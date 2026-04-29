@@ -1,0 +1,93 @@
+#include "custom/player/PlayerState_UsingGun_Aim.hps"
+
+//------------------------------------------------------------
+
+class cScrPlayerState_UsingVolleyGun_Aim : cScrPlayerState_UsingGun_Aim
+{
+	void Init() override
+	{
+		cScrPlayerState_UsingGun_Aim::Init();
+		
+		msWeaponType = "VolleyGun";
+		msItemPrompt = "FireWeapon";
+		mfShootCooldown = 0.8f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep) override
+	{
+		iScrPlayerState_UsingWeapon_Aim_Base::Update(afTimeStep);
+		
+		if (VolleyGun_GetQueuedFire() &&
+			mlAnimState == eUsingItemAnimState_Loop &&
+			mbLeaveState == false &&
+			GetShootAnimActive() == false &&
+			mfShootCooldownCount <= 0.f)
+		{
+			VolleyGun_SetQueuedFire(false);
+			OnUse();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed) override
+	{
+		if (alAction == eAction_Interact && abPressed)
+		{
+			if (mfShootCooldownCount > 0.f)
+				return false;
+				
+			QueueVolleyReload();
+			return false;
+		}
+		
+		return cScrPlayerState_UsingGun_Aim::OnAction(alAction, abPressed);
+	}
+	
+	//------------------------------------------------------------
+	
+	void QueueVolleyReload()
+	{
+		VolleyGun_SetQueuedFire(false);
+		
+		mbLeaveState = true;
+		mbAllowLeavingState = true;
+		Player_SetCanRun(true);
+		
+		cScript_SetGlobalArgInt(0, Gun_GetReloadStateId(msWeaponType));
+		cScript_SetGlobalArgInt(1, eItemHandlerHand_Right);
+		cScript_SetGlobalArgString(2, msItemType);
+		cScript_RunGlobalFunc("State_Normal", "", "_Global_SetQueuedState");
+	}
+	
+	//------------------------------------------------------------
+	
+	void SpawnProjectiles(const cMatrixf a_mtxOrientation) override
+	{
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap is null) return;
+		
+		cVector3f vStart = a_mtxOrientation.GetTranslation();
+		cVector3f vDir = a_mtxOrientation.GetTranspose().GetForward();
+		
+		for (int i = 0; i < 6; ++i)
+			BulletHandler_AddBullet(vStart, vDir, eBulletType_Revolver, pMap.GetPlayerEntity().GetID(), "OnPlayerBulletHit");
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnUse() override
+	{
+		bool bCanFire = Gun_GetCanFire(msWeaponType);
+
+		iScrPlayerState_UsingWeapon_Aim_Base::OnUse();
+		
+		if (bCanFire)
+		{
+			GameStats_IncreaseEntryAmount(eHeroStats_BulletsFired, 6);
+			Effect_Rumble_Start(0.75, 0.5);
+		}
+	}
+}

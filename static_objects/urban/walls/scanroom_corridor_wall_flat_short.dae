@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>illerulf</author>
+      <authoring_tool>OpenCOLLADA2011 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/Maya_old/deeper/scenes/wait%20room.mb</source_data>
+    </contributor>
+    <created>2013-01-21T13:05:10</created>
+    <modified>2013-01-21T13:05:10</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="wall" name="wall">
+      <instance_effect url="#wall-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="wall-fx">
+      <profile_COMMON>
+        <newparam sid="file9-surface">
+          <surface type="2D">
+            <init_from>file9</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file9-sampler">
+          <sampler2D>
+            <source>file9-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file9-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file9" name="file9">
+      <init_from>file:///E:/Maya_old/deeper/sourceimages/urban_scanroom_corridor_wall.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file9</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="pPlaneShape17" name="pPlaneShape17">
+      <mesh>
+        <source id="pPlaneShape17-positions" name="pPlaneShape17-positions">
+          <float_array id="pPlaneShape17-positions-array" count="60">-100 0 0 -100 400 8.522503 -100 20.50904 0 -100 185.7374 3.771903 -100 390.5383 5.651998 -100 394.9924 8.050587 -100 22.55544 2.045321 -100 24.80184 3.771903 99.99994 0 0 100.0109 20.50905 0 99.92419 22.55544 2.045321 99.8985 24.80184 3.771903 99.98389 185.7375 3.771903 100.0422 390.5383 5.651998 100.006 394.9924 8.050587 99.99994 400 8.522503 99.93262 188.6662 5.651999 99.94763 187.1979 5.088027 -100 187.1979 5.088029 -100 188.6662 5.651999</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape17-positions-array" count="20" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pPlaneShape17-normals" name="pPlaneShape17-normals">
+          <float_array id="pPlaneShape17-normals-array" count="102">0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 -0.7069203 0.7072932 0 -0.7069203 0.7072932 0 -0.7069203 0.7072932 0 -0.7069203 0.7072932 0 -0.5985109 0.8011146 0 -0.5985109 0.8011146 0 -0.669446 0.7428607 0 -0.669446 0.7428607 0 0 1 0 0 1 0 0 1 0 0 1 0 -0.4741337 0.8804529 0 -0.4741337 0.8804529 0 -0.2897551 0.9571008 0 -0.2897551 0.9571008 0 -0.0938239 0.9955888 0 -0.0938239 0.9955888 0 0 0.9999999 0 -0.9663365 0.2572816 0 -0.6093965 0.7928656 0 -0.6093965 0.7928656 0 -0.5985109 0.8011146 0 0 1 0 0 1 0 -0.5985109 0.8011146</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape17-normals-array" count="34" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pPlaneShape17-map1" name="pPlaneShape17-map1">
+          <float_array id="pPlaneShape17-map1-array" count="40">0.5081306 0.009140015 0.9918694 0.008946985 0.5081306 0.05955541 0.5081306 0.07475843 0.5082416 0.4625739 0.5081306 0.06749716 0.5081309 0.9935226 0.5080697 0.9838974 0.9917029 0.9838974 0.9917029 0.9935226 0.9917048 0.9638535 0.9918694 0.07475843 0.9918694 0.06749716 0.9918694 0.05955541 0.5082416 0.4675332 0.9918093 0.4625739 0.5082416 0.4705019 0.9917133 0.4705024 0.507971 0.9638535 0.991742 0.4675332</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape17-map1-array" count="20" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="pPlaneShape17-vertices" name="pPlaneShape17-vertices">
+          <input semantic="POSITION" source="#pPlaneShape17-positions"/>
+        </vertices>
+        <triangles material="lambert6SG" count="18">
+          <input semantic="VERTEX" source="#pPlaneShape17-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#pPlaneShape17-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#pPlaneShape17-map1" offset="2" set="0"/>
+          <p>2 0 2 0 1 0 9 3 13 9 3 13 0 1 0 8 2 1 3 4 4 7 5 3 12 7 15 12 7 15 7 5 3 11 6 11 6 8 5 2 9 2 10 11 12 10 11 12 2 9 2 9 10 13 17 12 19 18 13 14 12 15 15 12 15 15 18 13 14 3 14 4 19 16 16 16 17 17 4 19 18 4 19 18 16 17 17 13 18 10 4 20 18 13 21 10 5 23 7 5 23 7 13 21 10 14 22 8 5 23 7 14 22 8 1 25 6 1 25 6 14 22 8 15 24 9 7 26 3 6 27 5 11 29 11 11 29 11 6 27 5 10 28 12 17 30 19 16 31 17 18 33 14 18 33 14 16 31 17 19 32 16</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>pPlaneShape17</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="wait_room">
+      <node id="pPlane17" name="pPlane17" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#pPlaneShape17">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lambert6SG" target="#wall">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>pPlane17</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

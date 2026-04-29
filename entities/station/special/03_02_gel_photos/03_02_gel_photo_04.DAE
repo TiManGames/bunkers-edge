@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=1;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/entities/station/special/03_02_gel_photos/03_02_gel_photo_04.DAE</source_data>
+    </contributor>
+    <created>2015-04-12T23:32:09</created>
+    <modified>2015-04-12T23:32:09</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="_08___Default" name="_08___Default">
+      <instance_effect url="#_08___Default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_08___Default-fx">
+      <profile_COMMON>
+        <newparam sid="Map__1_image-surface">
+          <surface type="2D">
+            <init_from>Map__1_image</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Map__1_image-sampler">
+          <sampler2D>
+            <source>Map__1_image-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.588235 0.588235 0.588235 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map__1_image-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU sid="coverageU">1</coverageU>
+                    <coverageV sid="coverageV">1</coverageV>
+                    <fast sid="fast">0</fast>
+                    <mirrorU sid="mirrorU">0</mirrorU>
+                    <mirrorV sid="mirrorV">0</mirrorV>
+                    <noiseU sid="noiseU">0</noiseU>
+                    <noiseV sid="noiseV">0</noiseV>
+                    <offsetU sid="offsetU">0</offsetU>
+                    <offsetV sid="offsetV">0</offsetV>
+                    <repeatU sid="repeatU">1</repeatU>
+                    <repeatV sid="repeatV">1</repeatV>
+                    <rotateFrame sid="rotateFrame">0</rotateFrame>
+                    <rotateUV sid="rotateUV">0</rotateUV>
+                    <stagger sid="stagger">0</stagger>
+                    <translateFrameU sid="translateFrameU">0</translateFrameU>
+                    <translateFrameV sid="translateFrameV">0</translateFrameV>
+                    <wrapU sid="wrapU">1</wrapU>
+                    <wrapV sid="wrapV">1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0 0 0 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">2</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Map__1_image" name="Map__1_image">
+      <init_from>file:///D:/SOMA/trunk/redist/entities/station/special/03_02_gel_photos/03_02_gel_photos.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Map__1_image</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="photograph_world01Shape" name="photograph_world01Shape">
+      <mesh>
+        <source id="photograph_world01Shape-positions" name="photograph_world01Shape-positions">
+          <float_array id="photograph_world01Shape-positions-array" count="120">-0.076291 -0.001213 -0.103112 -0.076291 -0.001213 0.103112 0.076291 -0.001213 0.103112 0.07629101 -0.001213 -0.103112 -0.076291 0.002403 0.051556 0.076291 0.002403 0.051556 -0.076291 0.003442 0 0.076291 0.003442 0 -0.076291 0.002403 -0.05155599 0.07629101 0.002403 -0.051556 0.02543 1.18e-4 0.103112 0.02543 0.003734 0.05155599 0.02543 0.004772 0 0.02543 0.003734 -0.051556 0.02543001 1.18e-4 -0.103112 -0.02543 1.18e-4 0.103112 -0.02543 0.003734 0.051556 -0.02543 0.004772 0 -0.02543 0.003734 -0.051556 -0.02543 1.18e-4 -0.103112 -0.076291 0 -0.103112 -0.076291 0 0.103112 0.076291 0 0.103112 0.076291 0 -0.103112 -0.076291 0.003616 0.051556 0.076291 0.003616 0.051556 -0.076291 0.004655 0 0.076291 0.004655 0 -0.076291 0.003616 -0.05155599 0.07629101 0.003616 -0.051556 0.02543 0.001331 0.103112 0.02543 0.004947 0.05155599 0.02543 0.005985 0 0.02543 0.004947 -0.051556 0.02543001 0.001331 -0.103112 -0.02543 0.001331 0.103112 -0.02542999 0.004947 0.051556 -0.02543 0.005985 0 -0.02543 0.004947 -0.051556 -0.02543 0.001331 -0.103112</float_array>
+          <technique_common>
+            <accessor source="#photograph_world01Shape-positions-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_world01Shape-normals" name="photograph_world01Shape-normals">
+          <float_array id="photograph_world01Shape-normals-array" count="120">0.02609635 -0.9972096 0.0699416 0.02609633 -0.9972096 -0.06994162 -0.02609633 -0.9972096 -0.06994161 -0.02609636 -0.9972096 0.06994162 0.02613384 -0.9986425 -0.04505573 -0.02613382 -0.9986425 -0.04505573 0.02614672 -0.9996355 -0.006708702 -0.02614672 -0.9996356 -0.006708699 0.02613619 -0.9989828 0.03674548 -0.02613619 -0.9989828 0.03674548 -0.008699442 -0.9975116 -0.0699628 -0.01493198 -0.999027 -0.04149779 -0.01307448 -0.9998921 0.006713652 -0.0130627 -0.9984897 0.05336363 -0.01304931 -0.9974644 0.06995948 0.01304929 -0.9974644 -0.06995951 0.01493197 -0.9987057 -0.04862 0.01307477 -0.9999146 0 0.01306315 -0.9988991 0.04505617 0.00869945 -0.9975116 0.06996279 -0.02609636 0.9972096 -0.0699416 -0.02609632 0.9972095 0.06994162 0.02609632 0.9972096 0.06994161 0.02609636 0.9972096 -0.06994162 -0.02613382 0.9986425 0.04505574 0.02613382 0.9986426 0.04505575 -0.02614672 0.9996355 0.006708709 0.02614673 0.9996356 0.0067087 -0.0261362 0.9989828 -0.03674548 0.0261362 0.9989828 -0.03674548 0.008699442 0.9975117 0.0699628 0.01493197 0.999027 0.04149779 0.01307448 0.9998921 -0.006713648 0.0130627 0.9984897 -0.05336363 0.01304929 0.9974644 -0.06995948 -0.01304929 0.9974644 0.0699595 -0.01493197 0.9987057 0.04862 -0.01307478 0.9999146 0 -0.01306315 0.9988991 -0.04505617 -0.008699444 0.9975117 -0.06996281</float_array>
+          <technique_common>
+            <accessor source="#photograph_world01Shape-normals-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_world01Shape-UVSet0" name="photograph_world01Shape-UVSet0">
+          <float_array id="photograph_world01Shape-UVSet0-array" count="80">0.5267201 0.1745098 0.5267201 0.1203962 0.4625165 0.1203958 0.462517 0.1745098 0.3341094 0.1745098 0.3341094 0.1203958 0.2699062 0.1203958 0.2699062 0.1745098 0.3983131 0.1745098 0.3983131 0.1203958 0.3341094 0.06628175 0.3341094 0.0121677 0.2699062 0.01216821 0.2699062 0.06628227 0.3983131 0.06628175 0.3983131 0.0121677 0.4625165 0.06628175 0.462517 0.0121677 0.5267206 0.06628175 0.5267201 0.01216821 0.999192 0.6717 0.874436 0.6717 0.874436 0.567066 0.999192 0.567066 0.624925 0.6717 0.50017 0.6717 0.50017 0.567066 0.624925 0.567066 0.749681 0.6717 0.749681 0.567066 0.624925 0.462431 0.50017 0.462431 0.50017 0.357797 0.624925 0.357797 0.749681 0.462431 0.749681 0.357797 0.874436 0.462431 0.874436 0.357797 0.999192 0.462431 0.999192 0.357797</float_array>
+          <technique_common>
+            <accessor source="#photograph_world01Shape-UVSet0-array" count="40" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="photograph_world01Shape-vertices" name="photograph_world01Shape-vertices">
+          <input semantic="POSITION" source="#photograph_world01Shape-positions"/>
+          <input semantic="NORMAL" source="#photograph_world01Shape-normals"/>
+        </vertices>
+        <triangles material="photograph_world01SG" count="48">
+          <input semantic="VERTEX" source="#photograph_world01Shape-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#photograph_world01Shape-UVSet0" offset="1" set="0"/>
+          <p>19 1 18 2 0 0 0 0 18 2 8 3 4 4 16 5 1 7 16 5 15 6 1 7 6 8 16 5 4 4 16 5 6 8 17 9 18 2 17 9 8 3 8 3 17 9 6 8 5 11 2 12 11 10 11 10 2 12 10 13 7 15 11 10 12 14 11 10 7 15 5 11 13 16 9 17 12 14 9 17 7 15 12 14 14 18 3 19 13 16 3 19 9 17 13 16 11 10 10 13 16 5 16 5 10 13 15 6 12 14 11 10 17 9 17 9 11 10 16 5 13 16 12 14 18 2 18 2 12 14 17 9 14 18 13 16 19 1 19 1 13 16 18 2 38 22 20 20 28 21 20 20 38 22 39 23 35 26 36 27 21 25 21 25 36 27 24 24 36 27 26 28 24 24 26 28 36 27 37 29 37 29 28 21 26 28 28 21 37 29 38 22 22 32 31 30 30 31 31 30 22 32 25 33 31 30 27 35 32 34 27 35 31 30 25 33 27 35 29 37 32 34 32 34 29 37 33 36 29 37 23 39 33 36 33 36 23 39 34 38 30 31 36 27 35 26 36 27 30 31 31 30 31 30 37 29 36 27 37 29 31 30 32 34 32 34 38 22 37 29 38 22 32 34 33 36 33 36 39 23 38 22 39 23 33 36 34 38</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>photograph_world01Shape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="_3_02_gel_photo_04">
+      <node id="photograph_world01" name="photograph_world01" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#photograph_world01Shape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="photograph_world01SG" target="#_08___Default">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>photograph_world01</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

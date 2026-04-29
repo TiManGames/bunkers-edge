@@ -1,0 +1,499 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+
+#include "helpers/helper_player.hps"
+#include "helpers/helper_items.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourPoleSwing_SnapTime = 0.12f;
+const float gfParkourPoleSwing_StartAngle = -0.95f;
+const float gfParkourPoleSwing_EndAngle = 1.24f;
+const float gfParkourPoleSwing_ForwardHoldSpeedMul = 1.12f;
+const float gfParkourPoleSwing_BackwardHoldSpeedMul = 1.00f;
+const float gfParkourPoleSwing_ReleaseInputLockTime = 0.18f;
+const float gfParkourPoleSwing_InputAccel = 1.60f;
+const float gfParkourPoleSwing_GravityAccel = 5.85f;
+const float gfParkourPoleSwing_InputDamping = 0.72f;
+const float gfParkourPoleSwing_NoInputDamping = 1.85f;
+const float gfParkourPoleSwing_MaxAngularVel = 2.65f;
+const float gfParkourPoleSwing_InitialAngleMul = 0.35f;
+const float gfParkourPoleSwing_InitialVelMul = 0.48f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+	
+	void OnAttachBodyToStickyArea() {}
+	
+	//------------------------------------------------------------
+	
+	void Init() {}
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void OnMapLeave(cLuxMap @apMap) {}
+	void CreateWorldEntities(cLuxMap @apMap) {}
+	void DestroyWorldEntities(cLuxMap @apMap) {}
+	void Reset() {}
+	void PostUpdate(float afTimeStep) {}
+	bool OnExitPressed() { return true; }
+	
+	//------------------------------------------------------------
+	
+	void SetupParkourPoleSwing()
+	{
+		mvPivot = cScript_GetGlobalArgVector3f(0);
+		mvPoleAxis = cScript_GetGlobalArgVector3f(1);
+		mvSwingForward = cScript_GetGlobalArgVector3f(2);
+		mvLaunchTarget = cScript_GetGlobalArgVector3f(3);
+		mbHasLaunchTarget = cScript_GetGlobalArgBool(4);
+		mfPoleLength = cScript_GetGlobalArgFloat(5);
+		mfSwingDuration = cScript_GetGlobalArgFloat(6);
+		mfPeakStart = cScript_GetGlobalArgFloat(7);
+		mfPeakEnd = cScript_GetGlobalArgFloat(8);
+		mfLaunchSpeed = cScript_GetGlobalArgFloat(9);
+		mfLaunchUpSpeed = cScript_GetGlobalArgFloat(10);
+		mfFlowLaunchBonus = cScript_GetGlobalArgFloat(11);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		NormalizeSetupVectors();
+		
+		mbFinished = false;
+		mfTimer = 0.f;
+		SetupInitialSwingMomentum(pBody);
+		mvStartFeetPos = pBody.GetFeetPosition();
+		mfStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
+		
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+		pBody.SetGravityActive(false);
+		pBody.SetTestCollision(false);
+		pBody.SetPhysicsBodyActive(false);
+		pBody.StopMovement();
+		
+		Player_SetDisableCrawling(true);
+		Player_SetCrouching(false);
+		Player_SetCrouchDisabled(true);
+		Player_SetCrouchActionDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_CancelJump();
+		
+		PlayerBody_SetVisible(false);
+		
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+		
+		cLux_PlayGuiSoundData("player/climb_ledge/low", eSoundEntryType_WorldClean, 0.65f, true);
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, -0.10f, 0.08f), 10.f, 6.f, 0.08f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Pole swing state entered.", true);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId)
+	{
+		RestoreBody();
+		Player_ResetCameraLimits();
+		Player_SetDisableCrawling(false);
+		Player_SetCrouchDisabled(false);
+		Player_SetCrouchActionDisabled(false);
+		Player_SetLeanDisabled(false);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		if (mbFinished) return;
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		mfTimer += afTimeStep;
+		UpdateSwingPhysics(afTimeStep);
+		cVector3f vTargetFeet = GetSwingFeetPosition();
+		cVector3f vFeet = vTargetFeet;
+		
+		if (mfTimer < gfParkourPoleSwing_SnapTime)
+		{
+			float fSnapT = cMath_Clamp(mfTimer / gfParkourPoleSwing_SnapTime, 0.f, 1.f);
+			fSnapT = cMath_Easing(eEasing_QuadOut, fSnapT);
+			vFeet = LerpVector(mvStartFeetPos, vTargetFeet, fSnapT);
+		}
+		
+		pBody.SetFeetPosition(vFeet, true);
+		pBody.SetYaw(cMath_GetAngleFromPoints3D(cVector3f_Zero, mvSwingForward).y);
+		
+		float fAngleN = GetNormalizedSwingAngle();
+		float fSwingAmount = cMath_Abs(fAngleN);
+		float fPitch = mfStartPitch + cMath_ToRad(fAngleN * 14.f);
+		cLux_GetPlayer().GetCamera().SetPitch(fPitch);
+		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, cMath_ToRad(fAngleN * 7.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
+										  cVector3f(0.f, -0.10f + fSwingAmount * 0.06f, 0.10f),
+										  10.f,
+										  6.f,
+										  0.06f);
+		
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if (abPressed == false) return false;
+		
+		if (alAction == eAction_Jump)
+		{
+			if (mfTimer < gfParkourPoleSwing_ReleaseInputLockTime)
+				return false;
+			
+			ReleaseFromSwing();
+			return false;
+		}
+		
+		if (alAction == eAction_Crouch)
+		{
+			DropFromSwing();
+			return false;
+		}
+		
+		if (alAction == eAction_Interact)
+			return false;
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (alAnalogId == eAnalogType_Look ||
+			alAnalogId == eAnalogType_Move ||
+			alAnalogId == eAnalogType_GamepadMove ||
+			alAnalogId == eAnalogType_Lean)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool AllowBuoyancy(iPhysicsBody @apBody)
+	{
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody, const cVector3f &in avVel) {}
+	
+	//------------------------------------------------------------
+	
+	float DrawDebugOutput(cGuiSet @apSet, iFontData @apFont, float afStartY)
+	{
+		return afStartY;
+	}
+	
+	//------------------------------------------------------------
+	
+	void NormalizeSetupVectors()
+	{
+		mvPoleAxis.y = 0.f;
+		if (mvPoleAxis.SqrLength() > 0.001f)
+			mvPoleAxis.Normalize();
+		else
+			mvPoleAxis = cVector3f_Right;
+		
+		mvSwingForward.y = 0.f;
+		if (mvSwingForward.SqrLength() > 0.001f)
+			mvSwingForward.Normalize();
+		else
+			mvSwingForward = cVector3f_Forward;
+		
+		mfPoleLength = cMath_Max(0.4f, mfPoleLength);
+		mfSwingDuration = cMath_Max(0.35f, mfSwingDuration);
+		mfPeakStart = cMath_Clamp(mfPeakStart, 0.05f, 0.95f);
+		mfPeakEnd = cMath_Clamp(mfPeakEnd, mfPeakStart + 0.05f, 0.98f);
+		mfLaunchSpeed = cMath_Max(0.1f, mfLaunchSpeed);
+		mfLaunchUpSpeed = cMath_Max(0.f, mfLaunchUpSpeed);
+		mfFlowLaunchBonus = cMath_Max(0.f, mfFlowLaunchBonus);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetupInitialSwingMomentum(iCharacterBody@ apBody)
+	{
+		mfSwingAngle = gfParkourPoleSwing_StartAngle * gfParkourPoleSwing_InitialAngleMul;
+		mfSwingAngularVel = 0.f;
+		
+		if (apBody is null) return;
+		
+		cVector3f vEnterVel = apBody.GetForceVelocity();
+		if (vEnterVel.SqrLength() <= 0.001f)
+			vEnterVel = apBody.GetVelocity(1.0f / 60.0f);
+		
+		float fForwardSpeed = cMath_Vector3Dot(vEnterVel, mvSwingForward);
+		mfSwingAngularVel = cMath_Clamp((fForwardSpeed / mfPoleLength) * gfParkourPoleSwing_InitialVelMul,
+										-gfParkourPoleSwing_MaxAngularVel,
+										gfParkourPoleSwing_MaxAngularVel);
+		
+		if (fForwardSpeed > 0.4f && mfSwingAngularVel < 0.20f)
+			mfSwingAngularVel = 0.20f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateSwingPhysics(float afTimeStep)
+	{
+		bool bForward = cInput_IsTriggered(eAction_Forward);
+		bool bBackward = cInput_IsTriggered(eAction_Backward);
+		
+		float fInput = 0.f;
+		if (bForward && bBackward == false)
+			fInput = gfParkourPoleSwing_ForwardHoldSpeedMul;
+		else if (bBackward && bForward == false)
+			fInput = -gfParkourPoleSwing_BackwardHoldSpeedMul;
+		
+		float fDurationScale = 1.15f / mfSwingDuration;
+		float fAccel = -cMath_Sin(mfSwingAngle) * gfParkourPoleSwing_GravityAccel * fDurationScale;
+		fAccel += fInput * gfParkourPoleSwing_InputAccel * fDurationScale;
+		
+		float fDamping = gfParkourPoleSwing_InputDamping;
+		if (fInput == 0.f)
+			fDamping = gfParkourPoleSwing_NoInputDamping;
+		fAccel -= mfSwingAngularVel * fDamping;
+		
+		mfSwingAngularVel += fAccel * afTimeStep;
+		mfSwingAngularVel = cMath_Clamp(mfSwingAngularVel,
+										-gfParkourPoleSwing_MaxAngularVel,
+										gfParkourPoleSwing_MaxAngularVel);
+		
+		mfSwingAngle += mfSwingAngularVel * afTimeStep;
+		if (mfSwingAngle < gfParkourPoleSwing_StartAngle)
+		{
+			mfSwingAngle = gfParkourPoleSwing_StartAngle;
+			if (mfSwingAngularVel < 0.f)
+				mfSwingAngularVel = 0.f;
+		}
+		else if (mfSwingAngle > gfParkourPoleSwing_EndAngle)
+		{
+			mfSwingAngle = gfParkourPoleSwing_EndAngle;
+			if (mfSwingAngularVel > 0.f)
+				mfSwingAngularVel = 0.f;
+		}
+		
+		if (fInput == 0.f &&
+			cMath_Abs(mfSwingAngle) < 0.01f &&
+			cMath_Abs(mfSwingAngularVel) < 0.035f)
+		{
+			mfSwingAngle = 0.f;
+			mfSwingAngularVel = 0.f;
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetSwingT()
+	{
+		float fRange = gfParkourPoleSwing_EndAngle - gfParkourPoleSwing_StartAngle;
+		if (fRange <= 0.001f) return 0.f;
+		
+		return cMath_Clamp((mfSwingAngle - gfParkourPoleSwing_StartAngle) / fRange, 0.f, 1.f);
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetNormalizedSwingAngle()
+	{
+		float fMaxAngle = cMath_Max(cMath_Abs(gfParkourPoleSwing_StartAngle), cMath_Abs(gfParkourPoleSwing_EndAngle));
+		if (fMaxAngle <= 0.001f) return 0.f;
+		
+		return cMath_Clamp(mfSwingAngle / fMaxAngle, -1.f, 1.f);
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f GetSwingFeetPosition()
+	{
+		return mvPivot + mvSwingForward * (cMath_Sin(mfSwingAngle) * mfPoleLength) - cVector3f_Up * (cMath_Cos(mfSwingAngle) * mfPoleLength);
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetReleaseQuality(float afT)
+	{
+		if (afT >= mfPeakStart && afT <= mfPeakEnd)
+			return 1.f;
+		
+		float fDist = 0.f;
+		if (afT < mfPeakStart)
+			fDist = mfPeakStart - afT;
+		else
+			fDist = afT - mfPeakEnd;
+		
+		return cMath_Clamp(1.f - fDist * 1.8f, 0.45f, 0.85f);
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetReleaseMomentum()
+	{
+		float fForwardAngle = cMath_Clamp(mfSwingAngle / gfParkourPoleSwing_EndAngle, 0.f, 1.f);
+		float fVelocity = cMath_Clamp(cMath_Abs(mfSwingAngularVel) / 1.45f, 0.f, 1.f);
+		return cMath_Max(fForwardAngle, fVelocity);
+	}
+	
+	//------------------------------------------------------------
+	
+	void ReleaseFromSwing()
+	{
+		if (mbFinished) return;
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		float fT = GetSwingT();
+		float fQuality = GetReleaseQuality(fT);
+		float fMomentum = GetReleaseMomentum();
+		bool bGoodRelease = fQuality >= 0.99f && fMomentum >= 0.65f;
+		float fFlowMul = 1.f + Parkour_GetFlow() * mfFlowLaunchBonus;
+		float fMomentumMul = cMath_InterpolateLinear(0.45f, 1.08f, fMomentum);
+		float fPower = fQuality * fFlowMul * fMomentumMul;
+		
+		cVector3f vLaunchDir = mvSwingForward;
+		if (mbHasLaunchTarget)
+		{
+			vLaunchDir = mvLaunchTarget - pBody.GetFeetPosition();
+			vLaunchDir.y = 0.f;
+			if (vLaunchDir.SqrLength() <= 0.001f)
+				vLaunchDir = mvSwingForward;
+		}
+		vLaunchDir.y = 0.f;
+		if (vLaunchDir.SqrLength() > 0.001f)
+			vLaunchDir.Normalize();
+		else
+			vLaunchDir = mvSwingForward;
+		
+		cVector3f vLaunchVel = vLaunchDir * (mfLaunchSpeed * fPower);
+		vLaunchVel.y = mfLaunchUpSpeed * fPower;
+		
+		mbFinished = true;
+		RestoreBody();
+		pBody.SetForceVelocity(vLaunchVel);
+		
+		if (bGoodRelease)
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_PoleSwingGoodRelease, 1.f);
+		else
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_PoleSwingBadRelease, 1.f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Pole swing released. t=" + fT + " angle=" + mfSwingAngle + " vel=" + mfSwingAngularVel + " quality=" + fQuality + " momentum=" + fMomentum + " power=" + fPower, true);
+		
+		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DropFromSwing()
+	{
+		if (mbFinished) return;
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		mbFinished = true;
+		RestoreBody();
+		pBody.SetForceVelocity(mvSwingForward * 0.35f + cVector3f(0.f, -0.15f, 0.f));
+		Parkour_NotifyFlowEvent(geParkourFlowEvent_PoleSwingDrop, 1.f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Pole swing dropped.", true);
+		
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void RestoreBody()
+	{
+		PlayerBody_SetVisible(true);
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			pBody.SetGravityActive(true);
+			pBody.SetTestCollision(true);
+			pBody.SetPhysicsBodyActive(true);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f LerpVector(const cVector3f &in avA, const cVector3f &in avB, float afT)
+	{
+		return avA * (1.f - afT) + avB * afT;
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f mvPivot = cVector3f_Zero;
+	cVector3f mvPoleAxis = cVector3f_Right;
+	cVector3f mvSwingForward = cVector3f_Forward;
+	cVector3f mvLaunchTarget = cVector3f_Zero;
+	cVector3f mvStartFeetPos = cVector3f_Zero;
+	
+	bool mbHasLaunchTarget = false;
+	bool mbFinished = false;
+	
+	float mfPoleLength = 1.8f;
+	float mfSwingDuration = 1.15f;
+	float mfPeakStart = 0.62f;
+	float mfPeakEnd = 0.82f;
+	float mfLaunchSpeed = 5.2f;
+	float mfLaunchUpSpeed = 2.6f;
+	float mfFlowLaunchBonus = 0.25f;
+	float mfTimer = 0.f;
+	float mfSwingAngle = 0.f;
+	float mfSwingAngularVel = 0.f;
+	float mfStartPitch = 0.f;
+	
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

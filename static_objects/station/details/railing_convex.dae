@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>Marc</author>
+            <authoring_tool>modo 601 [Build 48460], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>
+                Plug-in: [Build 48460];
+                Use Absolute Path: No;
+                Merge Reference Items: No;
+                Save Hidden Items: No;
+                Save Cameras: Yes;
+                Save Lights: Yes;
+                Save Locators: Yes;
+                Save Triangles as Triangles: No;
+                Bake Matrices: No;
+                Save Vertex Normals: Yes;
+                Save UV Texture Coordinates: Yes;
+                Save Vertex Colors: Yes;
+                Save Vertex Weights: Yes;
+                Save Animation: Yes;
+                Sample Animation: No;
+                Sample Animation Start: 0;
+                Sample Animation End: 120;
+                Save modo Profile: Yes;
+                Save Maya Profile: Yes;
+                Save 3ds Max Profile: Yes;
+                Formatted Arrays: Yes;
+            </comments>
+            <source_data>file:///D:/Work/My%20Dropbox/Team/Aaron/models/static_objects/station/details/railing.lxo</source_data>
+        </contributor>
+        <created>2012-09-19T07:53:30Z</created>
+        <modified>2012-09-19T07:53:30Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_cameras>
+        <camera id="Camera-camera013" name="Camera">
+            <optics>
+                <technique_common>
+                    <perspective>
+                        <xfov sid="HFOV">39.5978</xfov>
+                        <yfov sid="YFOV">26.9915</yfov>
+                        <znear sid="near_clip">0.01</znear>
+                        <zfar sid="far_clip">10000</zfar>
+                    </perspective>
+                </technique_common>
+                <technique profile="modo401">
+                    <param sid="projType" name="Projection_Type" type="Name">persp</param>
+                    <param sid="focalLen" name="Focal_Length" type="float">0.05</param>
+                    <param sid="distort" name="Lens_Distortion" type="float">0</param>
+                    <param sid="squeeze" name="Lens_Squeeze" type="float">1</param>
+                    <param sid="focusDist" name="Focus_Distance" type="float">4</param>
+                    <param sid="fStop" name="F-Stop" type="float">4</param>
+                    <param sid="blurLen" name="Blur_Length" type="float">0.5</param>
+                    <param sid="blurOff" name="Blur_Offset" type="float">0</param>
+                    <param sid="ioDist" name="Interocular_Distance" type="float">0.065</param>
+                    <param sid="convDist" name="Convergence_Distance" type="float">2</param>
+                </technique>
+            </optics>
+            <imager>
+                <technique profile="modo401">
+                    <param sid="apertureX" name="Film_Width" type="float">0.036</param>
+                    <param sid="apertureY" name="Film_Height" type="float">0.024</param>
+                    <param sid="offsetX" name="Film_Offset_X" type="float">0</param>
+                    <param sid="offsetY" name="Film_Offset_Y" type="float">0</param>
+                    <param sid="filmFit" name="Film_Fit" type="Name">fill</param>
+                </technique>
+            </imager>
+        </camera>
+    </library_cameras>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/My%20Dropbox/Team/Aaron/models/static_objects/station/floor/catwalk.tga</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-catwalk" name="catwalk">
+            <instance_effect url="#Effect-catwalk" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-catwalk" name="catwalk">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh036" name="railing_convex">
+            <mesh>
+                <source id="Geometry-mesh036-positions" name="positions">
+                    <float_array id="Geometry-mesh036-positions-array" count="138">
+                        0.0277661 -0.000626951 -0.972236
+                        0.0277661 -0.000626951 -1.02776
+                        -0.0277613 -0.000626951 -0.972236
+                        -0.0277613 -0.000626951 -1.02776
+                        -0.0277613 1.13036 -1.02776
+                        -0.0277613 1.13036 -0.972236
+                        0.0277661 1.13036 -0.972236
+                        0.0277661 1.13036 -1.02776
+                        0.0418112 1.13036 -0.946022
+                        0.0418112 1.13036 -1.05398
+                        0.0418112 1.19405 -1.05398
+                        0.0418112 1.19405 -0.946022
+                        -0.0418053 1.19405 -0.946025
+                        -0.0418063 1.19405 -1.05398
+                        -0.0418063 1.13036 -1.05398
+                        -0.0418053 1.13036 -0.946025
+                        0.0418106 1.13036 -2
+                        -0.0418063 1.13036 -2
+                        -0.0418063 1.19405 -2
+                        0.0418106 1.19405 -2
+                        0.972236 -0.000626951 0.0277661
+                        1.02776 -0.000626951 0.0277661
+                        0.972236 -0.000626951 -0.0277613
+                        1.02776 -0.000626951 -0.0277613
+                        1.02776 1.13036 -0.0277613
+                        0.972236 1.13036 -0.0277613
+                        0.972236 1.13036 0.0277661
+                        1.02776 1.13036 0.0277661
+                        0.946022 1.13036 0.0418112
+                        1.05398 1.13036 0.0418112
+                        1.05398 1.19405 0.0418112
+                        0.946022 1.19405 0.0418112
+                        0.946025 1.19405 -0.0418053
+                        1.05398 1.19405 -0.0418063
+                        1.05398 1.13036 -0.0418063
+                        0.946025 1.13036 -0.0418053
+                        2 1.13036 0.0418106
+                        2 1.13036 -0.0418063
+                        2 1.19405 -0.0418063
+                        2 1.19405 0.0418106
+                        -0.0418053 1.19405 -0.0418091
+                        0.0418112 1.19405 -0.0418078
+                        0.0418112 1.13036 -0.0418078
+                        -0.0418053 1.13036 -0.0418091
+                        0.0418106 1.19405 0.0418112
+                        0.0418106 1.13036 0.0418112
+                    </float_array>
+                    <technique_common>
+                        <accessor count="46" source="#Geometry-mesh036-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh036-normals" name="normals">
+                    <float_array id="Geometry-mesh036-normals-array" count="102">
+                        1 0 0
+                        1 0 -3.15028e-007
+                        -1 0 4.96919e-006
+                        0 -1 0
+                        0 0 -1
+                        -1 0 0
+                        0 0 1
+                        2.28107e-006 -1 -2.1094e-007
+                        5.7026e-006 -1 7.81911e-006
+                        0 1 0
+                        2.64354e-005 -1 1.00895e-005
+                        2.81294e-005 -1 2.94465e-006
+                        2.14397e-005 -1 8.02208e-006
+                        4.1218e-006 -1 1.94481e-006
+                        5.7026e-006 -1 5.04041e-007
+                        1 0 -6.30056e-007
+                        3.15028e-007 0 1
+                        -3.55193e-006 0 -1
+                        -4.96919e-006 0 -1
+                        -7.81911e-006 -1 5.7026e-006
+                        -1.00895e-005 -1 2.64354e-005
+                        -2.94465e-006 -1 2.81294e-005
+                        -8.02208e-006 -1 2.14397e-005
+                        -2.20849e-006 -1 4.12179e-006
+                        -5.04041e-007 -1 5.7026e-006
+                        6.30056e-007 0 1
+                        1 0 3.74226e-006
+                        7.60357e-006 -1 -3.51537e-007
+                        5.70267e-006 -1 2.13409e-011
+                        5.70267e-006 -1 4.26818e-011
+                        8.90201e-006 0 -1
+                        -0.707126 0 0.707088
+                        1.49695e-005 0 -1
+                        1 0 7.48452e-006
+                    </float_array>
+                    <technique_common>
+                        <accessor count="34" source="#Geometry-mesh036-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh036-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh036-uvSet1-array" count="128">
+                        0.575976 0.788703
+                        0.575976 0.754867
+                        0.596492 0.788703
+                        0.596492 0.754867
+                        0.528528 0.788702
+                        0.528528 0.754867
+                        0.549043 0.788702
+                        0.549043 0.754867
+                        0.549043 0.754784
+                        0.575976 0.754784
+                        0.549043 0.788702
+                        0.575976 0.788702
+                        0.70444 0.855638
+                        0.70444 0.819845
+                        0.737802 0.855638
+                        0.737802 0.819845
+                        0.98979 0.4108
+                        0.972106 0.4108
+                        0.98979 0.0433783
+                        0.972106 0.0433784
+                        0.972106 0.0433784
+                        0.98979 0.0433783
+                        0.972106 0.4108
+                        0.98979 0.0433783
+                        0.972106 0.0433784
+                        0.989789 0.0433784
+                        0.972106 0.4108
+                        0.98979 0.4108
+                        0.57125 0.780487
+                        0.57125 0.763084
+                        0.501594 0.754867
+                        0.501594 0.788703
+                        0.553847 0.763084
+                        0.553847 0.780487
+                        0.575976 0.754785
+                        0.549043 0.754785
+                        0.575977 0.450064
+                        0.549043 0.450064
+                        0.528528 0.754785
+                        0.528528 0.450064
+                        0.501594 0.754785
+                        0.501594 0.450064
+                        0.596492 0.754785
+                        0.596492 0.450064
+                        0.596492 0.450064
+                        0.575976 0.450064
+                        0.596492 0.754785
+                        0.575976 0.754785
+                        0.549043 0.754785
+                        0.549043 0.450064
+                        0.528528 0.450064
+                        0.528528 0.754785
+                        0.501594 0.450064
+                        0.959103 0.894163
+                        0.940166 0.875226
+                        0.97804 0.875226
+                        0.528528 0.684217
+                        0.528528 0.64618
+                        0.549043 0.684217
+                        0.549043 0.64618
+                        0.549043 0.665475
+                        0.549043 0.625541
+                        0.575976 0.645508
+                        0.70444 0.819845
+                    </float_array>
+                    <technique_common>
+                        <accessor count="64" source="#Geometry-mesh036-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh036-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh036-positions" />
+                </vertices>
+                <polylist count="92" material="Material-catwalk">
+                    <input semantic="VERTEX" source="#Geometry-mesh036-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh036-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh036-uvSet1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>8 0 0 9 1 1 11 0 2 11 0 2 9 1 1 10 1 3 12 2 4 13 2 5 15 2 6 15 2 6 13 2 5 14 2 7 2 3 8 3 3 9 0 3 10 0 3 10 3 3 9 1 3 11 16 4 12 17 4 13 19 4 14 19 4 14 17 4 13 18 4 15 5 5 16 4 5 17 2 5 18 2 5 18 4 5 17 3 5 19 2 6 20 0 6 21 5 6 22 5 6 22 0 6 21 6 6 16 0 0 19 1 0 23 6 0 17 6 0 17 1 0 23 7 0 16 1 4 24 3 4 25 7 4 26 7 4 26 3 4 25 4 4 27 6 3 28 7 3 29 8 7 0 8 7 0 7 3 29 9 8 1 10 9 30 13 9 5 11 9 31 11 9 31 13 9 5 12 9 4 4 10 32 5 11 33 14 12 7 14 12 7 5 11 33 15 13 6 7 3 29 4 10 32 9 8 1 9 8 1 4 10 32 14 12 7 5 11 33 6 3 28 15 13 6 15 13 6 6 3 28 8 7 0 9 8 34 14 12 35 16 14 36 16 14 36 14 12 35 17 3 37 14 2 35 13 2 38 17 5 37 17 5 37 13 2 38 18 5 39 13 9 38 10 9 40 18 9 39 18 9 39 10 9 40 19 9 41 10 1 42 9 1 34 19 15 43 19 15 43 9 1 34 16 15 36 28 6 0 29 16 1 31 6 2 31 6 2 29 16 1 30 16 3 32 17 4 33 18 5 35 17 6 35 17 6 33 18 5 34 18 7 22 3 8 23 3 9 20 3 10 20 3 10 23 3 9 21 3 11 36 0 12 37 0 13 39 0 14 39 0 14 37 0 13 38 0 15 25 4 16 24 4 17 22 4 18 22 4 18 24 4 17 23 4 19 22 5 20 20 5 21 25 5 22 25 5 22 20 5 21 26 5 16 20 6 19 21 6 23 26 6 17 26 6 17 21 6 23 27 6 16 21 0 24 23 0 25 27 0 26 27 0 26 23 0 25 24 0 27 26 3 28 27 3 29 28 3 0 28 3 0 27 3 29 29 19 1 30 9 30 33 9 5 31 9 31 31 9 31 33 9 5 32 9 4 24 20 32 25 21 33 34 22 7 34 22 7 25 21 33 35 23 6 27 3 29 24 20 32 29 19 1 29 19 1 24 20 32 34 22 7 25 21 33 26 3 28 35 23 6 35 23 6 26 3 28 28 3 0 29 19 34 34 22 35 36 24 36 36 24 36 34 22 35 37 3 37 34 18 35 33 18 38 37 4 37 37 4 37 33 18 38 38 4 39 33 9 38 30 9 40 38 9 39 38 9 39 30 9 40 39 9 41 30 16 42 29 16 34 39 25 43 39 25 43 29 16 34 36 25 36 41 26 44 42 26 45 11 0 46 11 0 46 42 26 45 8 0 47 15 13 48 8 7 47 43 27 49 43 27 49 8 7 47 42 28 45 43 5 49 40 5 50 15 2 48 15 2 48 40 5 50 12 2 51 12 9 51 40 9 50 11 9 40 11 9 40 40 9 50 41 9 52 44 6 44 45 6 45 31 6 46 31 6 46 45 6 45 28 6 47 35 23 48 28 3 47 42 28 49 42 28 49 28 3 47 45 29 45 42 30 49 41 30 50 35 17 48 35 17 48 41 30 50 32 17 51 32 9 51 41 9 50 31 9 40 31 9 40 41 9 50 44 9 52 41 9 53 40 9 54 44 9 55 44 31 56 40 31 57 45 31 58 45 31 58 40 31 57 43 31 59 45 29 60 43 27 61 42 28 62 42 30 12 43 32 63 41 30 14 41 30 14 43 32 63 40 32 15 45 33 12 42 26 63 44 33 14 44 33 14 42 26 63 41 26 15</p>
+                </polylist>
+                <extra>
+                    <technique profile="modo401">
+                        <param sid="render" name="Render" type="Name">default</param>
+                        <param sid="dissolve" name="Dissolve" type="float">0</param>
+                        <param sid="curves" name="Render_Curves" type="bool">false</param>
+                        <param sid="radius" name="Curve_Radius" type="float">0.05</param>
+                    </technique>
+                </extra>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_lights>
+        <light id="Light-polyRender010" name="Render">
+            <technique_common>
+                <ambient>
+                    <color sid="ambient_light_rgb">0.05 0.05 0.05</color>
+                </ambient>
+            </technique_common>
+        </light>
+        <light id="Light-sunLight016" name="Directional_Light">
+            <technique_common>
+                <directional>
+                    <color sid="directional_light_rgb">1 1 1</color>
+                </directional>
+            </technique_common>
+            <extra>
+                <technique profile="modo401">
+                    <param sid="lightType" name="Light_Type" type="Name">sun_light</param>
+                    <param sid="render" name="Render" type="Name">default</param>
+                    <param sid="visible" name="Display_Visible" type="Name">default</param>
+                    <param sid="size" name="Display_Size" type="float">1</param>
+                    <param sid="dissolve" name="Dissolve" type="float">0</param>
+                    <param sid="radiance" name="Radiant_Intensity" type="float">3</param>
+                    <param sid="samples" name="Samples" type="int">64</param>
+                    <param sid="shadType" name="Shadow_Type" type="Name">raytrace</param>
+                    <param sid="shadRes" name="Shadow_Resolution" type="int">1024</param>
+                    <param sid="fast" name="Simple_Shading" type="bool">true</param>
+                    <param sid="azimuth" name="Azimuth" type="float">0</param>
+                    <param sid="clamp" name="Clamp_Intensity" type="bool">true</param>
+                    <param sid="day" name="Day" type="int">2012173</param>
+                    <param sid="elevation" name="Elevation" type="float">0</param>
+                    <param sid="haze" name="Haze" type="float">2</param>
+                    <param sid="height" name="Height" type="float">10</param>
+                    <param sid="lat" name="Latitude" type="float">0.655057</param>
+                    <param sid="lon" name="Longitude" type="float">-2.13456</param>
+                    <param sid="mapSize" name="Map_Size" type="float">2</param>
+                    <param sid="north" name="North" type="float">0</param>
+                    <param sid="radius" name="Radius" type="float">0.5</param>
+                    <param sid="spread" name="Spread" type="float">0</param>
+                    <param sid="sunPos" name="Sun_Position" type="bool">false</param>
+                    <param sid="time" name="Time" type="float">12</param>
+                    <param sid="timeZone" name="Time_Zone" type="float">-8</param>
+                    <param sid="volumetrics" name="Volumetrics" type="bool">false</param>
+                    <param sid="vdissolve" name="Volumetrics_Dissolve" type="float">0</param>
+                    <param sid="vsamples" name="Volumetric_Samples" type="int">40</param>
+                </technique>
+            </extra>
+        </light>
+    </library_lights>
+    <library_nodes id="shader_tree" name="Shader_Tree">
+        <node sid="shader_tree_render" name="Render">
+            <extra>
+                <technique profile="modo401">
+                    <param sid="first" name="Frame_Range_First" type="int">1</param>
+                    <param sid="last" name="Frame_Range_Last" type="int">120</param>
+                    <param sid="dpi" name="Frame_DPI" type="float">300</param>
+                    <param sid="resUnit" name="Resolution_Unit" type="Name">pixels</param>
+                    <param sid="pAspect" name="Frame_Pixel_Aspect_Ratio" type="float">1</param>
+                    <param sid="bucketX" name="Bucket_Width" type="int">32</param>
+                    <param sid="bucketY" name="Bucket_Height" type="int">32</param>
+                    <param sid="bktOrder" name="Bucket_Order" type="Name">hilbert</param>
+                    <param sid="bktSkip" name="Skip_Existing_Buckets" type="bool">false</param>
+                    <param sid="region" name="Render_Region" type="bool">false</param>
+                    <param sid="regX0" name="Render_Region_Left" type="float">0</param>
+                    <param sid="regX1" name="Render_Region_Right" type="float">1</param>
+                    <param sid="regY0" name="Render_Region_Top" type="float">0</param>
+                    <param sid="regY1" name="Render_Region_Bottom" type="float">1</param>
+                    <param sid="aa" name="Render_Antialiasing" type="Name">s8</param>
+                    <param sid="aaFilter" name="Render_Antialiasing_Filter" type="Name">gaussian</param>
+                    <param sid="fineRate" name="Refinement_Shading_Rate" type="float">0.25</param>
+                    <param sid="fineThresh" name="Refinement_Threshold" type="float">0.1</param>
+                    <param sid="bktRefine" name="Refine_Bucket_Borders" type="bool">false</param>
+                    <param sid="dof" name="Render_Depth_of_Field" type="bool">false</param>
+                    <param sid="mBlur" name="Render_Motion_Blur" type="bool">false</param>
+                    <param sid="stereo" name="Render_Stereoscopic" type="bool">false</param>
+                    <param sid="rayShadow" name="Ray_Tracing_Shadows" type="bool">true</param>
+                    <param sid="reflDepth" name="Reflection_Depth" type="int">8</param>
+                    <param sid="refrDepth" name="Refraction_Depth" type="int">8</param>
+                    <param sid="rayThresh" name="Ray_Threshold" type="float">0.001</param>
+                    <param sid="subdAdapt" name="Adaptive_Subdivision" type="bool">false</param>
+                    <param sid="subdRate" name="Subdivision_Rate" type="float">10</param>
+                    <param sid="dispEnable" name="Micropoly_Displacement" type="bool">true</param>
+                    <param sid="dispRate" name="Displacement_Rate" type="float">1</param>
+                    <param sid="dispRatio" name="Displacement_Ratio" type="float">4</param>
+                    <param sid="edgeMin" name="Minimum_Edge_Length" type="float">0.0001</param>
+                    <param sid="dispSmooth" name="Smooth_Positions" type="bool">true</param>
+                    <param sid="ambRad" name="Ambient_Intensity" type="float">0.05</param>
+                    <param sid="ambColor" name="Ambient_Color" type="color">1 1 1</param>
+                    <param sid="globEnable" name="Enable_Indirect_Illumination" type="bool">false</param>
+                    <param sid="globScope" name="Indirect_Illumination_Scope" type="Name">all</param>
+                    <param sid="globRays" name="Indirect_Rays" type="int">64</param>
+                    <param sid="globLimit" name="Indirect_Bounces" type="int">1</param>
+                    <param sid="globRange" name="Indirect_Range" type="float">0</param>
+                    <param sid="globSubs" name="Subsurface_Scattering" type="int">0</param>
+                    <param sid="globVols" name="Volumetrics_Affect_Indirect" type="bool">false</param>
+                    <param sid="irrCache" name="Enable_Irradiance_Caching" type="bool">true</param>
+                    <param sid="irrRays" name="Irradiance_Rays" type="int">256</param>
+                    <param sid="globSuper" name="Indirect_Supersampling" type="bool">true</param>
+                    <param sid="irrRate" name="Irradiance_Rate" type="float">2.5</param>
+                    <param sid="irrRatio" name="Irradiance_Ratio" type="float">6</param>
+                    <param sid="irrVals" name="Interpolation_Values" type="int">1</param>
+                    <param sid="irrGrads" name="Irradiance_Gradients" type="Name">both</param>
+                    <param sid="irrWalk" name="Walkthrough_Mode" type="bool">false</param>
+                    <param sid="irrLEnable" name="Load_Irradiance_before_Render" type="bool">false</param>
+                    <param sid="irrLName" name="Load_Irradiance_File" type="Name"></param>
+                    <param sid="irrSEnable" name="Save_Irradiance_after_Render" type="bool">false</param>
+                    <param sid="irrSName" name="Save_Irradiance_File" type="Name"></param>
+                    <param sid="causEnable" name="Enable_Direct_Caustics" type="bool">false</param>
+                    <param sid="causTotal" name="Caustics_Total_Photons" type="int">100000</param>
+                    <param sid="causLocal" name="Caustics_Local_Photons" type="int">32</param>
+                    <param sid="globCaus" name="Indirect_Caustics" type="Name">refraction</param>
+                </technique>
+            </extra>
+        </node>
+        <node sid="shader_tree_environment" name="Environment">
+            <extra>
+                <technique profile="modo401">
+                    <param sid="radiance" name="Environment_Intensity" type="float">1</param>
+                    <param sid="visCam" name="Environment_Visible_to_Camera" type="bool">true</param>
+                    <param sid="visInd" name="Environment_Visible_to_Indirect_Rays" type="bool">true</param>
+                    <param sid="visRefl" name="Environment_Visible_to_Reflection_Rays" type="bool">true</param>
+                    <param sid="visRefr" name="Environment_Visible_to_Refraction_Rays" type="bool">true</param>
+                </technique>
+            </extra>
+        </node>
+    </library_nodes>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="polyRender010" name="Render" type="NODE">
+                <instance_light url="#Light-polyRender010" />
+            </node>
+            <node id="Geometry-mesh036Node" name="railing_convex" type="NODE">
+                <instance_geometry url="#Geometry-mesh036">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-catwalk" target="#Material-catwalk">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="Camera-camera013Node" name="Camera" type="NODE">
+                <translate sid="translation014">0 0.75 4</translate>
+                <rotate sid="rotation015Y">0 1 0 0</rotate>
+                <rotate sid="rotation015X">1 0 0 -5</rotate>
+                <rotate sid="rotation015Z">0 0 1 0</rotate>
+                <instance_camera url="#Camera-camera013" />
+            </node>
+            <node id="groupLocator031Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator027Node" name="catwalk__Image___Texture_" type="NODE">
+                    <translate sid="translation030">0 0 0</translate>
+                    <rotate sid="rotation029Y">0 1 0 0</rotate>
+                    <rotate sid="rotation029X">1 0 0 0</rotate>
+                    <rotate sid="rotation029Z">0 0 1 0</rotate>
+                    <scale sid="scale028">1 1 1</scale>
+                </node>
+            </node>
+            <node id="Light-sunLight016Node" name="Directional_Light" type="NODE">
+                <translate sid="translation017">-2 2 2</translate>
+                <rotate sid="rotation018Y">0 1 0 -45</rotate>
+                <rotate sid="rotation018X">1 0 0 -30</rotate>
+                <rotate sid="rotation018Z">0 0 1 0</rotate>
+                <instance_light url="#Light-sunLight016" />
+            </node>
+            <extra>
+                <technique profile="modo401">
+                    <param sid="fps" name="Scene_FPS" type="float">24</param>
+                    <param sid="sceneS" name="Scene_Start_Time" type="float">0</param>
+                    <param sid="sceneE" name="Scene_End_Time" type="float">5</param>
+                    <param sid="currentS" name="Scene_Current_Start_Time" type="float">0</param>
+                    <param sid="currentE" name="Scene_Current_End_Time" type="float">5</param>
+                    <param sid="timeSys" name="Scene_Time_System" type="Name">frames</param>
+                </technique>
+            </extra>
+            <extra>
+                <technique profile="MAX3D">
+                    <frame_rate>24</frame_rate>
+                </technique>
+            </extra>
+            <extra>
+                <technique profile="MAYA">
+                    <start_time>0</start_time>
+                    <end_time>5</end_time>
+                </technique>
+            </extra>
+            <extra>
+                <technique profile="OKINO" />
+            </extra>
+            <extra>
+                <technique profile="XSI">
+                    <SI_Scene>
+                        <frame_rate>24</frame_rate>
+                    </SI_Scene>
+                </technique>
+            </extra>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

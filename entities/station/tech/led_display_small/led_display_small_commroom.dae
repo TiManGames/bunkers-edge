@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 601 [Build 48460], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>
+                Plug-in: [Build 48460];
+                Use Absolute Path: No;
+                Merge Reference Items: No;
+                Save Hidden Items: No;
+                Save Cameras: No;
+                Save Lights: No;
+                Save Locators: Yes;
+                Save Triangles as Triangles: No;
+                Bake Matrices: Yes;
+                Save Vertex Normals: Yes;
+                Save UV Texture Coordinates: Yes;
+                Save Vertex Colors: Yes;
+                Save Vertex Weights: Yes;
+                Save Animation: Yes;
+                Sample Animation: No;
+                Sample Animation Start: 0;
+                Sample Animation End: 200;
+                Save modo Profile: No;
+                Save Maya Profile: Yes;
+                Save 3ds Max Profile: No;
+                Formatted Arrays: Yes;
+            </comments>
+            <source_data>file:///D:/Work/studio/Frictional%20Games/PROJECT%20SVN%20REPOSITORY/redist/entities/station/tech/led_display_small/led_display_small_commroom.dae</source_data>
+        </contributor>
+        <created>2013-02-01T16:29:35Z</created>
+        <modified>2013-02-01T16:29:35Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_02_door_display/door_display_sectorD_text.tga</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/led_display_small/led_display_small.psd</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/led_display_small/led_display_small_comm_text.psd</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/led_display_small/led_display_small_nrm.tga</init_from>
+        </image>
+        <image id="Image0005" name="Image0005">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/led_display_small/led_display_small_pixels.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default" name="Default">
+            <instance_effect url="#Effect-Default" />
+        </material>
+        <material id="Material-led_display_small" name="led_display_small">
+            <instance_effect url="#Effect-led_display_small" />
+        </material>
+        <material id="Material-led_display_small_comm_text" name="led_display_small_comm_text">
+            <instance_effect url="#Effect-led_display_small_comm_text" />
+        </material>
+        <material id="Material-led_display_small_pixels" name="led_display_small_pixels">
+            <instance_effect url="#Effect-led_display_small_pixels" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default" name="Default">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-led_display_small" name="led_display_small">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.58 0.58 0.58 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">16</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-led_display_small_comm_text" name="led_display_small_comm_text">
+            <profile_COMMON>
+                <newparam sid="Image0003-surface">
+                    <surface type="2D">
+                        <init_from>Image0003</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0003-sampler">
+                    <sampler2D>
+                        <source>Image0003-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0003-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-led_display_small_pixels" name="led_display_small_pixels">
+            <profile_COMMON>
+                <newparam sid="Image0005-surface">
+                    <surface type="2D">
+                        <init_from>Image0005</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0005-sampler">
+                    <sampler2D>
+                        <source>Image0005-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0005-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh021" name="led_display">
+            <mesh>
+                <source id="Geometry-mesh021-positions" name="positions">
+                    <float_array id="Geometry-mesh021-positions-array" count="144">
+                        -0.5625 -0.0543747 0.1225
+                        -0.483781 0.162109 0.09375
+                        -0.535374 0.132779 0.168398
+                        -0.489347 0.176186 0.168398
+                        -0.536621 -0.0543747 0.1225
+                        -0.521484 -0.0543747 0.107363
+                        -0.521484 -0.0629883 0.09375
+                        -0.536621 -0.078125 0.09375
+                        -0.53571 0.104662 0.168398
+                        -0.5625 0.144531 0.168398
+                        -0.5 0.203125 0.168398
+                        -0.521484 0.126762 0.153262
+                        -0.483781 0.162109 0.153262
+                        -0.5625 0.104662 0.168398
+                        -0.521484 0.104662 0.153262
+                        -0.5625 0.0719938 0.1225
+                        -0.535893 0.0719938 0.1225
+                        -0.521484 0.0719938 0.107363
+                        -0.5625 -0.078125 0.09375
+                        0.483781 0.162109 0.09375
+                        0.489347 0.176186 0.168398
+                        0.5 0.203125 0.168398
+                        0.483781 0.162109 0.153262
+                        -0.5625 -0.078125 0
+                        -0.536621 -0.078125 0
+                        0.5 0.203125 0
+                        0.536621 -0.078125 0
+                        -0.5 0.203125 0
+                        -0.5625 0.144531 0
+                        -0.521484 0.126762 0.09375
+                        0.5625 -0.0543747 0.1225
+                        0.536621 -0.0543747 0.1225
+                        0.521484 -0.0543747 0.107363
+                        0.53571 0.104662 0.168398
+                        0.5625 0.104662 0.168398
+                        0.521484 0.104662 0.153262
+                        0.5625 0.0719938 0.1225
+                        0.535893 0.0719938 0.1225
+                        0.521484 0.0719938 0.107363
+                        0.521484 -0.0629883 0.09375
+                        0.536621 -0.078125 0.09375
+                        0.5625 -0.078125 0.09375
+                        0.5625 -0.078125 0
+                        0.535374 0.132779 0.168398
+                        0.5625 0.144531 0.168398
+                        0.521484 0.126762 0.153262
+                        0.5625 0.144531 0
+                        0.521484 0.126762 0.09375
+                    </float_array>
+                    <technique_common>
+                        <accessor count="48" source="#Geometry-mesh021-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh021-normals" name="normals">
+                    <float_array id="Geometry-mesh021-normals-array" count="132">
+                        -1 0 0
+                        1 0 0
+                        0.342573 -0.555597 0.757598
+                        0.687007 -0.27051 0.674422
+                        0.36498 -0.445831 0.817327
+                        0.67137 -0.375322 0.639059
+                        0 0 1
+                        -0.676261 -0.377063 0.632846
+                        -0.52738 -0.00314076 0.849624
+                        -0.736815 0 0.676095
+                        -0.295334 -0.357957 0.885801
+                        0.676261 -0.377063 0.632846
+                        0.369773 -0.44818 0.813881
+                        0.367738 0.929929 0
+                        -0.367738 0.929929 0
+                        -0.27472 -0.29217 0.91606
+                        -0.0922878 -0.366736 0.925736
+                        -0.322072 -0.863468 0.388191
+                        -0.663982 -0.708245 0.239827
+                        0 -0.602269 0.798293
+                        0.184774 -0.330998 0.925364
+                        0.275909 -0.292565 0.915577
+                        0.637327 -0.67896 0.364455
+                        0.268453 -0.844782 0.462901
+                        0.367739 -0.929929 0
+                        -0.486113 -0.873896 0
+                        0.683942 -0.729536 0
+                        0 -0.280626 0.959817
+                        -0.342573 -0.555597 0.757598
+                        0 -0.770958 0.636886
+                        -0.322519 -0.72976 0.602853
+                        0 -0.458326 0.888784
+                        0 -1 0
+                        -0.67137 -0.375322 0.639059
+                        -0.36498 -0.445831 0.817327
+                        -0.683942 -0.729536 0
+                        -0.683941 0.729537 0
+                        -0.687007 -0.27051 0.674422
+                        0.399689 -0.00238031 0.916648
+                        0.322519 -0.72976 0.602853
+                        0.54367 -0.68118 0.490323
+                        0.683941 0.729537 0
+                        0.736815 0 0.676095
+                        -0.54367 -0.68118 0.490323
+                    </float_array>
+                    <technique_common>
+                        <accessor count="44" source="#Geometry-mesh021-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh021-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh021-uvSet1-array" count="192">
+                        0.0972255 0.944681
+                        0.0975611 0.752174
+                        0.00446448 0.641076
+                        0.132597 0.702635
+                        0.132696 0.641911
+                        0.974346 0.112967
+                        0.94536 0.0340251
+                        0.992894 0.0090273
+                        0.993549 0.112468
+                        0.0976834 0.508382
+                        0.00386479 0.20608
+                        0.0973469 0.315875
+                        0.132096 0.205124
+                        0.132209 0.265847
+                        0.0842234 0.118731
+                        0.0650973 0.0151874
+                        0.112831 0.0391967
+                        0.0650195 0.118653
+                        0.154583 0.303416
+                        0.169996 0.301547
+                        0.153641 0.490497
+                        0.169044 0.487814
+                        0.16822 0.201946
+                        0.958384 0.201946
+                        0.179365 0.224235
+                        0.94724 0.224235
+                        0.964496 0.512925
+                        0.976573 0.563216
+                        0.960933 0.548352
+                        0.9779 0.523415
+                        0.157064 0.562128
+                        0.143396 0.571153
+                        0.931007 0.99308
+                        0.194269 0.993093
+                        0.931006 0.744949
+                        0.194269 0.744961
+                        0.969813 0.662665
+                        0.925209 0.693577
+                        0.921268 0.662616
+                        0.960875 0.640467
+                        0.997128 0.52033
+                        0.996777 0.580093
+                        0.201503 0.692356
+                        0.156922 0.661318
+                        0.165872 0.639147
+                        0.205468 0.6614
+                        0.206424 0.57286
+                        0.92039 0.573966
+                        0.170678 0.556551
+                        0.932446 0.733746
+                        0.985695 0.692865
+                        0.99276 0.253743
+                        0.973969 0.254859
+                        0.987155 0.196745
+                        0.967292 0.204511
+                        0.223137 0.0400148
+                        0.230709 0.0164129
+                        0.133754 0.486714
+                        0.13585 0.300269
+                        0.194231 0.732532
+                        0.835263 0.0371355
+                        0.827584 0.0136935
+                        0.92567 0.183224
+                        0.92543 0.045442
+                        0.944687 0.183091
+                        0.944447 0.0453092
+                        0.179365 0.503638
+                        0.94724 0.503637
+                        0.207124 0.555686
+                        0.919481 0.555686
+                        0.117994 0.188863
+                        0.117754 0.0510806
+                        0.137011 0.18873
+                        0.13677 0.0509479
+                        0.141013 0.691458
+                        0.954543 0.437423
+                        0.969851 0.441768
+                        0.956161 0.557835
+                        0.0044567 0.545215
+                        0.0758483 0.54472
+                        0.12428 0.565993
+                        0.131152 0.74496
+                        0.131152 0.993092
+                        0.958629 0.251326
+                        0.143645 0.61104
+                        0.123014 0.625707
+                        0.162612 0.253863
+                        0.174566 0.278819
+                        0.989811 0.440142
+                        0.994123 0.993083
+                        0.994123 0.744958
+                        0.142988 0.24396
+                        0.159664 0.59789
+                        0.00387254 0.980212
+                        0.0752641 0.980713
+                        0.954681 0.228137
+                    </float_array>
+                    <technique_common>
+                        <accessor count="96" source="#Geometry-mesh021-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh021-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh021-positions" />
+                </vertices>
+                <polylist count="86" material="Material-led_display_small">
+                    <input semantic="VERTEX" source="#Geometry-mesh021-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh021-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh021-uvSet1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>0 0 0 15 0 1 28 0 2 13 0 3 28 0 2 15 0 1 28 0 2 13 0 3 9 0 4 14 1 5 17 1 6 29 1 7 11 1 8 14 1 5 29 1 7 30 1 9 46 1 10 36 1 11 44 1 12 34 1 13 46 1 10 36 1 11 46 1 10 34 1 13 35 0 14 47 0 15 38 0 16 45 0 17 47 0 15 35 0 14 4 2 18 5 3 19 16 4 20 17 5 21 16 4 20 5 3 19 7 6 22 40 6 23 6 6 24 39 6 25 6 6 24 40 6 23 35 7 26 43 8 27 45 9 28 43 8 27 35 7 26 33 10 29 17 5 21 14 11 30 16 4 20 8 12 31 16 4 20 14 11 30 25 13 32 27 14 33 21 13 34 10 14 35 21 13 34 27 14 33 43 15 36 20 16 37 22 17 38 22 17 38 45 18 39 43 15 36 34 19 40 44 6 41 33 10 29 43 8 27 33 10 29 44 6 41 3 20 42 2 21 43 11 22 44 11 22 44 12 23 45 3 20 42 12 23 45 1 24 46 22 17 38 19 25 47 22 17 38 1 24 46 12 23 45 11 22 44 1 24 46 29 26 48 1 24 46 11 22 44 43 15 36 21 6 49 20 16 37 21 6 49 43 15 36 44 6 50 30 27 51 31 28 52 41 29 53 40 30 54 41 29 53 31 28 52 32 0 55 38 0 16 39 0 56 47 0 15 39 0 56 38 0 16 16 4 20 15 31 57 0 27 58 0 27 58 4 2 18 16 4 20 10 6 59 3 20 42 20 16 37 20 16 37 21 6 49 10 6 59 5 1 60 6 1 61 17 1 6 29 1 7 17 1 6 6 1 61 40 32 62 26 32 63 41 32 64 42 32 65 41 32 64 26 32 63 29 6 66 47 6 67 1 6 68 19 6 69 1 6 68 47 6 67 18 32 70 23 32 71 7 32 72 24 32 73 7 32 72 23 32 71 10 6 59 9 6 74 3 20 42 2 21 43 3 20 42 9 6 74 38 33 75 37 34 76 35 7 26 33 10 29 35 7 26 37 34 76 22 17 38 19 25 47 45 18 39 47 35 77 45 18 39 19 25 47 46 1 10 30 1 9 42 1 78 41 1 79 42 1 78 30 1 9 8 12 31 13 31 80 16 4 20 15 31 57 16 4 20 13 31 80 20 16 37 3 20 42 12 23 45 12 23 45 22 17 38 20 16 37 10 14 35 27 14 33 9 36 81 28 36 82 9 36 81 27 14 33 31 28 52 37 34 76 32 37 83 38 33 75 32 37 83 37 34 76 29 6 66 6 6 24 47 6 67 39 6 25 47 6 67 6 6 24 2 38 84 13 31 80 8 12 31 13 31 80 2 38 84 9 6 85 7 39 86 6 40 87 4 2 18 5 3 19 4 2 18 6 40 87 36 31 88 37 34 76 30 27 51 31 28 52 30 27 51 37 34 76 21 13 34 46 41 89 25 13 32 46 41 89 21 13 34 44 41 90 0 27 58 18 29 91 4 2 18 7 39 86 4 2 18 18 29 91 11 42 92 2 38 84 14 11 30 8 12 31 14 11 30 2 38 84 28 0 2 23 0 93 0 0 0 18 0 94 0 0 0 23 0 93 33 10 29 37 34 76 34 19 40 36 31 88 34 19 40 37 34 76 7 32 72 24 32 73 40 32 62 26 32 63 40 32 62 24 32 73 40 30 54 31 28 52 39 43 95 32 37 83 39 43 95 31 28 52</p>
+                </polylist>
+            </mesh>
+        </geometry>
+        <geometry id="Geometry-mesh009" name="text">
+            <mesh>
+                <source id="Geometry-mesh009-positions" name="positions">
+                    <float_array id="Geometry-mesh009-positions-array" count="24">
+                        -0.4525 -0.0175 0.0953979
+                        -0.4525 0.095625 0.0953979
+                        0.4525 0.095625 0.0953979
+                        0.4525 -0.0175 0.0953979
+                        -0.4525 -0.0175 0.0944824
+                        -0.4525 0.095625 0.0944824
+                        0.4525 0.095625 0.0944824
+                        0.4525 -0.0175 0.0944824
+                    </float_array>
+                    <technique_common>
+                        <accessor count="8" source="#Geometry-mesh009-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh009-normals" name="normals">
+                    <float_array id="Geometry-mesh009-normals-array" count="3">
+                        0 0 1
+                    </float_array>
+                    <technique_common>
+                        <accessor count="1" source="#Geometry-mesh009-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh009-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh009-uvSet1-array" count="8">
+                        0 5.55112e-017
+                        1 0
+                        5.55112e-017 1
+                        1 1
+                    </float_array>
+                    <technique_common>
+                        <accessor count="4" source="#Geometry-mesh009-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh009-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh009-positions" />
+                </vertices>
+                <polylist count="4" material="Material-led_display_small_comm_text">
+                    <input semantic="VERTEX" source="#Geometry-mesh009-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh009-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh009-uvSet1" offset="2" set="0" />
+                    <vcount>3 3 3 3</vcount>
+                    <p>0 0 0 3 0 1 1 0 2 2 0 3 1 0 2 3 0 1 4 0 0 7 0 1 5 0 2 6 0 3 5 0 2 7 0 1</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh021Node" name="led_display" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <instance_geometry url="#Geometry-mesh021">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-led_display_small" target="#Material-led_display_small">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="Geometry-mesh009Node" name="text" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <instance_geometry url="#Geometry-mesh009">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-led_display_small_comm_text" target="#Material-led_display_small_comm_text">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <extra>
+                <technique profile="MAYA">
+                    <start_time>0</start_time>
+                    <end_time>5</end_time>
+                </technique>
+            </extra>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

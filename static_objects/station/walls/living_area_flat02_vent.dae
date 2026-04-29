@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=1;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///F:/Dropbox/Team/depth_marc/models/station_curie/static_objects/walls/living_area.mb</source_data>
+    </contributor>
+    <created>2011-11-02T12:57:18</created>
+    <modified>2011-11-02T12:57:18</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="file1">
+      <init_from>file:///F:/Dropbox/Team/depth_marc/textures/station_curie/static_objects/wall_living_area_cabin.psd</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="pPlaneShape2" name="pPlaneShape2">
+      <mesh>
+        <source id="pPlaneShape2-positions" name="pPlaneShape2-positions">
+          <float_array id="pPlaneShape2-positions-array" count="135">-2.000001 0 0 1.999999 0 0 -2.000001 4 0 1.999999 4 0 -2.000001 0.1734176 -0.06091431 1.999999 0.1734176 -0.06091431 -2.000001 1.461709 -0.1250029 1.999999 1.461709 -0.1250029 1.999999 3 -0.1052158 -2.000001 3 -0.1052158 0 4 0 0 3 -0.1052158 0 1.461709 -0.1250029 0 0.1734176 -0.06091431 0 0 0 1.999999 1.531977 -0.06091431 1.999999 1.513641 -0.06892458 0 1.513641 -0.06892458 0 1.531977 -0.06091431 1.999999 0.1142136 -0.005346059 1.999999 0.100706 0 0 0.100706 0 0 0.1142136 -0.005346059 1.999999 3.133616 0 1.999999 3.119813 -0.005011572 0 3.119813 -0.005011572 0 3.133616 0 1.999999 2.882363 -0.0635239 1.999999 2.867188 -0.06091438 0 2.867188 -0.06091438 0 2.882363 -0.0635239 1.999999 1.414313 -0.07653782 1.999999 1.390515 -0.06091431 0 1.390515 -0.06091431 0 1.414313 -0.07653782 -2.000001 3.119813 -0.005011572 -2.000001 3.133616 0 -2.000001 2.867188 -0.06091438 -2.000001 2.882363 -0.0635239 -2.000001 1.513641 -0.06892458 -2.000001 1.531977 -0.06091431 -2.000001 1.390515 -0.06091431 -2.000001 1.414313 -0.07653782 -2.000001 0.100706 0 -2.000001 0.1142136 -0.005346059</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape2-positions-array" count="45" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pPlaneShape2-normals" name="pPlaneShape2-normals">
+          <float_array id="pPlaneShape2-normals-array" count="186">0 -0.7337081 0.6794647 0 -0.7337081 0.6794647 0 -0.5792619 0.8151414 0 -0.579262 0.8151414 0 -0.2044886 0.9788688 0 -0.2044886 0.9788688 0 0.0850485 0.9963768 0 0.0850485 0.9963769 0 0 0.9999999 0 0 0.9999999 0 0.1873197 0.982299 0 0.1873197 0.982299 0 0.5356677 0.8444288 0 0.5356677 0.8444288 0 0.6843638 0.7291406 0 0.6843638 0.7291406 0 0 0.9999999 0 0 0.9999999 0 0.2864068 0.9581081 0 0.2864068 0.9581081 0 -0.1732522 0.9848776 0 -0.1732522 0.9848776 0 0 0.9999999 0 0 0.9999999 0 0.2526815 0.9675496 0 0.2526815 0.9675496 0 0.3340515 0.9425548 0 0.3340515 0.9425548 0 -0.6415447 0.7670856 0 -0.6415447 0.7670856 0 -0.4989493 0.8666312 0 -0.4989493 0.8666312 0 0.6355718 0.7720417 0 0.6355718 0.7720417 0 0.7149475 0.699178 0 0.7149475 0.699178 0 -0.1732522 0.9848776 0 0 0.9999999 0 0 0.9999999 0 -0.6415447 0.7670856 0 -0.6415447 0.7670856 0 -0.4989493 0.8666312 0 0.2526816 0.9675496 0 0.3340516 0.9425548 0 0.3340516 0.9425548 0 -0.2044886 0.9788688 0 0.0850485 0.9963768 0 -0.7337081 0.6794647 0 -0.7337081 0.6794647 0 -0.5792619 0.8151414 0 0.6355718 0.7720417 0 0.7149475 0.699178 0 0.7149475 0.699178 0 0 0.9999999 0 0 0.9999999 0 0.2864068 0.9581081 0 0.5356677 0.8444288 0 0.6843638 0.7291407 0 0.6843638 0.7291407 0 0 0.9999999 0 0 0.9999999 0 0.1873197 0.982299</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape2-normals-array" count="62" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pPlaneShape2-map1" name="pPlaneShape2-map1">
+          <float_array id="pPlaneShape2-map1-array" count="172">0.5968314 0.2782682 0.2255674 0.2886636 0.5968314 0.2782682 0.5968314 0.2886636 0.2255674 0.2886636 0.612298 0.01356602 0.9835615 0.01356602 0.6122978 0.03248153 0.6122978 0.03513002 0.9835615 0.03513002 0.9835615 0.04916978 0.6122979 0.04916954 0.612298 0.01356602 0.9835615 0.01356602 0.9835615 0.03248153 0.6122978 0.03248153 0.6122978 0.6136388 0.9835615 0.6136389 0.9835613 0.6414179 0.6122978 0.6414179 0.9835613 0.6447312 0.9835615 0.8031737 0.6122978 0.8031737 0.6122978 0.6136388 0.9835615 0.6136389 0.9835613 0.6414179 0.6122978 0.6414179 0.2255674 0.2923338 0.5968314 0.2923338 0.2255674 0.5599381 0.2255674 0.5641742 0.5968314 0.5641742 0.5968314 0.5861934 0.2255674 0.5861934 0.2255674 0.02038759 0.5968314 0.02038759 0.2255674 0.2639705 0.2255674 0.2687809 0.5968314 0.2687809 0.2255674 0.2782682 0.2255674 0.02038759 0.5968314 0.02038759 0.5968314 0.2639705 0.2255674 0.2639705 0.9835613 0.6447312 0.9835615 0.8031737 0.6122978 0.8031737 0.5968314 0.5641742 0.5968314 0.5861934 0.2255674 0.5861934 0.5968314 0.2923338 0.5968314 0.5599381 0.2255674 0.5599381 0.5968314 0.2687809 0.2255674 0.2782682 0.9835615 0.03513002 0.9835615 0.04916978 0.6122979 0.04916954 0.5968314 0.2886636 0.2255674 0.2639705 0.2255674 0.2687809 0.5968314 0.2886636 0.2255674 0.2923338 0.2255674 0.2886636 0.9835615 0.03248153 0.9835615 0.03513002 0.6122978 0.03513002 0.9835615 0.03248153 0.6122978 0.03513002 0.6122978 0.03248153 0.9835613 0.6447312 0.6122978 0.6447312 0.6122978 0.6447312 0.9835613 0.6447312 0.6122978 0.6447312 0.6122978 0.6447312 0.5968314 0.5599381 0.5968314 0.5641742 0.2255674 0.5641742 0.5968314 0.5599381 0.2255674 0.5641742 0.2255674 0.5599381 0.5968314 0.2639705 0.5968314 0.2687809 0.2255674 0.2687809 0.5968314 0.2639705</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape2-map1-array" count="86" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="pPlaneShape2-vertices" name="pPlaneShape2-vertices">
+          <input semantic="POSITION" source="#pPlaneShape2-positions"/>
+        </vertices>
+        <triangles material="lambert2SG" count="56">
+          <input semantic="VERTEX" source="#pPlaneShape2-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#pPlaneShape2-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#pPlaneShape2-map1" offset="2" set="0"/>
+          <p>12 0 39 7 1 0 17 3 1 17 3 1 7 1 0 16 2 58 18 4 27 15 5 28 29 7 29 29 7 29 15 5 28 28 6 76 14 8 5 1 9 6 21 11 7 21 11 7 1 9 6 20 10 64 22 12 8 19 13 9 13 15 11 13 15 11 19 13 9 5 14 10 13 16 34 5 17 35 33 19 36 33 19 36 5 17 35 32 18 82 26 20 71 23 21 20 10 23 22 10 23 22 23 21 20 3 22 21 30 24 30 27 25 31 11 27 33 11 27 33 27 25 31 8 26 32 11 28 16 8 29 17 25 31 19 25 31 19 8 29 17 24 30 18 34 32 37 31 33 38 12 35 39 12 35 39 31 33 38 7 34 0 36 36 74 26 20 44 2 38 46 2 38 46 26 20 44 10 37 45 9 39 23 11 40 24 35 41 26 35 41 26 11 40 24 25 31 25 38 42 80 30 24 47 9 44 49 9 44 49 30 24 47 11 43 48 40 45 62 18 4 50 37 46 52 37 46 52 18 4 50 29 7 51 6 47 54 12 48 2 39 49 4 39 49 4 12 48 2 17 3 3 42 50 60 34 32 53 6 52 54 6 52 54 34 32 53 12 51 2 4 53 40 13 54 41 41 55 43 41 55 43 13 54 41 33 19 42 44 56 68 22 12 55 4 58 57 4 58 57 22 12 55 13 57 56 0 59 12 14 60 13 43 61 15 43 61 15 14 60 13 21 11 14 16 2 58 15 5 28 17 3 1 17 3 1 15 5 28 18 4 27 17 3 61 18 4 50 39 49 63 39 49 63 18 4 50 40 45 62 20 10 64 19 13 65 21 11 7 21 11 7 19 13 65 22 12 66 21 11 67 22 12 55 43 61 69 43 61 69 22 12 55 44 56 68 24 30 70 23 21 20 25 31 72 25 31 72 23 21 20 26 20 71 25 31 73 26 20 44 35 41 75 35 41 75 26 20 44 36 36 74 28 6 76 27 25 77 29 7 29 29 7 29 27 25 77 30 24 78 29 7 79 30 24 47 37 46 81 37 46 81 30 24 47 38 42 80 32 18 82 31 33 83 33 19 36 33 19 36 31 33 83 34 32 84 33 19 85 34 32 53 41 55 59 41 55 59 34 32 53 42 50 60</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>pPlaneShape2</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="living_area">
+      <node id="pPlane2" name="pPlane2" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#pPlaneShape2">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>pPlane2</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

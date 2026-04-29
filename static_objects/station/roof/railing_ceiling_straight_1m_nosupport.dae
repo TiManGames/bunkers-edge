@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><contributor><author></author><authoring_tool>FBX COLLADA exporter</authoring_tool><comments></comments></contributor><created>2015-01-28T20:22:13Z</created><keywords></keywords><modified>2015-01-28T20:22:13Z</modified><revision></revision><subject></subject><title></title><unit meter="0.010000" name="centimeter"></unit><up_axis>Y_UP</up_axis></asset>
+  <library_images>
+    <image id="file1-image" name="file1"><init_from>file://D:/work/svn_soma/redist/static_objects/station/details/railing_pplant/railing_pplant.dds</init_from></image>
+  </library_images>
+  <library_materials>
+    <material id="DDS" name="DDS">
+      <instance_effect url="#DDS-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="DDS-fx" name="DDS">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.000000  0.000000 0.000000 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>NONE</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.500000  0.500000 0.500000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">6.311791</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0.000000  0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">0.500000</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <texture texture="file1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>NONE</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </transparent>
+            <transparency>
+              <float sid="transparency">1.000000</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="polySurface663-lib" name="polySurface663Mesh">
+      <mesh>
+        <source id="polySurface663-POSITION">
+          <float_array id="polySurface663-POSITION-array" count="36">
+-5.542236 -75.030685 -100.000000
+-5.542236 -81.429138 -100.000000
+0.000000 -84.628494 -100.000000
+5.542236 -81.429138 -100.000000
+5.542236 -75.030754 -100.000000
+0.000000 -71.831528 -100.000000
+-5.542236 -75.030548 -0.000001
+-5.542236 -81.429138 0.000000
+0.000000 -84.628494 0.000000
+5.542236 -81.429138 0.000000
+5.542236 -75.030754 0.000000
+0.000000 -71.831528 0.000000
+</float_array>
+          <technique_common>
+            <accessor source="#polySurface663-POSITION-array" count="12" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurface663-Normal0">
+          <float_array id="polySurface663-Normal0-array" count="36">
+-0.865984 0.500072 0.000000
+-0.865984 -0.500072 0.000000
+0.000000 -1.000000 0.000000
+0.865987 -0.500066 0.000000
+0.865984 0.500072 0.000000
+-0.000012 1.000000 0.000000
+-0.865984 0.500072 0.000000
+-0.865984 -0.500072 0.000000
+0.000000 -1.000000 0.000000
+0.865987 -0.500066 0.000000
+0.865984 0.500072 0.000000
+-0.000012 1.000000 0.000000
+</float_array>
+          <technique_common>
+            <accessor source="#polySurface663-Normal0-array" count="12" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurface663-UV0">
+          <float_array id="polySurface663-UV0-array" count="28">
+0.628101 0.962898
+0.628101 0.928491
+0.628101 0.894144
+0.628101 0.860004
+0.628101 0.826105
+0.628101 0.792026
+0.628101 0.997261
+1.000000 0.962898
+1.000000 0.928491
+1.000000 0.894144
+1.000000 0.860004
+1.000000 0.826105
+1.000000 0.792026
+1.000000 0.997261
+</float_array>
+          <technique_common>
+            <accessor source="#polySurface663-UV0-array" count="14" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurface663-VERTEX">
+          <input semantic="POSITION" source="#polySurface663-POSITION"/>
+          <input semantic="NORMAL" source="#polySurface663-Normal0"/>
+        </vertices>
+        <triangles count="12" material="DDS"><input semantic="VERTEX" offset="0" source="#polySurface663-VERTEX"/><input semantic="TEXCOORD" offset="1" set="0" source="#polySurface663-UV0"/><p> 0 0 7 8 6 7 7 8 0 0 1 1 7 8 1 1 8 9 8 9 1 1 2 2 8 9 2 2 9 10 9 10 2 2 3 3 3 3 10 11 9 10 10 11 3 3 4 4 10 11 4 4 11 12 11 12 4 4 5 5 6 7 5 6 0 0 5 6 6 7 11 13</p></triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="railing_ceiling_straight_1m_nosupport" name="railing_ceiling_straight_1m_nosupport">
+      <node name="polySurface663" id="polySurface663" sid="polySurface663"><matrix sid="matrix">1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000</matrix><instance_geometry url="#polySurface663-lib"><bind_material><technique_common><instance_material symbol="DDS" target="#DDS"/></technique_common></bind_material></instance_geometry><extra><technique profile="FCOLLADA"><visibility>1.000000</visibility></technique></extra></node>
+      <extra><technique profile="MAX3D"><frame_rate>24.000000</frame_rate></technique><technique profile="FCOLLADA"><start_time>0.041667</start_time><end_time>2.000000</end_time></technique></extra>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#railing_ceiling_straight_1m_nosupport"></instance_visual_scene>
+  </scene>
+</COLLADA>

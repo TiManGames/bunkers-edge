@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/entities/station/special/04_02_ross_photos/04_02_ross_photos01.dae</source_data>
+    </contributor>
+    <created>2015-07-31T09:29:12</created>
+    <modified>2015-07-31T09:29:12</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="_08___Default" name="_08___Default">
+      <instance_effect url="#_08___Default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_08___Default-fx">
+      <profile_COMMON>
+        <newparam sid="Map__1_image-surface">
+          <surface type="2D">
+            <init_from>Map__1_image</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Map__1_image-sampler">
+          <sampler2D>
+            <source>Map__1_image-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="Map__1_image_1-surface">
+          <surface type="2D">
+            <init_from>Map__1_image_1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Map__1_image_1-sampler">
+          <sampler2D>
+            <source>Map__1_image_1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.588235 0.588235 0.588235 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map__1_image-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0 0 0 1</color>
+            </specular>
+            <shininess>
+              <float>2</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="A_ONE">
+              <texture texture="Map__1_image_1-sampler" texcoord="TEX1">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color>0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Map__1_image" name="Map__1_image">
+      <init_from>file:///E:/depth/redist/entities/station/special/04_02_lindwall_photos/04_02_lindwall_photos.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Map__1_image</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+    <image id="Map__1_image_1" name="Map__1_image_1">
+      <init_from>file:///E:/depth/redist/entities/station/special/04_02_ross_photos/04_02_ross_photos.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Map__1_image_1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="photograph_world01Shape" name="photograph_world01Shape">
+      <mesh>
+        <source id="photograph_world01Shape-positions" name="photograph_world01Shape-positions">
+          <float_array id="photograph_world01Shape-positions-array" count="120">0.076291 -0.001213 0.103112 0.076291 -0.001213 -0.103112 -0.076291 -0.001213 -0.103112 -0.076291 -0.001213 0.103112 0.076291 0.002403 -0.051556 -0.076291 0.002403 -0.051556 0.076291 0.003442 0 -0.076291 0.003442 0 0.076291 0.002403 0.051556 -0.076291 0.002403 0.051556 -0.02543 1.18e-4 -0.103112 -0.02543 0.003734 -0.051556 -0.02543 0.004772 0 -0.02543 0.003734 0.051556 -0.02543 1.18e-4 0.103112 0.02543 1.18e-4 -0.103112 0.02543 0.003734 -0.051556 0.02543 0.004772 0 0.02543 0.003734 0.051556 0.02543 1.18e-4 0.103112 0.076291 0 0.103112 0.076291 0 -0.103112 -0.076291 0 -0.103112 -0.076291 0 0.103112 0.076291 0.003616 -0.051556 -0.076291 0.003616 -0.051556 0.076291 0.004655 0 -0.076291 0.004655 0 0.076291 0.003616 0.051556 -0.076291 0.003616 0.051556 -0.02543 0.001331 -0.103112 -0.02543 0.004947 -0.051556 -0.02543 0.005985 0 -0.02543 0.004947 0.051556 -0.02543 0.001331 0.103112 0.02543 0.001331 -0.103112 0.02543 0.004947 -0.051556 0.02543 0.005985 0 0.02543 0.004947 0.051556 0.02543 0.001331 0.103112</float_array>
+          <technique_common>
+            <accessor source="#photograph_world01Shape-positions-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_world01Shape-normals" name="photograph_world01Shape-normals">
+          <float_array id="photograph_world01Shape-normals-array" count="432">-0.01739901 -0.9973985 -0.06995503 -0.01307 -0.9988987 -0.04506199 -0.026123 -0.9982339 -0.05335599 -0.026123 -0.9982339 -0.05335599 -0.02609599 -0.9972097 -0.06994198 -0.01739901 -0.9973985 -0.06995503 -0.01304899 -0.9974645 0.06995897 -0.02609599 -0.9972097 0.06994198 -0.026123 -0.9982339 0.05335599 -0.026123 -0.9982339 0.05335599 -0.013069 -0.999239 0.036752 -0.01304899 -0.9974645 0.06995897 -0.013069 -0.999239 0.036752 -0.026123 -0.9982339 0.05335599 -0.026151 -0.9996581 0 -0.026151 -0.9996581 0 -0.010457 -0.9999372 -0.004027001 -0.013069 -0.999239 0.036752 -0.01307 -0.9988987 -0.04506199 -0.010457 -0.9999372 -0.004027001 -0.026151 -0.9996581 0 -0.026151 -0.9996581 0 -0.026123 -0.9982339 -0.05335599 -0.01307 -0.9988987 -0.04506199 0.026123 -0.9982339 0.05335599 0.02609599 -0.9972097 0.06994198 0.01739901 -0.9973985 0.06995503 0.01739901 -0.9973985 0.06995503 0.01307 -0.9988987 0.04506199 0.026123 -0.9982339 0.05335599 0.026151 -0.9996581 0 0.026123 -0.9982339 0.05335599 0.01307 -0.9988987 0.04506199 0.01307 -0.9988987 0.04506199 0.010457 -0.9999372 0.004027001 0.026151 -0.9996581 0 0.026151 -0.9996581 0 0.010457 -0.9999372 0.004027001 0.013069 -0.999239 -0.036752 0.013069 -0.999239 -0.036752 0.026123 -0.9982339 -0.05335599 0.026151 -0.9996581 0 0.026123 -0.9982339 -0.05335599 0.013069 -0.999239 -0.036752 0.01304899 -0.9974645 -0.06995897 0.01304899 -0.9974645 -0.06995897 0.02609599 -0.9972097 -0.06994198 0.026123 -0.9982339 -0.05335599 0.01307 -0.9988987 0.04506199 0.01739901 -0.9973985 0.06995503 -0.01304899 -0.9974645 0.06995897 -0.01304899 -0.9974645 0.06995897 -0.013069 -0.999239 0.036752 0.01307 -0.9988987 0.04506199 0.010457 -0.9999372 0.004027001 0.01307 -0.9988987 0.04506199 -0.013069 -0.999239 0.036752 -0.013069 -0.999239 0.036752 -0.010457 -0.9999372 -0.004027001 0.010457 -0.9999372 0.004027001 0.013069 -0.999239 -0.036752 0.010457 -0.9999372 0.004027001 -0.010457 -0.9999372 -0.004027001 -0.010457 -0.9999372 -0.004027001 -0.01307 -0.9988987 -0.04506199 0.013069 -0.999239 -0.036752 0.01304899 -0.9974645 -0.06995897 0.013069 -0.999239 -0.036752 -0.01307 -0.9988987 -0.04506199 -0.01307 -0.9988987 -0.04506199 -0.01739901 -0.9973985 -0.06995503 0.01304899 -0.9974645 -0.06995897 0.026123 0.9982339 0.05335599 0.01307 0.9988987 0.04506199 0.01739901 0.9973985 0.06995503 0.01739901 0.9973985 0.06995503 0.02609599 0.9972097 0.06994198 0.026123 0.9982339 0.05335599 0.01304899 0.9974645 -0.06995897 0.013069 0.999239 -0.036752 0.026123 0.9982339 -0.05335599 0.026123 0.9982339 -0.05335599 0.02609599 0.9972097 -0.06994198 0.01304899 0.9974645 -0.06995897 0.013069 0.999239 -0.036752 0.010457 0.9999372 0.004027001 0.026151 0.9996581 0 0.026151 0.9996581 0 0.026123 0.9982339 -0.05335599 0.013069 0.999239 -0.036752 0.026151 0.9996581 0 0.010457 0.9999372 0.004027001 0.01307 0.9988987 0.04506199 0.01307 0.9988987 0.04506199 0.026123 0.9982339 0.05335599 0.026151 0.9996581 0 -0.01739901 0.9973985 -0.06995503 -0.02609599 0.9972097 -0.06994198 -0.026123 0.9982339 -0.05335599 -0.026123 0.9982339 -0.05335599 -0.01307 0.9988987 -0.04506199 -0.01739901 0.9973985 -0.06995503 -0.01307 0.9988987 -0.04506199 -0.026123 0.9982339 -0.05335599 -0.026151 0.9996581 0 -0.026151 0.9996581 0 -0.010457 0.9999372 -0.004027001 -0.01307 0.9988987 -0.04506199 -0.026151 0.9996581 0 -0.026123 0.9982339 0.05335599 -0.013069 0.999239 0.036752 -0.013069 0.999239 0.036752 -0.010457 0.9999372 -0.004027001 -0.026151 0.9996581 0 -0.026123 0.9982339 0.05335599 -0.02609599 0.9972097 0.06994198 -0.01304899 0.9974645 0.06995897 -0.01304899 0.9974645 0.06995897 -0.013069 0.999239 0.036752 -0.026123 0.9982339 0.05335599 0.01304899 0.9974645 -0.06995897 -0.01739901 0.9973985 -0.06995503 -0.01307 0.9988987 -0.04506199 -0.01307 0.9988987 -0.04506199 0.013069 0.999239 -0.036752 0.01304899 0.9974645 -0.06995897 0.013069 0.999239 -0.036752 -0.01307 0.9988987 -0.04506199 -0.010457 0.9999372 -0.004027001 -0.010457 0.9999372 -0.004027001 0.010457 0.9999372 0.004027001 0.013069 0.999239 -0.036752 0.010457 0.9999372 0.004027001 -0.010457 0.9999372 -0.004027001 -0.013069 0.999239 0.036752 -0.013069 0.999239 0.036752 0.01307 0.9988987 0.04506199 0.010457 0.9999372 0.004027001 0.01307 0.9988987 0.04506199 -0.013069 0.999239 0.036752 -0.01304899 0.9974645 0.06995897 -0.01304899 0.9974645 0.06995897 0.01739901 0.9973985 0.06995503 0.01307 0.9988987 0.04506199</float_array>
+          <technique_common>
+            <accessor source="#photograph_world01Shape-normals-array" count="144" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_world01Shape-photograph_world01Shape-photograph_world01Shape-UVSet0" name="photograph_world01Shape-photograph_world01Shape-photograph_world01Shape-UVSet0">
+          <float_array id="photograph_world01Shape-photograph_world01Shape-photograph_world01Shape-UVSet0-array" count="80">0.9981655 0.2026046 0.9981655 0.1406236 0.8751504 0.1406236 0.8751504 0.2026046 0.6257355 0.2026046 0.6257355 0.1406236 0.5027182 0.1406236 0.5027182 0.2026046 0.7504418 0.2026046 0.7504418 0.1406236 0.6257355 0.07864194 0.6257355 0.01666027 0.5027182 0.01666145 0.5027182 0.07864313 0.7504418 0.07864194 0.7504418 0.01666145 0.8751504 0.07864194 0.8751504 0.01666027 0.9981655 0.07864313 0.9981655 0.01666145 0.4969304 0.6008099 0.3738601 0.6008099 0.3738601 0.5392181 0.4969304 0.5392181 0.1250141 0.6008099 5.9119e-4 0.6008099 5.9119e-4 0.5392181 0.1250141 0.5392181 0.2494371 0.6008099 0.2494371 0.5392181 0.1250141 0.4776264 5.9119e-4 0.4776264 5.9119e-4 0.4160343 0.1250141 0.4160343 0.2494371 0.4776264 0.2494371 0.4160343 0.3738601 0.4776264 0.3738601 0.4160343 0.4969304 0.4776264 0.4969304 0.4160343</float_array>
+          <technique_common>
+            <accessor source="#photograph_world01Shape-photograph_world01Shape-photograph_world01Shape-UVSet0-array" count="40" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="photograph_world01Shape-vertices" name="photograph_world01Shape-vertices">
+          <input semantic="POSITION" source="#photograph_world01Shape-positions"/>
+        </vertices>
+        <triangles material="_08___DefaultSG" count="48">
+          <input semantic="VERTEX" source="#photograph_world01Shape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#photograph_world01Shape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#photograph_world01Shape-photograph_world01Shape-photograph_world01Shape-UVSet0" offset="2" set="0"/>
+          <p>19 0 1 18 1 2 8 2 3 8 3 3 0 4 0 19 5 1 15 6 6 1 7 7 4 8 4 4 9 4 16 10 5 15 11 6 16 12 5 4 13 4 6 14 8 6 15 8 17 16 9 16 17 5 18 18 2 17 19 9 6 20 8 6 21 8 8 22 3 18 23 2 5 24 11 2 25 12 10 26 13 10 27 13 11 28 10 5 29 11 7 30 15 5 31 11 11 32 10 11 33 10 12 34 14 7 35 15 7 36 15 12 37 14 13 38 16 13 39 16 9 40 17 7 41 15 9 42 17 13 43 16 14 44 18 14 45 18 3 46 19 9 47 17 11 48 10 10 49 13 15 50 6 15 51 6 16 52 5 11 53 10 12 54 14 11 55 10 16 56 5 16 57 5 17 58 9 12 59 14 13 60 16 12 61 14 17 62 9 17 63 9 18 64 2 13 65 16 14 66 18 13 67 16 18 68 2 18 69 2 19 70 1 14 71 18 28 72 21 38 73 22 39 74 23 39 75 23 20 76 20 28 77 21 35 78 26 36 79 27 24 80 24 24 81 24 21 82 25 35 83 26 36 84 27 37 85 29 26 86 28 26 87 28 24 88 24 36 89 27 26 90 28 37 91 29 38 92 22 38 93 22 28 94 21 26 95 28 30 96 31 22 97 32 25 98 33 25 99 33 31 100 30 30 101 31 31 102 30 25 103 33 27 104 35 27 105 35 32 106 34 31 107 30 27 108 35 29 109 37 33 110 36 33 111 36 32 112 34 27 113 35 29 114 37 23 115 39 34 116 38 34 117 38 33 118 36 29 119 37 35 120 26 30 121 31 31 122 30 31 123 30 36 124 27 35 125 26 36 126 27 31 127 30 32 128 34 32 129 34 37 130 29 36 131 27 37 132 29 32 133 34 33 134 36 33 135 36 38 136 22 37 137 29 38 138 22 33 139 36 34 140 38 34 141 38 39 142 23 38 143 22</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>photograph_world01Shape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="_4_02_ross_photos01">
+      <node id="photograph_world01" name="photograph_world01" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#photograph_world01Shape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="_08___DefaultSG" target="#_08___Default">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="TEX1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>photograph_world01</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

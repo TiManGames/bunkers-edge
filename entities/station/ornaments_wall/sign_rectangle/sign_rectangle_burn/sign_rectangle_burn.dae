@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=1;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=0;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=0;exportVertexColors=0;exportVertexColorsPerVertex=0;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=0;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/entities/station/ornaments_wall/sign_rectangle/sign_rectangle_burn/sign_rectangle_burn.DAE</source_data>
+    </contributor>
+    <created>2015-01-22T09:37:44</created>
+    <modified>2015-01-22T09:37:44</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="_01___Default" name="_01___Default">
+      <instance_effect url="#_01___Default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_01___Default-fx">
+      <profile_COMMON>
+        <newparam sid="Map__1_image-surface">
+          <surface type="2D">
+            <init_from>Map__1_image</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Map__1_image-sampler">
+          <sampler2D>
+            <source>Map__1_image-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.588235 0.588235 0.588235 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map__1_image-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0 0 0 1</color>
+            </specular>
+            <shininess>
+              <float>2</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color>0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Map__1_image" name="Map__1_image">
+      <init_from>../../../../../../../../C:/Users/Alex/Desktop/signs_2/sign_rectangle/sign_rectangle_burn/sign_rectangle_burn/originals/sign_rectangle_burn.psd</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Map__1_image</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="sign_rectangle_burnShape" name="sign_rectangle_burnShape">
+      <mesh>
+        <source id="sign_rectangle_burnShape-positions" name="sign_rectangle_burnShape-positions">
+          <float_array id="sign_rectangle_burnShape-positions-array" count="24">-0.1926735 -0.2502702 0.00349968 0.1926735 -0.2502702 0.00349968 -0.1926735 0.2502702 0.003499756 0.1926735 0.2502702 0.003499756 -0.1926735 -0.2502702 0 0.1926735 -0.2502702 0 -0.1926735 0.2502702 0 0.1926735 0.2502702 0</float_array>
+          <technique_common>
+            <accessor source="#sign_rectangle_burnShape-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="sign_rectangle_burnShape-normals" name="sign_rectangle_burnShape-normals">
+          <float_array id="sign_rectangle_burnShape-normals-array" count="72">0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999</float_array>
+          <technique_common>
+            <accessor source="#sign_rectangle_burnShape-normals-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="sign_rectangle_burnShape-UVSet0" name="sign_rectangle_burnShape-UVSet0">
+          <float_array id="sign_rectangle_burnShape-UVSet0-array" count="32">0.988856 0.642221 0.010266 0.642221 0.010265 0.009602 0.988856 0.009602 0.985617 0.652087 0.985617 0.99361 0.093725 0.99361 0.093725 0.652087 0.006155 0.644308 0.006155 0.007515 0.992966 0.644308 0.992966 0.007515 0.989144 0.642407 0.009977 0.642407 0.009977 0.009416 0.989144 0.009416</float_array>
+          <technique_common>
+            <accessor source="#sign_rectangle_burnShape-UVSet0-array" count="16" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="sign_rectangle_burnShape-vertices" name="sign_rectangle_burnShape-vertices">
+          <input semantic="POSITION" source="#sign_rectangle_burnShape-positions"/>
+        </vertices>
+        <triangles material="sign_rectangle_burnSG" count="12">
+          <input semantic="VERTEX" source="#sign_rectangle_burnShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#sign_rectangle_burnShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#sign_rectangle_burnShape-UVSet0" offset="2" set="0"/>
+          <p>2 0 1 0 1 2 1 2 3 1 2 3 3 3 0 2 0 1 4 4 9 0 5 14 2 6 13 2 6 13 6 7 8 4 4 9 6 8 8 2 9 13 3 10 12 3 10 12 7 11 10 6 8 8 7 12 10 3 13 12 1 14 15 1 14 15 5 15 11 7 12 10 5 16 11 1 17 15 0 18 14 0 18 14 4 19 9 5 16 11 5 20 4 4 21 5 6 22 6 6 22 6 7 23 7 5 20 4</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>sign_rectangle_burnShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="sign_rectangle_burn">
+      <node id="sign_rectangle_burn" name="sign_rectangle_burn" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#sign_rectangle_burnShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="sign_rectangle_burnSG" target="#_01___Default">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>sign_rectangle_burn</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

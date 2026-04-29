@@ -1,0 +1,372 @@
+#include "interfaces/MoveState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+
+#include "helpers/helper_player.hps"
+#include "helpers/helper_items.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourWallRun_MaxTime = 1.f;
+const float gfParkourWallRun_Speed = 4.1f;
+const float gfParkourWallRun_MinVerticalVel = -0.65f;
+const float gfParkourWallRun_AntiGravityMul = 0.72f;
+const float gfParkourWallRun_LostWallGrace = 0.15f;
+const float gfParkourWallRun_EntryExitGrace = 0.22f;
+const float gfParkourWallRun_ForwardReleaseGrace = 0.28f;
+const float gfParkourWallRun_GroundExitGrace = 0.18f;
+const float gfParkourWallJump_SideImpulse = 255.f;
+const float gfParkourWallJump_UpImpulse = 235.f;
+const float gfParkourWallJump_ForwardImpulse = 120.f;
+
+//------------------------------------------------------------
+
+class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
+{
+	//------------------------------------------------------------
+	
+	void Init() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void Reset() {}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{
+		mfTimer = 0.f;
+		mfLostWallTimer = gfParkourWallRun_LostWallGrace;
+		mfForwardReleaseTimer = gfParkourWallRun_ForwardReleaseGrace;
+		mfGroundTimer = gfParkourWallRun_GroundExitGrace;
+		msLastWallRefreshFail = "";
+		mvWallNormal = cScript_GetGlobalVarVector3f("Parkour_WallRun_Normal");
+		mvWallForward = cScript_GetGlobalVarVector3f("Parkour_WallRun_Forward");
+		mlWallSide = cScript_GetGlobalVarInt("Parkour_WallRun_Side");
+		mfPowerMul = cMath_Clamp(Parkour_GetWallRunPowerMul(), 0.1f, 1.15f);
+		
+		if (mvWallNormal.SqrLength() > 0.001f) mvWallNormal.Normalize();
+		if (mvWallForward.SqrLength() > 0.001f) mvWallForward.Normalize();
+		
+		Player_SetDisableCrawling(true);
+		Player_SetCrouching(false, false, true);
+		Player_SetCrouchDisabled(true);
+		Player_SetCrouchActionDisabled(true);
+		Player_CancelJump();
+		
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			cVector3f vVel = pBody.GetForceVelocity();
+			vVel.y = cMath_Max(vVel.y, gfParkourWallRun_MinVerticalVel);
+			pBody.SetForceVelocity(vVel);
+		}
+		
+		UpdateCameraRoll();
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId)
+	{
+		Player_SetDisableCrawling(false);
+		Player_SetCrouchDisabled(false);
+		Player_SetCrouchActionDisabled(false);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 7.f, cMath_ToRad(140.f));
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			EndWallRun("no player body");
+			return;
+		}
+		
+		mfTimer += afTimeStep;
+		
+		if (Player_GetUnderwater())
+		{
+			EndWallRun("underwater");
+			return;
+		}
+		if (mfTimer > gfParkourWallRun_EntryExitGrace && cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal)
+		{
+			EndWallRun("player state changed");
+			return;
+		}
+		if (mfTimer > gfParkourWallRun_MaxTime)
+		{
+			EndWallRun("timer expired");
+			return;
+		}
+		
+		if (cInput_IsTriggered(eAction_Forward) || pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f)
+			mfForwardReleaseTimer = gfParkourWallRun_ForwardReleaseGrace;
+		else if (mfTimer > gfParkourWallRun_EntryExitGrace)
+			mfForwardReleaseTimer -= afTimeStep;
+		
+		if (mfForwardReleaseTimer <= 0.f)
+		{
+			EndWallRun("forward released");
+			return;
+		}
+		
+		if (pBody.IsOnGround())
+		{
+			if (mfTimer > gfParkourWallRun_EntryExitGrace)
+				mfGroundTimer -= afTimeStep;
+		}
+		else
+		{
+			mfGroundTimer = gfParkourWallRun_GroundExitGrace;
+		}
+		
+		if (mfGroundTimer <= 0.f)
+		{
+			EndWallRun("grounded");
+			return;
+		}
+		
+		cVector3f vNewNormal;
+		if (RefreshWallNormal(pBody, vNewNormal) == false)
+		{
+			mfLostWallTimer -= afTimeStep;
+			if (mfLostWallTimer <= 0.f)
+			{
+				EndWallRun(msLastWallRefreshFail);
+				return;
+			}
+		}
+		else
+		{
+			mfLostWallTimer = gfParkourWallRun_LostWallGrace;
+			mvWallNormal = vNewNormal;
+			RefreshWallForward(pBody);
+		}
+		
+		cVector3f vTarget = mvWallForward * gfParkourWallRun_Speed * mfPowerMul;
+		cVector3f vForceVel = pBody.GetForceVelocity();
+		vTarget.y = cMath_Max(vForceVel.y, gfParkourWallRun_MinVerticalVel);
+		pBody.SetForceVelocity(vTarget);
+		
+		iPhysicsWorld@ pPhysicsWorld = cLux_GetCurrentMap().GetPhysicsWorld();
+		cVector3f vGravity = pBody.GetCustomGravityActive() ? pBody.GetCustomGravity() : pPhysicsWorld.GetGravity();
+		pBody.AddForce(cVector3f(0.f, -vGravity.y * pBody.GetMass() * gfParkourWallRun_AntiGravityMul, 0.f));
+		
+		UpdateCameraRoll();
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if (alAction == eAction_Jump && abPressed)
+		{
+			if (Parkour_TryStartLedgeGrab(false))
+				return false;
+
+			WallJump();
+			return false;
+		}
+		
+		if (alAction == eAction_Crouch && abPressed)
+		{
+			EndWallRun();
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody,const cVector3f &in avVel) {}
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY) { return afStartY; }
+
+	//------------------------------------------------------------
+	
+	bool RefreshWallNormal(iCharacterBody@ apBody, cVector3f &out avNormal)
+	{
+		msLastWallRefreshFail = "";
+		int lWallSide;
+		float fDistance;
+		tString sFailReason;
+		if (Parkour_FindWallRunWall(apBody, mlWallSide, gfParkourWallDetect_SustainRayLength, true, avNormal, lWallSide, fDistance, sFailReason))
+		{
+			mlWallSide = lWallSide;
+			msLastWallRefreshFail = "";
+			return true;
+		}
+		
+		if (RefreshWallNormalFromLastNormal(apBody, avNormal))
+			return true;
+		
+		if (msLastWallRefreshFail == "")
+			msLastWallRefreshFail = sFailReason;
+		return false;
+	}
+	
+	//------------------------------------------------------------
+
+	bool RefreshWallNormalFromLastNormal(iCharacterBody@ apBody, cVector3f &out avNormal)
+	{
+		avNormal = cVector3f_Zero;
+		
+		cVector3f vRayDir = mvWallNormal * -1.f;
+		vRayDir.y = 0.f;
+		if (vRayDir.SqrLength() <= 0.001f) return false;
+		vRayDir.Normalize();
+		
+		array<float> vHeights = { 0.65f, 1.05f, 1.45f };
+		float fBestDistance = 1000.f;
+		bool bFoundWall = false;
+		bool bAnyBodyHit = false;
+		
+		for (uint h = 0; h < vHeights.size(); ++h)
+		{
+			cVector3f vStart = apBody.GetFeetPosition() + cVector3f(0.f, vHeights[h], 0.f);
+			float fDistance;
+			cVector3f vNormal;
+			bool bBodyHit;
+			
+			if (Parkour_CastWallRunRay(vStart, vRayDir, gfParkourWallDetect_SustainRayLength, fDistance, vNormal, bBodyHit))
+			{
+				if (bFoundWall == false || fDistance < fBestDistance)
+				{
+					fBestDistance = fDistance;
+					avNormal = vNormal;
+					bFoundWall = true;
+				}
+			}
+			else if (bBodyHit)
+			{
+				bAnyBodyHit = true;
+			}
+		}
+		
+		if (bFoundWall)
+		{
+			msLastWallRefreshFail = "";
+			return true;
+		}
+		
+		if (bAnyBodyHit)
+			msLastWallRefreshFail = "invalid wall normal";
+		
+		return false;
+	}
+	
+	//------------------------------------------------------------
+	
+	void RefreshWallForward(iCharacterBody@ apBody)
+	{
+		cVector3f vReferenceFwd = mvWallForward;
+		vReferenceFwd.y = 0.f;
+		if (vReferenceFwd.SqrLength() > 0.001f)
+			vReferenceFwd.Normalize();
+		else
+		{
+			cVector3f vRight;
+			if (Parkour_GetWallRunBasis(apBody, vReferenceFwd, vRight) == false)
+			{
+				vReferenceFwd = cLux_GetPlayer().GetCamera().GetForward();
+				vReferenceFwd.y = 0.f;
+				if (vReferenceFwd.SqrLength() > 0.001f) vReferenceFwd.Normalize();
+			}
+		}
+		
+		mvWallForward = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, mvWallNormal));
+		if (cMath_Vector3Dot(mvWallForward, vReferenceFwd) < 0.f)
+			mvWallForward *= -1.f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void WallJump()
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			EndWallRun("wall jump without body");
+			return;
+		}
+		
+		cVector3f vCamFwd = cLux_GetPlayer().GetCamera().GetForward();
+		vCamFwd.y = 0.f;
+		if (vCamFwd.SqrLength() > 0.001f) vCamFwd.Normalize();
+		
+		cVector3f vImpulse = mvWallNormal * gfParkourWallJump_SideImpulse * mfPowerMul;
+		vImpulse += cVector3f_Up * gfParkourWallJump_UpImpulse * mfPowerMul;
+		vImpulse += vCamFwd * gfParkourWallJump_ForwardImpulse * mfPowerMul;
+		
+		pBody.SetForceVelocity(cVector3f_Zero);
+		pBody.AddImpulse(vImpulse);
+		Parkour_NotifyFlowEvent(geParkourFlowEvent_WallJump, 1.f);
+		Parkour_ArmWallJumpChain(mvWallNormal);
+		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void EndWallRun(const tString &in asReason = "")
+	{
+		if (Parkour_GetDebug() && asReason != "")
+			cLux_AddDebugMessage("[Parkour] Wall run ended: " + asReason, true);
+		
+		if (asReason == "timer expired")
+		{
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_WallRunTimeout, 1.f);
+		}
+		else if (asReason == "forward released" ||
+				 asReason == "lost wall" ||
+				 asReason == "lost front wall" ||
+				 asReason == "no wall hit" ||
+				 asReason == "invalid wall normal")
+		{
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_WallRunDropped, 1.f);
+		}
+		
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateCameraRoll()
+	{
+		float fRoll = -12.f * float(mlWallSide);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, cMath_ToRad(fRoll), 7.f, cMath_ToRad(140.f));
+	}
+	
+	//------------------------------------------------------------
+	
+	
+	float mfTimer = 0.f;
+	float mfLostWallTimer = 0.f;
+	float mfForwardReleaseTimer = 0.f;
+	float mfGroundTimer = 0.f;
+	float mfPowerMul = 1.f;
+	int mlWallSide = 0;
+	tString msLastWallRefreshFail = "";
+	cVector3f mvWallNormal = cVector3f_Forward;
+	cVector3f mvWallForward = cVector3f_Forward;
+	
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

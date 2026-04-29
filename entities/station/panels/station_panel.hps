@@ -1,0 +1,60 @@
+#include "props/Prop_Button.hps"
+#include "helpers/helper_audio.hps"
+
+class cScrPropButton_Panel : cScrPropButton
+{		
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void _Global_FlashPoweredOff()
+	{
+		FlashPoweredOff();
+	}
+	
+	//------------------------------------------------------------
+	
+	void FlashPoweredOff()
+	{
+		Sound_CreateAtEntity(GetBase().GetName()+"Sound", "Entities_Station/doors/electrical_doors/electrical_door_negative", GetBase().GetName(), 0.1f, false);
+		
+		GetBase().SetEffectsActive(true,false);
+		GetBase().SetEffectBaseColor(cColor_Red);
+		GetBase().SetInteractionDisabled(true);
+		
+		//Done with timers instead of sequences to allow several buttons to blink at once
+		GetBase().Timer_Add(0, 0.45f, "TimerTurnOffEffects");
+		GetBase().Timer_Add(1, 0.75f, "TimerTurnOnEffects");
+		GetBase().Timer_Add(2, 0.9f, "TimerTurnOffEffects");
+		GetBase().Timer_Add(3, 1.25f, "TimerEnable");
+	}
+	
+	//-------------------------------------------------------
+	
+	void TimerTurnOnEffects(int alTimer)
+	{
+		GetBase().SetEffectBaseColor(cColor_Red);
+		GetBase().SetEffectsActive(true,false);
+	}
+	
+	//-------------------------------------------------------
+	
+	void TimerTurnOffEffects(int alTimer)
+	{
+		GetBase().SetEffectBaseColor(cColor_Red);
+		GetBase().SetEffectsActive(false,false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void TimerEnable(int alTimer)
+	{
+		GetBase().SetInteractionDisabled(false);
+	}
+	
+	//------------------------------------------------------------
+}	

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>illerulf</author>
+      <authoring_tool>OpenCOLLADA2011 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/Maya/deeper/scenes/beveled%20walls.mb</source_data>
+    </contributor>
+    <created>2012-12-17T16:16:08</created>
+    <modified>2012-12-17T16:16:08</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="scanningroom_concave_lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="scanningroom_concave_file1">
+      <init_from>file:///F:/depth/redist/static_objects/urban/urban_scanningroom.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>scanningroom_concave_file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="polySurfaceShape149" name="scanningroom_concaveShape">
+      <mesh>
+        <source id="polySurfaceShape149-positions" name="polySurfaceShape149-positions">
+          <float_array id="polySurfaceShape149-positions-array" count="90">-3.856452 0 3.873454 -3.4144 0 200 -3.856452 400 3.873454 -3.4144 400 200 -3.4144 3.3474 200 -3.856452 3.3474 3.873454 0 3.3474 200 -0.4420514 3.3474 0.4590534 -3.4144 396.7481 200 -3.856452 396.7891 3.873454 0 396.7481 200 -0.4420514 396.7891 0.4590534 -200 0 3.4144 -200 400 3.4144 -200 3.3474 3.4144 -200 3.3474 0 -200 396.7891 3.4144 -200 396.7891 0 -3.4144 400 5.163795 -3.4144 396.7887 5.163798 0 396.7887 1.779783 0 3.3474 1.779783 -3.4144 3.3474 5.163798 -3.4144 0 5.163795 -5.075576 400 3.4144 -5.075576 396.7891 3.4144 -1.690028 396.7891 0 -1.690028 3.3474 0 -5.075576 3.3474 3.4144 -5.075576 0 3.4144</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape149-positions-array" count="30" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape149-normals" name="polySurfaceShape149-normals">
+          <float_array id="polySurfaceShape149-normals-array" count="222">-1 0 0 -1 0 0 -1 0 0 -0.7071068 0.7071068 0 0 1 0 -0.7071068 0.7071068 0 0 1 0 0 1 0 -0.9999999 0 0 -0.9999999 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -0.7071434 -0.7070704 -1.46e-4 -1 0 0 -10e-5 -1 -2e-4 -1.02422e-4 -1 -2.06657e-4 -1.03e-4 -1 -2.07e-4 -0.7071434 -0.7070704 -1.46e-4 0 0 0.9999999 0 0 0.9999999 -0.7176578 0 0.6963959 -0.7176578 0 0.6963959 0 1 0 0 1 0 0 1 0 0 1 0 0 0 1 0 0 0.9999999 -0.7174575 0 0.6966024 -0.7174575 0 0.6966024 0 0 0.9999999 0 0 0.9999999 -0.7176571 0 0.6963967 -0.7176571 0 0.6963967 0 -1 0 0 -1 0 0 -1 0 0 -1 0 -0.7176571 0 0.6963967 -0.7176571 0 0.6963967 -1 0 0 -1 0 0 -2.08855e-4 -0.9999999 -2.30408e-4 0 -1 0 -2.08855e-4 -0.9999999 -2.30408e-4 -2.08855e-4 -0.9999999 -2.30408e-4 -0.7174575 0 0.6966024 -0.7174575 0 0.6966024 -0.9999999 0 0 -0.9999999 0 0 0 1 0 0 1 0 -0.7176578 0 0.6963959 -0.7176578 0 0.6963959 -1 0 0 -1 0 0 0 0 1 0 -0.7071068 0.7071068 0 0 1 0 0 0.9999999 0 -1 0 0 -0.7071068 0.7071068 0 0 1 0 0 1 0 0 1 0 0 1 0 1 0 0 0.7071068 0.7071068 0 0.7071068 0.7071068 0 0 1 0 0 0.9999999 0 0 0.9999999</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape149-normals-array" count="74" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape149-polySurfaceShape149-map1" name="polySurfaceShape149-polySurfaceShape149-map1">
+          <float_array id="polySurfaceShape149-polySurfaceShape149-map1-array" count="96">0.64697 0.344672 0.999151 0.344672 0.713221 0.342371 0.99725 0.342371 0.999151 0.352368 0.64697 0.352368 0.999151 0.358889 0.64697 0.358889 0.99725 0.336126 0.713221 0.336126 0.99725 0.328349 0.713221 0.328349 0.64697 0.344672 0.999151 0.344672 0.999151 0.352368 0.64697 0.352368 0.999151 0.358889 0.64697 0.358889 0.99725 0.328349 0.713221 0.328349 0.713221 0.336126 0.99725 0.336126 0.99725 0.342371 0.713221 0.342371 0.658346 0.36206 0.98782 0.36206 0.98782 0.997614 0.658346 0.997614 0.658346 0.36206 0.98782 0.36206 0.98782 0.997614 0.658346 0.997614 0.7157485 0.342371 0.7157485 0.336126 0.661278 0.997614 0.7157485 0.328349 0.650104 0.358889 0.661278 0.36206 0.650104 0.352368 0.650104 0.344672 0.9948499 0.342371 0.9948499 0.336126 0.985036 0.997614 0.9948499 0.328349 0.996175 0.358889 0.985036 0.36206 0.996175 0.352368 0.996175 0.344672</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape149-polySurfaceShape149-map1-array" count="48" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurfaceShape149-vertices" name="polySurfaceShape149-vertices">
+          <input semantic="POSITION" source="#polySurfaceShape149-positions"/>
+        </vertices>
+        <triangles material="scanningroom_concave_lambert2SG" count="40">
+          <input semantic="VERTEX" source="#polySurfaceShape149-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#polySurfaceShape149-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#polySurfaceShape149-polySurfaceShape149-map1" offset="2" set="0"/>
+          <p>22 0 38 23 1 39 4 3 4 4 3 4 23 1 39 1 2 1 4 5 4 6 6 6 22 4 38 22 4 38 6 6 6 21 7 36 20 8 34 21 9 37 10 11 26 10 11 26 21 9 37 6 10 25 18 12 32 19 13 33 3 15 3 3 15 3 19 13 33 8 14 8 20 17 35 10 18 10 19 16 33 19 16 33 10 18 10 8 19 8 28 20 46 29 21 47 5 23 14 5 23 14 29 21 47 0 22 13 28 25 46 5 26 14 27 24 44 27 24 44 5 26 14 7 27 16 26 28 42 27 29 45 11 31 30 11 31 30 27 29 45 7 30 29 24 32 40 25 33 41 2 35 22 2 35 22 25 33 41 9 34 21 11 37 18 9 38 21 26 36 43 26 36 43 9 38 21 25 39 41 2 40 2 9 41 9 18 43 32 18 43 32 9 41 9 19 42 33 11 45 11 20 46 35 9 44 9 9 44 9 20 46 35 19 47 33 11 48 27 7 49 24 20 51 34 20 51 34 7 49 24 21 50 37 22 4 38 21 7 36 5 52 5 5 52 5 21 7 36 7 53 7 5 54 5 0 55 0 22 57 38 22 57 38 0 55 0 23 56 39 13 58 23 16 59 20 24 61 40 24 61 40 16 59 20 25 60 41 26 36 43 25 39 41 17 62 19 17 62 19 25 39 41 16 63 20 17 64 31 15 65 28 26 67 42 26 67 42 15 65 28 27 66 45 14 69 15 28 25 46 15 68 17 15 68 17 28 25 46 27 24 44 14 70 15 12 71 12 28 73 46 28 73 46 12 71 12 29 72 47</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>scanningroom_concaveShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="beveled_walls">
+      <node id="polySurface149" name="scanningroom_concave" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#polySurfaceShape149">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="scanningroom_concave_lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>scanningroom_concave</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

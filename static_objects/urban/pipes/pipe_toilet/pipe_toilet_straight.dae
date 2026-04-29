@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 68192]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: No; Order Vertex Maps Alphabetically: No; Bake Matrices: Yes; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: No; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 1; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/urban/pipes/pipe_toilet/pipe_toilet.lxo</source_data>
+        </contributor>
+        <created>2015-01-12T21:33:40Z</created>
+        <modified>2015-01-12T21:33:40Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/urban/toilet/sink_toilet/sink_toilet.tga</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-blinn1" name="blinn1">
+            <instance_effect url="#Effect-blinn1" />
+        </material>
+        <material id="Material-sink" name="sink">
+            <instance_effect url="#Effect-sink" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-blinn1" name="blinn1">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-sink" name="sink">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh019" name="straight">
+            <mesh>
+                <source id="Geometry-mesh019-positions" name="positions">
+                    <float_array id="Geometry-mesh019-positions-array" count="120">0 0 -0.025191 -0.0148069 0 -0.02038 -0.0239581 0 -0.00778446 -0.0239581 0 0.00778446 -0.0148069 0 0.02038 0 0 0.025191 0.0148069 0 0.02038 0.0239581 0 0.00778446 0.0239581 0 -0.00778446 0.0148069 0 -0.02038 0 0.476563 -0.025191 -0.0148069 0.476563 -0.02038 -0.0239581 0.476563 -0.00778446 -0.0239581 0.476563 0.00778446 -0.0148069 0.476563 0.02038 0 0.476563 0.025191 0.0148069 0.476563 0.02038 0.0239581 0.476563 0.00778446 0.0239581 0.476563 -0.00778446 0.0148069 0.476563 -0.02038 0 0.476563 -0.029603 -0.0174002 0.476563 -0.0239493 -0.0281541 0.476563 -0.00914782 -0.0281541 0.476563 0.00914782 -0.0174002 0.476563 0.0239493 0 0.476563 0.029603 0.0174002 0.476563 0.0239493 0.0281541 0.476563 0.00914782 0.0281541 0.476563 -0.00914782 0.0174002 0.476563 -0.0239493 0 0.5 -0.029603 -0.0174002 0.5 -0.0239493 -0.0281541 0.5 -0.00914782 -0.0281541 0.5 0.00914782 -0.0174002 0.5 0.0239493 0 0.5 0.029603 0.0174002 0.5 0.0239493 0.0281541 0.5 0.00914782 0.0281541 0.5 -0.00914782 0.0174002 0.5 -0.0239493</float_array>
+                    <technique_common>
+                        <accessor count="40" source="#Geometry-mesh019-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh019-normals" name="normals">
+                    <float_array id="Geometry-mesh019-normals-array" count="114">-0.978801 0 0.204814 -0.912253 0 0.409627 -0.67148 0 0.741022 -0.497255 0 0.867604 0.912253 0 0.409627 0.978801 0 0.204814 0.978801 0 -0.204814 0.912253 0 -0.409627 0 -1 0 0.978801 0 -0.204814 0.67148 0 -0.741022 0.912253 0 -0.409627 0.497255 0 -0.867604 -0.912253 0 -0.409627 -0.978801 0 0.204814 -0.978801 0 -0.204814 -0.912253 0 0.409627 -0.912253 0 -0.409627 -0.978801 0 -0.204814 0.497255 0 0.867604 0.67148 0 0.741022 0.912253 0 0.409627 0.978801 0 0.204814 -0.497255 0 -0.867604 -0.67148 0 -0.741022 0 1 0 -0.497255 0 -0.867604 -0.107677 0 0.994186 0.107677 0 0.994186 0.497255 0 -0.867604 0.107677 0 -0.994186 -0.107677 0 -0.994186 0.497255 0 0.867604 0.107677 0 -0.994186 -0.107677 0 -0.994186 -0.107677 0 0.994186 -0.497255 0 0.867604 0.107677 0 0.994186</float_array>
+                    <technique_common>
+                        <accessor count="38" source="#Geometry-mesh019-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh019-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh019-uvSet1-array" count="128">0.915133 0.548176 0.914487 0.867356 0.92873 0.548176 0.92873 0.867409 0.970526 0.548176 0.970526 0.867502 0.985444 0.548176 0.985444 0.867503 0.956197 0.544372 0.942324 0.544372 0.956197 0.548176 0.942324 0.548176 0.874344 0.544372 0.860077 0.544372 0.874344 0.548176 0.860077 0.548176 0.92873 0.544372 0.915216 0.544372 0.845264 0.544372 0.845264 0.527255 0.860077 0.527255 0.901522 0.544372 0.901522 0.527255 0.915251 0.527255 0.105268 0.411034 0.105268 0.438815 0.0889395 0.388559 0.0625185 0.379974 0.0889395 0.46129 0.0360976 0.388559 0.0625185 0.469874 0.0197686 0.411034 0.0360976 0.46129 0.0197686 0.438815 0.901522 0.548176 0.901522 0.867422 0.956197 0.86748 0.845264 0.548176 0.970526 0.544372 0.985444 0.544372 0.970526 0.527255 0.985444 0.527255 0.888219 0.544372 0.888219 0.527255 0.105418 0.410876 0.105418 0.438733 0.0890441 0.38834 0.0625507 0.379732 0.0890441 0.46127 0.0360574 0.38834 0.0625507 0.469878 0.0196836 0.410876 0.0360574 0.46127 0.0196836 0.438733 0.888219 0.548176 0.888219 0.867363 0.942324 0.867451 0.860077 0.867503 0.874344 0.867432 0.956197 0.527255 0.874344 0.527255 0.92873 0.527255 0.942324 0.527255 0.845264 0.867446</float_array>
+                    <technique_common>
+                        <accessor count="64" source="#Geometry-mesh019-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh019-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh019-positions" />
+                </vertices>
+                <polylist count="76" material="Material-sink">
+                    <input semantic="VERTEX" source="#Geometry-mesh019-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh019-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh019-uvSet1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>13 0 0 3 1 1 14 2 2 4 3 3 14 2 2 3 1 1 17 4 4 7 5 5 18 6 6 8 7 7 18 6 6 7 5 5 26 8 8 25 8 9 16 8 10 15 8 11 16 8 10 25 8 9 20 8 12 29 8 13 10 8 14 19 8 15 10 8 14 29 8 13 24 8 16 23 8 17 14 8 2 13 8 0 14 8 2 23 8 17 28 9 18 29 10 13 38 11 19 39 12 20 38 11 19 29 10 13 22 13 21 23 14 17 32 15 22 33 16 23 32 15 22 23 14 17 8 8 24 7 8 25 9 8 26 0 8 27 9 8 26 7 8 25 7 8 25 6 8 28 0 8 27 1 8 29 0 8 27 6 8 28 6 8 28 5 8 30 1 8 29 2 8 31 1 8 29 5 8 30 5 8 30 4 8 32 2 8 31 3 8 33 2 8 31 4 8 32 12 17 34 2 18 35 13 0 0 3 1 1 13 0 0 2 18 35 16 19 10 6 20 36 17 4 4 7 5 5 17 4 4 6 20 36 25 8 9 24 8 16 15 8 11 14 8 2 15 8 11 24 8 16 29 8 13 28 8 18 19 8 15 18 8 37 19 8 15 28 8 18 23 8 17 22 8 21 13 8 0 12 8 34 13 8 0 22 8 21 27 21 38 28 9 39 37 22 40 38 11 41 37 22 40 28 9 39 21 23 42 22 13 21 31 24 43 32 15 22 31 24 43 22 13 21 37 25 44 38 25 45 36 25 46 35 25 47 36 25 46 38 25 45 38 25 45 39 25 48 35 25 47 34 25 49 35 25 47 39 25 48 39 25 48 30 25 50 34 25 49 33 25 51 34 25 49 30 25 50 30 25 50 31 25 52 33 25 51 32 25 53 33 25 51 31 25 52 11 26 54 1 24 55 12 17 34 2 18 35 12 17 34 1 24 55 15 27 11 5 28 56 16 19 10 6 20 36 16 19 10 5 28 56 19 10 15 9 29 57 10 30 14 0 31 58 10 30 14 9 29 57 28 8 39 27 8 38 18 8 6 17 8 4 18 8 6 27 8 38 21 8 42 11 8 54 22 8 21 12 8 34 22 8 21 11 8 54 26 32 8 27 21 38 36 20 59 37 22 40 36 20 59 27 21 38 20 33 12 21 23 42 30 34 60 31 24 43 30 34 60 21 23 42 24 2 16 25 35 9 34 36 61 35 37 62 34 36 61 25 35 9 10 30 14 0 31 58 11 26 54 1 24 55 11 26 54 0 31 58 14 2 2 4 3 3 15 27 11 5 28 56 15 27 11 4 3 3 18 6 37 8 7 63 19 10 15 9 29 57 19 10 15 8 7 63 26 8 8 16 8 10 27 8 38 17 8 4 27 8 38 16 8 10 21 8 42 20 8 12 11 8 54 10 8 14 11 8 54 20 8 12 25 35 9 26 32 8 35 37 62 36 20 59 35 37 62 26 32 8 29 10 13 20 33 12 39 12 20 30 34 60 39 12 20 20 33 12 23 14 17 24 2 16 33 16 23 34 36 61 33 16 23 24 2 16</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh019Node" name="straight" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                <instance_geometry url="#Geometry-mesh019">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-sink" target="#Material-sink">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator022Node" name="Texture_Group" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                <node id="txtrLocator027Node" name="sink_toilet__Image___Texture_" type="NODE">
+                    <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

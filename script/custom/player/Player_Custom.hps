@@ -1,0 +1,5406 @@
+#include "player/Player.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "custom/helpers/helper_modules_custom.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/helpers/helper_items.hps"
+#include "custom/helpers/helper_parkour.hps"
+#include "custom/helpers/helper_player_custom.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+#include "custom/modules/helper_modules_custom.hps"
+#include "helpers/helper_effects_custom.hps"
+#include "utilities/Utility_PickBasics.hps"
+#include "helpers/helper_props.hps"
+#include "helpers/helper_props_Custom.hps"
+#include "helpers/helper_areas.hps"
+#include "helpers/helper_game.hps"
+#include "custom/components/ComponentInterfaces_Custom.hps"
+#include "helpers/helper_imgui.hps"
+
+//------------------------------------------------------------
+
+/////////////////////////////////////////
+// Custom Player
+/////////////////////////////////////////
+// This overrides the built-in cScrPlayer in Player.hps
+// So it's a good place to hook in to do your own game-specific behaviour.
+// A good strategy for simple additionas is to implement an empty method in 
+// cScrPlayer and override it here.
+
+//------------------------------------------------------------
+
+// This is just a demo really. :-)
+const tString gsFootstepParticle = "";
+
+// Sand movement
+float gfGroundFriction_Default = 6;
+float gfGroundFriction_OnSand = 15;
+
+const float gfMapDeepShadowDefault=0.35f;
+
+const float gfLookAccelerationSpeedReduction = 0.75f; // Higher value means mouse movement adds less to velocity
+const float gfLookAccelerationDrag = 4.0f; // Controls how quickly the mouse velocity goes back to 0. Higher = faster.
+const float gfParkourMoveTilt_StrafeRollDeg = 2.10f;
+const float gfParkourMoveTilt_TurnRollDeg = 2.50f;
+const float gfParkourMoveTilt_MaxRollDeg = 3.15f;
+const float gfParkourMoveTilt_YawSpeedForMax = 2.80f;
+const float gfParkourMoveTilt_TargetFadeSpeed = 8.0f;
+const float gfParkourMoveTilt_RollEaseSpeed = 11.0f;
+
+const float gfVertigoMinDist = 15.f;
+const float gfVertigoFovAdd = 0.2f;
+const float gfVertigoMaxPitch = (-50.0f / 360.0f) * cMath_PiMul2;
+
+const float gfWaterHidingOxygenMax = 15.f;
+const float gfWaterHidingOxygenMin = 7.5f;
+
+const float gfCheckHealthDelay = 0.4f;
+
+const float gfNightVisionActivationTime = 0.25f;
+const float gfNightVisionDeactivationTime = 0.5f;
+const cColor gNightVisionColor(0.2f, 0.2f, 0.325f, 1.0f);
+
+const float gfExertionMulFadeTime = 2.f;
+
+const int glPlayer_RatBiteNumUntilDeath = 2;
+const int glPlayer_MinAttackRatCountToDie = 1;
+const float gfPlayer_TimeUntilReduceRatBiteCount = 2.f;
+
+const int glPlayer_DreamLightNum = 64;
+const float gfPlayer_DreamLightSpectrumMul = 0.25f;
+
+const float gfPlayer_MonsterScreenEffectMaxDist = 25.f;
+const float gfPlayer_MonsterScreenEffectMinDist = 10.f;
+const float gfPlayer_MonsterScreenEffectUpdateInterval = 0.2f;
+
+const tString gsGasMask_ScreenEffect = "gasmask_screen.mat";
+const tString gsGasMask_BreatheLoop = "player/vocalisations/mask/breathe_idle";
+
+const tString[] gsPlayer_HurtAnims = { "player_shot_centre", "player_hurt_left", "player_hurt_right" };
+
+const tString gsGun_EarRingingSound = "weapons/revolver/ear_ring_loop";
+
+const tString gsPlayer_BleedingIcon = "bleeding_icon.dds";
+const tString gsPlayer_BleedingStoppedIcon = "bleeding_stopped_icon.dds";
+const tString gsPlayer_BleedingIconBg = "bleeding_icon_background.dds";
+
+//------------------------------------------------------------
+
+class cBloodTrailPlane
+{
+	tString msName = "";
+	float mfTimePassed = 0.f;
+}
+
+//------------------------------------------------------------
+
+class cAimAssistTarget
+{
+	cAimAssistTarget() {}
+	cAimAssistTarget(tID a_idEnt, int alBoneId, const tString &in asSkipBoolVar, const cVector3f &in avOffset, 
+					 float afTargetRadiusMul, float afMaxDist, float afMinCoverage, bool abUseJointChildPos, 
+					 bool abRemoveOnSkip, int alWeaponType)
+	{
+		m_idEnt = a_idEnt;
+		mlBoneId = alBoneId;
+		msSkipBoolVar = asSkipBoolVar;
+		mvOffset = avOffset;
+		mfTargetRadiusMul = afTargetRadiusMul;
+		mfMaxDist = afMaxDist;
+		mfMinCoverage = afMinCoverage;
+		mbUseJointChildPos = abUseJointChildPos;
+		mbRemoveOnSkip = abRemoveOnSkip;
+		mlWeaponType = alWeaponType;
+	}
+	
+	float mfTargetRadiusMul;
+	float mfMaxDist;
+	float mfMinCoverage;
+	bool mbUseJointChildPos;
+	bool mbRemoveOnSkip;
+	int mlBoneId;
+	int mlWeaponType;
+	tString msSkipBoolVar;
+	cVector3f mvOffset;
+	tID m_idEnt;
+}
+
+//------------------------------------------------------------
+
+enum eAimAssistAmount
+{
+	eAimAssistAmount_None,
+	eAimAssistAmount_VeryLow,
+	eAimAssistAmount_Low,
+	eAimAssistAmount_Medium,
+	eAimAssistAmount_High,
+	eAimAssistAmount_VeryHigh,
+}
+
+//------------------------------------------------------------
+
+class cScrPlayerCustom : cScrPlayer
+{
+	//------------------------------------------------------------
+	
+	void PreloadData(cLuxMap@ apMap) override
+	{
+		cScrPlayer::PreloadData(apMap);
+		
+		if (gsFootstepParticle!="")
+			apMap.PreloadParticleSystem(gsFootstepParticle);
+		
+		apMap.PreloadParticleSystem("underwater.ps");
+			
+		apMap.PreloadMaterial("player_damage_screen_minor.mat");
+		apMap.PreloadMaterial("player_damage_screen_major.mat");
+		apMap.PreloadMaterial("vignette_screen.mat");
+		apMap.PreloadMaterial("vignette_screen_strong.mat");
+		apMap.PreloadMaterial("vignette_screen_strongest.mat");
+		apMap.PreloadMaterial(gsGasMask_ScreenEffect);
+		apMap.PreloadMaterial("player_health_screen.mat");
+
+		Entity_Preload(msBloodPlaneEntityFile);
+		Entity_Preload("medkit_cutscene.ent");
+		Entity_Preload("bandage_cutscene.ent");
+		Entity_Preload("gas_mask_cutscene.ent");
+		
+	    ImGui_PreloadImage(gsPlayer_BleedingIcon, eImGuiGfx_Texture);
+	    ImGui_PreloadImage(gsPlayer_BleedingStoppedIcon, eImGuiGfx_Texture);
+	    ImGui_PreloadImage(gsPlayer_BleedingIconBg, eImGuiGfx_Texture);
+		
+		PreloadDreamLights();
+	}
+	
+	//------------------------------------------------------------
+	
+	void Init() override
+	{
+		cScrPlayer::Init();
+		
+		SetupDreamLights();
+	}
+	
+	//------------------------------------------------------------
+	
+	void Reset() override
+	{
+		cScrPlayer::Reset();
+		
+		mbCanEquipItems = true;
+		mbSliding_Active = false;
+		mbSliding_SandOnly = true;
+		mfSliding_AngleThreshold = 45.f;
+		msPrevMap = "";
+		mfDamage_ReduceRatBiteCountTime = 0.f;
+		mlDamage_RatBiteCount = 0;
+		
+		mfScaredCount = 0.f;
+		mfForcedScaredCount = 0.f;
+		mlScaredStage = 0;
+		mfParkourMoveTiltRollDeg = 0.f;
+		mfParkourMoveTiltTargetDeg = 0.f;
+		mfParkourMoveTiltPrevYaw = 0.f;
+		mbParkourMoveTiltHasYaw = false;
+	}
+	
+	//------------------------------------------------------------
+	
+	[nosave] bool mbHintsEnabled = false;
+	
+	void LoadUserConfig() 
+	{
+		cScrPlayer::LoadUserConfig();		
+		cConfigFile@ pConfig = cLux_GetUserConfig();
+		
+		//////////////////////
+		// Hints
+		mbHintsEnabled = pConfig.GetBool("Gameplay", "ShowHints", true);
+		
+		//////////////////////
+		// Aim assist
+		int lAimAssistAmount = pConfig.GetInt("Accessibility", "AimAssist", 0);		
+		mbAimAssist_Active = lAimAssistAmount != eAimAssistAmount_None;
+		
+		switch (lAimAssistAmount)
+		{
+			case eAimAssistAmount_None:
+			{
+				mfAimAssist_Acc = 0.f;
+				mfAimAssist_SpeedMul = 0.f;
+				mfAimAssist_RadiusMul = 0.f;
+				break;
+			}
+			case eAimAssistAmount_VeryLow:
+			{
+				mfAimAssist_Acc = 6.f;
+				mfAimAssist_SpeedMul = 3.f;
+				mfAimAssist_RadiusMul = 0.8f;
+				break;
+			}
+			case eAimAssistAmount_Low:
+			{
+				mfAimAssist_Acc = 8.f;
+				mfAimAssist_SpeedMul = 4.f;
+				mfAimAssist_RadiusMul = 0.9f;
+				break;
+			}
+			case eAimAssistAmount_Medium:
+			{
+				mfAimAssist_Acc = 10.f;
+				mfAimAssist_SpeedMul = 4.5f;
+				mfAimAssist_RadiusMul = 1.f;
+				break;
+			}
+			case eAimAssistAmount_High:
+			{
+				mfAimAssist_Acc = 12.f;
+				mfAimAssist_SpeedMul = 5.f;
+				mfAimAssist_RadiusMul = 1.1f;
+				break;
+			}
+			case eAimAssistAmount_VeryHigh:
+			{
+				mfAimAssist_Acc = 14.f;
+				mfAimAssist_SpeedMul = 6.f;
+				mfAimAssist_RadiusMul = 1.2f;
+				break;
+			}
+		}
+		
+		//////////////////////
+		// Check health
+		mlCheckHealth_Mode = pConfig.GetInt("Accessibility", "CheckHealthMode", 0);
+		
+		//////////////////////
+		// Lock code quick access
+		mbLockCodeQuickAccess = pConfig.GetBool("Gameplay", "LockCodeQuickAccess", false);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnAnalogInput(int alAnalogId, const cVector3f &in avAmount) override
+	{
+		////////////////////////////////////
+		// Look acceleration
+		if(alAnalogId == eAnalogType_Look && mfLookAcceleration > 0)
+		{
+			float fLookSpeedMul = mfLookSpeedMul;
+			float fAccMul = (1.0f - gfLookAccelerationSpeedReduction * cMath_Easing(eEasing_QuartOut, mfLookAcceleration));
+			
+			mvLookVelocity += avAmount*-1*fLookSpeedMul * fAccMul;
+			return;
+		}
+		
+		if ((alAnalogId == eAnalogType_Move || alAnalogId == eAnalogType_GamepadMove) &&
+			Parkour_GetAirLockConsumesMoveInput())
+		{
+			return;
+		}
+		
+		cScrPlayer::OnAnalogInput(alAnalogId, avAmount);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// MAP
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	tString msPrevMap = "";
+	
+	void OnMapEnter(cLuxMap @apMap)
+	{
+		cScrPlayer::OnMapEnter(apMap);
+		
+		SetupBleeding(apMap);
+		
+		mfMapDeepShadow = gfMapDeepShadowDefault;
+		//ResetNightVision();	
+		
+		mbHealthSpeedMulActive = true;
+		mbHealthRegen_Active = GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_PlayerHealthRegeneration);
+		
+		mfScaredSourceDist = 0.f;
+		mbScaredSourceVisible = false;
+		
+		////////////////
+		// Reset aim assist
+		mbAimAssist_Setup = true;
+		mlAimAssist_EvaluationId = -1;
+		mlAimAssist_SelectedTargetId = -1;	
+		mfAimAssist_SelectedScreenDistSqr = 1000.f * 1000.f;
+		mvAimAssist_Targets.resize(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnMapLeave(cLuxMap @apMap)
+	{
+		cScrPlayer::OnMapLeave(apMap);
+		
+		// Make sure player lights are considered off
+		_Global_LanternOff();
+		
+		msPrevMap = apMap.GetName();
+		SetGasmaskEffectActive(false, true);
+		DestroyGasMaskEntity();
+		
+		mlHealth_BleedEffectScreenId = -1;
+		mlHealthRegen_ScreenId = -1;
+		
+		mfAimAssist_RangeMul = 1.f;
+ 	}
+	
+	//------------------------------------------------------------
+	
+	void CreateWorldEntities(cLuxMap@ apMap)
+	{
+		cScrPlayer::CreateWorldEntities(apMap);
+		CreateWaterHidingLight(apMap);
+		CreateCheckHealthLight(apMap);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetPrevMap()
+	{
+		cScript_SetGlobalReturnString(msPrevMap);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep) override
+	{
+		//UpdateOnSandCheck();
+		cScrPlayer::Update(afTimeStep);
+		UpdateParkourMoveTilt(afTimeStep);
+		//UpdateVertigo(afTimeStep);	
+		//UpdateSliding(afTimeStep);
+	}
+	
+	//------------------------------------------------------------
+	
+	void VariableUpdate(float afTimeStep) override
+	{
+		//////////////////
+		// Update time since grab & throw
+		mfInteract_TimeSinceGrab += afTimeStep;
+		mfInteract_TimeSinceThrow += afTimeStep;
+		
+		UpdateLookAcceleration(afTimeStep);
+		cScrPlayer::VariableUpdate(afTimeStep);
+		
+		UpdateEquipItemsAfterDamage(afTimeStep);
+		UpdateLightSwitchCounter(afTimeStep);
+		UpdateHealth(afTimeStep);
+		UpdateMonsterScreenEffects(afTimeStep);
+		UpdateScaredSound(afTimeStep);
+		UpdateNightVision(afTimeStep);
+		UpdateWaterHiding(afTimeStep);
+		UpdateCheckHealth(afTimeStep);
+		UpdateDisorientEffect(afTimeStep);
+		UpdatePocketWatchTime(afTimeStep);
+		UpdateRatDamage(afTimeStep);
+		UpdateBleeding(afTimeStep);
+		UpdateLowHealthEffect(afTimeStep);
+		UpdateCheckHealthLight(afTimeStep);
+		UpdateGasMaskEquip(afTimeStep);
+		UpdateHeal(afTimeStep);
+		UpdateEarRingingEffect(afTimeStep);
+		UpdateAimAssist(afTimeStep);
+	}
+	
+	//------------------------------------------------------------
+
+	void UpdateParkourMoveTilt(float afTimeStep)
+	{
+		float fTargetRoll = 0.f;
+		iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+		bool bCanTilt = Parkour_GetEnabled() &&
+						pBody !is null &&
+						mBaseObj.GetCurrentStateId() == ePlayerState_Normal &&
+						cLux_GetPlayer().GetCurrentMoveStateId() == eMoveState_Normal;
+
+		if (bCanTilt)
+		{
+			float fYaw = pBody.GetYaw();
+			float fTurn = 0.f;
+			if (mbParkourMoveTiltHasYaw && afTimeStep > 0.f)
+			{
+				float fYawDelta = cMath_GetAngleDistanceRad(mfParkourMoveTiltPrevYaw, fYaw);
+				fTurn = cMath_Clamp(fYawDelta / cMath_Max(afTimeStep * gfParkourMoveTilt_YawSpeedForMax, 0.001f), -1.f, 1.f);
+			}
+			mfParkourMoveTiltPrevYaw = fYaw;
+			mbParkourMoveTiltHasYaw = true;
+
+			float fStrafe = cMath_Clamp(pBody.GetMoveSpeed(eCharDir_Right), -1.f, 1.f);
+			if (cMath_Abs(fStrafe) < 0.05f)
+			{
+				cVector3f vFlatVel = pBody.GetVelocity(cMath_Max(afTimeStep, 1.0f / 60.0f));
+				vFlatVel.y = 0.f;
+				cVector3f vRight = pBody.GetRight();
+				vRight.y = 0.f;
+				if (vRight.SqrLength() > 0.001f)
+				{
+					vRight.Normalize();
+					fStrafe = cMath_Clamp(cMath_Vector3Dot(vFlatVel, vRight) / 2.4f, -1.f, 1.f);
+				}
+			}
+
+			float fGroundMul = pBody.IsOnGround() ? 1.f : 0.35f;
+			fTargetRoll = -(fStrafe * gfParkourMoveTilt_StrafeRollDeg + fTurn * gfParkourMoveTilt_TurnRollDeg) * fGroundMul;
+			fTargetRoll = cMath_Clamp(fTargetRoll, -gfParkourMoveTilt_MaxRollDeg, gfParkourMoveTilt_MaxRollDeg);
+		}
+		else
+		{
+			mbParkourMoveTiltHasYaw = false;
+		}
+
+		mfParkourMoveTiltTargetDeg = cMath_IncreaseTo(mfParkourMoveTiltTargetDeg,
+													   gfParkourMoveTilt_TargetFadeSpeed * afTimeStep,
+													   fTargetRoll);
+		float fEase = cMath_Easing(eEasing_SineInOut,
+								   cMath_Clamp(gfParkourMoveTilt_RollEaseSpeed * afTimeStep, 0.f, 1.f));
+		mfParkourMoveTiltRollDeg = cMath_InterpolateLinear(mfParkourMoveTiltRollDeg,
+														   mfParkourMoveTiltTargetDeg,
+														   fEase);
+		mBaseObj.SetCameraRoll(ePlayerRoll_Lucidity, cMath_ToRad(mfParkourMoveTiltRollDeg));
+	}
+
+	//------------------------------------------------------------
+	
+	void _Global_GetMoveSpeedMul() override
+	{
+		cScrPlayer::_Global_GetMoveSpeedMul();
+		cScript_SetGlobalReturnFloat(cScript_GetGlobalReturnFloat() * mfHealthSpeedMul * mfWaterSpeedMul);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetTotalMoveSpeedMul() override
+	{
+		cScrPlayer::_Global_GetTotalMoveSpeedMul();
+		float fMul = cScript_GetGlobalReturnFloat();
+		
+		cScript_SetGlobalReturnFloat(fMul * mfHealthSpeedMul * mfWaterSpeedMul);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetRunSpeedMul() override
+	{
+		cScript_SetGlobalReturnFloat(mfRunSpeedMul*mfWaterRunSpeedMul);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetHealthSpeedMulActive()
+	{
+		mbHealthSpeedMulActive = cScript_GetGlobalArgBool(0);
+	}
+	
+	/////////////////////////////////////////
+	// MISC
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbCanEquipItems = true;
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetCanEquipItems()
+	{
+		mbCanEquipItems = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetCanEquipItems()
+	{
+		cScript_SetGlobalReturnBool(mbCanEquipItems);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// INTERACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfInteract_TimeSinceGrab = 10000.f;
+	float mfInteract_TimeSinceThrow = 10000.f;
+	
+	//------------------------------------------------------------
+	
+	void _Global_ResetTimeSinceGrab()
+	{
+		mfInteract_TimeSinceGrab = 0.f;
+	}
+	
+
+	//------------------------------------------------------------
+	
+	void _Global_GetTimeSinceGrabInteract()
+	{
+		cScript_SetGlobalReturnFloat(mfInteract_TimeSinceGrab);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_ResetTimeSinceThrow()
+	{
+		mfInteract_TimeSinceThrow = 0;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetTimeSinceLastThrowInteraction()
+	{
+		cScript_SetGlobalReturnFloat(mfInteract_TimeSinceThrow);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetAllowItemCrosshair()
+	{
+		bool bX = cScript_GetGlobalArgBool(0);
+		mbAllowItemCrosshair = bX;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// THREAT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbPrevScared = false;
+	bool mbCanBeScared = true;
+	float mfScaredCount = 0.f;
+	float mfForcedScaredCount = 0.f;
+	float mfScaredSourceDist = 0.f;
+	bool mbScaredSourceVisible = false;
+	int mlScaredStage = 0;
+	
+	//------------------------------------------------------------
+	
+	void UpdateScaredSound(float afTimeStep)
+	{						
+		//////////////////
+		// Get max stage
+		int lMaxStage = 0;		
+		if (mbScaredSourceVisible)
+		{
+			if (mfScaredSourceDist <= 0.f)			lMaxStage = 0;
+			else if (mfScaredSourceDist < 20.f)		lMaxStage = 3;
+			else if (mfScaredSourceDist < 30.f) 	lMaxStage = 2;
+			else if (mfScaredSourceDist < 40.f) 	lMaxStage = 1;
+		}
+		else
+		{
+			if (mfScaredSourceDist <= 0.f)			lMaxStage = 0;
+			else if (mfScaredSourceDist < 10.f)		lMaxStage = 3;
+			else if (mfScaredSourceDist < 20.f) 	lMaxStage = 2;
+			else if (mfScaredSourceDist < 30.f) 	lMaxStage = 1;
+		}
+		
+		//////////////////
+		// Force scared?			
+		if (mfForcedScaredCount > 0.f)
+		{
+			mfForcedScaredCount -= afTimeStep;
+			
+			if (lMaxStage == 0)
+			{
+				if (mfForcedScaredCount > 3.f) 		lMaxStage = 2;
+				else if (mfForcedScaredCount > 0.f) lMaxStage = 1;
+			}
+		}
+		
+		bool bScared = mfForcedScaredCount > 0.f || lMaxStage > 0;
+		
+		//////////////////
+		// Update stage
+		float fScaredStageTime;		
+		if (bScared)
+		{
+			fScaredStageTime = 1.f;
+			
+			if (mbPrevScared == false)
+				mfScaredCount = fScaredStageTime;
+		}
+		else if (bScared == false)
+		{
+			fScaredStageTime = 3.f;
+			
+			if (mbPrevScared)
+				mfScaredCount = fScaredStageTime;
+		}
+		
+		mfScaredCount = cMath_IncreaseTo(mfScaredCount, afTimeStep, fScaredStageTime);
+		if (mfScaredCount >= fScaredStageTime)
+		{
+			mfScaredCount = 0.f;
+			
+			if (bScared)	++mlScaredStage;
+			else			--mlScaredStage;
+			
+			mlScaredStage = cMath_Clamp(mlScaredStage, 0, lMaxStage);
+		}
+		
+		mbPrevScared = bScared;
+		
+		//////////////////
+		// Play heartbeat?		
+		bool bPlay = mbCanBeScared &&
+					 mlScaredStage > 0 &&
+					 mBaseObj.GetHealth() > 0.f;
+					 
+		if (bPlay)
+		{
+			tString sSound;
+			
+			switch (mlScaredStage)
+			{
+				case 1: sSound = "player/heartbeat/slow";
+					break;
+				case 2: sSound = "player/heartbeat/med";
+					break;
+				case 3: sSound = "player/heartbeat/fast";
+					break;
+			}
+			
+			PlayerEmotion_PlaySound(eEmotionPlaylistType_Heartbeat, eEmotionSoundType_OneShotEvent, 2, sSound);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_AddScaredSource()
+	{
+		// TODO: Add array of sources
+		mfScaredSourceDist = cScript_GetGlobalArgFloat(0);
+		mbScaredSourceVisible = cScript_GetGlobalArgBool(1);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetScared()
+	{
+		mfForcedScaredCount = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetScared()
+	{
+		cScript_SetGlobalReturnBool(mlScaredStage > 0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetCanBeScared()
+	{
+		mbCanBeScared = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// MONSTER SCREEN EFFECTS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbMonsterScreenEffect_Active = false;
+	int mlMonsterScreenEffect_RadialBlurId = -1;
+	int mlMonsterScreenEffect_ImageTrailId = -1;
+	float mfMonsterScreenEffect_UpdateCount = gfPlayer_MonsterScreenEffectUpdateInterval;
+	float mfMonsterScreenEffect_Dist = gfPlayer_MonsterScreenEffectMaxDist;
+	float mfMonsterScreenEffect_RadialBlurCount = 0.f;
+	float mfMonsterScreenEffect_FovCount = 0.f;
+	
+	//------------------------------------------------------------
+	
+	void UpdateMonsterScreenEffects(float afTimeStep)
+	{		
+		/////////////////////
+		// Setup vars
+		bool bPrevEffectActive = mbMonsterScreenEffect_Active;
+		tID idStalker = Blackboard_GetClosestAgent(mBaseObj.GetCharacterBody().GetPosition());
+		cLuxAgent@ pStalker = cLux_ID_Agent(idStalker);
+		
+		bool bStalkerActive = pStalker !is null && pStalker.GetClassName() == "cScrAgentStalker";
+		if (bStalkerActive)
+		{
+			mfMonsterScreenEffect_Dist = (pStalker.GetPosition() - mBaseObj.GetCharacterBody().GetPosition()).Length();
+		}
+		
+		/////////////////////
+		// Should effect be active?
+		mfMonsterScreenEffect_UpdateCount -= afTimeStep;
+		if (mfMonsterScreenEffect_UpdateCount <= 0.f)
+		{
+			mfMonsterScreenEffect_UpdateCount = gfPlayer_MonsterScreenEffectUpdateInterval;
+			
+			if (bStalkerActive && cLux_GetGodModeActivated() == false)
+			{
+				mbMonsterScreenEffect_Active = mfMonsterScreenEffect_Dist < gfPlayer_MonsterScreenEffectMaxDist &&
+											   pStalker.GetMeshEntity().IsVisible() &&
+											   pStalker.CheckIsOnScreen(true);
+			}
+			else
+			{
+				mbMonsterScreenEffect_Active = false;
+			}
+		}
+		
+		/////////////////////
+		// Start effect?
+		if (bPrevEffectActive == false && 
+			mbMonsterScreenEffect_Active)
+		{
+			if (mlMonsterScreenEffect_RadialBlurId == -1) 
+				mlMonsterScreenEffect_RadialBlurId = Effect_RadialBlur_Start(0.f, 0.5f, 0.1f, -1);
+			if (mlMonsterScreenEffect_ImageTrailId == -1)
+				mlMonsterScreenEffect_ImageTrailId = Effect_ImageTrail_Start(1.f, 1.f, -1.f, 1.f);
+				
+			mfMonsterScreenEffect_RadialBlurCount = 0.f;
+			mfMonsterScreenEffect_FovCount = 0.f;
+		}
+		
+		/////////////////////
+		// Stop effect?
+		else if (bPrevEffectActive && 
+				mbMonsterScreenEffect_Active == false)
+		{
+			if (mlMonsterScreenEffect_RadialBlurId != -1)
+			{
+				Effect_RadialBlur_FadeOut(mlMonsterScreenEffect_RadialBlurId, 1.f);
+				mlMonsterScreenEffect_RadialBlurId = -1;
+			}
+			
+			if (mlMonsterScreenEffect_ImageTrailId != -1)
+			{
+				Effect_ImageTrail_FadeOut(mlMonsterScreenEffect_ImageTrailId, 1.f);
+				mlMonsterScreenEffect_ImageTrailId = -1;
+			}
+			
+			mBaseObj.FadeCameraFOVMulTo(ePlayerFOVMul_MonsterScreenEffect, 1.f, 0.3f);
+		}
+		
+		/////////////////////
+		// Update effect
+		if (mbMonsterScreenEffect_Active)
+		{			
+			float fMinDist = gfPlayer_MonsterScreenEffectMinDist;
+			float fMaxDist = gfPlayer_MonsterScreenEffectMaxDist;
+			float fEffectMul = 1.f - cMath_Clamp((mfMonsterScreenEffect_Dist - fMinDist) / (fMaxDist - fMinDist), 0.f, 1.f);
+			
+			/////////////////////
+			// Radial blur
+			float fBlurFrequency = cMath_Max(3.f * fEffectMul, 2.f);
+			
+			mfMonsterScreenEffect_RadialBlurCount += afTimeStep * fBlurFrequency;
+			mfMonsterScreenEffect_RadialBlurCount %= cMath_PiMul2;
+			
+			float fBlurPulse = 0.3f + cMath_Abs(cMath_Sin(mfMonsterScreenEffect_RadialBlurCount)) * 0.7f;
+			float fBlurSize = 0.2f * fBlurPulse * fEffectMul;
+			
+			Effect_RadialBlur_FadeSize(mlMonsterScreenEffect_RadialBlurId, fBlurSize, 0.3f);
+			Effect_ImageTrail_FadeInstanceAmount(mlMonsterScreenEffect_ImageTrailId, 0.75f * fEffectMul, 0.3f);
+			
+			/////////////////////
+			// FOV pulse
+			float fFovFrequency = cMath_Max(8.f * fEffectMul, 4.f);
+			
+			mfMonsterScreenEffect_FovCount += afTimeStep * fFovFrequency;
+			mfMonsterScreenEffect_FovCount %= cMath_PiMul2;
+			
+			float fFovPulse = cMath_Sin(mfMonsterScreenEffect_FovCount);
+			float fFovMul = 1.f + (fFovPulse * 0.015f * (0.5f + (fEffectMul * 0.5f)));
+			
+			mBaseObj.SetCameraFOVMul(ePlayerFOVMul_MonsterScreenEffect, fFovMul);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// HEALTH
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbHealthSpeedMulActive = true;
+	float mfHealthSpeedThreshold = 0.7f;
+	float mfHealthSpeedMul = 1.0f;
+	bool mbHealthRegen_Active = true;
+	int mlHealthRegen_ScreenId = -1;
+	float mfHealthRegen_TimeSinceDamage = 999999.f;
+	float mfHealthRegen_IncreaseRate = 1.f / (60.f * 10.f); // 10 mins to full regen
+	float mfHealthRegen_SpeedMul = 1.f;
+	float mfHealth_SmoothHealth = 1.f;
+	int mlHealth_BleedEffectScreenId = -1;
+	float mfHealth_BleedEffectT = 0.f;
+	bool mbHealth_DoScreenBleedEffect = false;
+	bool mbHealth_BleedingStopped = false;
+	
+	//------------------------------------------------------------
+	
+	void UpdateHealth(float afTimeStep)
+	{		
+		//////////////////
+		// Smoot health value
+		float fHealth = mBaseObj.GetHealth();
+		float fSmoothHealthSpeed;
+		
+		if (fHealth < mfHealth_SmoothHealth) fSmoothHealthSpeed = afTimeStep * 4.f;
+		else 								 fSmoothHealthSpeed = afTimeStep * 2.f;
+		
+		mfHealth_SmoothHealth = cMath_IncreaseTo(mfHealth_SmoothHealth, fSmoothHealthSpeed, fHealth);
+		
+		//////////////////
+		// Update hurt anim count
+		mfPlayedHurtAnimCount -= afTimeStep;
+		if (mfPlayedHurtAnimCount <= 0.f)
+			mfPlayedHurtAnimCount = 0.f;
+
+		///////////////////////
+		// Health speed mul
+		if (mbHealthSpeedMulActive && fHealth < mfHealthSpeedThreshold)
+		{
+			mfHealthSpeedMul = 0.5f+(fHealth/mfHealthSpeedThreshold)*0.5f;
+			
+			if (Player_GetCrawling())
+				mfHealthSpeedMul = cMath_Max(mfHealthSpeedMul, 0.85f);
+			else if (Player_GetCrouching())
+				mfHealthSpeedMul = cMath_Max(mfHealthSpeedMul, 0.6f);
+		}
+		else 
+		{
+			mfHealthSpeedMul = 1.0f;
+		}
+		
+		///////////////////////
+		// Create screen effect if hurt
+		if (fHealth < 1.f && mlHealthRegen_ScreenId == -1)
+		{
+			mlHealthRegen_ScreenId = Effect_Screen_Start("player_health_screen.mat", cVector2f(0.5f, 0.5f), cVector2f(1.25f, 1.f));
+		}
+			
+		if (mfHealthRegen_TimeSinceDamage < 999999.f)
+			mfHealthRegen_TimeSinceDamage += afTimeStep;
+		
+		//////////////////////////
+		// Health regen
+		int lState = mBaseObj.GetCurrentStateId();
+		bool bStateOK = lState != ePlayerState_Dead &&
+						lState != ePlayerState_Custom_ReadMemoryCylinder;
+						
+		const float fTimeLimit = 60.f * 1.f; // 1 min to start regen
+		bool bHealthOK = fHealth < 1.f && mfHealthRegen_TimeSinceDamage > fTimeLimit;
+		
+		if (GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem) &&
+			mbHealth_BleedingStopped == false)
+		{
+			bHealthOK = false;
+		}
+	
+		if (bStateOK && bHealthOK && mbHealthRegen_Active)
+		{
+			fHealth += mfHealthRegen_IncreaseRate * afTimeStep * mfHealthRegen_SpeedMul;
+			mBaseObj.SetHealth(fHealth);
+		}
+		
+		///////////////////////
+		// Update screen effect
+		if (mlHealthRegen_ScreenId != -1)
+		{
+			float fAlpha = 1.f - cMath_Clamp(mfHealth_SmoothHealth, 0.f, 1.f);
+			float fBleedEffectAlpha = cMath_Easing(eEasing_SineOut, mfHealth_BleedEffectT);
+			float fAlphaMul = 0.3f + (fBleedEffectAlpha * 0.3f);
+			Effect_Screen_SetAlpha(mlHealthRegen_ScreenId, fAlpha * fAlphaMul);
+		}
+	}
+	
+	//------------------------------------------------------------
+
+	void _Global_GetHealthRegenActive()
+	{
+		cScript_SetGlobalReturnBool(mbHealthRegen_Active);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetHealthRegenActive()
+	{
+		mbHealthRegen_Active = cScript_GetGlobalArgBool(0);
+		bool bForce = cScript_GetGlobalArgBool(1);
+		if (bForce)
+			mfHealthRegen_TimeSinceDamage = 60.f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetHealthRegenSpeedMul()
+	{
+		mfHealthRegen_SpeedMul = cMath_Max(cScript_GetGlobalArgFloat(0), 0.f);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// BLEEDING EFFECTS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	int mlLastBloodPlaneID = -1;
+	tString msBloodPlaneEntityFile = "blood_trail.ent";
+	tString msBloodPlaneEntityBaseName = "";
+	array<cBloodTrailPlane> mvBloodTrailPlanes;
+	bool mbBleedingIsActive = true;
+	float mfBleedingSoundCooldown = 0.f;
+	[nosave] float mfLastBloodPlaneCreationTime = 0.f;
+	float mfBloodDropSoundTimer = 0.f;
+	float mfBloodDropSoundInterval = 0.f;
+	
+	//------------------------------------------------------------
+	
+	void SetupBleeding(cLuxMap@ apMap)
+	{
+		msBloodPlaneEntityBaseName = apMap.GetName() + "_PlayerBloodTrail_";
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetBleedingActive()
+	{
+		mbBleedingIsActive = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetBleedingIsActive()
+	{
+		cScript_SetGlobalReturnBool(mbBleedingIsActive);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_StopBleeding()
+	{
+		mbHealth_BleedingStopped = true;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetBleedingStopped()
+	{
+		cScript_SetGlobalReturnBool(mbHealth_BleedingStopped);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetIsBleeding()
+	{
+		cScript_SetGlobalReturnBool(GetIsBleeding());
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetBloodTrailEntityBaseName()
+	{
+		cScript_SetGlobalReturnString(msBloodPlaneEntityBaseName);
+	}
+	
+	//------------------------------------------------------------
+	
+	iLuxEntity@ CreateBloodPlane(float afScaleOffsetMul=1.f, cVector2f avOffset=0.f)
+	{
+		const tString sEntityName = msBloodPlaneEntityBaseName + mlLastBloodPlaneID;
+		
+		if (Entity_Exists(sEntityName))
+			Entity_Destroy(sEntityName);
+		
+		mlLastBloodPlaneID++;
+		
+		//////////////////
+		// Trace the floor
+		cVector3f vStart = cLux_GetPlayer().GetCharacterBody().GetPosition();
+		cVector3f vDirection = cVector3f_Up * -1.f;
+		cVector3f vFloorNormal = cVector3f(0.f);
+
+		float fDistance = 0.f;
+		float fTraceLength = 10.f;
+		
+		////////////////////////////
+		// If there's no floor abort
+		iPhysicsBody@ pHitBody = cLux_GetClosestBody(vStart, vDirection, fTraceLength, fDistance, vFloorNormal);
+		if (pHitBody is null) return null;
+		
+		cMatrixf mtxTransform;
+		
+		///////////////
+		// Random scale
+		float fScale = afScaleOffsetMul * cMath_RandRectf(0.45f, 1.55f);
+		
+		//////////////////
+		// Random rotation
+		float fRnd = cMath_RandRectf(0, 350);
+		cMatrixf mtxRndRot = cMath_MatrixRotateY(cMath_Pi + fRnd);
+		
+		/////////////////////
+		// Align to the floor
+		cVector3f vUp = cVector3f_Up; // No need for the local up vector since it matches the world's up vector.
+		float fFloorAngle = cMath_ACos(cMath_Vector3Dot(vUp, vFloorNormal) / (vUp.Length() * vFloorNormal.Length()));
+		cVector3f vAxis = cMath_Vector3Normalize(cMath_Vector3Cross(vUp, vFloorNormal));
+		cQuaternion qRotation;
+		qRotation.FromAngleAxis(fFloorAngle, vAxis);
+		
+		///////////////
+		// Set position
+		cVector3f vPos = vStart + (vDirection * (fDistance - 0.01f));
+		vPos.x += avOffset.x;
+		vPos.z += avOffset.y;
+		vPos.y += cMath_RandRectf(-0.0001f, 0.0001f); // Kill Y fighting
+		mtxTransform.SetTranslation(vPos);
+		
+		///////////////
+		// Set Rotation
+		cMatrixf mtxRotation = cMath_MatrixQuaternion(qRotation);
+		mtxTransform = cMath_MatrixMul(mtxTransform, mtxRotation);
+		mtxTransform = cMath_MatrixMul(mtxTransform, mtxRndRot);
+		
+		////////////////
+		// Create entity
+		cLux_GetCurrentMap().CreateEntity(sEntityName, msBloodPlaneEntityFile, mtxTransform, cVector3f(fScale));
+		iLuxEntity@ pEntity = cLux_GetCurrentMap().GetLatestEntity();
+		
+		if (pEntity is null || pEntity.GetName() != sEntityName)
+		{
+			mlLastBloodPlaneID = cMath_Max(mlLastBloodPlaneID-1, -1);
+			Error("[Player_Custom] Something went wrong creating blood plane entity "+sEntityName);
+			return null;
+		}
+		
+		//////////////////////////////
+		// Pick a decal texture division
+		cMeshEntity@ pMeshEnt = pEntity.GetMeshEntity();
+		if (pMeshEnt is null)
+		{
+			mlLastBloodPlaneID = cMath_Max(mlLastBloodPlaneID-1, -1);
+			Error("[Player_Custom] Blood plane entity "+sEntityName + " doesn't have a mesh instance.");
+			return null;
+		}
+		
+		pMeshEnt.GetSubMeshEntity(0).SetCurrentSubDiv(cMath_RandRectl(0, 3));
+		
+		//////////////
+		// Fade in entity
+		pEntity.SetActive(false);
+		Prop_SetActiveAndFade(sEntityName, true, 0.5f);
+		
+		//////////////////////
+		// Track its lifecycle
+		cBloodTrailPlane BloodPlane;
+		BloodPlane.msName = sEntityName;
+		mvBloodTrailPlanes.push_back(BloodPlane);
+		
+		mfLastBloodPlaneCreationTime = cLux_GetGameTime();
+		
+		return pEntity;
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateBleeding(float afTimeStep)
+	{
+		const float fPlayerhealth = mBaseObj.GetHealth();
+		bool bPlayerIsHurt = fPlayerhealth <= 0.9f;
+		bool bHardCoreHealthSystemActive = GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem);
+		
+		///////////////
+		// Bleeding
+		if (GetIsBleeding())
+		{
+			mfBloodDropSoundTimer += afTimeStep;
+			
+			cVector3f vPlayerVelocity = cLux_GetPlayer().GetCharacterBody().GetVelocity(afTimeStep);
+			vPlayerVelocity.y = 0.f; // Don't take jumps/falls into account.
+			
+			////////////////////////
+			// The lower the health the more bleeding occurs
+			float fBleedingRate = cMath_RandRectf(2.f, 6.f) * cMath_Max(fPlayerhealth, 0.1f);
+			
+			////////////////////
+			// Spawn blood drops
+			bool bPlayerIsMoving = vPlayerVelocity.Length() > 0.1;
+			
+			if (bPlayerIsMoving)
+			{
+				/////////////////////////////
+				// Bleeding is more severe when moving
+				vPlayerVelocity.Normalize();
+				fBleedingRate /= cMath_Max(vPlayerVelocity.Length(), 0.1);
+				
+				if (cLux_GetGameTime() - mfLastBloodPlaneCreationTime > fBleedingRate)
+				{
+					float fRelScale = 1.f / cMath_Max(fPlayerhealth, 0.5f);
+					iLuxEntity@ pBlood = CreateBloodPlane(0.15f * fRelScale, cMath_RandRectVector2f(cVector2f(-0.05), cVector2f(0.05)));
+					
+					/////////////////
+					// Bleed effects			
+					if (bHardCoreHealthSystemActive == false && 
+						mfBloodDropSoundTimer > 5.f * fBleedingRate)
+					{
+						mfBloodDropSoundTimer = 0.f;						
+						Sound_CreateAtEntity("BloodDrop", "player/foley/damage/blood_drip", "player");
+					}
+					
+					//////////////////////
+					// Add to rat tracking
+					if (pBlood !is null)
+						RatHandler_AddBloodTrail(pBlood.GetID(), 1.0f-fPlayerhealth);
+						
+					///////////////
+					// Bleeding hint
+					tString sHint = "HintInjuredCreatures";
+					if (bHardCoreHealthSystemActive)
+						sHint = (Hint_IsGiven("Hints", "HintInjuredAlt") || Hint_IsGiven("Hints", "HintInjuredAlt_Toggle")) ? "HintInjuredCreaturesAltOne" : "HintInjuredCreaturesAltTwo";					
+					
+					if (Hint_IsGiven("Hints", sHint) == false && mBaseObj.GetCurrentStateId() == ePlayerState_Normal)
+					{
+						tID idStalker = Blackboard_GetClosestAgent(mBaseObj.GetCharacterBody().GetPosition());
+						cLuxAgent@ pStalker = cLux_ID_Agent(idStalker);
+						
+						bool bHintsOK = Hint_IsShowing() == false;
+						bool bRatsOK = RatHandler_GetAttackingRatCount() == 0 && RatHandler_GetPlayerDistanceToClosestRat() > 10.f;
+						bool bStalkerOK = pStalker is null;
+						
+						if (pStalker !is null)
+						{
+							bStalkerOK = Blackboard_GetHuntingAgentCount() == 0 && 
+										 pStalker.PlayerIsDetected() == false &&
+										 pStalker.GetDistanceToPlayer() > 20.f;
+						}
+						
+						if (bHintsOK && bRatsOK && bStalkerOK)
+						{
+							Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, true, -1.f, true, true);
+						}
+					}
+				}
+			}
+			
+			/////////////////
+			// Bleed effects								
+			if (bHardCoreHealthSystemActive && 
+				mfBloodDropSoundTimer >= mfBloodDropSoundInterval &&
+				cLux_GetGodModeActivated() == false)
+			{
+				mfBloodDropSoundTimer = 0.f;
+						
+				float fDamage = 0.0333f;
+				if (fPlayerhealth - fDamage >= 0.1f)
+					mBaseObj.SetHealth(fPlayerhealth - fDamage);
+					
+				PlayBleedBark();
+							
+				mbHealth_DoScreenBleedEffect = true;
+				mfBloodDropSoundInterval = cMath_RandRectf(15.f, 22.f) * (0.7f + (fPlayerhealth * 0.3f));
+							
+				Effect_Rumble_Start(0.3f, 0.5f);
+				Effect_Shake_Start(0.02f, 0.25f, 0.05f, 0.1f);
+							
+				Sound_CreateAtEntity("Sound_BleedingFeedback", "player/foley/damage/player_hit", "player", 0.f, false, 0.3f);						
+				Sound_CreateAtEntity("BloodDrop", "player/foley/damage/blood_start", "player");
+			}
+			
+			/////////////////
+			// Bleeding voices
+			if (bHardCoreHealthSystemActive == false)
+			{
+				mfBleedingSoundCooldown += afTimeStep;
+				if (mfBleedingSoundCooldown > 35)
+				{
+					mfBleedingSoundCooldown = 0.f;				
+					PlayBleedBark();
+				}
+			}
+		}
+		
+		////////////////////////////////////
+		// Destroy blood drops after a while
+		float fRatAggressiveness = GameDifficulty_GetSettingValueByID_Float(eGameDifficultySetting_RatsAggressiveness);
+		for (int i=0; i<mvBloodTrailPlanes.size(); i++)
+		{
+			mvBloodTrailPlanes[i].mfTimePassed += afTimeStep;
+			
+			tString sEntName = mvBloodTrailPlanes[i].msName;
+			iLuxEntity@ pEntity = cLux_GetCurrentMap().GetEntityByName(sEntName);
+			if (pEntity is null)
+			{
+				mvBloodTrailPlanes.removeAt(i);
+				continue;
+			}
+			
+			const float fTimePassed = mvBloodTrailPlanes[i].mfTimePassed;
+			const float fLifeSpan = 180.f * cMath_Min(fRatAggressiveness, 1.0f);
+			if (fTimePassed > fLifeSpan)
+			{
+				//cLux_AddDebugMessage("Destroying Blood Plane: " + sEntName);
+				mvBloodTrailPlanes.removeAt(i);
+				Entity_Destroy(sEntName);
+				
+				//////////////////////
+				// Remove from rat tracking
+				RatHandler_RemoveBloodTrail(pEntity.GetID());
+				continue;
+			}
+			
+			if (fTimePassed > fLifeSpan * 0.75f)
+				Prop_SetActiveAndFade(sEntName, false, fLifeSpan * 0.25f);
+		}
+		
+		///////////////////////
+		// Bleed screen effect
+		if (bHardCoreHealthSystemActive)
+		{
+			float fBleedEffectTGoal;
+			float fBleedEffectSpeed;
+			
+			if (mbHealth_DoScreenBleedEffect)
+			{
+				fBleedEffectTGoal = 1.f;
+				fBleedEffectSpeed = 1.f / 0.5f;
+			}
+			else
+			{
+				fBleedEffectTGoal = 0.f;
+				fBleedEffectSpeed = 1.f / 2.f;
+			}
+			
+			mfHealth_BleedEffectT = cMath_IncreaseTo(mfHealth_BleedEffectT, afTimeStep * fBleedEffectSpeed, fBleedEffectTGoal);
+			
+			if (mbHealth_DoScreenBleedEffect && 
+				mfHealth_BleedEffectT >= fBleedEffectTGoal)
+			{
+				mbHealth_DoScreenBleedEffect = false;
+			}
+			
+			float fBleedEffectAlpha = cMath_Easing(eEasing_SineOut, mfHealth_BleedEffectT) * 1.5f;
+			
+			if (bPlayerIsHurt && 
+				mbHealth_BleedingStopped == false && 
+				mlHealth_BleedEffectScreenId == -1)
+			{
+				mlHealth_BleedEffectScreenId = Effect_Screen_Start("player_damage_screen_major.mat", cVector2f(0.5f, 0.45f), cVector2f(1.75f, 0.875f));
+			}
+			
+			if (mlHealth_BleedEffectScreenId != -1)
+			{
+				Effect_Screen_SetAlpha(mlHealth_BleedEffectScreenId, fBleedEffectAlpha);
+				
+				if (bPlayerIsHurt == false || mbHealth_BleedingStopped)
+				{
+					Effect_Screen_FadeOut(mlHealth_BleedEffectScreenId, 0.5f);
+					mlHealth_BleedEffectScreenId = -1;
+				}
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void PlayBleedBark()
+	{
+		tString sSubPath = Player_GetGasMaskEquipped() ? "mask/" : "world/";
+		tString sPainSoundPath = "player/vocalisations/" + sSubPath;
+		PlayerEmotion_PlaySound(eEmotionPlaylistType_Vocal, eEmotionSoundType_OneShotEvent, 2, sPainSoundPath + "pain_bleeding");
+	}
+	
+	//------------------------------------------------------------
+	
+	bool GetIsBleeding()
+	{
+		const float fPlayerhealth = mBaseObj.GetHealth();
+		bool bPlayerIsHurt = fPlayerhealth <= 0.9f;
+		
+		return bPlayerIsHurt && mbBleedingIsActive && mbHealth_BleedingStopped == false && Player_IsDead() == false;
+	}
+
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// HEALING EFFECTS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	int mlHealingFxState = 0;
+	bool mbHealingFxActive = false;
+	bool mbFullHealFx = false;
+	tString msHealingItemEntity = "";
+	float mfBandageApplyEndTimer = 0.f;
+	float mfHealAmount = 0.f;
+	float mfHealStartDelay = 0.f;
+	
+	//------------------------------------------------------------
+	
+	void _Global_Heal()
+	{
+		float fHealAmount = cScript_GetGlobalArgFloat(0);
+		bool bFeedbackOnly = cScript_GetGlobalArgBool(1);
+		//mfHealStartDelay = 0.25f;
+		Heal(fHealAmount, bFeedbackOnly);
+	}
+	
+	//------------------------------------------------------------
+	
+	void StartHeal()
+	{
+		bool bFullHeal = mfHealAmount > 0.5f;
+		mbFullHealFx = bFullHeal;
+		
+		//////////////////
+		// Play animations
+		CreateHealingItemEntity(bFullHeal);
+		if (msHealingItemEntity == "")
+			return;
+			
+		tString sPlayerHealAnim = bFullHeal ? "player_medkit_usage" : "player_bandage_application";
+		PlayerBody_PlayCutsceneAnimation(sPlayerHealAnim, false, 0.1);
+		
+		tString sHeldItemHealAnim = bFullHeal ? "medkit_usage" : "bandage_application";
+		Entity_PlayAnimation(msHealingItemEntity, sHeldItemHealAnim, 0.1f, false, true, "", false, false);
+		
+		mfBandageApplyEndTimer = bFullHeal ? 11.f : 5.833f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void Heal(float afHealAmount, bool abFeedbackOnly)
+	{
+		///////
+		// Heal
+		if (abFeedbackOnly == false)
+		{
+			afHealAmount = cMath_Max(0.f, afHealAmount);
+			float fHealth = mBaseObj.GetHealth();
+			fHealth = cMath_Clamp(fHealth + afHealAmount, 0.f, 1.f);
+			mBaseObj.SetHealth(fHealth);
+			mbHealingFxActive = true;
+		}
+		
+		/////////////
+		// Play sound
+		tString sSubPath = Player_GetGasMaskEquipped() ? "mask/" : "world/";
+		tString sSoundPath = "player/vocalisations/" + sSubPath;
+		PlayerEmotion_PlaySound(eEmotionPlaylistType_Vocal, eEmotionSoundType_OneShotEvent, 4, sSoundPath + "heal");
+		
+		/////////////
+		// Callback
+		if (abFeedbackOnly == false)
+		{
+			cLuxMap@ pMap = cLux_GetCurrentMap();
+			if (pMap !is null)
+			{
+				tString sCallback = "void OnPlayerHeal(float afAmount)";
+				if (pMap.ScriptMethodExists(sCallback) && 
+					pMap.ScriptPrepare(sCallback))
+				{
+					pMap.SetArgFloat(0, afHealAmount);
+					pMap.ScriptExecute();
+				}
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void DoHealingFx()
+    {
+		float fFxGoal = 0.4f;		
+        if (mlHealingFxState==0)
+        {
+            ImGui_SetStateFloat("HealingFxAlpha", 0.f);
+            ImGui_FadeStateFloat("HealingFxAlpha", fFxGoal, 0.5f, eEasing_SineInOut);
+            
+            ImGui_AddTimer("ImGuiTimer_NextStateDelay", 1.f);
+			
+			Effect_DollyZoom_Stop();
+			Effect_DollyZoom_Start(0.1f, 0.f, 0.75f, 3.5f);
+            
+            mlHealingFxState=1;
+        }
+        else if (mlHealingFxState==1 && ImGui_IsFading("HealingFxAlpha")==false)
+        {
+            ImGui_SetStateFloat("HealingFxAlpha", fFxGoal);
+            ImGui_FadeStateFloat("HealingFxAlpha", 0.f, 3.f, eEasing_SineInOut);
+            mlHealingFxState=2;
+        }
+        else if (mlHealingFxState==2 && ImGui_IsFading("HealingFxAlpha")==false)
+        {
+            mlHealingFxState=0;
+            mbHealingFxActive=false;
+			mbFullHealFx = false;
+        }
+        
+		if (mbHealingFxActive==false) return;
+		
+		cImGuiGfx gfxBrightVignette("vignette_white_alpha.dds", eImGuiGfx_Texture);
+		gfxBrightVignette.mColor = cColor(0.785,1,0.831,ImGui_GetStateFloat("HealingFxAlpha", 0.f));
+		
+		cVector2f vSize = ImGui_FullScreenSize();
+		cVector3f vPos = ImGui_FullScreenPos(1.f) + (cVector3f(vSize.x, vSize.y, 0.f) * 0.5f);
+		
+		ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+		ImGui_DoImage(gfxBrightVignette, vPos, vSize);
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+    }
+	
+	//------------------------------------------------------------
+	
+	void UpdateHeal(float afTimeStep)
+	{
+/*		///////////////////
+		// Heal start delay
+		if (mfHealStartDelay > 0.f)
+		{
+			mfHealStartDelay -= afTimeStep;
+			
+			if (mfHealStartDelay <= 0.f)
+				StartHeal();
+		}
+		
+		/////////////////////
+		// Heal effects delay
+		if (mfBandageApplyEndTimer > 0.f)
+		{
+			mfBandageApplyEndTimer -= afTimeStep;
+			
+			if (mfBandageApplyEndTimer <= 0.f)
+			{
+				Heal();
+				DestroyHealingItemEntity();
+			}
+		}*/
+	}
+	
+	//------------------------------------------------------------
+	
+	void CreateHealingItemEntity(bool abFullHeal)
+	{
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap is null) return;
+		
+		msHealingItemEntity = "HeldHealingItem";
+		
+		if (Entity_Exists(msHealingItemEntity)==false)
+		{
+			cMatrixf mtx_Matrix = cLux_GetPlayer().GetCamera().GetMatrix();
+			tString sHealingEntityFile = abFullHeal ? "medkit_cutscene.ent" : "bandage_cutscene.ent";
+			pMap.CreateEntity(msHealingItemEntity, sHealingEntityFile, mtx_Matrix, cVector3f(1.f));
+		}
+		
+		iLuxEntity@ pEntity = pMap.GetLatestEntity(); 
+		
+		if (pEntity is null)
+		{
+			Error("[Player_Custom] Something went wrong creating the held entity for the healing cutscene "+ msHealingItemEntity + ".");
+			msHealingItemEntity = "";
+			return;
+		}
+		
+		Entity_SetCollideCharacter(msHealingItemEntity, false);
+		Entity_SetCollide(msHealingItemEntity, false);
+		Entity_SetActive(msHealingItemEntity, true);
+		Prop_SetStaticPhysics(msHealingItemEntity, true);
+		Prop_ClearVelocity(msHealingItemEntity);
+		Entity_SetInteractionDisabled(msHealingItemEntity, true);
+		Prop_SetRenderLayer(msHealingItemEntity, glArmsRenderLayer);
+		Entity_SetReflectionVisibility(msHealingItemEntity, false, true);
+		Entity_SetCastShadows(msHealingItemEntity, cLux_GetUserConfig().GetBool("Graphics", "BodyShadows", true));
+		
+		PlayerBody_AttachProp(msHealingItemEntity, "R_Hand", true, false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DestroyHealingItemEntity()
+	{
+		if (Entity_Exists(msHealingItemEntity)==false) return;
+			
+		Entity_SetActive(msHealingItemEntity, false);
+		Entity_Destroy(msHealingItemEntity);
+		
+		msHealingItemEntity = "";
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DAMAGE EFFECTS
+	/////////////////////////////////////////
+	//------------------------------------------------------------
+	
+	float mfDamage_ReduceRatBiteCountTime = 0.f;
+	float mfDamage_RatInteractionDisablingTimer = 0.0f;
+	int mlDamage_RatBiteCount = 0;
+	float mfDamageVignetteFlashTimer = 0.f;
+	float mfDamageSwayTimer = 0.f;
+	int mlDamageSwayDoF = -1;
+	float mfDamageSwayAmount = 0.f;
+	float mfDamageVignetteDoFTimer = 0.f;
+	int mlDamageSwayImgTrail = -1;
+	float mfPlayedHurtAnimCount = 0.f;
+	bool mbDamageAnimPlaying = false;
+	tString msDamageAnimEquipItemL = "";
+	tString msDamageAnimEquipItemR = "";
+	array<tString> mvHurtAnims;
+	
+	//------------------------------------------------------------
+	
+	void _Global_GiveDamage()
+	{
+		float fAmount = cScript_GetGlobalArgFloat(0);
+		int lType = cScript_GetGlobalArgInt(1);
+		
+		iLuxEntity@ pEnt = cLux_GetCurrentMap().GetEntityByName(cScript_GetGlobalArgString(2));
+		tID id = pEnt !is null ? pEnt.GetID() : tID_Invalid;
+		
+		mBaseObj.GiveDamage(fAmount, 0, lType, 0.f, id, -1);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnDamageTaken(float afAmount, int aType, tID a_idSource) override
+	{
+		////////////////
+		// Setup
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		iCharacterBody@ pCharBody = mBaseObj.GetCharacterBody();
+		
+		if (pMap is null) return;
+		if (pCharBody is null) return;
+		
+		tString sSource = "";
+		bool bDead = Player_IsDead();
+		
+		msDamageAnimEquipItemL = Item_GetHeldType(eItemHandlerHand_Left);
+		msDamageAnimEquipItemR = Item_GetHeldType(eItemHandlerHand_Right);
+		
+		if (aType != eDamageType_Fall && aType != eDamageType_FallBig)
+			mfHealthRegen_TimeSinceDamage = 0.f;
+		
+		////////////////
+		// Fall damage
+		if (aType == eDamageType_Fall || aType == eDamageType_FallBig)
+		{
+			sSource = "Fall";
+			
+			if (bDead == false)
+			{				
+				if (PlayerBody_IsActive() && aType == eDamageType_FallBig)
+				{
+					mbDamageAnimPlaying = true;
+					PlayerBody_PlayCutsceneAnimation("fall_and_get_up_quickly", false, 0.3f, "", 1.3f, 0.f, false, 0.f, 0.f);
+					PlayerBody_SetCutsceneMaxPitch(0.f);
+					PlayerBody_SetCutsceneMaxYaw(0.f);
+				}
+			}
+		}
+		
+		////////////////
+		// Gun
+		else if (aType == eDamageType_Gun)
+		{			
+			Player_SetMoveSpeedMul(0.3f, ePlayerMoveSpeedMulType_Hurt);
+			Player_FadeMoveSpeedMulTo(1.f, 1.f, ePlayerMoveSpeedMulType_Hurt);
+			
+			///////////////////
+			// Hurt by shotgunner
+			cLuxAgent@ pAgent = cLux_ID_Agent(a_idSource);
+			if (pAgent !is null && pAgent.GetClassName() == "cScrAgentShotgunner")
+			{
+				mbDamageAnimPlaying = true;
+				
+				float fDist = 0.f;
+				cVector3f vNrm = 0.f;
+				cLux_GetClosestBody(pCharBody.GetFeetPosition() + cVector3f(0.f, 0.2f, 0.f), cVector3f_Down, 2.f, fDist, vNrm);
+				
+				if (fDist < 10.f)
+					pCharBody.SetFeetPosition(pCharBody.GetFeetPosition() + cVector3f(0.f, -fDist + 0.205f, 0.f), true);
+				
+				tString sAnim = Player_GetCrouching() ? "player_shot_shotgun_crouched_1" : "player_shot_shotgun_1";
+				PlayerBody_PlayCutsceneAnimation(sAnim, false, 0.3f);
+				PlayerBody_SetCutsceneMaxPitch(0.f);
+				PlayerBody_SetCutsceneMaxYaw(0.f);				
+			}
+		}
+		
+		////////////////
+		// Screen effects
+		if (aType != eDamageType_Silent)
+		{
+			if (mbDamageAnimPlaying == false && mfPlayedHurtAnimCount <= 0.f)
+			{
+				if (aType == eDamageType_Gun) // TODO: Remove this and always play the anim! Just here for now since it bugs out when bitten by the rats
+				{
+					mfPlayedHurtAnimCount = 2.f;
+					PlayerBody_PlayAdditiveCameraAnimation(GetHurtAnim(), false, 0.f, 1.f);
+				}
+			}
+			
+			DoDamageScreenEffects(afAmount);
+			
+			tString sDamageSound = "player/foley/damage/player_hit";
+			Sound_PlayGui(sDamageSound, 1.0f, eSoundEntryType_GuiWorld);
+		}
+		
+		////////////////
+		// Mod events
+		bool isAI = false;
+		iLuxEntity@ pEnt = pMap.GetEntityByID(a_idSource);
+		if (pEnt !is null)
+		{
+			sSource = pEnt.GetName();
+			isAI = (pEnt.GetEntityType()==eLuxEntityType_Critter) || (pEnt.GetEntityType()==eLuxEntityType_Agent);
+		}
+			
+		if (isAI == false)
+		{
+			if (afAmount >= 0.5f)
+				ModEvent_Trigger(eModEvent_Hurt_Major);
+			else if (afAmount >= 0.1f)
+				ModEvent_Trigger(eModEvent_Hurt_Minor);
+		}
+		
+		////////////////
+		// Rat damage
+		if (aType == eDamageType_RatBite && bDead == false)
+		{
+			++mlDamage_RatBiteCount;
+			mfDamage_ReduceRatBiteCountTime = gfPlayer_TimeUntilReduceRatBiteCount;
+			
+			SetMoveSpeedMul(ePlayerMoveSpeedMulType_RatBite, 0.25);
+			SetRunSpeedMul(0);
+			FadeMoveSpeedMulTo(ePlayerMoveSpeedMulType_RatBite, 1, 1.5);
+			FadeRunSpeedMulTo(1, 0.25);
+			
+			Player_SetInteractionAllowed("RatBite", false);
+			mfDamage_RatInteractionDisablingTimer = 1.0f;
+			
+			Sound_CreateAtEntity("RatBite", "player/foley/damage/rat_bite", "player");
+		}
+		
+		////////////////
+		// Broadcast message
+		array<iLuxEntity@> vAgents;
+		pMap.GetEntityArray("*", eLuxEntityType_Agent, "", vAgents);
+		
+		for (int i = 0; i < vAgents.size(); ++i)
+		{
+			cLuxAgent@ pAgent = cLux_ToAgent(vAgents[i]);
+			if (pAgent is null) continue;
+			
+			pAgent.BroadcastMessage(eCustomEntityMessage_PlayerHurt, null, cVector3f(0.f), aType);
+		}
+		
+		///////////////////////////
+		// Damage scares the player
+		mfForcedScaredCount = 10.f;
+		
+		//////////////////
+		// Pain sound
+		tString sSubPath = Player_GetGasMaskEquipped() ? "mask/" : "world/";
+		tString sPainSoundPath = "player/vocalisations/" + sSubPath;
+		tString sPainSound = "pain";
+		
+		if (aType == eDamageType_RatBite)
+			sPainSound = "rat_bite_pain";
+		else if (aType == eDamageType_Gas)
+			sPainSound = "cough";
+		else if (aType == eDamageType_Fire)
+			sPainSound = "burn";
+		else if (aType == eDamageType_Fall || aType == eDamageType_FallBig)
+			sPainSound = "land";
+		
+		PlayerEmotion_PlaySound(eEmotionPlaylistType_Vocal, eEmotionSoundType_OneShotEvent, 3, sPainSoundPath + sPainSound);
+		
+		////////////////
+		// Map callback
+		tString sFunc = "void OnDamageTaken(const tString&in, int)";
+		if (pMap.ScriptMethodExists(sFunc) && pMap.ScriptPrepare(sFunc))
+		{
+			pMap.SetArgString(0, sSource);
+			pMap.SetArgInt(1, aType);
+			if (pMap.ScriptExecute())
+			{
+				cLux_AddDebugMessage("Using OnDamageTaken(" + sSource + ", " + aType + ")");
+			}
+		}
+		
+		//////////////////////
+		// Start bleeding sound
+		float fPlayerhealth = mBaseObj.GetHealth();
+		if (fPlayerhealth >= 1.f && 
+			GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem) == false)
+		{
+			Sound_CreateAtEntity("BleedingStart", "player/foley/damage/blood_start", "player");
+		}
+		
+		//////////////////////
+		// Start bleeding?
+		if (GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem) &&
+			fPlayerhealth - afAmount <= 0.9f)
+		{
+			mbHealth_BleedingStopped = false;
+			mfBloodDropSoundTimer = 0.f;
+			mfBloodDropSoundInterval = cMath_RandRectf(1.f, 2.f);
+		}
+		
+		cLux_AddDebugMessage("Damage Source " + sSource);
+	}
+	
+	//------------------------------------------------------------
+	
+	tString GetHurtAnim()
+	{
+		if (mvHurtAnims.size() == 0)
+		{
+			mvHurtAnims.resize(gsPlayer_HurtAnims.length());
+			for (int i = 0; i < gsPlayer_HurtAnims.length(); ++i)
+				mvHurtAnims[i] = gsPlayer_HurtAnims[i];
+		}
+		
+		int lId = cMath_RandRectl(0, mvHurtAnims.size() - 1);
+		tString sAnim = mvHurtAnims[lId];
+		mvHurtAnims.removeAt(lId);
+		
+		return sAnim;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_DoDamageEffects()
+	{
+		float fAmount = cScript_GetGlobalArgFloat(0);
+		float FShake = cScript_GetGlobalArgFloat(1);
+		DoDamageScreenEffects(fAmount, FShake);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DoDamageScreenEffects(float afAmount, float afShake = 0.05f)
+	{
+		/////////////////
+		// Screen effects
+		float fRumbleAmount = 0.7f;
+		float fRumbleTime = 0.5f;
+		if (afAmount > 0.3f)
+		{
+			fRumbleAmount = 0.9f;
+			fRumbleTime = 0.7f;
+			Effect_Screen_Start("player_damage_screen_major.mat", cVector2f(0.5, 0.52), cVector2f(1.75, 0.875), 1, 0, 0.25f, 3.f);
+		}
+		else
+		{
+			Effect_Screen_Start("player_damage_screen_minor.mat", cVector2f(0.5, 0.32), cVector2f(1.75, 0.5), 0.5, 0, 0.25f, 3.f);
+		}
+        
+		Effect_Rumble_Start(fRumbleAmount, fRumbleTime);
+		Effect_Shake_Start(afShake, 0.25, 0.05, 0.1f);
+        Effect_DollyZoom_Start(0.1f, 0.f, 0.15f, 1.5f);
+        Effect_ImageTrail_Start(1, 0, 0, 1);
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetMinFallDamageHealth() override
+	{
+		return 0.f;
+	}
+	
+	
+	//------------------------------------------------------------
+	
+	void UpdateRatDamage(float afDeltaTime)
+	{		
+		if (mfDamage_RatInteractionDisablingTimer > 0)
+		{
+			mfDamage_RatInteractionDisablingTimer -= afDeltaTime;
+			if (mfDamage_RatInteractionDisablingTimer < 0)
+				Player_SetInteractionAllowed("RatBite", true);
+		}
+		
+		if (mlDamage_RatBiteCount <= 0)
+			return;
+			
+		mfDamage_ReduceRatBiteCountTime -= afDeltaTime;
+		if (mfDamage_ReduceRatBiteCountTime <= 0.f)
+		{
+			--mlDamage_RatBiteCount;
+			if (mlDamage_RatBiteCount < 0)
+				mlDamage_RatBiteCount = 0;
+				
+			mfDamage_ReduceRatBiteCountTime = gfPlayer_TimeUntilReduceRatBiteCount;
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetCanDieFromNextRatBite()
+	{
+		bool bCanDie = RatHandler_GetAttackingRatCount() >= glPlayer_MinAttackRatCountToDie && 
+					   mlDamage_RatBiteCount + 1 >= glPlayer_RatBiteNumUntilDeath;
+		
+		cScript_SetGlobalReturnBool(bCanDie);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DoDamageVignette(float afTimeStep)
+	{
+		cImGuiGfx gfxBrightVignette("vignette_white_alpha", eImGuiGfx_Texture);
+		
+		const float fHealth = mfHealth_SmoothHealth;
+		const float fHealthInv = cMath_Clamp(1.f - fHealth, 0.f, 1.f);
+		
+		const float fAlphaPulserate = 1.f + (fHealthInv * 3.f);
+		mfDamageVignetteFlashTimer += afTimeStep * fAlphaPulserate;
+		const float fAlphaPulse = cMath_Abs(cMath_Cos(mfDamageVignetteFlashTimer)) * (fHealthInv * 0.2f);
+		
+		const float fAlpha = 1.f - cMath_Max(0.1f, fHealth);
+		float fAlphaHealingMul = 1.f - cMath_Clamp(ImGui_GetStateFloat("HealingFxAlpha", 0.f) / 0.4f, 0.f, 1.f);
+		
+		gfxBrightVignette.mColor = cColor(0.5f, 0.15f, 0.15f, cMath_Max(fAlpha - fAlphaPulse, 0.f) * fAlphaHealingMul);
+		
+		if (fAlpha > 0.f)
+		{
+			cVector2f vSize = ImGui_FullScreenSize();
+			cVector3f vPos = ImGui_FullScreenPos(1.f) + (cVector3f(vSize.x, vSize.y, -0.25) * 0.5f);
+			
+			ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+			ImGui_DoImage(gfxBrightVignette, vPos, vSize);
+			ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		}
+	}
+	
+	//-----------------------------------------------------------
+	
+	float mfBleedingIconIntroCount = 0.f;
+	float mfBleedingIconCount = 0.f;
+	float mfBleedingIconAlphaMul = 0.f;
+	
+	//-----------------------------------------------------------
+	
+	void DrawBleedingIcon(float afTimeStep)
+	{	
+		if (GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem) == false)
+			return;
+		
+		/////////////////
+		// Show icon?
+		float fAlphaGoal = 0.f;		
+		
+		if (mBaseObj.GetCurrentStateId() == ePlayerState_Custom_CheckHealth)
+		{
+			cScript_RunGlobalFunc("State_CheckHealth", "", "_Global_GetTutorialAnimActive");
+			bool bTutorialAnimActive = cScript_GetGlobalReturnBool();
+			
+			mfBleedingIconIntroCount += afTimeStep;
+				
+			float fHealth = mBaseObj.GetHealth();
+			bool bBleeding = fHealth <= 0.9f && mbHealth_BleedingStopped == false;
+			float fIntroTime = fHealth > 0.75f ? 0.3f : 0.85f;
+			
+			if (bTutorialAnimActive)
+			{
+				fIntroTime = 2.4f;
+			}
+			
+			if (mfBleedingIconIntroCount >= fIntroTime && 
+				bBleeding)
+			{
+				fAlphaGoal = 1.f;
+			}
+		}
+		else
+		{
+			mfBleedingIconIntroCount = 0.f;
+		}
+		
+		mfBleedingIconAlphaMul = cMath_IncreaseTo(mfBleedingIconAlphaMul, afTimeStep * (1.f / 0.35f), fAlphaGoal);
+		
+		/////////////////
+		// Draw icon
+		if (mfBleedingIconAlphaMul > 0.f)
+		{	
+			tString sIcon = gsPlayer_BleedingIcon;
+			tString sBgIcon = gsPlayer_BleedingIconBg;
+			cImGuiGfx gfx(sIcon, eImGuiGfx_Texture);	
+			cImGuiGfx gfxBg(sBgIcon, eImGuiGfx_Texture);	
+			
+			iLuxEntity@ pEnt = cLux_ID_Prop(PlayerBody_GetEntityID());
+			cMeshEntity@ pMeshEnt = pEnt !is null ? pEnt.GetMeshEntity() : null;
+			cNode3D@ pSocket = pMeshEnt !is null ? pMeshEnt.GetSocket("Socket_BleedingIcon") : null;		
+			
+			cVector3f vPos(0.f);
+			
+			if (pSocket !is null)
+			{
+				cVector2f vScreenSize = cGraphics_GetLowLevel().GetScreenSizeFloat();
+				cRect2l rect = cMath_GetClipRectFromSphere(pSocket.GetWorldPosition(), 0.01f, cLux_GetViewport().GetCamera().GetFrustum(), cVector2l(vScreenSize.x, vScreenSize.y), false, false);
+				cVector2f vHudPos = (cVector2f(rect.x, rect.y) * cLux_GetHudVirtualSize()) / vScreenSize;
+				vPos = cLux_GetHudVirtualStartPos() + cVector3f(vHudPos.x, vHudPos.y, 1.f) - ImGui_GetCurrentGroupPos();
+			}
+			
+			float fNrmSize = 0.06f;
+			cVector2f vSize = ImGui_NrmSize(fNrmSize);
+			
+			mfBleedingIconCount += afTimeStep * (1.f / 0.333f);
+			mfBleedingIconCount %= cMath_PiMul2;
+			
+			float fPulseAlpha = (0.5f + cMath_Abs(cMath_Cos(mfBleedingIconCount) * 1.5f) * 0.5f) * mfBleedingIconAlphaMul;
+			cColor colorMul = cColor(1.f, 1.f, 1.f);
+			
+			ImGui_SetAlignment(eImGuiAlign_TopCenter);
+			ImGui_SetModColorMul(cColor(colorMul.r, colorMul.g, colorMul.b, mfBleedingIconAlphaMul));
+			ImGui_DoImageCorrectAspect(gfxBg, vPos, vSize);
+			ImGui_SetModColorMul(cColor(colorMul.r, colorMul.g, colorMul.b, fPulseAlpha));
+			ImGui_DoImageCorrectAspect(gfx, vPos, vSize);
+			ImGui_SetAlignment(eImGuiAlign_TopLeft);
+			ImGui_ResetModifiers();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateLowHealthEffect(float afTimeStep)
+	{
+		const float fHealth = mfHealth_SmoothHealth;
+		
+		///////
+		// Sway
+		const float fSwayThreshold = 0.5f;
+		const bool bShouldSway = (fHealth < fSwayThreshold) && (fHealth > 0.f);
+		const float fSpeed = cLux_GetPlayer().GetCharacterBody().GetMoveSpeed(eCharDir_Forward);
+		const float fSpeedMul = cMath_Clamp(fSpeed, 0.5f, 1.0f);
+		const float fSwayAmountNorm = cMath_Clamp((fSwayThreshold - fHealth) / fSwayThreshold, 0.f, 1.f);
+		const float fDesiredSwayAmount = bShouldSway==false ? 0.f : fSwayAmountNorm * fSpeedMul;
+		
+		if (mfDamageSwayAmount != fDesiredSwayAmount)
+			mfDamageSwayAmount = cMath_IncreaseTo(mfDamageSwayAmount, afTimeStep, fDesiredSwayAmount);
+		
+		if (mfDamageSwayAmount>0.f)
+		{
+			const float fRate = 1.4f * fSpeedMul;
+			mfDamageSwayTimer += afTimeStep * fRate;
+			const float fRoll = mfDamageSwayAmount * 0.01f * cMath_Sin(mfDamageSwayTimer);
+			const float fYaw = mfDamageSwayAmount * -0.03f * cMath_Sin(mfDamageSwayTimer * 1.5f);
+			const float fPitch = mfDamageSwayAmount * 0.001f * cMath_Sin(mfDamageSwayTimer * 1.5f);
+			// TODO: Commented out for now, bring back later!
+			//cLux_GetPlayer().GetCamera().AddRoll(fRoll);
+			//cLux_GetPlayer().GetCamera().AddYaw(fYaw);
+			//cLux_GetPlayer().GetCamera().AddPitch(fPitch);
+		}
+		
+		////////////////
+		// Blurry Vision
+		const float fBlurThreshold = 0.7f;
+		bool bBlurryVision = (fHealth > 0.f) && (fHealth < fBlurThreshold);
+		
+		if (GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem) &&
+			mbHealth_BleedingStopped)
+		{
+			bBlurryVision = false;
+		}
+		
+		if (Platform_IsPS4() || Platform_IsXboxOne())
+		{
+			bBlurryVision = false;
+		}
+		
+		if (bBlurryVision)
+		{
+			///////
+			// DoF
+			if (mlDamageSwayDoF == -1)
+				mlDamageSwayDoF = Effect_DoF_Start(0.f, 1.f, 0.1f, 1.f);
+			
+			const float fDofDist = 20.f;
+			float fDofEnd = cMath_Clamp((fBlurThreshold - (1.f-fHealth)) / fBlurThreshold, 0.05f, 1.f) * 20.f;
+			float fDoFPulseRate = cMath_RandRectf(0.25f, 0.5f);
+			mfDamageVignetteDoFTimer += afTimeStep * fDoFPulseRate;
+			fDofEnd = cMath_Clamp(fDofEnd + cMath_Abs(cMath_Sin(mfDamageVignetteDoFTimer)) * (fDofDist/5), 0.5f, fDofDist);
+			//cLux_AddDebugMessage("fDofEnd: " + fDofEnd);
+			Effect_DoF_FadeFocus(mlDamageSwayDoF, 0.f, fDofEnd, afTimeStep);
+			
+			////////////
+			// Img Trail
+			if (mlDamageSwayImgTrail==-1)
+				mlDamageSwayImgTrail = Effect_ImageTrail_Start(1.1f, 1.f, -1, 1.f);
+			
+			float fImgTrailAmount = cMath_Clamp((fBlurThreshold - fHealth) / fBlurThreshold, 0.1f, 1.f) * 1.5f * fSpeedMul;// (1.f - fHealth) * 1.5f;
+			Effect_ImageTrail_FadeInstanceAmount(mlDamageSwayImgTrail, fImgTrailAmount, afTimeStep);
+		}
+		else
+		{
+			///////////////
+			// Fade out dof
+			if (mlDamageSwayDoF!=-1)
+			{
+				Effect_DoF_FadeOut(mlDamageSwayDoF, 10.f);
+				mlDamageSwayDoF = -1;
+			}
+			
+			/////////////////////
+			// Fade out Img Trail
+			if (mlDamageSwayImgTrail!=-1)
+			{
+				Effect_ImageTrail_FadeOut(mlDamageSwayImgTrail, 5.f);
+				mlDamageSwayImgTrail=-1;
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DEATH
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnPlayerDead(int aType, const tString&in asSource) override
+	{
+		if (mBaseObj.IsActive() && mBaseObj.GetCanDie())
+		{        
+			//////////////////////
+			// Sound
+			Sound_PlayGui("player/vocalisations/hurt/player_death" + Player_GetReactionSoundSuffix(), 1.f);
+			Sound_PlayGui("player/foley/damage/player_death", 1.0f, eSoundEntryType_GuiWorld);
+			
+			iLuxEntity@ pEnt = Map_GetEntity(asSource);
+			
+			//////////////////////////////////////////////
+			// Override the death source based on damage type
+			tString sDeathSource = "General";
+			
+			////////////////
+			// Is it a trap?
+			if (pEnt !is null && pEnt.GetVarBool("IsTrap"))
+			{
+				sDeathSource = "Traps";
+			}
+			//////////////
+			// Not a trap?
+			else
+			{
+				if (aType == eDamageType_Fall || aType == eDamageType_FallBig)
+					sDeathSource = "Fall";
+				else if (aType == eDamageType_Thrown)
+					sDeathSource = "Monster";
+				else if (aType == eDamageType_RatBite)
+					sDeathSource = "Rats";
+				else if (aType == eDamageType_Drowning)
+					sDeathSource = "Drowning";
+			}
+			
+			//////////////////////
+			// Die
+			if (aType == eDamageType_Gun)
+			{
+				tString sAnim = Player_GetCrouching() ? "player_shot_death_crouched_1" : "player_shot_death_1";
+				Death_SetDeathAnimation(sAnim);
+			}
+			
+			Death_Start(sDeathSource);
+			
+			//////////////////////
+			// Close the inventory
+			if (Sketchbook_IsOpen())
+				Sketchbook_Close();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DRAWING
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+
+	void OnDraw(float afFrameTime) override
+	{
+		///////////////////////
+		// Make sure check health light is positioned correctly when inventory is open
+		if (cLux_GetCurrentMap() !is null &&
+			cLux_GetGamePaused() && 
+			Sketchbook_IsOpen())
+		{
+			UpdateCheckHealthLight(afFrameTime);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GUI
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	cUtility_PickBasics mPickBasics;
+	bool mbShowDisabledInteraction = false;
+	bool mbAllowItemCrosshair = true;
+	
+	float mfPromptFrameTime = 0.f;
+	float mfPromptAlpha = 0.f;
+	float mfCombLockPromptAlpha = 0.f;
+	tString msItemPrompt = "";
+	
+	[nosave] bool mbLockCodeQuickAccess = false;
+	float mfLockCodeQuickAccessAlpha = 0.f;
+	
+	//------------------------------------------------------------
+	
+	void OnGui(float afTimeStep) override
+	{
+		cScrPlayer::OnGui(afTimeStep);
+		
+		////////////////
+		// Crosshair
+		{
+			iScrItemHandler_Interface@ pHandler = cast<iScrItemHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_ItemHandler) );
+			
+			tID idFocusEnt = Player_GetFocusEntityID();
+			iLuxEntity@ pFocusEnt = cLux_ID_Entity(idFocusEnt);
+			
+			tString sFocusEntName = pFocusEnt !is null ? pFocusEnt.GetName() : "";
+			tString sFocusEntClass = pFocusEnt !is null ? pFocusEnt.GetClassName() : "";
+			
+			///////////////
+			// Handle interact aux areas
+			if (pFocusEnt !is null && sFocusEntClass == "cScrAreaInteractAux")
+			{
+				tString sInteractParent = InteractAux_GetInteractParent(sFocusEntName);
+				@pFocusEnt = cLux_GetCurrentMap().GetEntityByName(sInteractParent);
+				
+				if (pFocusEnt !is null)
+				{
+					sFocusEntName = pFocusEnt.GetName();
+					sFocusEntClass = pFocusEnt.GetClassName();
+				}
+				else
+				{
+					sFocusEntName = "";
+					sFocusEntClass = "";
+				}
+			}
+			
+			///////////////
+			// Draw pickup gui!
+			if (!cLux_GetFootageModeActive() &&
+				pHandler !is null &&
+				(sFocusEntClass == "cScrPropPickup" ||
+				 sFocusEntClass == "cScrPropReadable" ||
+				 sFocusEntClass == "cScrPropRabbitDoll" ||
+				 sFocusEntClass == "cScrPropReadableDogTag"))
+			{
+				bool bIsLockerItem = (sFocusEntClass == "cScrPropPickup" && Pickup_GetIsLockerItem(sFocusEntName)) ||
+									 (sFocusEntClass == "cScrPropReadable" && Readable_GetIsLockerItem(sFocusEntName));
+				pHandler.DrawPickupGui(sFocusEntName, bIsLockerItem);
+			}
+			
+			eImGuiGfx gfxType = eImGuiGfx_Image;
+
+			///////////////
+			// Draw crosshair
+			if(	mfCrosshairAlphaMul > 0.f &&
+				meCrossHairState != eCrossHairState_None &&
+				cLux_GetPlayer().IsActive() &&
+				cLux_GetGamePaused()==false &&
+				cLux_GetPlayer().GetCamera() is cLux_GetViewport().GetCamera() &&
+				cLux_GetHideCrosshair() == false)
+			{
+				tString sCross = "";
+
+				///////////////
+				// Special behavior
+				bool bFocusingOnLockerPickup = (sFocusEntClass == "cScrPropPickup" && Pickup_GetIsLockerItem(sFocusEntName)) ||
+												(sFocusEntClass == "cScrPropReadable" && Readable_GetIsLockerItem(sFocusEntName));
+												
+				if (cLux_GetFootageModeActive() && meCrossHairState == eCrossHairState_Default)
+				{
+					sCross = "";
+				}
+				else if (mbHideDefaultCrosshair && meCrossHairState == eCrossHairState_Default)
+				{
+					sCross = "";
+				}
+				else if (mbUseNoHintsCursor && meCrossHairState != eCrossHairState_Default && meCrossHairState != eCrossHairState_Aim)
+				{
+					sCross = mvCrossHairGfx[eCrossHairState_NoHints];
+				}
+				else if (mbUseLargeDefaultCursor && meCrossHairState == eCrossHairState_Default)
+				{
+					sCross = mvCrossHairGfx[eCrossHairState_DefaultLarge];
+				}
+				else if (bFocusingOnLockerPickup)
+				{
+					sCross = mvCrossHairGfx[eCrossHairState_Default];
+				}
+				else
+				{
+					sCross = mvCrossHairGfx[meCrossHairState];
+				}
+				
+				///////////////
+				// Equipped inventory item crosshair			
+				float fCrosshairSizeMult = 1.0;
+				bool bItemCanBeUsed = false;
+				float fCrosshairAlpha = 1.f;
+				cColor crosshairColor = cColor(1,1,1,fCrosshairAlpha*mfCrosshairAlphaMul);	
+				
+				if (mbAllowItemCrosshair && pHandler !is null)
+				{
+					tString sItem = pHandler.GetHeldItem(eItemHandlerHand_Right);
+					iScrItem@ pItem = pHandler.GetItemByID(sItem);
+					
+					if (pItem !is null && pHandler.IsItemHeld(eItemHandlerHand_Right))
+					{		
+						///////////////
+						// If the item can be used on things
+						cCamera@ pCam = mBaseObj.GetCamera();
+						if (Player_GetIsUsingItem() &&
+							pCam !is null && 
+							mPickBasics.UpdatePickCheck(pCam, true))
+						{
+							bItemCanBeUsed = pHandler.CanUseHeldItemOnWorld(eItemHandlerHand_Right, mPickBasics.GetFocusedEntity().GetName()) ||
+											 meCrossHairState == eCrossHairState_UseCutters ||
+											 meCrossHairState == eCrossHairState_UseTorch ||
+											 meCrossHairState == eCrossHairState_UseWrench ||
+											 meCrossHairState == eCrossHairState_UseLighter;
+						}					
+						
+						// Only show crosshair if not holding, or holding and it can be used
+						if (bItemCanBeUsed || pItem.GetType().GetUsesArmAnimation() == false)
+						{
+							sCross = pItem.GetCrossHairGfx();
+							
+							if (sCross == "")
+								sCross = mvCrossHairGfx[eCrossHairState_Default];
+							else
+							{
+								gfxType = eImGuiGfx_Texture;
+								fCrosshairSizeMult = 0.35;
+							}
+								
+							if (bItemCanBeUsed == false)
+								crosshairColor = cColor(0.4, 0.4, 0.4);
+						}
+					}
+				}
+
+				///////////////
+				// Draw crosshair
+				if ( (meCrossHairState != eCrossHairState_Default  || gbDrawDefaultCrosshair) && sCross != "")
+				{
+					cImGuiGfx pCrossGfx = cImGuiGfx(sCross, gfxType);
+					
+					cVector3f vCrosshairPos = cVector3f(cLux_GetHudVirtualCenterSize().x/2, cLux_GetHudVirtualCenterSize().y/2, 0);
+					cVector2f vCrosshairSize = cLux_GetCurrentImGui().GetGfxSize(pCrossGfx) * fCrosshairSizeMult;
+					
+					// Draw Outline
+					if (bItemCanBeUsed)
+					{
+						float fStrength = Platform_IsConsole() ? 4 : 20;
+						DrawCrosshair(pCrossGfx, vCrosshairPos, vCrosshairSize * 1.05, cColor(fStrength,fStrength,fStrength, 0.75));
+					}
+
+					DrawCrosshair(pCrossGfx, vCrosshairPos, vCrosshairSize, crosshairColor);
+					
+					///////////////
+					// Draw counter for fuel?
+					if (meCrossHairState == eCrossHairState_UseFuel || meCrossHairState == eCrossHairState_UseFuelBottle)
+					{
+						///////////////
+						// Show fuel count
+						bool bGotFuel = ItemType_GetCountInInventory("Fuel") > 0 || ItemType_GetCountInInventory("FuelBottle") > 0;
+						Item_ShowFuelCount(bGotFuel == false, true);
+					}
+					
+					///////////////
+					// Draw counter for empty bottles?
+					else if (meCrossHairState == eCrossHairState_UseEmptyBottle)
+					{
+						///////////////
+						// Show fuel count
+						bool bGotBottle = ItemType_GetCountInInventory("EmptyBottle") > 0;
+						Item_ShowBottleCount(bGotBottle == false, true);
+					}
+				}
+			}
+		}
+		
+		/////////////
+		// Item prompts
+		DrawItemPrompts(afTimeStep);
+		
+		/////////////
+		// Combination lock prompts
+		DrawCombinationLockPrompts(afTimeStep);
+		
+		/////////////
+		// Healing Fx
+		if (mbHealingFxActive)
+            DoHealingFx();
+			
+		/////////////////
+		// Low Health Fx
+		DoDamageVignette(afTimeStep);
+		
+		////////////////
+		// Bleeding icon
+		DrawBleedingIcon(afTimeStep);
+		
+		////////////////
+		// Dream lights
+		DrawDreamLights(afTimeStep);
+		
+		//////////////////
+		// Draw debug menu
+		if(cLux_ScriptDebugOn() && cLux_HideDebugOutputOn()==false)
+		{
+			cVector3f vPos;
+			vPos.x = -cLux_GetHudVirtualOffset().x;
+			vPos.y = -cLux_GetHudVirtualOffset().y;
+			vPos.z = 0.0f;
+			
+			ImGui_SetTransCategory("");
+			
+			ImGui_GroupBegin(vPos, ImGui_GetSize());
+			
+			cColor sDefaultColor = cColor(1.0f,1.0f,0.0f);
+			cImGuiLabelData labelData;
+			labelData.mColorBase = sDefaultColor;
+			tString sText;
+			
+			if (cLux_GetGodModeActivated())
+			{
+				sText += "!!GOD!!";
+			}
+			else
+			{
+				sText += "Health: "+cString_ToString(Player_GetHealth(),3)+"  ";
+			}
+			
+			sText += "  Light Level: "+cString_ToString(GetLightLevel(true),2) + "  ";
+			
+			sText += "  VisMul: "+cString_ToString(mBaseObj.GetVisibilityRangeMul(),2) + "  ";
+			
+			sText += "  Terror: "+cString_ToString(Terror_GetAmount(), 2) + "  ";
+			
+			sText += "  Oxygen: "+mfWaterHiding_OxygenCount + "  ";
+			
+			ImGui_DoLabelExt(sText, labelData, cVector3f(190.0f,ImGui_GetSize().y-20.0f,100.0f), -1,1.0f);
+			ImGui_GroupEnd();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void DrawCrosshair(cImGuiGfx @apCross, const cVector3f &in avPos, const cVector2f &in avSize, const cColor aColor = cColor_White)
+	{
+		//////////////////////////////////////////
+		// Don't draw while equip gui is animating
+		iScrItemHandler_Interface@ pHandler = cast<iScrItemHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_ItemHandler) );
+		if (pHandler.GetIsPickupGuiAnimating()) return;
+		
+		////////////
+		// Crosshair
+		cVector3f vRenderPos = avPos;
+		vRenderPos.x -= avSize.x/2;
+		vRenderPos.y -= avSize.y/2;
+		ImGui_DrawGfx(apCross, vRenderPos, avSize, aColor);
+		
+		////////////////////////////
+		// Draw Disabled Interaction
+		int lState = mBaseObj.GetCurrentStateId();
+		bool bHasFuel = ItemType_IsInInventory("Fuel") || ItemType_IsInInventory("FuelBottle");
+		bool bUsingFuel = meCrossHairState == eCrossHairState_UseFuel || meCrossHairState == eCrossHairState_UseFuelBottle;
+		
+		bool bStateOK = mbShowDisabledInteraction || 
+						(bUsingFuel && bHasFuel==false) ||
+						(ItemType_GetCountInInventory("EmptyBottle")==0 && meCrossHairState == eCrossHairState_UseEmptyBottle) || 
+						(bUsingFuel && bHasFuel && Generator_GetFullness() >= Generator_GetFullnessInteractLimit());
+		
+		if (bStateOK && meCrossHairState != eCrossHairState_Default)
+		{
+			cImGuiGfx pNoInteractIcon = cImGuiGfx("crosshair_cross");
+			
+			cVector2f vIconSize = cLux_GetCurrentImGui().GetGfxSize(pNoInteractIcon);
+			cVector3f vIconRenderPos = avPos;
+			vIconRenderPos.x -= vIconSize.x/2;
+			vIconRenderPos.y -= vIconSize.y/2;
+			vIconRenderPos.z = 0.01f;
+			
+			ImGui_DrawGfx(pNoInteractIcon, vIconRenderPos, vIconSize);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void DrawItemPrompts(float afTimeStep)
+	{
+		if (mbHintsEnabled == false) return;
+		
+		/////////////////////
+		// Get prompt
+		tString sNewPrompt = "";
+		
+		if (Player_GetIsInUsingItemState())
+		{
+			cScript_RunGlobalFunc(mBaseObj.GetCurrentStateName(), "", "_Global_GetItemPrompt");
+			sNewPrompt = cScript_GetGlobalReturnString();
+		}
+		
+		if (sNewPrompt != "" && msItemPrompt != sNewPrompt)
+			msItemPrompt = sNewPrompt;
+		
+		if (msItemPrompt == "" && mfPromptAlpha <= 0.f) 
+			return;
+		
+		/////////////////////
+		// Time
+		mfPromptFrameTime += afTimeStep;
+			
+		/////////////////////
+		// Setup
+		cVector3f vPos = cVector3f_Zero;
+		vPos.x = -cLux_GetHudVirtualOffset().x;
+		vPos.y = -cLux_GetHudVirtualOffset().y;
+		vPos.z = 0.0f;
+				
+		cVector2f vScreenSize = ImGui_GetSize();
+		cVector2f vSize = vScreenSize;
+				
+		cLuxScreenTextFormatParameters formatParams;
+		formatParams.mLabelText.mColorBase = cColor(1.f);
+		formatParams.mLabelText.mFontAlign = eFontAlign_Left;
+		formatParams.mLabelText.mFont.SetFile(FontHandler_GetFont(eFontType_Hints, 56));
+		formatParams.mLabelText.mFont.mvSize = cVector2f(22.f);
+		formatParams.mfIconGamepadHeight = formatParams.mLabelText.mFont.mvSize.y;
+		formatParams.mfIconKeyHeight = formatParams.mLabelText.mFont.mvSize.y;
+		formatParams.mfIconMouseHeight = formatParams.mLabelText.mFont.mvSize.y;
+				
+		/////////////////////
+		// Start group
+		ImGui_GroupBegin(vPos, vSize);
+			ImGui_SetTransCategory("");
+					
+			cVector3f vPromptPos = ImGui_NrmPosGroup(0.840f, 0.925f, 2.f);
+					
+			/////////////////////
+			// Alpha
+			float fAlphaGoal = Player_GetShowUseItemPromptForState(mBaseObj.GetCurrentStateId()) ? 1.f : 0.f;
+			mfPromptAlpha = cMath_IncreaseTo(mfPromptAlpha, (1.f / 0.2f) * afTimeStep, fAlphaGoal);
+						
+			cColor color = formatParams.mLabelText.mColorBase;
+			color.a = mfPromptAlpha;
+			ImGui_SetModColorMul(color);
+						
+			/////////////////////
+			// Draw prompt!
+			array<tWString> vCurrentPromptLines;
+			array<cLuxScreenTextIcon@> vCurrentPromptIcons;
+			array<array<int>> vCurrentPromptIconsPerLine;
+						
+			float fLineHeight = 0.f;
+			float fDisplayTime = 0.f;
+			bool bGamepad  = cLux_GetInputHandler().GetGamepadWasLastDeviceUsed();
+
+			cLux_ParseStringIntoScreenText(cLux_Translate("ItemPrompts", msItemPrompt), cLux_GetGameHudImGui(), formatParams, vCurrentPromptLines, 
+										   vCurrentPromptIcons, vCurrentPromptIconsPerLine, fLineHeight, fDisplayTime, bGamepad);
+			
+			float fMaxWidth = 0;
+			for (int i = 0; i < vCurrentPromptLines.length(); i++)
+			{
+				float fLineWidth = GetFontLengthW(formatParams.mLabelText.mFont, 1.0f, vCurrentPromptLines[i]) + 64;
+				if (fLineWidth > fMaxWidth)
+					fMaxWidth = fLineWidth;
+			}
+			
+			vPromptPos.x = cMath_Min(vPromptPos.x, ImGui_NrmPosGroup(1.0f, 0, 0).x - fMaxWidth);
+			
+			cLux_DrawScreenText(cLux_GetGameHudImGui(), mfPromptFrameTime, formatParams.mLabelText, vPromptPos, fMaxWidth, 1.f, 
+								vCurrentPromptLines, vCurrentPromptIcons, vCurrentPromptIconsPerLine);
+					
+			/////////////////////
+			// End group
+			ImGui_ResetModifiers();
+		ImGui_GroupEnd();
+		
+		/////////////////////
+		// No prompt and faded out? Reset!
+		if (sNewPrompt == "" && mfPromptAlpha <= 0.f)
+			msItemPrompt = "";
+	}
+	
+	//------------------------------------------------------------
+	
+	void DrawCombinationLockPrompts(float afTimeStep)
+	{		
+		/////////////////////
+		// Setup
+		cVector3f vScreenPos = ImGui_FullScreenPos(0.f);
+		cVector2f vScreenSize = ImGui_FullScreenSize();		
+		float fAlphaGoal = mBaseObj.GetCurrentStateId() == ePlayerState_Custom_CombinationLock ? 1.f : 0.f;	
+		
+		/////////////////////
+		// Exit prompt				
+		if (mbHintsEnabled &&
+			(mfCombLockPromptAlpha > 0.f || fAlphaGoal > 0.f))
+		{
+			mfPromptFrameTime += afTimeStep;
+				
+			cLuxScreenTextFormatParameters formatParams;
+			formatParams.mLabelText.mColorBase = cColor(1.f);
+			formatParams.mLabelText.mFontAlign = eFontAlign_Left;
+			formatParams.mLabelText.mFont.SetFile(FontHandler_GetFont(eFontType_Hints, 56));
+			formatParams.mLabelText.mFont.mvSize = cVector2f(22.f);
+			formatParams.mfIconGamepadHeight = formatParams.mLabelText.mFont.mvSize.y;
+			formatParams.mfIconKeyHeight = formatParams.mLabelText.mFont.mvSize.y;
+			formatParams.mfIconMouseHeight = formatParams.mLabelText.mFont.mvSize.y;			
+						
+			cVector3f vPromptPos = ImGui_NrmPosGroup(0.865f, 0.925f, 2.f);
+			cVector2f vPromptSize = ImGui_NrmSizeGroup(0.5f, 0.03f);
+						
+			/////////////////////
+			// Alpha				
+			mfCombLockPromptAlpha = cMath_IncreaseTo(mfCombLockPromptAlpha, (1.f / 0.2f) * afTimeStep, fAlphaGoal);
+			
+			cColor color = formatParams.mLabelText.mColorBase;
+			color.a = mfCombLockPromptAlpha;
+			ImGui_SetModColorMul(color);
+						
+			/////////////////////
+			// Draw prompt!
+			array<tWString> vCurrentPromptLines;
+			array<cLuxScreenTextIcon@> vCurrentPromptIcons;
+			array<array<int>> vCurrentPromptIconsPerLine;
+							
+			float fLineHeight = 0.f;
+			float fDisplayTime = 0.f;
+			bool bGamepad  = cLux_GetInputHandler().GetGamepadWasLastDeviceUsed();
+			
+			ImGui_GroupBegin(vScreenPos, vScreenSize);
+			{
+				ImGui_SetTransCategory("ReadablePrompts");
+				
+				cLux_ParseStringIntoScreenText(cLux_Translate("ReadablePrompts", "PromptExit"), cLux_GetGameHudImGui(), formatParams, vCurrentPromptLines, 
+											   vCurrentPromptIcons, vCurrentPromptIconsPerLine, fLineHeight, fDisplayTime, bGamepad);
+					
+				cLux_DrawScreenText(cLux_GetGameHudImGui(), mfPromptFrameTime, formatParams.mLabelText, vPromptPos, vPromptSize.x, 1.f, 
+									vCurrentPromptLines, vCurrentPromptIcons, vCurrentPromptIconsPerLine);
+				
+				ImGui_ResetModifiers();
+			}
+			ImGui_GroupEnd();
+		}				
+		
+		/////////////////////
+		// Lock code quick access		
+		if (mbLockCodeQuickAccess &&
+			(mfLockCodeQuickAccessAlpha > 0.f || fAlphaGoal > 0.f))
+		{
+			cImGuiLabelData labelData;
+			labelData.mbUseBackgroundGfx = false;
+			labelData.mColorBase = cColor(1.f);
+			labelData.mFontAlign = eFontAlign_Left;
+			labelData.mFont.SetFile(FontHandler_GetFont(eFontType_Hints, 56));
+			labelData.mFont.mvSize = cVector2f(20.f);
+			
+			array<tString> vIds;
+			array<tString> vDigits;
+			Sketchbook_GetUnusedCodeData(vIds, vDigits);
+			
+			/////////////////////
+			// Alpha				
+			mfLockCodeQuickAccessAlpha = cMath_IncreaseTo(mfLockCodeQuickAccessAlpha, (1.f / 0.2f) * afTimeStep, fAlphaGoal);
+			
+			cColor color = labelData.mColorBase;
+			color.a = mfLockCodeQuickAccessAlpha;
+			
+			if (vIds.size() > 0)
+			{
+				/////////////////////
+				// Calculate pos & size
+				ImGui_SetTransCategory("CodesUI");
+				
+				float fMaxWidth = 0.f;
+				float fDigitWidthAdd = (labelData.mFont.mvSize.x * 4.f);
+				
+				for (int i = 0; i < vIds.size(); ++i)
+				{			
+					float fLineWidth = GetFontLengthW(labelData.mFont, 1.f, vIds[i]);
+					if (fLineWidth > fMaxWidth)
+						fMaxWidth = fLineWidth;
+				}
+				
+				cVector2f vSize(fMaxWidth + fDigitWidthAdd, labelData.mFont.mvSize.y * vIds.size());				
+				cVector3f vPos = ImGui_NrmPos(cVector3f(0.5f, 0.5f, 1.f));
+				vPos.x -= vSize.x * 0.5f;
+				vPos.y -= (labelData.mFont.mvSize.y * vIds.size()) * 0.5f;
+				
+				if (cScript_GetGlobalVarBool("CombinationLockAtScreenCenter"))
+				{
+					vPos.x = ImGui_NrmPos(cVector3f(1.f, 0.f, 0.f)).x;
+					vPos.x -= vSize.x * 1.2f;
+				}
+				
+				/////////////////////
+				// Draw background
+				cVector2f vBGSize(vSize.x, labelData.mFont.mvSize.y * vIds.size());
+				ImGui_DrawReadableBackground(vPos, vBGSize, color.a * 0.7f, true);
+				
+				/////////////////////
+				// Draw labels
+				ImGui_SetModColorMul(color);
+				
+				ImGui_LayoutBegin(eImGuiLayout_Y, vPos, vSize);
+				{
+					ImGui_SetTransCategory("CodesUI");
+					
+					for (int i = 0; i < vIds.size(); ++i)
+						ImGui_DoLabelExt(vIds[i], labelData);
+				}			
+				ImGui_LayoutEnd();
+				
+				vPos.x += fMaxWidth + fDigitWidthAdd;
+				
+				ImGui_LayoutBegin(eImGuiLayout_Y, vPos, vSize);
+				{
+					ImGui_SetTransCategory("");
+					ImGui_SetAlignment(eImGuiAlign_TopRight);
+					
+					for (int i = 0; i < vDigits.size(); ++i)
+						ImGui_DoLabelExt(vDigits[i], labelData);
+				}			
+				ImGui_LayoutEnd();
+			}
+		}
+		
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		ImGui_ResetModifiers();
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_ShowDisableInteractionCross()
+	{
+		mbShowDisabledInteraction = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	float mfDreamLight_Alpha = 0.f;
+	float mfDreamLight_AlphaGoal = 0.f;
+	float mfDreamLight_AlphaFadeSpeed = 1.f;
+	float mfDreamLight_Angle = 0.f;
+	float mfDreamLight_Spectrum = 0.f;
+	float mfDreamLight_SpectrumMul = 0.f;
+	float[] mfDreamLight_AlphaFadeOffsets(glPlayer_DreamLightNum);
+	float[] mfDreamLight_AlphaFadeFreq(glPlayer_DreamLightNum);
+	float[] mfDreamLight_AngleOffsets(glPlayer_DreamLightNum);
+	float[] mfDreamLight_SpinDirs(glPlayer_DreamLightNum);
+	float[] mfDreamLight_SizeMuls(glPlayer_DreamLightNum);
+	cVector3f[] mvDreamLight_PosOffsets(glPlayer_DreamLightNum);
+	cColor[] mfDreamLight_ColorMuls(glPlayer_DreamLightNum);
+	tString msDreamLight_VoiceScene = "";
+	tString msDreamLight_GuiSound = "";
+	
+	//------------------------------------------------------------
+	
+	void SetupDreamLights()
+	{
+		for (int i = 0; i < glPlayer_DreamLightNum; ++i)
+		{
+			mvDreamLight_PosOffsets[i] = cVector3f(cMath_RandRectf(-0.75f, 0.75f), cMath_RandRectf(-0.75f, 0.75f), 0.f);
+			mfDreamLight_AlphaFadeOffsets[i] = cMath_RandRectf(-7.f, 7.f);
+			mfDreamLight_AlphaFadeFreq[i] = cMath_RandRectf(0.25f, 0.75f);
+			mfDreamLight_AngleOffsets[i] = cMath_ToRad(cMath_RandRectf(-180.f, 180.f));
+			mfDreamLight_SpinDirs[i] = cMath_Sign(cMath_RandRectf(-1.f, 1.f));
+			mfDreamLight_SizeMuls[i] = cMath_RandRectf(2.25f, 2.75f);
+				
+			int lColor = cMath_RandRectl(0, 4);
+			switch (lColor)
+			{
+				case 0: mfDreamLight_ColorMuls[i] = cColor(1,0.59,0.59,0.447); 		break;
+				case 1: mfDreamLight_ColorMuls[i] = cColor(1,0.72,0.59,0.447); 		break;
+				case 2: mfDreamLight_ColorMuls[i] = cColor(1,0.648,0.352,0.447); 	break;
+				case 3: mfDreamLight_ColorMuls[i] = cColor(1,0.587,0.352,0.447); 	break;
+				case 4: mfDreamLight_ColorMuls[i] = cColor(1,0.352,0.352,0.447); 	break;					
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void PreloadDreamLights()
+	{
+		for (int i = 1; i < 5; ++i)
+			cLux_PreloadGuiGfx("dream_spot_" + i + ".dds", eImGuiGfx_TextureTemporary);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DrawDreamLights(float afTimeStep)
+	{		
+		//////////////////////
+		// Fade alpha
+		mfDreamLight_Alpha = cMath_IncreaseTo(mfDreamLight_Alpha, mfDreamLight_AlphaFadeSpeed * afTimeStep, mfDreamLight_AlphaGoal);
+		if (mfDreamLight_Alpha <= 0.f) return;
+		
+		//////////////////////
+		// Setup
+		cVector3f vPos = cVector3f_Zero;
+		vPos.x = -cLux_GetHudVirtualOffset().x;
+		vPos.y = -cLux_GetHudVirtualOffset().y;
+		vPos.z = 0.0f;
+				
+		cVector2f vScreenSize = ImGui_GetSize();
+		cVector2f vSize = vScreenSize;
+
+		vSize.x = vSize.y / 9.f * 16.f;
+		vPos.x -= (vSize.x - vScreenSize.x) / 2.f;
+		
+		//////////////////////
+		// Start group
+		ImGui_GroupBegin(ImGui_FullScreenPos(0.95f), ImGui_FullScreenSize());
+			
+			//////////////////////
+			// Angle
+			mfDreamLight_Angle += afTimeStep * 0.7f;
+			if (mfDreamLight_Angle >= cMath_PiMul2)
+				mfDreamLight_Angle -= cMath_PiMul2;
+			
+			//////////////////////
+			// Sound spectrum
+			float fSpectrumGoal = 0.f;
+			
+			if (msDreamLight_GuiSound != "")
+			{
+				cSoundEntry@ pEntry = cSound_GetEntry(msDreamLight_GuiSound);
+				if (pEntry !is null)
+				{		
+					array<float> vSpectrum;
+					pEntry.GetAverageSpectrum(vSpectrum);
+					
+					for (int i = 0; i < vSpectrum.size(); ++i)
+						fSpectrumGoal = cMath_Max(vSpectrum[i], fSpectrumGoal);
+				}
+			}
+			
+			if (msDreamLight_VoiceScene != "")
+			{
+				array<float> vSpectrum;
+				cLux_GetVoiceHandler().GetSpectrumFromScene(msDreamLight_VoiceScene, vSpectrum);
+				
+				for (int i = 0; i < vSpectrum.size(); ++i)
+					fSpectrumGoal = cMath_Max(vSpectrum[i], fSpectrumGoal);
+			}
+			
+			float fSpectrumMul = mfDreamLight_SpectrumMul * gfPlayer_DreamLightSpectrumMul;
+			fSpectrumGoal *= fSpectrumMul;
+			
+			if (fSpectrumGoal > mfDreamLight_Spectrum)
+			{
+				mfDreamLight_Spectrum = fSpectrumGoal;
+			}
+			else
+			{
+				mfDreamLight_Spectrum = cMath_IncreaseTo(mfDreamLight_Spectrum, afTimeStep * 0.5f, 0.f);
+			}
+			
+			//////////////////////
+			// Draw lights
+			int lId = 1;
+			for (int i = 0; i < glPlayer_DreamLightNum; ++i)
+			{
+				if (i % 2 == 0)
+					mfDreamLight_AlphaFadeOffsets[i] += mfDreamLight_Spectrum;
+				
+				DrawDreamLight(i, "dream_spot_" + lId);
+				lId = cMath_Max(++lId % 5, 1);
+			}
+		
+		//////////////////////
+		// End group
+		ImGui_ResetModifiers();
+		ImGui_GroupEnd();
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetDreamLightAlpha()
+	{
+		return cMath_Easing(eEasing_SineInOut, mfDreamLight_Alpha);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DrawDreamLight(int alId, const tString &in aGfx)
+	{		
+		//////////////////////
+		// Gfx		
+		float fBaseAlpha = GetDreamLightAlpha();
+		float fAlpha = cMath_Abs(cMath_Sin((cEngine_GetGameTime() + mfDreamLight_AlphaFadeOffsets[alId]) * mfDreamLight_AlphaFadeFreq[alId])) * 0.35f;
+		fAlpha = cMath_Clamp(fAlpha, 0.f, 0.35f) * fBaseAlpha;
+		
+		cImGuiGfx gfxSmoke(aGfx, eImGuiGfx_TextureTemporary);
+		gfxSmoke.mColor = cColor(1.f) * fAlpha * fBaseAlpha;
+		gfxSmoke.mMaterial = eGuiMaterial_Alpha;
+		
+		//////////////////////
+		// Move to new pos if faded out
+		if (fAlpha <= 0.01f)
+			mvDreamLight_PosOffsets[alId] = cVector3f(cMath_RandRectf(-0.75f, 0.75f), cMath_RandRectf(-0.75f, 0.75f), 0.f);
+		
+		//////////////////////
+		// Draw
+		cVector3f vPos = ImGui_NrmPosGroup(cVector3f(0.5f, 0.5f, 0.045f) + mvDreamLight_PosOffsets[alId]);
+		cVector2f vSize = ImGui_NrmSizeGroup(cVector2f(0.5f, 0.5f) * mfDreamLight_SizeMuls[alId]);
+		
+		ImGui_SetModColorMul(mfDreamLight_ColorMuls[alId]);
+		ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+		ImGui_SetModRotateAngle(cMath_ToDeg(mfDreamLight_Angle + mfDreamLight_AngleOffsets[alId]) * mfDreamLight_SpinDirs[alId]);
+		ImGui_DoImageCorrectAspect(gfxSmoke, vPos, vSize);
+		ImGui_SetModRotateAngle(0.f);
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_FadeDreamLights()
+	{
+		mfDreamLight_AlphaGoal = cMath_Clamp(cScript_GetGlobalArgFloat(0), 0.f, 1.f);
+		float fTime = cScript_GetGlobalArgFloat(1);
+		
+		mfDreamLight_AlphaFadeSpeed = cMath_Abs(mfDreamLight_AlphaGoal - mfDreamLight_Alpha) / cMath_Max(0.000001f, fTime);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetupDreamLightSound()
+	{
+		msDreamLight_GuiSound = cScript_GetGlobalArgString(0);
+		msDreamLight_VoiceScene = cScript_GetGlobalArgString(1);
+		
+		float fMul = cScript_GetGlobalArgFloat(2);
+		mfDreamLight_SpectrumMul = fMul < 0.f ? 1.f : fMul;			
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ENVIRONMENT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	int mlFootstepPSID = 0;
+	
+	//------------------------------------------------------------
+		
+	void UpdateOnSandCheck()
+	{
+		iCharacterBody@ pCharBody = mBaseObj.GetCharacterBody();
+		
+		if(pCharBody.IsOnGround()==false)
+		{
+			SetOnSand(false, pCharBody);
+			return;
+		}
+		
+		iPhysicsMaterial @pGravityMat = pCharBody.GetGravityCollideMaterial();
+		if(pGravityMat is null || pGravityMat.GetSurfaceData()is null) return;
+		
+		SetOnSand(pGravityMat.GetSurfaceData().GetUserVar()=="Sand", pCharBody);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetOnSand(bool abOnSand, iCharacterBody@ apCharBody)
+	{
+		if (cScript_GetGlobalVarBool("PlayerOnSand") == abOnSand) return;
+		
+		//cLux_AddDebugMessage("SetOnSand "+abOnSand);
+		
+		cScript_SetGlobalVarBool("PlayerOnSand", abOnSand);
+		if (abOnSand)
+		{
+			apCharBody.SetGroundFriction(gfGroundFriction_OnSand);
+		}
+		else
+		{
+			apCharBody.SetGroundFriction(gfGroundFriction_Default);
+		}
+	}
+	
+	//------------------------------------------------------------
+		
+	void OnFootstep(const tString&in asMaterialName) override
+	{
+		if (gsFootstepParticle=="")
+			return;
+		
+		mlFootstepPSID++;
+		iCharacterBody @pCharBody = mBaseObj.GetCharacterBody();
+		cWorld@ pWorld = cLux_GetCurrentMap().GetWorld();
+		cParticleSystem @pPS = pWorld.CreateParticleSystem("footstepPS_"+mlFootstepPSID,
+			gsFootstepParticle, cVector3f(1), true, false);
+		if (pPS is null)
+		{
+			Error("Could not create footstep particles.");
+			return;
+		}
+		cVector3f particlePos = pCharBody.GetFeetPosition();
+		if (mlFootstepPSID%2==0)
+			particlePos+=cVector3f( -0.4, 0.2f, 0);
+		else
+			particlePos+=cVector3f( 0.4f, 0.2f, 0);
+			
+		pPS.SetPosition(particlePos);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// NIGHT VISION
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	///////////////////
+	// Settings
+	bool mbNightVision_Enabled = true;		
+	bool mbNightVision_Active = false;
+	bool mbNightVision_Force = false;
+	float mfNightVision_Count = 0.0f;
+	float mfNightVision_LightLevelCheckCount = 0.0f;
+	float mfNightVision_Mul = 0.0f;
+	float mfNightVision_Strength = 1.0f;
+	float mfNightVision_StrengthGoal = 1.0f;
+	float mfNightVision_StrengthFadeSpeed = 1.0f;
+	float mfNightVision_RadiusMin = 0.5f;
+	float mfNightVision_RadiusMax = 3.5f;
+	float mfNightVision_DefaultRadiusMax = 3.5f;
+	float mfNightVision_AgentRadiusAdd = 2.0f;
+	float mfNightVision_Brightness = 1.5f;
+	float mfNightVision_Falloff = 1.0f;
+	float mfNightVision_LightLevel = 1.0f;
+	int mlNightVision_ActivationFrame = 0;
+	
+	float mfMapDeepShadow = gfMapDeepShadowDefault;
+	
+	//------------------------------------------------------------
+	
+	void ResetNightVision()
+	{
+		mbNightVision_Enabled = true;
+		mbNightVision_Active = false;
+		mbNightVision_Force = false;
+		mfNightVision_Mul = 0.0f;
+		mfNightVision_Strength = 1.0f;
+		mfNightVision_StrengthGoal = 1.0f;
+		mfNightVision_StrengthFadeSpeed = 1.0f;
+		mfNightVision_LightLevelCheckCount= 0.0f;
+		mfNightVision_RadiusMin = 0.5f;
+		mfNightVision_RadiusMax = 3.5f;
+		mfNightVision_DefaultRadiusMax = 3.5f;
+		mfNightVision_AgentRadiusAdd = 2.0f;
+		mfNightVision_Brightness = 1.5f;
+		mfNightVision_Falloff = 1.0f;
+		mfNightVision_LightLevel = 1.0f;
+		mlNightVision_ActivationFrame = 0;
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateNightVision(float afTimeStep)
+	{
+		if (mlNightVision_ActivationFrame < 2) ++mlNightVision_ActivationFrame;
+		
+		///////////////////
+		// Setup vars
+		cCamera@ pCam = mBaseObj.GetCamera();
+		iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+		int lState = mBaseObj.GetCurrentStateId();
+		
+		///////////////////
+		// Should activate?
+		bool bInShadow = mfNightVision_LightLevel < mfMapDeepShadow || 
+						 lState == ePlayerState_Custom_CheckHealth || 
+						 lState == ePlayerState_Custom_UsingGun_Reload ||
+						 lState == ePlayerState_Custom_UsingVolleyGun_Reload;
+		
+		mfNightVision_LightLevelCheckCount -= afTimeStep;
+		if (mfNightVision_LightLevelCheckCount <= 0.f)
+		{
+			mfNightVision_LightLevelCheckCount = cMath_RandRectf(0.25f, 0.30f);
+			
+			mfNightVision_LightLevel = GetLightLevel(true);
+			bInShadow = mfNightVision_LightLevel < mfMapDeepShadow;
+			
+			if (bInShadow == false)
+			{
+				// Do another check slightly in front of the player
+				float fDist = 0.f;
+				float fMaxDist = 1.25f;
+				cVector3f vNrm = 0.f;
+				cLux_GetClosestBody(pCam.GetPosition(), pBody.GetForward(), fMaxDist, fDist, vNrm);
+							
+				cVector3f vPos = pCam.GetPosition() + pBody.GetForward() * cMath_Min(fMaxDist, fDist);
+				mfNightVision_LightLevel = cMath_Min(mfNightVision_LightLevel, GetLightLevelAtPosWithoutIgnoredLights(vPos, 0.25f));
+				bInShadow = mfNightVision_LightLevel < mfMapDeepShadow;
+			}
+		}
+								
+		bool bShouldActivate = bInShadow || mbNightVision_Force;
+
+		///////////////////
+		// Activate
+		if (mbNightVision_Active == false)
+		{
+			if (bShouldActivate) 
+			{
+				mfNightVision_Count += afTimeStep;
+
+				float fActivationTime = gfNightVisionActivationTime;
+				if (mbWaterHiding_Submerged)
+					fActivationTime *= 0.15f;
+					
+				if (mfNightVision_Count >= fActivationTime || mlNightVision_ActivationFrame == 1)
+				{
+					mbNightVision_Active = true;
+					mfNightVision_Count = 0.0f;
+					if (mlNightVision_ActivationFrame == 1) mfNightVision_Mul = 1;
+				}
+			}
+			else
+			{
+				mfNightVision_Count = 0.0f;
+			}
+		}
+		
+		///////////////////
+		// Deactivate
+		else
+		{
+			if (bInShadow == false && mbNightVision_Force == false)
+			{
+				mfNightVision_Count += mbLanternOn ? 4.0f * afTimeStep : afTimeStep;
+				if (mfNightVision_Count >= gfNightVisionDeactivationTime)
+				{
+					mbNightVision_Active = false;
+					mfNightVision_Count = 0.0f;
+				}
+			}
+			else
+			{
+				mfNightVision_Count = 0.0f;
+			}
+		}
+		
+		///////////////////
+		// Fade mul
+		float fMulGoal = 0.f;
+		float fMulSpeed = 1.f / 2.5f;
+		
+		if (mbNightVision_Enabled && mbNightVision_Active)
+		{
+			fMulGoal = 1.f;
+			fMulSpeed = 1.f / 2.f;
+		}
+		
+		if (mbWaterHiding_Submerged)
+			fMulSpeed *= 2.5f;
+		
+		mfNightVision_Mul = cMath_IncreaseTo(mfNightVision_Mul, fMulSpeed * afTimeStep, fMulGoal);
+		
+		///////////////////
+		// Fade strength
+		mfNightVision_Strength = cMath_IncreaseTo(mfNightVision_Strength, afTimeStep * mfNightVision_StrengthFadeSpeed, mfNightVision_StrengthGoal);
+		
+		///////////////////
+		// Apply values
+		Map_SetNightVision(gNightVisionColor,
+						   mfNightVision_Brightness * mfNightVision_Mul * mfNightVision_Strength,
+						   mfNightVision_RadiusMin * mfNightVision_Mul * mfNightVision_Strength,
+						   mfNightVision_RadiusMax * mfNightVision_Mul * mfNightVision_Strength,
+						   mfNightVision_Falloff);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetNightVisionEnabled()
+	{
+		mbNightVision_Enabled = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetNightVisionStrength()
+	{
+		mfNightVision_Strength = cScript_GetGlobalArgFloat(0);
+		mfNightVision_StrengthGoal = mfNightVision_Strength;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_FadeNightVisionStrength()
+	{
+		mfNightVision_StrengthGoal = cScript_GetGlobalArgFloat(0);
+		float fTime = cScript_GetGlobalArgFloat(1);
+		
+		mfNightVision_StrengthFadeSpeed = cMath_Abs(mfNightVision_Strength-mfNightVision_StrengthGoal)/cMath_Max(0.000001f, fTime);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetForceNightVision()
+	{
+		mbNightVision_Force = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetMapDeepShadow()
+	{
+		mfMapDeepShadow = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetMapDeepShadow()
+	{
+		cScript_SetGlobalReturnFloat(mfMapDeepShadow);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_IsInShadow()
+	{
+		cScript_SetGlobalReturnBool(GetLightLevel(true) < mfMapDeepShadow);
+	}
+		
+	//------------------------------------------------------------
+	
+	void _Global_SetNightVisionBrightness()
+	{
+		mfNightVision_Brightness = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetNightVisionBrightness()
+	{
+		cScript_SetGlobalReturnFloat(mfNightVision_Brightness);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetNightVisionRadius()
+	{
+		mfNightVision_DefaultRadiusMax = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetNightVisionAgentRadiusAdd()
+	{
+		mfNightVision_AgentRadiusAdd = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_IsNightVisionActive()
+	{
+		cScript_SetGlobalReturnBool(mbNightVision_Active);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetNightVisionRadiusMax()
+	{
+		cScript_SetGlobalReturnFloat(mfNightVision_RadiusMax);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// HEALTH LIGHT
+	/////////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	cColor mCheckHealth_LightColor = cColor(1.f);
+	float mfCheckHealth_LightBrightness = 0.1f;
+	float mfCheckHealth_LightRadius = 1.f;
+	[nosave] tID m_idCheckHealth_Light = tID_Invalid;
+
+
+	void CreateCheckHealthLight(cLuxMap@ apMap)
+	{
+		cLightPoint@ pLight = cast<cLightPoint@>(apMap.GetWorld().GetLight("CheckHealthLight"));
+		if (pLight is null)
+			@pLight = apMap.GetWorld().CreateLightPoint("CheckHealthLight", "", false);
+		
+		pLight.SetDiffuseColor(mCheckHealth_LightColor);
+		pLight.SetBrightness(mfCheckHealth_LightBrightness);
+		pLight.SetRadius(mfCheckHealth_LightRadius);
+		pLight.SetFalloffPow(0.8f);
+		pLight.SetScriptableIsSaved(false);
+
+		m_idCheckHealth_Light = pLight.GetID();
+		mvPlayerLights.push_back(m_idCheckHealth_Light);
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_FadeCheckHealthLightBrightness()
+	{
+		iLight@ pLight = cLux_ID_Light(m_idCheckHealth_Light);
+		
+		if (pLight is null)
+			return;
+
+		pLight.FadeBrightnessTo(cScript_GetGlobalArgFloat(0), cScript_GetGlobalArgFloat(1));
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateCheckHealthLight(float afTimeStep)
+	{
+		iLight@ pLight = cLux_ID_Light(m_idCheckHealth_Light);
+		
+		if (pLight is null)
+			return;
+			
+		pLight.SetWorldPosition(mBaseObj.GetCamera().GetPosition() + mBaseObj.GetCamera().GetForward() * 0.05f);
+	}
+
+
+	//------------------------------------------------------------
+
+	/////////////////////////////////////////
+	// WATER HIDING
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfWaterSpeedMul = 1.f;
+	float mfWaterRunSpeedMul = 1.f;
+	bool mbWaterHiding_Submerged = false;
+	bool mbWaterHiding_UsingItem = false;
+	float mfWaterHiding_OxygenCount = 15.f;
+	float mfWaterHiding_ForcedEmergeCount = 0.f;
+	float mfWaterHiding_LightBrightness = 1.f;
+	int mlWaterHiding_PrevUsedLiquidAreaNum = -1;
+	int mlWaterHiding_FeedbackStage = 0;
+	int mlWaterHiding_ScreenId = -1;
+	int mlWaterHiding_DofId = -1;	
+	tString msWaterHiding_HeldItemL = "";
+	tString msWaterHiding_HeldItemR = "";
+	cColor mWaterHiding_LightColor = cColor(0.f);
+	[nosave] tID m_idWaterHiding_Light = tID_Invalid;
+	
+	//------------------------------------------------------------
+	
+	void CreateWaterHidingLight(cLuxMap@ apMap)
+	{
+		cLightPoint@ pLight = cast<cLightPoint@>(apMap.GetWorld().GetLight("WaterHidingLight"));
+		if (pLight is null)
+			@pLight = apMap.GetWorld().CreateLightPoint("WaterHidingLight", "", false);
+		
+		pLight.SetDiffuseColor(mWaterHiding_LightColor);
+		pLight.SetBrightness(mfWaterHiding_LightBrightness);
+		pLight.SetRadius(7.f);
+		pLight.SetFalloffPow(0.8f);
+		pLight.SetScriptableIsSaved(false);
+		
+		m_idWaterHiding_Light = pLight.GetID();
+		mvPlayerLights.push_back(m_idWaterHiding_Light);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnUnderwaterEffectActive(bool abX, bool abUseStartAndEndEffects) override
+	{
+		/////////////////////////
+		// Setup vars
+		mbWaterHiding_Submerged = mBaseObj.GetUsedLiquidAreaNum() == 0 ? false : abX;
+		
+		int lState = mBaseObj.GetCurrentStateId();
+		bool bDoEffects = lState != ePlayerState_Dead &&
+						  lState != ePlayerState_CutsceneAnimation;
+		
+		/////////////////////////
+		// Submerge
+		if (mbWaterHiding_Submerged)
+		{
+			///////////////////////
+			// Items
+			msWaterHiding_HeldItemL = Item_GetHeldType(eItemHandlerHand_Left);
+			msWaterHiding_HeldItemR = Item_GetHeldType(eItemHandlerHand_Right);
+				
+			if (Player_GetIsUsingItem() == false)
+			{
+				mbWaterHiding_UsingItem = false;
+				Item_PutAway(eItemHandlerHand_Left);
+				Item_PutAway(eItemHandlerHand_Right);
+			}
+			else
+			{
+				mbWaterHiding_UsingItem = true;
+			}
+		
+			///////////////////////
+			// Effects
+			Sound_CreateAtEntity("Sound_WaterHiding_Submerge","player/footsteps/default/water_sweet/water_submerge", "player");
+			Sound_Stop("Sound_WaterHiding_GetOxygen", 0.05f);
+			
+			if (mfWaterHiding_OxygenCount <= gfWaterHidingOxygenMin && bDoEffects)
+				Sound_CreateAtEntity("Sound_WaterHiding_OutOfOxygen", "player/vocalisations/underwater/underwater_breath_low", "player");
+			
+			///////////////////////
+			// Send message to agents
+			array<iLuxEntity@> vAgents;
+			cLux_GetCurrentMap().GetEntityArray("*", eLuxEntityType_Agent, "", vAgents);
+			for (int i = 0; i < vAgents.size(); i++)
+				vAgents[i].BroadcastMessage(eCustomEntityMessage_PlayerSubmerged, null, cVector3f(0), 0);
+		
+			///////////////////////
+			// Map callback
+			cLuxMap@ pMap = cLux_GetCurrentMap();
+			tString sCallback = "void OnPlayerSubmerge()";
+			if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+				pMap.ScriptExecute();
+		}
+		/////////////////////////
+		// Emerge
+		else
+		{
+			///////////////////////
+			// Items
+			if (cLux_GetPlayer().GetCurrentStateId() == ePlayerState_Normal)
+			{
+				if (msWaterHiding_HeldItemL != "") 
+					Item_TakeOut(ItemType_GetFirstInInventory(msWaterHiding_HeldItemL));
+				if (msWaterHiding_HeldItemR != "") 
+					Item_TakeOut(ItemType_GetFirstInInventory(msWaterHiding_HeldItemR));
+				
+				msWaterHiding_HeldItemL = "";
+				msWaterHiding_HeldItemR = "";
+			}	
+			
+			///////////////////////
+			// Effects
+			mlWaterHiding_FeedbackStage = 1;
+			tString sEmergeSound = "player/vocalisations/underwater/underwater_exit_low";
+			
+			if (mfWaterHiding_OxygenCount < gfWaterHidingOxygenMin)
+			{
+				mlWaterHiding_FeedbackStage = 0;
+				sEmergeSound = "player/vocalisations/underwater/underwater_exit_high";
+			}
+			
+			if (bDoEffects)
+				Sound_CreateAtEntity("Sound_WaterHiding_Emerge", sEmergeSound, "player");
+			
+			Sound_Stop("Sound_WaterHiding_OutOfOxygen", 0.2f);
+			Sound_CreateAtEntity("Sound_WaterHiding_Exit","player/footsteps/default/water_sweet/water_exit", "player");
+			
+			if (ParticleSystem_Exists("PS_WaterHiding_Bubbles"))
+			{
+				ParticleSystem_SetVisible("PS_WaterHiding_Bubbles", false);
+				ParticleSystem_Destroy("PS_WaterHiding_Bubbles");
+			}		
+			
+			mfWaterHiding_OxygenCount = cMath_Max(mfWaterHiding_OxygenCount, gfWaterHidingOxygenMin);
+			
+			if (mlWaterHiding_DofId != -1)
+				Effect_DoF_FadeOut(mlWaterHiding_DofId, 0.1f);
+			if (mlWaterHiding_ScreenId != -1)
+				Effect_Screen_FadeOut(mlWaterHiding_ScreenId, 0.5f);
+			
+			mlWaterHiding_DofId = -1;
+			mlWaterHiding_ScreenId = -1;
+			
+			///////////////////////
+			// Send message to agents
+			array<iLuxEntity@> vAgents;
+			cLux_GetCurrentMap().GetEntityArray("*", eLuxEntityType_Agent, "", vAgents);
+			for (int i = 0; i < vAgents.size(); i++)
+				vAgents[i].BroadcastMessage(eCustomEntityMessage_PlayerEmerged, null, cVector3f(0), 0);
+		
+			///////////////////////
+			// Map callback
+			cLuxMap@ pMap = cLux_GetCurrentMap();
+			tString sCallback = "void OnPlayerEmerge()";
+			if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+				pMap.ScriptExecute();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateWaterHiding(float afTimeStep)
+	{
+		WaterHiding_UpdateLightColor(afTimeStep);
+		
+		////////////////////////////
+		// Reset if dead or in an anim
+		int lState = cLux_GetPlayer().GetCurrentStateId();
+		if (cLux_GetPlayer().IsActive() == false ||
+			lState == ePlayerState_Dead ||
+			lState == ePlayerState_CutsceneAnimation ||
+			lState == ePlayerState_InteractiveCutsceneAnimation)
+		{
+			return;
+		}
+		
+		////////////////////////////
+		// Update player speed
+		float fWaterSpeedMulTar = 1.f;
+		float fWaterRunSpeedMulTar = 1.f;
+		
+		if (mBaseObj.IsInLiquid())
+		{
+			float fHeight = mBaseObj.GetLiquidHeight();
+			if (fHeight > 0.2f)
+			{
+				fWaterSpeedMulTar = 1.f - (0.3f * cMath_Min(fHeight, 1.f));
+				fWaterRunSpeedMulTar = 1.f - (0.8f * cMath_Min(fHeight, 1.f));
+			}
+		}
+		
+		mfWaterSpeedMul = cMath_IncreaseTo(mfWaterSpeedMul, afTimeStep * 0.5f, fWaterSpeedMulTar);
+		mfWaterRunSpeedMul = cMath_IncreaseTo(mfWaterRunSpeedMul, afTimeStep * 0.5f, fWaterRunSpeedMulTar);
+		
+		////////////////////////////
+		// Unequip items
+		if (mbWaterHiding_Submerged &&
+			mbWaterHiding_UsingItem && 
+			mBaseObj.GetCurrentStateId() == ePlayerState_Normal &&
+			Item_GetFocusOutroAnimation() == "")
+		{
+			mbWaterHiding_UsingItem = false;
+			Item_PutAway(eItemHandlerHand_Left);
+			Item_PutAway(eItemHandlerHand_Right);
+		}
+		
+		////////////////////////////
+		// Force emerge, if still submerged, kill player
+		if (mfWaterHiding_ForcedEmergeCount > 0.f)
+		{
+			mfWaterHiding_ForcedEmergeCount -= afTimeStep;
+			if (mfWaterHiding_ForcedEmergeCount <= 0.f)
+			{
+				if (mbWaterHiding_Submerged)
+				{
+					mlWaterHiding_FeedbackStage = 0;
+					mfWaterHiding_OxygenCount = gfWaterHidingOxygenMax;
+					
+					Player_GiveDamage(1.f, 0.f, eDamageType_Drowning, "Drowned");
+				}
+			}
+			return;
+		}
+		
+		////////////////////////////
+		// Submerged
+		if (mbWaterHiding_Submerged)
+		{
+			////////////
+			// Emerge
+			mfWaterHiding_OxygenCount -= afTimeStep;
+			if (mfWaterHiding_OxygenCount <= 0.f && cLux_GetGodModeActivated() == false)
+			{
+				mfWaterHiding_OxygenCount = 0.f;
+				mfWaterHiding_ForcedEmergeCount = 1.f;
+				
+				Player_SetCrouching(false);
+				Player_SetCrouchDisabledTime(1.f);
+				return;
+			}
+			
+			////////////////////////////
+			// Oxygen feedback
+			if (mlWaterHiding_FeedbackStage == 0)
+			{
+				if (mfWaterHiding_OxygenCount > gfWaterHidingOxygenMin) 
+					return;
+				
+				mlWaterHiding_FeedbackStage++;
+				
+				if (mlWaterHiding_ScreenId == -1)
+				{
+					cVector2f vSize = cVector2f(1.25, 1);
+					mlWaterHiding_ScreenId = Effect_Screen_Start("vignette_screen.mat", cVector2f(0.5f, 0.5f), vSize);
+					Effect_Screen_FadeAlpha(mlWaterHiding_ScreenId, 1.f, 0.5f);
+				}
+				
+				Sound_CreateAtEntity("Sound_WaterHiding_OutOfOxygen", "player/vocalisations/underwater/underwater_breath_low", "player");
+			}
+			else if (mlWaterHiding_FeedbackStage == 1)
+			{
+				if (mfWaterHiding_OxygenCount > gfWaterHidingOxygenMin / 2.f) 
+					return;
+				
+				mlWaterHiding_FeedbackStage++;
+				
+				ParticleSystem_CreateAtEntity("PS_WaterHiding_Bubbles", "underwater.ps", "player", true);
+				Sound_CreateAtEntity("Sound_WaterHiding_OutOfOxygen", "player/foley/damage/drown", "player");
+			}
+			return;
+		}
+		
+		////////////////////////////
+		// Not submerged, increase oxygen
+		mfWaterHiding_OxygenCount += (10.f / 5.f) * afTimeStep;
+		if (mfWaterHiding_OxygenCount >= gfWaterHidingOxygenMax)
+		{
+			mlWaterHiding_FeedbackStage = 0;
+			mfWaterHiding_OxygenCount = gfWaterHidingOxygenMax;
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void WaterHiding_UpdateLightColor(float afTimeStep)
+	{
+		int lNum = mBaseObj.GetUsedLiquidAreaNum();
+		iLight@ pLight = cLux_ID_Light(m_idWaterHiding_Light);
+		
+		if (pLight is null)
+		{
+			mlWaterHiding_PrevUsedLiquidAreaNum = lNum;
+			return;
+		}
+		
+		if (lNum > 0)
+		{
+			/////////////////
+			// Get light color of the current area
+			cLuxLiquidArea@ pArea = cLux_ID_LiquidArea(mBaseObj.GetUsedLiquidAreaID(lNum - 1));		
+			if (mlWaterHiding_PrevUsedLiquidAreaNum != lNum)
+			{
+				cScript_RunGlobalFunc(pArea.GetName(), "", "_Global_GetUnderwaterLightColor");
+				mWaterHiding_LightColor = cScript_GetGlobalReturnColor();
+				mWaterHiding_LightColor.a = 0.f; //disable specular
+				
+				pLight.SetDiffuseColor(mWaterHiding_LightColor);
+			}
+			
+			/////////////////
+			// Adjust brightness based on distance to liquid areas top
+			float fDist = mBaseObj.GetCamera().GetPosition().y - pArea.GetAreaBody().GetBoundingVolume().GetMax().y;
+			float fMax = 0.f;
+			float fMin = -0.2f;			
+			float fLightMul = 1.f - cMath_Clamp((fDist - fMin) / (fMax - fMin), 0.f, 1.f);
+			
+			pLight.SetBrightness(mfWaterHiding_LightBrightness * fLightMul);
+		}
+		else
+		{
+			pLight.SetBrightness(cMath_Max(0.0f, pLight.GetBrightness() - afTimeStep));
+		}
+		
+		pLight.SetWorldPosition(mBaseObj.GetCamera().GetPosition());
+		mlWaterHiding_PrevUsedLiquidAreaNum = lNum;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetOxygenCount()
+	{
+		cScript_SetGlobalReturnFloat(mfWaterHiding_OxygenCount);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetOxygenCount()
+	{
+		float fCount = cScript_GetGlobalArgFloat(0);
+		fCount = cMath_Clamp(fCount, 0.f, gfWaterHidingOxygenMax);
+		
+		mfWaterHiding_OxygenCount = fCount;
+
+		int lStage = mfWaterHiding_OxygenCount > gfWaterHidingOxygenMin / 2.f ? 0 : 1;
+		mlWaterHiding_FeedbackStage = cMath_Max(mlWaterHiding_FeedbackStage, lStage);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetUnderwater()
+	{
+		cScript_SetGlobalReturnBool(mbWaterHiding_Submerged);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// VERTIGO
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfVertigo_FovMulAdd = 0.f;
+	float mfVertigo_UpdateCount = 0.1f;
+	float mfVertigo_PulseCount = 0.f;
+	float mfVertigo_Intensity = 1.f;
+	float mfVertigo_IntensityGoal = 1.f;
+	float mfVertigo_IntensityFadeSpeed = 1.f;
+	int mlVertigo_RayId = 0;
+	int mlVertigo_RayHitCount = 4;
+	int mlVertigo_DoFId = -1;
+	int mlVertigo_RadialBlurId = -1;
+	bool mbVertigo_DoEffects = false;
+	bool mbVertigo_PrevDoEffects = false;
+	bool mbVertigo_Active = true;
+	
+	//------------------------------------------------------------
+	
+	void UpdateVertigo(float afTimeStep)
+	{		
+		/////////////////////////////
+		// Set up vars
+		cCamera@ pCam = mBaseObj.GetCamera();
+		
+		mfVertigo_PulseCount += afTimeStep;
+		if (mfVertigo_PulseCount > cMath_PiMul2)
+			mfVertigo_PulseCount -= cMath_PiMul2;
+		
+		float fFovPulse = cMath_Sin(mfVertigo_PulseCount) * 0.05f;
+		float fSwayPulse = cMath_Sin(mfVertigo_PulseCount * 2.f);
+		
+		mfVertigo_Intensity = cMath_IncreaseTo(mfVertigo_Intensity, afTimeStep * mfVertigo_IntensityFadeSpeed, mfVertigo_IntensityGoal);
+		float fIntensity = gfVertigoFovAdd * mfVertigo_Intensity;
+		
+		float fFovTar =	0.f;
+		float fSpeed = 0.225f;
+		
+		/////////////////////////////
+		// Effects
+		if (mbVertigo_DoEffects)
+		{
+			fFovTar = gfVertigoFovAdd + fFovPulse;
+			fSpeed = 0.105f;
+			
+			if (mfVertigo_Intensity > 0.75f)
+			{
+				if (mlVertigo_DoFId == -1)
+					mlVertigo_DoFId = Effect_DoF_Start(0.f, gfVertigoMinDist * 0.5f, 0.1f, 1.f);
+				if (mlVertigo_RadialBlurId == -1)
+					mlVertigo_RadialBlurId = Effect_RadialBlur_Start(0.05f, 1.f, 0.3f, 1.f);
+			}			
+			
+			if (mbVertigo_PrevDoEffects != mbVertigo_DoEffects)
+			{
+				Sound_PlayGui("player/UI/vertigo/vertigo_drone", 0.5f, eSoundEntryType_Gui);
+			}				
+		}
+		else
+		{
+			if (mlVertigo_DoFId != -1)
+				Effect_DoF_FadeOut(mlVertigo_DoFId, 1.f);
+			if (mlVertigo_RadialBlurId != -1)
+				Effect_RadialBlur_FadeOut(mlVertigo_RadialBlurId, 1.f);
+			
+			mlVertigo_DoFId = -1;
+			mlVertigo_RadialBlurId = -1;
+			
+			if (mbVertigo_PrevDoEffects != mbVertigo_DoEffects)
+			{
+				Sound_StopGui("player/UI/vertigo/vertigo_drone", 2.f);
+			}				
+		}
+		
+		mbVertigo_PrevDoEffects = mbVertigo_DoEffects;
+		
+		/////////////////////////////
+		// Apply FOV and pos adds
+		mfVertigo_FovMulAdd = cMath_IncreaseTo(mfVertigo_FovMulAdd, afTimeStep * fSpeed, fFovTar);
+		
+		float fT = cMath_Easing(eEasing_SineInOut, mfVertigo_FovMulAdd / gfVertigoFovAdd);					
+		float fFovMul = 1.f + fT * fIntensity;
+		
+		mBaseObj.SetCameraFOVMul(ePlayerFOVMul_Vertigo, fFovMul);
+		
+		float fSwayMoveMul = 1.f + cMath_Min(Player_GetSpeed() / 2.f, 1.f) * 1.75f;
+		cVector3f vSwayAdd = cVector3f_Right * 0.04f * fSwayPulse * fSwayMoveMul;
+		
+		cVector3f vPosAdd = (cVector3f_Down * fIntensity + vSwayAdd) * fT;
+		mBaseObj.SetCameraPosAdd(eCameraAddType_Vertigo, vPosAdd);
+		
+		/////////////////////////////
+		// Vertigo active?
+		if (mbVertigo_Active == false) 
+		{
+			mbVertigo_DoEffects = false;
+			mlVertigo_RayHitCount = 4;
+			return;
+		}
+		
+		/////////////////////////////
+		// Are we high up and looking down?
+		mfVertigo_UpdateCount -= afTimeStep;
+		if (mfVertigo_UpdateCount > 0.f)
+			return;
+		
+		mfVertigo_UpdateCount = 0.1f;
+		
+		if (pCam.GetPitch() > gfVertigoMaxPitch || mBaseObj.GetCurrentStateId() != ePlayerState_Normal)
+		{
+			mbVertigo_DoEffects = false;
+			mlVertigo_RayHitCount = 4;
+			return;
+		}			
+		
+		/////////////////////////////
+		// Check one dir every 0.1 seconds, do effects if at least one dir is clear and height is large enough!
+		cVector3f vStart = Player_GetCameraPosition() - vPosAdd;		
+		cVector3f[] vDirs = { pCam.GetForward(), 
+							  cMath_MatrixMul(cMath_MatrixRotateXYZ(pCam.GetUp() * cMath_ToRad(18.f)), pCam.GetForward()),
+							  cMath_MatrixMul(cMath_MatrixRotateXYZ(pCam.GetRight() * cMath_ToRad(10.f)), pCam.GetForward()),
+							  cMath_MatrixMul(cMath_MatrixRotateXYZ(pCam.GetUp() * cMath_ToRad(-18.f)), pCam.GetForward()) };
+		
+		mlVertigo_RayId = ++mlVertigo_RayId % 4;
+		
+		float fRayDist = 0.f;
+		cLux_GetClosestBody(vStart, vDirs[mlVertigo_RayId], 30.f, fRayDist, 0.f);
+		
+		cVector3f vRayPoint = vStart + vDirs[mlVertigo_RayId] * fRayDist;		
+		float fDiff = cMath_Abs(vStart.y - vRayPoint.y);
+		mlVertigo_RayHitCount = fDiff < gfVertigoMinDist ? cMath_Min(mlVertigo_RayHitCount + 1, 4) : 0;
+		
+		mbVertigo_DoEffects = mlVertigo_RayHitCount < 4;
+
+		// Uncomment me if you get Vertigo bug
+		//cLux_AddDebugMessage("Vertigo Start: " + vStart + " Dir: " + vDirs[mlVertigo_RayId] + " Offset: " + vPosAdd + " Height: " + fDiff + " Active: " + mbVertigo_DoEffects);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetVertigoActive()
+	{
+		mbVertigo_Active = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetVertigoActive()
+	{
+		cScript_SetGlobalReturnBool(mbVertigo_Active);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_FadeVertigoIntensity()
+	{
+		mfVertigo_IntensityGoal = cScript_GetGlobalArgFloat(0);
+		
+		float fTime = cScript_GetGlobalArgFloat(1);
+		mfVertigo_IntensityFadeSpeed = cMath_Abs(mfVertigo_Intensity - mfVertigo_IntensityGoal) / cMath_Max(0.000001f, fTime);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// SLIDING
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbSliding_Active = false;
+	bool mbSliding_UseParticles = true;
+	bool mbSliding_SandOnly = true;
+	float mfSliding_AngleThreshold = 45.f;
+	
+	//------------------------------------------------------------
+	
+	void UpdateSliding(float afTimeStep)
+	{
+		/////////////////////////
+		// Set up vars
+		iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+		cVector3f vNormal = pBody.GetLastGroundNormal();
+		
+		/////////////////////////
+		// Only slide if the angle is steep enough!
+		if (mbSliding_Active == false ||
+			pBody.IsOnGround() == false ||
+			mBaseObj.GetCurrentStateId() != ePlayerState_Normal ||
+			(mbSliding_SandOnly && cScript_GetGlobalVarBool("PlayerOnSand") == false) || 
+			cMath_ToDeg(cMath_Vector3Angle(vNormal, cVector3f_Up)) < mfSliding_AngleThreshold)
+			return;
+		
+		////////////////////////
+		// Get slide dir
+		cVector3f vSlideDir = cVector3f_Down - vNormal * cMath_Vector3Dot(vNormal, cVector3f_Down);
+		vSlideDir.Normalize();
+		
+		////////////////////////
+		// Get start pos
+		float fSlideDist = 0.f;
+		cVector3f vSurfaceNrm = 0.f;
+		cVector3f vStartOffset = cVector3f(0.f, 0.1f, 0.f);
+		cVector3f vStart = pBody.GetFeetPosition() + vStartOffset;
+		
+		cLux_GetClosestBody(vStart, vSlideDir, 20.f, fSlideDist, vSurfaceNrm);
+		
+		////////////////////////
+		// Don't slide too long or short!
+		if (fSlideDist > 15.f || fSlideDist < 3.f)
+			return;
+		
+		////////////////////////
+		// Get end pos
+		cTerrain@ pTerrain = cLux_GetCurrentMap().GetWorld().GetTerrain();
+		cVector3f vEnd = vStart + vSlideDir * fSlideDist;
+		cVector3f vTerrainNormal = 0.f;
+		float fTerrainHeight = 0.f;
+		
+		if (pTerrain !is null && pTerrain.GetWorldPosHeightAndNormal(vEnd, fTerrainHeight, vTerrainNormal))
+		{
+			// End is below terrain, escape!
+			if (vEnd.y < fTerrainHeight)
+				return;
+		}
+		
+		float fGroundDist = 0.f;
+		cVector3f vGroundOffset = cVector3f(0.f, 0.5f, 0.f);		
+		cLux_GetClosestBody(vEnd + vGroundOffset, cVector3f_Down, 2.f, fGroundDist, vSurfaceNrm);
+			
+		// Remove ground offset from distance
+		fGroundDist -= 0.5f;
+			
+		// Safety check
+		if (fGroundDist > 2.f)
+			return;
+		
+		cVector3f vSlideDirXZ = cVector3f(vSlideDir.x, 0.f, vSlideDir.z);
+		vEnd += cVector3f_Down * fGroundDist + vSlideDirXZ * (pBody.GetSize().z / 2.f);
+		
+		////////////////////////
+		// Figure out which slide to use!
+		cVector3f vFwdXZ = cVector3f(pBody.GetForward().x, 0.f, pBody.GetForward().z);
+		bool bSlideOnBack = cMath_Vector3Dot(vSlideDirXZ, vFwdXZ) > 0.f;
+		
+		////////////////////////
+		// Start sliding!		
+		cScript_SetGlobalArgVector3f(0, vStart);
+		cScript_SetGlobalArgVector3f(1, vEnd);
+		cScript_SetGlobalArgVector3f(2, vSlideDir);
+		cScript_SetGlobalArgBool(3, bSlideOnBack);
+		cScript_SetGlobalArgBool(4, mbSliding_UseParticles);
+		cScript_RunGlobalFunc("State_Slide", "", "_Global_SetupSlide");
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetSlidingActive()
+	{
+		mbSliding_Active = cScript_GetGlobalArgBool(0);
+		mfSliding_AngleThreshold = cScript_GetGlobalArgFloat(1);
+		mbSliding_SandOnly = cScript_GetGlobalArgBool(2);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetSlidingUseParticles()
+	{
+		mbSliding_UseParticles = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// CHECK HEALTH
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfCheckHealth_Delay = gfCheckHealthDelay;
+	bool mbCheckHealth_Allowed = true;
+	[nosave] bool mbCheckHealth_ActionAllowed = true;
+	[nosave] int mlCheckHealth_Mode = eCheckHealthMode_Hold;
+	
+	//------------------------------------------------------------
+	
+	void UpdateCheckHealth(float afTimeStep)
+	{
+		//////////////////
+		// Setup vars
+		bool bActionTriggered = cInput_IsTriggered(eAction_OpenInventory);
+		int lState = mBaseObj.GetCurrentStateId();
+		
+		//////////////////
+		// Allowed?		
+		if (mlCheckHealth_Mode == eCheckHealthMode_Toggle)
+		{
+			if (lState == ePlayerState_Custom_CheckHealth)
+				mbCheckHealth_ActionAllowed = false;
+			else if (bActionTriggered == false)
+				mbCheckHealth_ActionAllowed = true;
+			if (Sketchbook_IsOpen())
+				mbCheckHealth_ActionAllowed = true;			
+		}
+		
+		bool bAllowed = mbCheckHealth_Allowed && mbCheckHealth_ActionAllowed;
+		
+		//////////////////
+		// Enter state?
+		if (bAllowed && 
+			bActionTriggered && 
+			Player_IsActive())
+		{
+			mfCheckHealth_Delay -= afTimeStep;
+			if (mfCheckHealth_Delay <= 0.f)
+			{
+				iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+			
+				bool bStateOK = lState == ePlayerState_Normal && Player_GetUnderwater() == false;
+				bool bMovementOK = pBody.IsOnGround() && 
+								   pBody.GetMoveSpeed(eCharDir_Right) == 0.f &&
+								   pBody.GetMoveSpeed(eCharDir_Forward) == 0.f;
+			
+				if (bStateOK && bMovementOK)
+				{
+					cScript_SetGlobalArgBool(0, false);
+					cScript_RunGlobalFunc("State_CheckHealth", "cScrPlayerState_CheckHealth", "_Global_SetOpenInventory");
+					mBaseObj.ChangeState(ePlayerState_Custom_CheckHealth);
+				}
+			}
+		}
+		else
+		{
+			mfCheckHealth_Delay = gfCheckHealthDelay;
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetCheckHealthAllowed()
+	{
+		mbCheckHealth_Allowed = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetCheckHealthAllowed()
+	{
+		cScript_SetGlobalReturnBool(mbCheckHealth_Allowed);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetCheckHealthActionAllowed()
+	{
+		cScript_SetGlobalReturnBool(mbCheckHealth_ActionAllowed);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DISORIENT EFFECT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	int mlDisorient_DofId = -1;
+	int mlDisorient_BlurId = -1;
+	float mfDisorient_Count = -1.f;
+	float mfDisorient_PulseCount = 0.f;
+	float mfDisorient_FarPlane = 4.f;
+	float mfDisorient_BlurAmount = 0.3f;
+	bool mbDisorient_AffectMovement = true;
+	
+	//------------------------------------------------------------
+	
+	void UpdateDisorientEffect(float afTimeStep)
+	{
+		if (mfDisorient_Count <= 0.f)
+			return;
+		
+		//////////////////////////
+		// Pulse DoF in and out
+		mfDisorient_PulseCount -= afTimeStep;
+		if (mfDisorient_PulseCount <= 0.f)
+		{
+			if (mlDisorient_DofId != -1)
+			{
+				mfDisorient_FarPlane = mfDisorient_FarPlane == 4.f ? 0.25f : 4.f;
+				mfDisorient_PulseCount = mfDisorient_FarPlane == 0.25f ? cMath_RandRectf(3.f, 5.f) : cMath_RandRectf(6.f, 8.f);
+				Effect_DoF_FadeFocus(mlDisorient_DofId, 0.f, mfDisorient_FarPlane, mfDisorient_PulseCount - 2.f);
+			}
+			
+			if (mlDisorient_BlurId != -1)
+			{
+				mfDisorient_BlurAmount = mfDisorient_BlurAmount == 0.3f ? 0.05f : 0.3f;
+				mfDisorient_PulseCount = mfDisorient_BlurAmount == 0.05f ? cMath_RandRectf(3.f, 5.f) : cMath_RandRectf(6.f, 8.f);
+				Effect_Blur_FadeAmount(mlDisorient_BlurId, mfDisorient_BlurAmount, mfDisorient_PulseCount - 2.f);
+			}
+		}
+		
+		//////////////////////////
+		// Stop disorient?
+		mfDisorient_Count -= afTimeStep;
+		if (mfDisorient_Count < 0.f)
+		{					
+			Player_FadeLookSpeedMulTo(1.f, 10.f);
+			Player_FadeLookAccelerationTo(0.f, 1.f);
+				
+			if (mbDisorient_AffectMovement)
+				Player_FadeMoveSpeedMulTo(1.f, 10.f, ePlayerMoveSpeedMulType_PlayerState);
+				
+			Effect_Sway_FadeOut(10.f);
+			
+			if (mlDisorient_DofId != -1)
+				Effect_DoF_FadeOut(mlDisorient_DofId, 10.f);
+			if (mlDisorient_BlurId != -1)
+				Effect_Blur_FadeOut(mlDisorient_BlurId, 10.f);
+			
+			mlDisorient_DofId = -1;
+			mlDisorient_BlurId = -1;
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_Disorient()
+	{
+		mfDisorient_Count = cScript_GetGlobalArgFloat(0);
+		mbDisorient_AffectMovement = cScript_GetGlobalArgBool(1);
+		bool bBlur = cScript_GetGlobalArgBool(2);
+		
+		if (mfDisorient_Count <= 0.f) 
+			return;
+			
+		Player_FadeLookSpeedMulTo(0.4f, 3.f);
+		Player_FadeLookAccelerationTo(0.2f, 3.f);
+		
+		if (mbDisorient_AffectMovement)
+			Player_FadeMoveSpeedMulTo(0.7f, 3.f, ePlayerMoveSpeedMulType_PlayerState);
+			
+		if (mlDisorient_DofId != -1)
+			Effect_DoF_FadeOut(mlDisorient_DofId, 1.f);
+		if (mlDisorient_BlurId != -1)
+			Effect_Blur_FadeOut(mlDisorient_BlurId, 1.f);
+		
+		if (bBlur == false)
+			mlDisorient_DofId = Effect_DoF_Start(0.f, 0.1f, 0.025f, 3.f);
+		else
+			mlDisorient_BlurId = Effect_Blur_Start(0.3f, 1.f);
+		
+		Effect_Sway_FadeIn(0.75f, 0.75f, 0.5f, -90.f, 1.f, 0.25f, 0.99f, 0.4f, 0.8f, 0.05f, true);
+	}	
+	
+	//------------------------------------------------------------
+	
+	void _Global_StopDisorient()
+	{
+		mfDisorient_Count = 0.1f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetRemainingDisorientDuration()
+	{
+		if (mfDisorient_Count > 0.f)
+			mfDisorient_Count = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// LOOK ACCELERATION
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfLookAcceleration = 0;
+	cVector3f mvLookVelocity = 0;
+	float mfLookAccTarget = 0;
+	float mfLookAccFadeSpeed = 0;
+	float mfParkourMoveTiltRollDeg = 0.f;
+	float mfParkourMoveTiltTargetDeg = 0.f;
+	float mfParkourMoveTiltPrevYaw = 0.f;
+	bool mbParkourMoveTiltHasYaw = false;
+	
+	//------------------------------------------------------------
+	
+	void UpdateLookAcceleration(float afTimeStep)
+	{
+		// Fade
+		if (cMath_Abs(mfLookAccTarget-mfLookAcceleration)>0.001)
+		{
+			float fSpeed = mfLookAccFadeSpeed*afTimeStep;
+			if (cMath_Abs(fSpeed) > cMath_Abs(mfLookAccTarget-mfLookAcceleration))
+			{
+				fSpeed = mfLookAccTarget-mfLookAcceleration;
+			}
+				
+			mfLookAcceleration += fSpeed;
+		}
+		
+		// Camera movement
+		if (mfLookAcceleration > 0)
+		{		
+			iCharacterBody@ pCharBody = mBaseObj.GetCharacterBody();
+			if (pCharBody !is null) 
+				pCharBody.AddYaw(mvLookVelocity.x);
+
+			cCamera@ pCamera = mBaseObj.GetCamera();
+			if (pCamera !is null) 
+				pCamera.AddPitch(mvLookVelocity.y);
+
+			mvLookVelocity *= (1.0f-gfLookAccelerationDrag*afTimeStep)*cMath_Easing(eEasing_QuartOut, mfLookAcceleration);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetLookAcceleration()
+	{
+		mfLookAcceleration = cScript_GetGlobalArgFloat(0);
+		mfLookAccTarget = mfLookAcceleration;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_FadeLookAccelerationTo()
+	{
+		mfLookAccTarget = cScript_GetGlobalArgFloat(0);
+		
+		float fTime = cScript_GetGlobalArgFloat(1);
+		mfLookAccFadeSpeed = (mfLookAccTarget-mfLookAcceleration)/fTime;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// LIGHT SOURCE
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbCanUseLightSource = true;
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetCanUseLightSource()
+	{
+		cScript_SetGlobalReturnBool(mbCanUseLightSource && mbWaterHiding_Submerged == false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetCanUseLightSource()
+	{
+		mbCanUseLightSource = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_ToggleLightSource()
+	{
+		Item_ToggleHeldItem("DynamoLantern", eItemHandlerHand_Left);
+	}
+		
+	//------------------------------------------------------------
+	
+	float GetLightLevel(bool abIgnoreLighter = true, bool abIgnoreLantern = false)
+	{
+		float fLightLevel = mfPlayerLightLevel;
+		
+		if (abIgnoreLantern && mbLanternOn)
+		{
+			fLightLevel -= DynamoLantern_GetCharge();
+		}
+	
+		return fLightLevel;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetLightLevel()
+	{
+		cScript_SetGlobalReturnFloat(GetLightLevel(cScript_GetGlobalArgBool(0), cScript_GetGlobalArgBool(1)));
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// LIGHT SWITCH COUNTER
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfLightSwitchCounter = 0.0f;
+	
+	//------------------------------------------------------------
+	
+	void UpdateLightSwitchCounter(float afTimeStep)
+	{
+		mfLightSwitchCounter -= 0.4f * afTimeStep;
+		mfLightSwitchCounter = cMath_Clamp(mfLightSwitchCounter, 0.0f, 3.0f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetLightSwitchCounter()
+	{
+		cScript_SetGlobalReturnFloat(mfLightSwitchCounter);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_LanternOn()
+	{
+		mbLanternOn = true;
+		mfLightSwitchCounter += 1.0f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_LanternOff()
+	{
+		mbLanternOn = false;
+		mfLightSwitchCounter += 1.0f;
+	}	
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetLanternOn()
+	{
+		cScript_SetGlobalReturnBool(mbLanternOn);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// EQUIP ITEMS AFTER DAMAGE
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void UpdateEquipItemsAfterDamage(float afDeltaTime)
+	{
+		if (mbDamageAnimPlaying == false) return;
+		if (mBaseObj.IsDead()) return;
+		
+		int lState = mBaseObj.GetCurrentStateId();
+		if (lState != ePlayerState_CutsceneAnimation &&
+			lState != ePlayerState_InteractiveCutsceneAnimation)
+		{
+			mbDamageAnimPlaying = false;
+			
+			if (msDamageAnimEquipItemL != "")
+				Item_TakeOut(ItemType_GetFirstInInventory(msDamageAnimEquipItemL));
+			if (msDamageAnimEquipItemR != "")
+				Item_TakeOut(ItemType_GetFirstInInventory(msDamageAnimEquipItemR));
+				
+			msDamageAnimEquipItemL = "";
+			msDamageAnimEquipItemR = "";
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// POCKET WATCH
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfPocketWatch_RunTime = 0.f;
+	bool mbPocketWatch_TrackRunTime = false;
+	
+	//------------------------------------------------------------
+	
+	void UpdatePocketWatchTime(float afDeltaTime)
+	{
+		if (mbPocketWatch_TrackRunTime)
+			mfPocketWatch_RunTime += afDeltaTime;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetTrackPocketWatchRunTime()
+	{
+		bool bWasTracking = mbPocketWatch_TrackRunTime;
+		mbPocketWatch_TrackRunTime = cScript_GetGlobalArgBool(0);
+		
+		if (mbPocketWatch_TrackRunTime && bWasTracking == false)
+			mfPocketWatch_RunTime = 0.f;
+	}
+	
+	void _Global_GetPocketWatchRunTime()
+	{
+		cScript_SetGlobalReturnFloat(mfPocketWatch_RunTime);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GAS MASK
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbGasMask_Equipping = false;
+	bool mbGasMask_Equipped = false;
+	int mlGasMask_ScreenId = -1;
+	int mlGasMask_BreatheId = -1;
+	float mfGasMaskEquipScreenFxTimer = 0.f;
+	float mfGasMaskEquipFadeFxTimer = 0.f;
+	float mfGasMaskActivateEntTimer = 0.f;
+	float mfGasMaskUnEquipTimer = 0.f;
+	tString msGasMaskEntity = "";
+	float mfGasMaskEquipStartDelay = 0.f;
+	float mfGasMaskUnequipStartDelay = 0.f;
+	tString msGasMaskAnimation = "";
+	tString msGasMaskReEquipItem_Right = false;
+	tString msGasMaskReEquipItem_Left = false;
+		
+	//------------------------------------------------------------
+	
+	void _Global_EquipGasMask()
+	{
+		if (mbGasMask_Equipping) return;
+		
+		mfGasMaskEquipStartDelay = 0.25f;
+		Sketchbook_SetCanOpen(false);
+		Player_SetInteractionAllowed("GasMask", false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_UnequipGasMask()
+	{
+		if (mbGasMask_Equipping) return;
+		
+		mfGasMaskUnequipStartDelay = 0.25f;
+		Sketchbook_SetCanOpen(false);
+		Player_SetInteractionAllowed("GasMask", false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_UnequipGasMaskInstantly()
+	{
+		mbGasMask_Equipped = false;
+		UnequipGasMask(true);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetGasMaskEquipped()
+	{
+		cScript_SetGlobalReturnBool(mbGasMask_Equipped);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetEquipGasMask(bool abX)
+	{
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap is null) return;
+		
+		CreateGasMaskEntity();
+		
+		if (msGasMaskEntity=="") return;
+			
+		mfGasMaskEquipScreenFxTimer = abX ? 2.f : 0.35f;
+		tString sItemAnim = abX ? "gas_mask_equip" : "gas_mask_unequip";
+		msGasMaskAnimation = abX ? "player_gas_mask_equip" : "player_gas_mask_unequip";
+		
+		mfGasMaskActivateEntTimer = 0.2f;
+		Entity_SetActive(msGasMaskEntity, false);
+			
+		if (abX)
+		{
+			mfGasMaskEquipFadeFxTimer = 1.5f;
+			
+			tString sCallback = "void OnGasMaskStartEquip()";
+			if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+				pMap.ScriptExecute();
+		}
+		else
+		{
+			Effect_Fade_Out(0.1f);
+			mfGasMaskUnEquipTimer = 2.7f;
+			
+			tString sCallback = "void OnGasMaskStartUnequip()";
+			if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+				pMap.ScriptExecute();
+		}
+		
+		//////////////////
+		// Play animations
+		Entity_PlayAnimation(msGasMaskEntity, sItemAnim, 0.1f, false, true, "", false, false);
+		PlayerBody_StopAnimationLayer(ePlayerBodyAnimationLayer_Arms, 0.2);
+		PlayerBody_PlayAnimation(msGasMaskAnimation, ePlayerBodyAnimationLayer_Arms, false, false, true, 0.2);
+		
+		//////////////////
+		// Unequip items
+		msGasMaskReEquipItem_Right = Item_GetHeld(eItemHandlerHand_Right);
+		msGasMaskReEquipItem_Left = Item_GetHeld(eItemHandlerHand_Left);
+		
+		if (msGasMaskReEquipItem_Right != "") Item_Unequip(msGasMaskReEquipItem_Right, true);
+		if (msGasMaskReEquipItem_Left != "") Item_Unequip(msGasMaskReEquipItem_Left, true);
+		
+		mbGasMask_Equipping = true;
+		Sketchbook_SetCanOpen(false);
+		Player_SetInteractionAllowed("GasMask", false);
+	}
+	
+	//------------------------------------------------------------
+
+	void SetGasmaskEffectActive(bool abX, bool abInstant = false)
+	{
+		if(abX)
+		{
+			if (mlGasMask_ScreenId == -1)
+			{
+				mlGasMask_ScreenId = Effect_Screen_Start(gsGasMask_ScreenEffect, cVector2f(0.5f, 0.5f), cVector2f(1.25f, 1.f), 1.f, abInstant ? 0.0 : 0.1, 99999999.f, 0.3f, 0);				
+			}
+			
+			if (mlGasMask_BreatheId == -1)
+			{
+				mlGasMask_BreatheId = PlayerEmotion_PlaySound(eEmotionPlaylistType_Vocal, eEmotionSoundType_Loop, 0, gsGasMask_BreatheLoop);
+			}
+		}
+		else
+		{
+			Effect_Screen_FadeOut(mlGasMask_ScreenId, abInstant ? 0.0 : 0.1);
+			mlGasMask_ScreenId = -1;
+			
+			PlayerEmotion_StopSound(eEmotionPlaylistType_Vocal, mlGasMask_BreatheId, 0.2f);
+			mlGasMask_BreatheId = -1;
+		}
+	}
+
+	//------------------------------------------------------------
+	
+	void ToggleGasMaskScreenEffect()
+	{		
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap is null) return;
+		
+		mbGasMask_Equipped = !mbGasMask_Equipped;
+		Effect_Fade_In(0.3);
+		
+		//////////////
+		// Equip
+		if (mbGasMask_Equipped)
+		{
+			Entity_StopAnimation("gas_mask_equip");
+			PlayerBody_StopAnimation("player_gas_mask_equip", 0.01f);
+			
+			DestroyGasMaskEntity();
+			
+			SetGasmaskEffectActive(true);			
+			
+			//////////////
+			// Callback
+			tString sCallback = "void OnGasMaskEquip()";
+			if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+				pMap.ScriptExecute();
+
+			return;
+		}
+		
+		//////////////
+		// Unequip
+		if (mlGasMask_ScreenId != -1)
+		{
+			UnequipGasMask(false);			
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void UnequipGasMask(bool abInstant)
+	{
+		SetGasmaskEffectActive(false, abInstant);
+			
+		// TODO: Custom effect for this
+		cLux_DecHideModeEffectUserCount();		
+		if (cLux_HasHideModeEffectUsers() == false)
+			cLux_SetHideModeEffectsActive(false);
+				
+		//////////////
+		// Callback
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap !is null)
+		{
+			tString sCallback = "void OnGasMaskUnequip()";
+			if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+				pMap.ScriptExecute();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateGasMaskEquip(float afTimeStep)
+	{		
+		///////////////////////
+		// Equip start delay
+		if (mfGasMaskEquipStartDelay > 0.f)
+		{
+			mfGasMaskEquipStartDelay -= afTimeStep;
+			
+			if (mfGasMaskEquipStartDelay <= 0.f)
+				SetEquipGasMask(true);
+		}
+		
+		///////////////////////
+		// Unequip start delay
+		if (mfGasMaskUnequipStartDelay > 0.f)
+		{
+			mfGasMaskUnequipStartDelay -= afTimeStep;
+			
+			if (mfGasMaskUnequipStartDelay <= 0.f)
+				SetEquipGasMask(false);
+		}
+		
+		//////////////////////
+		// Fade fx
+		if (mfGasMaskEquipFadeFxTimer > 0.f)
+		{
+			mfGasMaskEquipFadeFxTimer -= afTimeStep;
+			
+			if (mfGasMaskEquipFadeFxTimer <= 0.f)
+			{
+				Effect_Fade_Out(0.25f);
+				
+				///////////////////////////////
+				// Muffled hearing
+				cLux_IncHideModeEffectUserCount();
+				cLux_SetHideModeEffectsActive(true);
+			}
+		}
+		
+		if (mfGasMaskActivateEntTimer > 0.f)
+		{
+			mfGasMaskActivateEntTimer -= afTimeStep;
+			
+			if (mfGasMaskActivateEntTimer <= 0.f)
+				Entity_SetActive(msGasMaskEntity, true);
+		}
+		
+		////////////////////////////////
+		// Gas mask screen effect
+		if (mfGasMaskEquipScreenFxTimer > 0.f)
+		{
+			mfGasMaskEquipScreenFxTimer -= afTimeStep;
+			
+			if (mfGasMaskEquipScreenFxTimer <= 0.f)
+				ToggleGasMaskScreenEffect();
+		}
+		
+		/////////////////////////
+		// Unequip
+		if (mfGasMaskUnEquipTimer > 0.f)
+		{
+			mfGasMaskUnEquipTimer -= afTimeStep;
+			
+			if (mfGasMaskUnEquipTimer <= 0.f)
+				DestroyGasMaskEntity();
+		}
+
+		if(mbGasMask_Equipped && mlGasMask_ScreenId == -1)
+			SetGasmaskEffectActive(true, true);
+			
+		if (mbGasMask_Equipping && msGasMaskAnimation != "")
+		{
+			cAnimationState@ pState = PlayerBody_GetAnimationState(msGasMaskAnimation);
+			if (pState is null || (pState.IsOver() || pState.IsActive()==false))
+			{
+				if (msGasMaskReEquipItem_Right != "") Item_Equip(msGasMaskReEquipItem_Right);
+				if (msGasMaskReEquipItem_Left != "") Item_Equip(msGasMaskReEquipItem_Left);
+				
+				msGasMaskReEquipItem_Right = "";
+				msGasMaskReEquipItem_Left = "";
+				mbGasMask_Equipping = false;
+				
+				Player_SetInteractionAllowed("GasMask", true);
+				Sketchbook_SetCanOpen(true);
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void CreateGasMaskEntity()
+	{
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap is null) return;
+		
+		msGasMaskEntity = "GasMask_Cutscene";
+		
+		iLuxEntity@ pEntity = pMap.GetEntityByName(msGasMaskEntity, eLuxEntityType_Prop);
+		if (pEntity is null)
+		{
+			cMatrixf mtx_Matrix = cLux_GetPlayer().GetCamera().GetMatrix();
+			pMap.CreateEntity(msGasMaskEntity, "gas_mask_cutscene.ent", mtx_Matrix, cVector3f(1.f));
+			@pEntity = pMap.GetLatestEntity();
+		
+			if (pEntity is null || pEntity.GetName() != msGasMaskEntity)
+			{
+				Error("[Player_Custom] Something went wrong creating the cutscene gas mask entity "+ msGasMaskEntity);
+				msGasMaskEntity = "";
+				return;
+			}
+		
+			Entity_SetCollideCharacter(msGasMaskEntity, false);
+			Entity_SetCollide(msGasMaskEntity, false);
+			Entity_SetActive(msGasMaskEntity, true);
+			Prop_SetStaticPhysics(msGasMaskEntity, true);
+			Prop_ClearVelocity(msGasMaskEntity);
+			Entity_SetInteractionDisabled(msGasMaskEntity, true);
+			Prop_SetRenderLayer(msGasMaskEntity, glArmsRenderLayer);
+			
+			Entity_SetCastShadows(msGasMaskEntity, cLux_GetUserConfig().GetBool("Graphics", "BodyShadows", true));
+		}
+		
+		PlayerBody_AttachProp(msGasMaskEntity, "R_Hand", true, false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void DestroyGasMaskEntity()
+	{
+		if (Entity_Exists(msGasMaskEntity)==false) return;
+			
+		Entity_SetActive(msGasMaskEntity, false);
+		Entity_Destroy(msGasMaskEntity);
+		
+		msGasMaskEntity = "";
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// EAR RINGING EFFECT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	float mfEarRingingTimer = 0.f;
+	
+	//------------------------------------------------------------
+	
+	void UpdateEarRingingEffect(float afDeltaTime)
+	{
+		if (mfEarRingingTimer > 0.f)
+		{
+			mfEarRingingTimer -= afDeltaTime;
+			if (mfEarRingingTimer <= 0)
+				_Global_StopEarRingingSound();
+		}
+		
+		//cLux_AddDebugMessage("mfEarRingingTimer " + mfEarRingingTimer);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_StartEarRingingEffect()
+	{
+		//////////////////
+		// Is the effect already active?
+		if (mfEarRingingTimer <= 0)
+		{
+			////////////////
+			// Muffled fx
+			cLux_IncHideModeEffectUserCount();
+			cLux_SetHideModeEffectsActive(true);
+		}
+			
+		mfEarRingingTimer = cScript_GetGlobalArgFloat(0);
+		
+		////////////////////
+		// Ear ringing sound
+		if (Sound_GuiIsPlaying(gsGun_EarRingingSound)==false)
+			Sound_PlayGui(gsGun_EarRingingSound, 1.f, eSoundEntryType_Gui);
+			
+		cLux_AddDebugMessage("[Player_Custom] Start Ear Ringing Fx");
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_StopEarRingingSound()
+	{
+		cLux_AddDebugMessage("_Global_StopEarRingingSound ");
+		
+		/////////////////////
+		// Deactivate muffle effect
+		cLux_DecHideModeEffectUserCount();
+		if (cLux_HasHideModeEffectUsers() == false)
+			cLux_SetHideModeEffectsActive(false);
+			
+		////////////
+		// Stop ear ringing sound
+		if (Sound_GuiIsPlaying(gsGun_EarRingingSound))
+			Sound_StopGui(gsGun_EarRingingSound, 2.f, true);
+			
+		cLux_AddDebugMessage("[Player_Custom] Stop Ear Ringing Fx");
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// AIM ASSIST
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	[nosave] bool mbAimAssist_Active = false;
+	[nosave] float mfAimAssist_Acc = 10.f;
+	[nosave] float mfAimAssist_SpeedMul = 4.f;
+	[nosave] float mfAimAssist_RadiusMul = 1.f;	
+	float mfAimAssist_RangeMul = 1.f;
+	cVector2f mvAimAssist_Velocity(0.f);	
+	[nosave] bool mbAimAssist_Setup = true;
+	[nosave] int mlAimAssist_EvaluationId = -1;
+	[nosave] int mlAimAssist_SelectedTargetId = -1;	
+	[nosave] float mfAimAssist_SelectedScreenDistSqr = 1000.f * 1000.f;
+	[nosave] array<cAimAssistTarget> mvAimAssist_Targets;
+	
+	//------------------------------------------------------------
+	
+	void UpdateAimAssist(float afTimeStep)
+	{		
+		//////////////////
+		// Setup vars
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		cCamera@ pCam = mBaseObj.GetCamera();
+		iCharacterBody@ pCharBody = mBaseObj.GetCharacterBody();
+		
+		if (pMap is null) return;
+		if (pCam is null) return;
+		if (pCharBody is null) return;
+		
+		//////////////////
+		// Setup?
+		if (mbAimAssist_Active && mbAimAssist_Setup)
+		{
+			SetupAimAssistTargets(pMap);
+		}
+
+		//////////////////
+		// Aim assist active?		
+		int lState = mBaseObj.GetCurrentStateId();
+		bool bActive = mbAimAssist_Active &&
+					   (lState == ePlayerState_Custom_UsingGun_Aim || 
+						lState == ePlayerState_Custom_UsingShotgun_Aim ||
+						lState == ePlayerState_Custom_UsingVolleyGun_Aim);
+
+		if (bActive == false)
+		{
+			ResetCurrentAimAssistTargetData();
+			mvAimAssist_Velocity = cVector2f(0.f);
+			return;
+		}
+		
+		//////////////////
+		// Iterate targets
+		int lIterationCount = 0;
+		int lEvaluationCount = 0;
+		int lMaxEvaluationCount = 2;
+		int lNewTargetId = -1;
+		cVector3f vTarget(0.f);
+
+		int lWeaponType;
+		switch (lState)
+		{
+			case ePlayerState_Custom_UsingGun_Aim: 		lWeaponType = 0; break;
+			case ePlayerState_Custom_UsingVolleyGun_Aim: lWeaponType = 0; break;
+			case ePlayerState_Custom_UsingShotgun_Aim: 	lWeaponType = 1; break;
+		}
+		
+		while (lIterationCount < mvAimAssist_Targets.size() &&
+			   lEvaluationCount < lMaxEvaluationCount)
+		{
+			++lIterationCount;
+			++mlAimAssist_EvaluationId;			
+			mlAimAssist_EvaluationId %= mvAimAssist_Targets.size();
+			
+			if (mlAimAssist_EvaluationId == mlAimAssist_SelectedTargetId)
+			{
+				continue;		
+			}
+			
+			//////////////////
+			// Evaluate!
+			bool bCheckedRadius;
+			float fNewMinScreenDistSqr;
+			cVector3f vNewTarget;
+			
+			if (EvaluateAimAssistTarget(mlAimAssist_EvaluationId, mfAimAssist_SelectedScreenDistSqr,
+										vNewTarget, fNewMinScreenDistSqr, bCheckedRadius, lWeaponType))
+			{
+				lNewTargetId = mlAimAssist_EvaluationId;
+				mfAimAssist_SelectedScreenDistSqr = fNewMinScreenDistSqr;
+				vTarget = vNewTarget;
+			}
+			
+			//////////////////
+			// Only increase evaluation count if radius was checked
+			if (bCheckedRadius)
+			{
+				++lEvaluationCount;
+			}
+		}
+		
+		//////////////////
+		// Always evaluate selected target
+		if (mlAimAssist_SelectedTargetId != -1)
+		{
+			bool bCheckedRadius;
+			float fCurrentMinScreenDistSqr = lNewTargetId == -1 ? -1.f : mfAimAssist_SelectedScreenDistSqr;
+			float fNewMinScreenDistSqr;
+			cVector3f vNewTarget;
+			
+			if (EvaluateAimAssistTarget(mlAimAssist_SelectedTargetId, fCurrentMinScreenDistSqr,
+									    vNewTarget, fNewMinScreenDistSqr, bCheckedRadius, lWeaponType))
+			{
+				lNewTargetId = mlAimAssist_SelectedTargetId;
+				mfAimAssist_SelectedScreenDistSqr = fNewMinScreenDistSqr;
+				vTarget = vNewTarget;
+			}
+		}
+		
+		//////////////////
+		// Update selected target
+		if (lNewTargetId != -1)
+		{
+			mlAimAssist_SelectedTargetId = lNewTargetId;
+		}
+		else
+		{
+			mlAimAssist_SelectedTargetId = -1;
+			mfAimAssist_SelectedScreenDistSqr = 1000.f * 1000.f;
+		}
+		
+		//////////////////
+		// Rotate camera toward target
+		cVector2f vWantedSpeed(0.f);
+		
+		if (vTarget.SqrLength() > 0.f)
+		{
+			cVector3f vToTarget = cMath_Vector3Normalize(vTarget - pCam.GetPosition());
+			
+			float fPitchGoal = cMath_ATan2(vToTarget.y, cMath_Sqrt(vToTarget.x * vToTarget.x + vToTarget.z * vToTarget.z));
+			float fYawGoal = -cMath_ATan2(vToTarget.x, -vToTarget.z);
+				
+			vWantedSpeed.x = cMath_GetAngleDistanceRad(pCam.GetPitch(), fPitchGoal) * mfAimAssist_SpeedMul;
+			vWantedSpeed.y = cMath_GetAngleDistanceRad(pCam.GetYaw(), fYawGoal) * mfAimAssist_SpeedMul;
+		}
+			
+		mvAimAssist_Velocity.x = cMath_IncreaseTo(mvAimAssist_Velocity.x, mfAimAssist_Acc * afTimeStep, vWantedSpeed.x);
+		mvAimAssist_Velocity.y = cMath_IncreaseTo(mvAimAssist_Velocity.y, mfAimAssist_Acc * afTimeStep, vWantedSpeed.y);
+		
+		float fVelocityLengthSqr = mvAimAssist_Velocity.SqrLength();
+		if (fVelocityLengthSqr > 0.f)
+		{
+			pCam.AddPitch(mvAimAssist_Velocity.x * afTimeStep);
+			pCharBody.AddYaw(mvAimAssist_Velocity.y * afTimeStep);
+		}
+			
+		if (fVelocityLengthSqr < 0.001f)
+		{
+			mvAimAssist_Velocity = cVector2f(0.f);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	bool EvaluateAimAssistTarget(int alId, float afMinScreenDistSqr,  cVector3f &out avNewTarget, 
+								 float &out afNewMinScreenDistSqr, bool &out abCheckedRadius, int alWeaponType)
+	{
+		////////////////////
+		// Setup vars
+		cCamera@ pCam = mBaseObj.GetCamera();
+		cVector3f vCamPos = pCam.GetPosition();
+		cVector2f vHudCenterSize = cLux_GetHudVirtualCenterSize();
+		cVector3f vScreenCenter(vHudCenterSize.x / 2.f, vHudCenterSize.y / 2.f, 1.f);		
+		float fDefaultScreenRadius = 0.1f * cLux_GetHudVirtualSize().x * mfAimAssist_RadiusMul;
+		
+		avNewTarget = cVector3f(0.f);
+		abCheckedRadius = false;
+		afNewMinScreenDistSqr = 1000.f * 1000.f;
+		
+		////////////////////
+		// Exists?
+		if (alId >= mvAimAssist_Targets.size())
+		{
+			ResetCurrentAimAssistTargetData();
+			return false;
+		}
+		
+		cAimAssistTarget@ pTarget = mvAimAssist_Targets[alId];
+		iLuxEntity@ pEnt = cLux_ID_Entity(pTarget.m_idEnt);
+		cMeshEntity@ pMeshEnt = pEnt !is null ? pEnt.GetMeshEntity() : null;
+		
+		if (pTarget is null || 
+			pEnt is null ||
+			pMeshEnt is null) 
+		{
+			RemoveAimAssistTarget(alId);
+			return false;
+		}
+		
+		////////////////////
+		// Inactive?
+		if (pEnt.IsActive() == false)
+		{
+			return false;
+		}
+		
+		////////////////////
+		// Not visible?
+		if (pMeshEnt.IsVisible() == false)
+		{
+			return false;
+		}
+		
+		////////////////////
+		// Below coverage threshold?
+		if (pTarget.mfMinCoverage > 0.f &&
+			pMeshEnt.GetCoverageAmount() <= pTarget.mfMinCoverage)
+		{
+			return false;
+		}
+		
+		////////////////////
+		// Skip?
+		if (pTarget.msSkipBoolVar != "" &&
+			pEnt.GetVarBool(pTarget.msSkipBoolVar))
+		{
+			if (pTarget.mbRemoveOnSkip)
+			{
+				RemoveAimAssistTarget(alId);
+			}			
+			return false;
+		}
+		
+		////////////////////
+		// Correct weapon type?
+		if (pTarget.mlWeaponType != -1 && 
+			pTarget.mlWeaponType != alWeaponType)
+		{
+			return false;
+		}
+		
+		////////////////////
+		// Get pos
+		cVector3f vWorldPos(0.f);
+		
+		if (pTarget.mlBoneId != -1)
+		{
+			cBoneState@ pBone = pMeshEnt.GetBoneState(pTarget.mlBoneId);
+			vWorldPos = pBone !is null ? pBone.GetWorldPosition() : pEnt.GetPosition();
+		}
+		else if (pTarget.mbUseJointChildPos)
+		{
+			iPhysicsJoint@ pJoint = pEnt.GetMainBody().GetJoint(0);
+			if (pJoint !is null)
+				vWorldPos = pJoint.GetChildBody().GetWorldPosition();
+		}
+		
+		if (vWorldPos.SqrLength() <= 0.f)
+		{
+			vWorldPos = pEnt.GetPosition();
+		}
+		
+		vWorldPos += pTarget.mvOffset;
+		
+		////////////////////
+		// Close enough?
+		float fDistSqr = (vWorldPos - vCamPos).SqrLength();
+		float fMaxDistSqr = pTarget.mfMaxDist * pTarget.mfMaxDist;
+		if (fDistSqr > fMaxDistSqr * mfAimAssist_RangeMul)
+		{
+			return false;
+		}
+		
+		////////////////////
+		// Within radius?		
+		abCheckedRadius = true;
+		
+		cVector3f vHudPos = GetHudPosFromWorldPos(vWorldPos, pCam);
+		float fMinDistSqr = fMaxDistSqr * 0.1f;
+		float fRadiusDistMul = 1.f - cMath_Clamp((fDistSqr - fMinDistSqr) / (fMaxDistSqr - fMinDistSqr), 0.f, 1.f);
+		float fTargetRadiusDistMul = 1.f - cMath_Clamp(fDistSqr / fMinDistSqr, 0.f, 1.f);
+		float fTargetRadiusMul = pTarget.mfTargetRadiusMul + (1.f - pTarget.mfTargetRadiusMul) * fTargetRadiusDistMul;
+		float fScreenRadiusMul = 0.25f + (fRadiusDistMul * fTargetRadiusMul * 0.75f);
+		float fScreenRadius = fDefaultScreenRadius * fScreenRadiusMul;
+		
+		float fScreenDistSqr = (vHudPos - vScreenCenter).SqrLength();			
+		if ((afMinScreenDistSqr > 0.f && fScreenDistSqr > afMinScreenDistSqr) ||
+			 fScreenDistSqr > fScreenRadius * fScreenRadius)
+		{
+			return false;
+		}
+		
+		////////////////////
+		// In LoS?
+		cVector3f vLosPos = vCamPos + pCam.GetForward() * 0.75f;
+		if (cLux_CheckLineOfSight(vLosPos, vWorldPos, false, false, pEnt) == false)
+		{
+			return false;
+		}
+		
+		afNewMinScreenDistSqr = fScreenDistSqr;
+		avNewTarget = vWorldPos;
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f GetHudPosFromWorldPos(const cVector3f &in avWorldPos, cCamera@ pCam)
+	{
+		cVector2f vScreenSize = cGraphics_GetLowLevel().GetScreenSizeFloat();
+		cRect2l rect = cMath_GetClipRectFromSphere(avWorldPos, 0.01f, pCam.GetFrustum(), cVector2l(vScreenSize.x, vScreenSize.y), false, false);
+		cVector2f vHudPos = (cVector2f(rect.x, rect.y) * cLux_GetHudVirtualSize()) / vScreenSize;
+		return cLux_GetHudVirtualStartPos() + cVector3f(vHudPos.x, vHudPos.y, 1.f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetupAimAssistTargets(cLuxMap@ apMap)
+	{
+		if (apMap is null) return;
+		
+		mbAimAssist_Setup = false;
+		mvAimAssist_Targets.resize(0);
+		
+		////////////////////
+		// Get candidates		
+		array<iLuxEntity@> vCandidates;
+		array<iLuxEntity@> vProps;				
+		apMap.GetEntityArray("*", eLuxEntityType_Agent, "", vCandidates);
+		apMap.GetEntityArray("*", eLuxEntityType_Prop, "", vProps);
+		
+		for (int i = 0; i < vProps.size(); ++i)
+		{
+			vCandidates.push_back(vProps[i]);
+		}
+		
+		////////////////////
+		// Add targets
+		for (int i = 0; i < vCandidates.size(); ++i)
+		{
+			AddAimAssistTarget(vCandidates[i], apMap);
+		}
+		
+		////////////////////
+		// Map callback
+		tString sCallback = "void SetupAimAssistTargets()";
+		if (apMap.ScriptMethodExists(sCallback) && apMap.ScriptPrepare(sCallback))
+		{
+			apMap.ScriptExecute();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void AddAimAssistTarget(iLuxEntity@ apEnt, cLuxMap@ apMap)
+	{
+		if (apEnt is null) return;
+		if (apMap is null) return;
+		
+		////////////////////
+		// Setup vars
+		float fTargetRadiusMul = 1.f;
+		float fMaxDist = 20.f;
+		float fMinCoverage = -1.f;
+		bool bUseJointChildPos = false;
+		bool bRemoveOnSkip = false;
+		int lBoneId = -1;
+		int lWeaponType = -1;
+		tString sSkipBoolVar = "";
+		cVector3f vOffset(0.f);		
+		tString sClass = apEnt.GetClassName();
+		cMeshEntity@ pMeshEnt = apEnt.GetMeshEntity();
+		
+		if (pMeshEnt is null) return;
+		
+		////////////////////
+		// Agents
+		if (apEnt.GetEntityType() == eLuxEntityType_Agent)
+		{
+			if (sClass == "cScrAgentStalker")
+			{
+				fMaxDist = 30.f;
+				lBoneId = pMeshEnt.GetBoneStateIndex("j_Spine_3");
+			}
+			else if (sClass == "cScrAgentRat") 
+			{
+				fTargetRadiusMul = 0.8f;
+				lBoneId = pMeshEnt.GetBoneStateIndex("j_Spine_02");
+			}
+			else if (sClass == "cScrAgentShotgunner")
+			{
+				fMaxDist = 24.f;
+				fMinCoverage = 0.9f;
+				lBoneId = pMeshEnt.GetBoneStateIndex("j_Spine_02");
+				sSkipBoolVar = "IsDead";
+			}
+			else if (sClass == "cScrAgentFogSilhouette")
+			{
+				fMaxDist = 12.f;
+				fMinCoverage = 0.1f;
+				vOffset = cVector3f(0.f, 0.5f, 0.f);
+			}
+			else if (sClass == "cScrAgentPrisoner")
+			{
+				lBoneId = pMeshEnt.GetBoneStateIndex("j_Spine_03");
+				sSkipBoolVar = "IsDead";
+			}
+		}
+		
+		////////////////////
+		// Props
+		else
+		{
+			if (apEnt.IsActive() == false) return;
+			
+			if (sClass == "cScrPropExplosiveBarrel")
+			{
+				bRemoveOnSkip = true;
+				sSkipBoolVar = "BarrelExploded";
+			}
+			else if (sClass == "cScrPropGasCanister")
+			{
+				bRemoveOnSkip = true;
+				sSkipBoolVar = "GasCanisterTriggered";
+			}
+			else if (sClass == "cScrPropFuelSpill")
+			{
+				fTargetRadiusMul = 0.6f;
+				bRemoveOnSkip = true;
+				sSkipBoolVar = "FuelSpillIgnited";
+				vOffset = cVector3f(0.f, 0.05f, 0.f);
+			}
+			else if (sClass == "cScrPropPadlock")
+			{
+				fTargetRadiusMul = 0.4f;
+				fMaxDist = 15.f;
+				bUseJointChildPos = true;
+				vOffset = cVector3f(0.f, -0.02f, 0.f);
+			}
+			else if (sClass == "cScrPropTrap")
+			{
+				iLuxEntity@ pPayload = apMap.GetEntityByName(apEnt.GetName() + "_Payload", eLuxEntityType_Prop, "cScrPropPickup");
+				if (pPayload !is null)
+				{
+					fTargetRadiusMul = 0.4f;
+					fMaxDist = 15.f;
+					@apEnt = pPayload;
+				}
+				else
+				{
+					return;
+				}
+			}
+			else if (sClass == "cScrPropGrenade")
+			{
+				fTargetRadiusMul = 0.4f;
+				fMaxDist = 15.f;
+			}
+			else
+			{
+				return;
+			}
+		}
+		
+		////////////////////
+		// Skip?
+		if (sSkipBoolVar != "" &&
+			apEnt.GetVarBool(sSkipBoolVar))
+		{
+			return;
+		}
+		
+		////////////////////
+		// Add target!
+		mvAimAssist_Targets.push_back(cAimAssistTarget(apEnt.GetID(), lBoneId, sSkipBoolVar, vOffset, fTargetRadiusMul, fMaxDist, 
+													   fMinCoverage, bUseJointChildPos, bRemoveOnSkip, lWeaponType));
+	}
+	
+	//------------------------------------------------------------
+	
+	void RemoveAimAssistTarget(int alId)
+	{
+		if (mvAimAssist_Targets.size() <= alId)
+			return;
+			
+		mvAimAssist_Targets[alId] = mvAimAssist_Targets[mvAimAssist_Targets.size() - 1];
+		mvAimAssist_Targets.pop_back();
+		
+		if (mlAimAssist_EvaluationId >= alId)			--mlAimAssist_EvaluationId;		
+		if (mlAimAssist_SelectedTargetId > alId)		--mlAimAssist_SelectedTargetId;
+		else if (mlAimAssist_SelectedTargetId == alId)	mlAimAssist_SelectedTargetId = -1;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool GetAimAssistTargetExists(tID a_idEnt)
+	{
+		for (int i = 0; i < mvAimAssist_Targets.size(); ++i)
+		{
+			cAimAssistTarget@ pTarget = mvAimAssist_Targets[i];
+			if (pTarget is null) continue;
+			if (a_idEnt == pTarget.m_idEnt) return true;
+		}
+		
+		return false;
+	}
+	
+	//------------------------------------------------------------
+	
+	void ResetCurrentAimAssistTargetData()
+	{
+		mlAimAssist_EvaluationId = 0;
+		mlAimAssist_SelectedTargetId = 0;
+		mfAimAssist_SelectedScreenDistSqr = 1000.f * 1000.f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_AddAimAssistTarget()
+	{
+		tID id = cScript_GetGlobalArgID(0);
+		iLuxEntity@ pEnt = cLux_ID_Entity(id);
+		if (pEnt is null) return;
+		
+		if (GetAimAssistTargetExists(id) == false)
+		{
+			AddAimAssistTarget(pEnt, cLux_GetCurrentMap());
+		}		
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_AddCustomAimAssistTarget()
+	{
+		tID id = cScript_GetGlobalArgID(0);
+		tString sBone = cScript_GetGlobalArgString(1);
+		tString sSkipBoolVar = cScript_GetGlobalArgString(2);
+		cVector3f vOffset = cScript_GetGlobalArgVector3f(3);
+		float fTargetRadiusMul = cScript_GetGlobalArgFloat(4);
+		float fMaxDist = cScript_GetGlobalArgFloat(5);
+		float fMinCoverage = cScript_GetGlobalArgFloat(6);
+		bool bUseJointChildPos = cScript_GetGlobalArgBool(7);
+		bool bRemoveOnSkip = cScript_GetGlobalArgBool(8);
+		int lWeaponType = cScript_GetGlobalArgInt(9);
+		
+		iLuxEntity@ pEnt = cLux_ID_Entity(id);
+		cMeshEntity@ pMeshEnt = pEnt !is null ? pEnt.GetMeshEntity() : null;
+		
+		if (pEnt is null) return;	
+		if (pMeshEnt is null) return;
+		
+		int lBoneId = pMeshEnt.GetBoneStateIndex(sBone);
+		
+		if (GetAimAssistTargetExists(id) == false)
+		{
+			mvAimAssist_Targets.push_back(cAimAssistTarget(id, lBoneId, sSkipBoolVar, vOffset, fTargetRadiusMul, fMaxDist, 
+														   fMinCoverage, bUseJointChildPos, bRemoveOnSkip, lWeaponType));
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_RemoveAimAssistTarget()
+	{
+		tID id = cScript_GetGlobalArgID(0);
+		iLuxEntity@ pEnt = cLux_ID_Entity(id);
+		if (pEnt is null) return;
+		
+		for (int i = 0; i < mvAimAssist_Targets.size(); ++i)
+		{
+			cAimAssistTarget@ pTarget = mvAimAssist_Targets[i];
+			if (pTarget is null) continue;
+			
+			if (id == pTarget.m_idEnt)
+			{
+				RemoveAimAssistTarget(i);
+				break;
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetAimAssistRangeMul()
+	{
+		mfAimAssist_RangeMul = cScript_GetGlobalArgFloat(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DAMAGE
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbIgnoreGasDamage = false;
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetIgnoreGasDamage()
+	{
+		mbIgnoreGasDamage = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetIgnoreGasDamage()
+	{
+		cScript_SetGlobalReturnBool(mbIgnoreGasDamage);
+	}
+	
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

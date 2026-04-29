@@ -1,0 +1,365 @@
+#include "PlayerBodyHandler.hps"
+#include "PlayerBodyAnimationStates_Custom.hps"
+#include "helper_items.hps"
+#include "helper_modules.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+const float gfParkourPlayerBodyHeadBobFlowStart = 0.62f;
+const float gfParkourPlayerBodyHeadBobMinMul = 0.0f;
+const float gfParkourPlayerBodyHeadBobBaseFadeSpeed = 0.35f;
+const float gfParkourPlayerBodyHeadBobAddFadeSpeed = 48.0f;
+const float gfParkourPlayerBodyHeadBobMaxCompensate = 0.45f;
+const float gfParkourPlayerBodyShoulderBobDisableFlow = 0.82f;
+const float gfParkourPlayerBodyShoulderBobEnableFlow = 0.68f;
+
+//------------------------------------------------------------
+
+class cScrPlayerBodyHandler_Custom : cScrPlayerBodyHandler, iScrPlayerBodyHandler_Custom_Interface
+{
+	//------------------------------------------------------------
+
+	/////////////////////////////////////////
+	// INIT
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void Init() override
+	{
+		cScrPlayerBodyHandler::Init();
+
+		SetCustomAnimations();
+
+		mCurrentAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		mPrevAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		mNextAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		mPendingState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+
+		mbUnequipItemsOnCutsceneLeft = true;
+		mbUnequipItemsOnCutsceneRight = true;
+		ResetParkourBodyHeadBobReduction();
+	}
+
+	//------------------------------------------------------------
+
+	void PopulateStateList() override
+	{
+		cScrPlayerBodyHandler::PopulateStateList();
+
+		mvAnimationStates.resize(ePlayerBodyAnimationState_Custom_LastEnum);
+		@mvAnimationStates[ePlayerBodyAnimationState_Custom_SwimIdle] = mAnimationState_SwimIdle;
+		@mvAnimationStates[ePlayerBodyAnimationState_Custom_SwimForward] = mAnimationState_SwimForward;
+		@mvAnimationStates[ePlayerBodyAnimationState_Custom_SwimFastToSlowTr] = mAnimationState_SwimFastToSlow;
+		@mvAnimationStates[ePlayerBodyAnimationState_Custom_SwimForwardSlow] = mAnimationState_SwimForwardSlow;
+	}
+
+	//------------------------------------------------------------
+
+	//} END OF INIT
+
+	/////////////////////////////////////////
+	//MAP LOADING
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void Reset()
+	{
+		cScrPlayerBodyHandler::Reset();
+
+		SetCustomAnimations();
+
+		mCurrentAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		mPrevAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		mNextAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		mPendingState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		ResetParkourBodyHeadBobReduction();
+	}
+
+	//------------------------------------------------------------
+
+	void SetCustomAnimations()
+	{
+		mvAnimations.resize(ePlayerBodyAnimation_Custom_LastEnum);
+
+		mvAnimations[ePlayerBodyAnimation_Custom_SwimIdle] = "player_swim_idle_tread";
+		mvAnimations[ePlayerBodyAnimation_Custom_SwimForward] = "player_swim";
+		mvAnimations[ePlayerBodyAnimation_Custom_SwimFastToSlow] = "player_swim_fast_to_slow";
+		mvAnimations[ePlayerBodyAnimation_Custom_SwimForwardSlow] = "player_swim_slow_breaststroke";
+	}
+
+	//------------------------------------------------------------
+
+	//} END OF MAP LOADING
+
+	/////////////////////////////////////////
+	// PER-FRAME
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void VariableUpdate(float afTimeStep)
+	{
+		cScrPlayerBodyHandler::VariableUpdate(afTimeStep);
+		UpdateParkourBodyHeadBobReduction(afTimeStep);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateParkourBodyHeadBobReduction(float afTimeStep)
+	{
+		cLuxPlayer@ pPlayer = cLux_GetPlayer();
+		iCharacterBody@ pCharBody = null;
+		if (pPlayer !is null) @pCharBody = pPlayer.GetCharacterBody();
+
+		cNode3D@ pCameraSocket = null;
+		if (mbActive) @pCameraSocket = GetSocket("CameraSocket");
+
+		bool bCanReduce = mbActive &&
+						  pPlayer !is null &&
+						  pCharBody !is null &&
+						  pCameraSocket !is null &&
+						  Parkour_GetEnabled() &&
+						  pPlayer.GetCurrentStateId() == ePlayerState_Normal &&
+						  pPlayer.GetCurrentMoveStateId() == eMoveState_Normal &&
+						  pCharBody.IsOnGround() &&
+						  mbCrouching == false &&
+						  Player_GetCrawling() == false;
+
+		if (bCanReduce == false)
+		{
+			SetParkourShoulderBobDisabled(false);
+			mbParkourBodyHeadBobInitialized = false;
+			mfParkourBodyHeadBobAddY = cMath_InterpolateLinear(mfParkourBodyHeadBobAddY,
+															   0.f,
+															   cMath_Clamp(afTimeStep * gfParkourPlayerBodyHeadBobAddFadeSpeed, 0.f, 1.f));
+			if (pPlayer !is null)
+				pPlayer.SetCameraPosAdd(eCameraAddType_Bob, cVector3f(0.f, mfParkourBodyHeadBobAddY, 0.f));
+			return;
+		}
+
+		cVector3f vSocketRel = pCameraSocket.GetWorldPosition() - pCharBody.GetFeetPosition();
+		if (mbParkourBodyHeadBobInitialized == false)
+		{
+			mfParkourBodyHeadBobBaseY = vSocketRel.y;
+			mbParkourBodyHeadBobInitialized = true;
+		}
+
+		float fFlowT = cMath_Clamp((Parkour_GetFlow() - gfParkourPlayerBodyHeadBobFlowStart) /
+								   (1.f - gfParkourPlayerBodyHeadBobFlowStart),
+								   0.f,
+								   1.f);
+		float fBaseFade = gfParkourPlayerBodyHeadBobBaseFadeSpeed * (1.f - fFlowT);
+		mfParkourBodyHeadBobBaseY = cMath_InterpolateLinear(mfParkourBodyHeadBobBaseY,
+															vSocketRel.y,
+															cMath_Clamp(afTimeStep * fBaseFade, 0.f, 1.f));
+		if (Parkour_GetFlow() >= gfParkourPlayerBodyShoulderBobDisableFlow)
+			SetParkourShoulderBobDisabled(true);
+		else if (Parkour_GetFlow() <= gfParkourPlayerBodyShoulderBobEnableFlow)
+			SetParkourShoulderBobDisabled(false);
+
+		float fBodyBobMul = cMath_InterpolateLinear(1.f, gfParkourPlayerBodyHeadBobMinMul, fFlowT);
+		float fTargetAddY = (mfParkourBodyHeadBobBaseY - vSocketRel.y) * (1.f - fBodyBobMul);
+		fTargetAddY = cMath_Clamp(fTargetAddY,
+								   -gfParkourPlayerBodyHeadBobMaxCompensate,
+								   gfParkourPlayerBodyHeadBobMaxCompensate);
+
+		mfParkourBodyHeadBobAddY = cMath_InterpolateLinear(mfParkourBodyHeadBobAddY,
+														   fTargetAddY,
+														   cMath_Clamp(afTimeStep * gfParkourPlayerBodyHeadBobAddFadeSpeed, 0.f, 1.f));
+		pPlayer.SetCameraPosAdd(eCameraAddType_Bob, cVector3f(0.f, mfParkourBodyHeadBobAddY, 0.f));
+		ApplyParkourBodyCameraPosition(pPlayer, pCharBody, pCameraSocket);
+	}
+
+	//------------------------------------------------------------
+
+	void SetParkourShoulderBobDisabled(bool abX)
+	{
+		if (mbParkourBodyShoulderBobDisabled == abX) return;
+
+		SetShoulderBobActive(!abX);
+		mbParkourBodyShoulderBobDisabled = abX;
+	}
+
+	//------------------------------------------------------------
+
+	void ApplyParkourBodyCameraPosition(cLuxPlayer@ apPlayer, iCharacterBody@ apCharBody, cNode3D@ apCameraSocket)
+	{
+		if (apPlayer is null) return;
+		if (apCharBody is null) return;
+		if (apCameraSocket is null) return;
+		if (mbCameraAnimation_Active) return;
+
+		cCamera@ pCam = apPlayer.GetCamera();
+		if (pCam is null) return;
+
+		cVector3f vCamPosAddSum = apPlayer.GetCameraPosAddSum();
+		cVector3f vCamPosAdd = 0.f;
+
+		vCamPosAdd.y = vCamPosAddSum.y;
+		vCamPosAdd += apCharBody.GetRight() * vCamPosAddSum.x;
+		vCamPosAdd += apCharBody.GetForward() * vCamPosAddSum.z;
+
+		pCam.SetPosition(apCameraSocket.GetWorldPosition() + vCamPosAdd);
+		mvCameraPos = pCam.GetPosition();
+	}
+
+	//------------------------------------------------------------
+
+	void ResetParkourBodyHeadBobReduction()
+	{
+		SetParkourShoulderBobDisabled(false);
+		mbParkourBodyHeadBobInitialized = false;
+		mfParkourBodyHeadBobBaseY = 0.f;
+		mfParkourBodyHeadBobAddY = 0.f;
+	}
+
+	//------------------------------------------------------------
+
+	//------------------------------------------------------------
+
+	//} END OF PER-FRAME
+
+	/////////////////////////////////////////
+	// INTERFACE
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void OnReceivePlayerBodyMessage(int alMessageId, cLuxEntityMessageData @apData)
+	{
+		cScrPlayerBodyHandler::OnReceivePlayerBodyMessage(alMessageId, apData);
+	}
+
+	//------------------------------------------------------------
+
+	void SetSwimStateActive(const bool abActive, const tString&in asStartPositionEntity, const tString&in asTargetEntity, const tString&in asWaterEntity, float afAnimBlendInTime)
+	{
+		if (abActive==false)
+		{
+            if (cLux_GetPlayer().GetCurrentMoveStateId()==eMoveState_Swim)
+            {
+                ChangeAnimationState(ePlayerBodyAnimationState_Idle);
+                cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+                cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+            }
+			return;
+		}
+
+		ChangeAnimationState(ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_SwimIdle));
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Swim);
+
+		cScript_SetGlobalArgString(0, asStartPositionEntity);
+		cScript_SetGlobalArgString(1, asTargetEntity);
+		cScript_SetGlobalArgString(2, asWaterEntity);
+		cScript_SetGlobalArgFloat(3, afAnimBlendInTime);
+		cScript_RunGlobalFunc("MoveState_Swim", "", "_Global_SetupSwim");
+	}
+
+    //------------------------------------------------------------
+
+    void SetSwimBodyYaw(const float afAngle)
+    {
+        mAnimationState_SwimIdle.mfAngle = afAngle;
+        mAnimationState_SwimForward.mfAngle = afAngle;
+        mAnimationState_SwimForwardSlow.mfAngle = afAngle;
+    }
+
+	//------------------------------------------------------------
+
+	void SetUnequipItemsOnCutscene(bool abLeft, bool abRight)
+	{
+		mbUnequipItemsOnCutsceneLeft = abLeft;
+		mbUnequipItemsOnCutsceneRight = abRight;
+	}
+
+	//------------------------------------------------------------
+
+	//} END OF INTERFACE
+
+	/////////////////////////////////////////
+	//	HELPER METHODS
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void GetEntityPosAndYaw(const tString &in asTargetEntity, cVector3f &out avPos, float &out afYaw)
+	{
+		cLuxProp@ pProp = cLux_ID_Prop(m_idBody);
+		if (pProp !is null) SetRenderLayers(0,0);
+
+		iLuxEntity @pEntity = cLux_GetCurrentMap().GetEntityByName(asTargetEntity);
+		if(pEntity is null)
+		{
+			Error("Could not find entity '"+asTargetEntity+"' for GetEntityPosAndYaw");
+			return;
+		}
+
+		cMatrixf mtxEnt = pEntity.GetMatrix();
+		avPos = mtxEnt.GetTranslation();
+
+		cVector3f vFwd = mtxEnt.GetTranspose().GetForward();
+		afYaw = 0;
+		afYaw -= cMath_ATan2(vFwd.x, -vFwd.z);
+	}
+
+	//------------------------------------------------------------
+
+	//} END OF HELPERS
+
+	/////////////////////////////////////////
+	// GLOBALS
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	//------------------------------------------------------------
+
+	//} END OF GLOBALS
+
+	/////////////////////////////////////////
+	// ACTIONS
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void AdditionalCutsceneSetup() override
+	{
+		cScrPlayerBodyHandler::AdditionalCutsceneSetup();
+
+		if (mbUnequipItemsOnCutsceneLeft)
+			Item_PutAway(eItemHandlerHand_Left);
+
+		if (mbUnequipItemsOnCutsceneRight)
+			Item_PutAway(eItemHandlerHand_Right);
+
+		mbUnequipItemsOnCutsceneLeft = true;
+		mbUnequipItemsOnCutsceneRight = true;
+	}
+
+	//------------------------------------------------------------
+
+	//} END OF ACTIONS
+
+	/////////////////////////////////////////
+	// PROPERTIES
+	//{//////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	bool mbUnequipItemsOnCutsceneLeft;
+	bool mbUnequipItemsOnCutsceneRight;
+	bool mbParkourBodyHeadBobInitialized;
+	bool mbParkourBodyShoulderBobDisabled;
+	float mfParkourBodyHeadBobBaseY;
+	float mfParkourBodyHeadBobAddY;
+
+	cPlayerBodyAnimationState_Custom_SwimIdle mAnimationState_SwimIdle;
+	cPlayerBodyAnimationState_Custom_SwimForward mAnimationState_SwimForward;
+	cPlayerBodyAnimationState_Custom_SwimFastToSlow mAnimationState_SwimFastToSlow;
+	cPlayerBodyAnimationState_Custom_SwimForwardSlow mAnimationState_SwimForwardSlow;
+
+	//------------------------------------------------------------
+
+	//} END OF PROPERTIES
+}

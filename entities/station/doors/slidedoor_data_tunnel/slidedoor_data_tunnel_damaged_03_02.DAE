@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Wynn</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.3.1;  Revision: 847M;  Platform: x64;  Configuration: Release_Max2012_static</authoring_tool>
+      <source_data>file:///D:/Files/Google%20Drive/Work/ArtBully%20Productions/Frictional%20Games/Project%20Depth/slide_door_data_tunnel/slidedoor_data_tunnel_damaged.max</source_data>
+    </contributor>
+    <created>2012-07-27T13:49:50</created>
+    <modified>2012-07-27T13:49:50</modified>
+    <unit name="meter" meter="0.5"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="slidedoor_data_tunnel">
+      <profile_COMMON>
+        <newparam sid="slide_door_data_tunnel_dds-surface">
+          <surface type="2D">
+            <init_from>slide_door_data_tunnel_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="slide_door_data_tunnel_dds-sampler">
+          <sampler2D>
+            <source>slide_door_data_tunnel_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="slide_door_data_tunnel_spec_dds-surface">
+          <surface type="2D">
+            <init_from>slide_door_data_tunnel_spec_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="slide_door_data_tunnel_spec_dds-sampler">
+          <sampler2D>
+            <source>slide_door_data_tunnel_spec_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.5882353 0.5882353 0.5882353 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="slide_door_data_tunnel_dds-sampler" texcoord="CHANNEL1"/>
+            </diffuse>
+            <specular>
+              <color>0.9 0.9 0.9 1</color>
+            </specular>
+            <shininess>
+              <float>9.999999</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+          <extra>
+            <technique profile="OpenCOLLADA3dsMax">
+              <specularLevel>
+                <texture texture="slide_door_data_tunnel_spec_dds-sampler" texcoord="CHANNEL1"/>
+              </specularLevel>
+            </technique>
+          </extra>
+        </technique>
+      </profile_COMMON>
+      <extra>
+        <technique profile="OpenCOLLADA3dsMax">
+          <extended_shader>
+            <apply_reflection_dimming>0</apply_reflection_dimming>
+            <dim_level>0</dim_level>
+            <falloff_type>0</falloff_type>
+            <index_of_refraction>1.5</index_of_refraction>
+            <opacity_type>0</opacity_type>
+            <reflection_level>3</reflection_level>
+            <wire_size>1</wire_size>
+            <wire_units>0</wire_units>
+          </extended_shader>
+          <shader>
+            <ambient_diffuse_lock>1</ambient_diffuse_lock>
+            <ambient_diffuse_texture_lock>1</ambient_diffuse_texture_lock>
+            <diffuse_specular_lock>0</diffuse_specular_lock>
+            <soften>0.1</soften>
+            <use_self_illum_color>0</use_self_illum_color>
+          </shader>
+        </technique>
+      </extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="slidedoor_data_tunnel-material" name="slidedoor_data_tunnel">
+      <instance_effect url="#slidedoor_data_tunnel"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-Circle001" name="Circle001">
+      <spline closed="1">
+        <source id="geom-Circle001-positions">
+          <float_array id="geom-Circle001-positions-array" count="12">7.942971 0 0 -3.47198e-7 7.942971 0 -7.942971 -6.94397e-7 0 9.4719e-8 -7.942971 0</float_array>
+          <technique_common>
+            <accessor source="#geom-Circle001-positions-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-Circle001-intangents">
+          <float_array id="geom-Circle001-intangents-array" count="12">7.942971 -4.382822 0 4.382821 7.942971 0 -7.942971 4.382821 0 -4.382822 -7.942971 0</float_array>
+          <technique_common>
+            <accessor source="#geom-Circle001-intangents-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-Circle001-outtangents">
+          <float_array id="geom-Circle001-outtangents-array" count="12">7.942971 4.382822 0 -4.382822 7.942971 0 -7.94297 -4.382822 0 4.382822 -7.942971 0</float_array>
+          <technique_common>
+            <accessor source="#geom-Circle001-outtangents-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-Circle001-interpolations">
+          <Name_array id="geom-Circle001-interpolations-array" count="4">BEZIER BEZIER BEZIER BEZIER</Name_array>
+          <technique_common>
+            <accessor source="#geom-Circle001-interpolations-array" count="4" stride="1">
+              <param name="INTERPOLATION" type="name"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <control_vertices>
+          <input semantic="POSITION" source="#geom-Circle001-positions"/>
+          <input semantic="IN_TANGENT" source="#geom-Circle001-intangents"/>
+          <input semantic="OUT_TANGENT" source="#geom-Circle001-outtangents"/>
+          <input semantic="INTERPOLATION" source="#geom-Circle001-interpolations"/>
+        </control_vertices>
+      </spline>
+    </geometry>
+    <geometry id="geom-Circle002" name="Circle002">
+      <spline closed="1">
+        <source id="geom-Circle002-positions">
+          <float_array id="geom-Circle002-positions-array" count="12">8.265488 0 0 -3.61296e-7 8.265488 0 -8.265488 -7.22592e-7 0 9.8565e-8 -8.265488 0</float_array>
+          <technique_common>
+            <accessor source="#geom-Circle002-positions-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-Circle002-intangents">
+          <float_array id="geom-Circle002-intangents-array" count="12">8.265488 -4.560782 0 4.560781 8.265488 0 -8.265488 4.560781 0 -4.560782 -8.265488 0</float_array>
+          <technique_common>
+            <accessor source="#geom-Circle002-intangents-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-Circle002-outtangents">
+          <float_array id="geom-Circle002-outtangents-array" count="12">8.265488 4.560782 0 -4.560782 8.265488 0 -8.265488 -4.560783 0 4.560782 -8.265488 0</float_array>
+          <technique_common>
+            <accessor source="#geom-Circle002-outtangents-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-Circle002-interpolations">
+          <Name_array id="geom-Circle002-interpolations-array" count="4">BEZIER BEZIER BEZIER BEZIER</Name_array>
+          <technique_common>
+            <accessor source="#geom-Circle002-interpolations-array" count="4" stride="1">
+              <param name="INTERPOLATION" type="name"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <control_vertices>
+          <input semantic="POSITION" source="#geom-Circle002-positions"/>
+          <input semantic="IN_TANGENT" source="#geom-Circle002-intangents"/>
+          <input semantic="OUT_TANGENT" source="#geom-Circle002-outtangents"/>
+          <input semantic="INTERPOLATION" source="#geom-Circle002-interpolations"/>
+        </control_vertices>
+      </spline>
+    </geometry>
+    <geometry id="geom-slidedoor_data_tunnel_damaged_03_02" name="slidedoor_data_tunnel_damaged_03_02">
+      <mesh>
+        <source id="geom-slidedoor_data_tunnel_damaged_03_02-positions">
+          <float_array id="geom-slidedoor_data_tunnel_damaged_03_02-positions-array" count="204">3.670879 2.46304 0.4723575 3.670879 2.452964 0.4831434 3.599439 2.298317 0.4831434 3.599439 2.288696 0.4727437 3.629392 1.09356 0.4723575 3.629392 1.103636 0.4831434 3.629392 1.258283 0.4831434 3.629392 1.267905 0.4727437 1.936447 3.003301 0.3762499 1.788284 1.997915 0.3762499 2.88892 0.8866979 0.3762499 3.703812 0.6962039 0.3762499 3.470985 1.638092 0.3762499 3.650898 2.876305 0.3762499 3.357799 3.341148 0.3762499 1.730312 2.46304 0.4723575 1.730312 2.452964 0.4831434 1.694592 2.298317 0.4831434 1.694592 2.288696 0.4727437 2.439198 1.09356 0.4723575 2.439198 1.103636 0.4831434 2.439198 1.258283 0.4831434 2.439198 1.267905 0.4727437 2.797245 2.045482 0.6706358 3.172036 2.911776 0.3762499 3.650898 2.876305 0.3762499 3.07007 2.46304 0.7667435 3.07007 2.452964 0.7775294 3.01649 2.298317 0.7775294 3.01649 2.288696 0.7671297 3.034295 1.09356 0.5791023 3.034295 1.103636 0.5898882 3.034295 1.258283 0.5898882 3.034295 1.267905 0.5794885 3.670879 2.46304 0.1451278 3.07007 2.46304 0.4395137 3.07007 2.452964 0.4287277 3.670879 2.452964 0.1343419 3.01649 2.298317 0.4287278 3.599439 2.298317 0.1343419 3.629392 1.09356 0.1451278 3.034295 1.09356 0.1451278 3.629392 1.103636 0.1343419 3.034295 1.103636 0.1343419 3.629392 1.258283 0.1343419 3.034295 1.258283 0.1343419 3.629392 1.267905 0.1447415 3.034295 1.267905 0.1447415 3.650898 2.876305 0.2412354 3.357799 3.341148 0.2412354 3.172036 2.911776 0.2412354 3.650898 2.876305 0.2412354 1.694592 2.288696 0.1447415 3.01649 2.288696 0.4391274 1.694592 2.298317 0.1343419 1.936447 3.003301 0.2412354 1.788284 1.997915 0.2412354 2.88892 0.8866979 0.2412354 2.797245 2.045482 0.5356213 3.703812 0.6962039 0.2412354 3.470985 1.638092 0.2412354 1.730312 2.46304 0.1451278 1.730312 2.452964 0.1343419 3.599439 2.288696 0.1447415 2.439198 1.09356 0.1451278 2.439198 1.103636 0.1343419 2.439198 1.258283 0.1343419 2.439198 1.267905 0.1447415</float_array>
+          <technique_common>
+            <accessor source="#geom-slidedoor_data_tunnel_damaged_03_02-positions-array" count="68" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-slidedoor_data_tunnel_damaged_03_02-normals">
+          <float_array id="geom-slidedoor_data_tunnel_damaged_03_02-normals-array" count="576">0.06189753 0.9012384 0.4288801 0.07152443 0.7288718 0.6809039 0.3172125 0.6930047 0.6473954 0.1304342 0.9550516 0.2662017 0.1924049 -0.07100879 0.9787431 0.05422613 -0.01977186 0.998333 0.4330769 -0.1934025 0.8803635 0.4311855 -0.1991886 0.8800017 5.72828e-8 -0.7307453 0.6826503 -3.11736e-8 -0.9157819 0.4016759 0.05909164 -0.942328 0.3294329 0.121542 -0.7253268 0.6775903 2.89133e-8 0 1 3.37322e-8 0 1 0.1765559 0 0.9842905 0.176556 0 0.9842907 4.15159e-8 0.9168279 0.3992828 -2.03161e-7 0.7340494 0.679096 0.1209184 0.7286623 0.6741141 0.058719 0.943075 0.3273556 0.01172908 0.1583427 0.9873146 0.1835296 0.1553615 0.9706594 0 0 1 0 0 1 0.06447582 -0.9016847 0.42756 0.07367323 -0.7320546 0.6772506 -0.1495342 -0.7257952 0.6714618 -0.07086813 -0.9453633 0.3182232 -0.1201601 0.1455287 0.98203 -0.2760639 -0.07468646 0.9582331 -0.1158111 -0.2531659 0.960466 0.006742446 -0.006748124 0.9999545 0.1201176 -0.1339151 0.9836862 0.4277326 0.05543748 0.9022037 -0.07050709 0.944492 0.3208795 -0.1483399 0.7226597 0.6750987 -0.2169037 0.05171299 0.9748223 -0.2171009 0.05014516 0.9748603 0.1321524 -0.9560615 0.2616908 0.3243947 -0.6943524 0.6423728 -0.1215419 -0.7253268 0.6775903 -0.05909159 -0.942328 0.3294328 -0.1765559 0 0.9842905 -0.1765559 0 0.9842907 -0.05871913 0.9430747 0.3273563 -0.1209184 0.7286623 0.6741142 -0.2158613 0.8713899 -0.440549 -0.0309793 0.9550207 -0.2949167 0 0.9311414 -0.3646584 0 0.9311413 -0.3646585 0.09028457 -0.9096656 -0.4054099 -0.03169283 -0.9560944 -0.2913403 0.08950127 0.9088882 -0.4073226 -0.2218984 -0.8704494 -0.4394077 0 0.9311414 -0.3646583 -0.3172124 0.6930047 -0.6473954 -0.09804808 0.7272243 -0.679361 -0.1924049 0.07100844 -0.9787431 -0.4311854 0.1991885 -0.8800017 -0.4330769 0.1934024 -0.8803635 -0.05422615 0.01977148 -0.9983329 0 -0.9302537 -0.3669169 0 -0.9302537 -0.3669169 0 -0.7307443 -0.6826513 0 -0.7307443 -0.6826513 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0.7340484 -0.6790971 0 0.7340484 -0.6790971 -0.01172908 -0.1583427 -0.9873146 0 0 -1 0 0 -1 -0.1835296 -0.1553615 -0.9706594 0.1495342 -0.7257952 -0.6714618 -0.1018746 -0.7302284 -0.675565 0.1201601 -0.1455287 -0.98203 0.2760639 0.07468648 -0.9582331 -0.006742444 0.006748134 -0.9999545 0.1158111 0.2531659 -0.960466 -0.1201176 0.1339151 -0.9836862 -0.4277326 -0.05543748 -0.9022037 0.1483399 0.7226597 -0.6750987 0.2169037 -0.05171302 -0.9748223 0.2171009 -0.05014516 -0.9748603 -0.3243946 -0.6943524 -0.6423728 0 -0.9302539 -0.3669167 0 -0.7307442 -0.6826513 0 0 -1 0 0 -1 0 0.7340485 -0.6790971 -0.2276291 -0.973748 0 -0.4881005 -0.8727874 0 -0.4881005 -0.8727874 0 -0.2276291 -0.973748 0 -0.7104813 -0.703716 0 -0.7104813 -0.703716 0 -0.9893149 0.1457944 0 -0.9893149 0.1457943 0 -0.9893149 0.1457944 0 -0.9893149 0.1457943 0 -0.231251 0.9728941 0 -0.231251 0.9728942 0 -0.231251 0.9728941 0 -0.231251 0.9728942 0 0.8458875 0.5333613 0 0.8458876 0.5333612 0 0.8458875 0.5333613 0 0.8458876 0.5333612 0 1 0 0 1 0 0 1 0 0 1 0 0 0.9896082 -0.1437903 0 0.9987987 0.04900168 0 0.9987987 0.04900168 0 0.9896082 -0.1437903 0 0.9707807 0.2399682 0 0.9707807 0.2399681 0 0.8463488 -0.3909756 0.3617069 0.8463488 -0.3909756 0.3617069 0.8463488 -0.3909756 0.3617069 1 0 0 1 0 0 1 0 0 0.8452627 -0.3904739 0.3647753 0.8452627 -0.3904739 0.3647753 0.8452627 -0.3904739 0.3647753 0.9176447 -0.3972412 -0.01129401 0.9176447 -0.3972412 -0.01129401 0.9176447 -0.3972412 -0.01129401 0.917241 -0.3981559 -0.01186879 0.917241 -0.3981559 -0.01186879 0.917241 -0.3981559 -0.01186879 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -0.9535021 0.2202364 -0.2057418 -0.9535021 0.2202364 -0.2057418 -0.9535021 0.2202364 -0.2057418 -1 0 0 -1 0 0 -1 0 0 -0.9773504 0.2115422 0.006014382 -0.9773504 0.2115423 0.006014383 -0.9773504 0.2115423 0.006014382 -0.9538914 0.2203263 -0.2038325 -0.9538913 0.2203263 -0.2038325 -0.9538913 0.2203263 -0.2038325 -0.9772283 0.2120962 0.006322464 -0.9772284 0.2120962 0.006322464 -0.9772283 0.2120962 0.006322464 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0</float_array>
+          <technique_common>
+            <accessor source="#geom-slidedoor_data_tunnel_damaged_03_02-normals-array" count="192" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-slidedoor_data_tunnel_damaged_03_02-map1">
+          <float_array id="geom-slidedoor_data_tunnel_damaged_03_02-map1-array" count="441">0.528937 0.6286877 0 0.5289376 0.6279504 0 0.525353 0.620208 0 0.5253501 0.6195049 0 0.1838328 0.5793096 0 0.5268514 0.5592121 0 0.1825194 0.5874211 0 0.5268515 0.5599144 0 0.526852 0.5676532 0 0.517083 0.6110114 0 0.5268527 0.5683348 0 0.452446 0.3456239 0 0.4450047 0.2951522 0 0.5002468 0.2393675 0 0.5411503 0.2298045 0 0.5294642 0.2770886 0 0.538488 0.3392486 0 0.5237986 0.3625843 0 0.431495 0.6286851 0 0.4314966 0.6279571 0 0.4297029 0.6202048 0 0.4297014 0.619502 0 0.2766384 0.5793096 0 0.2405065 0.5874211 0 0.4670879 0.5592131 0 0.467088 0.5599151 0 0.4670885 0.5676523 0 0.4670891 0.5683424 0 0.459096 0.6110117 0 0.4956498 0.2975401 0 0.5144703 0.3410292 0 0.538488 0.3392486 0 0.4987684 0.6286935 0 0.4987676 0.6279545 0 0.4961564 0.6201602 0 0.4960782 0.6194755 0 0.2122345 0.5793096 0 0.2115129 0.5874211 0 0.4969696 0.5592126 0 0.4969698 0.5599147 0 0.4969703 0.5676528 0 0.4969709 0.5683386 0 0.4880895 0.6110116 0 0.528937 0.6286877 0 0.4987684 0.6286935 0 0.4987676 0.6279545 0 0.5289376 0.6279504 0 0.4961564 0.6201602 0 0.525353 0.620208 0 0.5268515 0.5599144 0 0.4969698 0.5599147 0 0.4969696 0.5592126 0 0.5268514 0.5592121 0 0.526852 0.5676532 0 0.4969703 0.5676528 0 0.5268527 0.5683348 0 0.4969709 0.5683386 0 0.538488 0.3392486 0 0.5237986 0.3625843 0 0.5144703 0.3410292 0 0.538488 0.3392486 0 0.4297014 0.619502 0 0.4960782 0.6194755 0 0.4297029 0.6202048 0 0.452446 0.3456239 0 0.4450047 0.2951522 0 0.5002468 0.2393675 0 0.4956498 0.2975401 0 0.5411503 0.2298045 0 0.5294642 0.2770886 0 0.431495 0.6286851 0 0.4314966 0.6279571 0 0.5253501 0.6195049 0 0.467088 0.5599151 0 0.4670879 0.5592131 0 0.4670885 0.5676523 0 0.4670891 0.5683424 0 0.5289373 0.6451082 0 0.4987685 0.6451098 0 0.5170829 0.6269945 0 0.4880894 0.6269941 0 0.2766384 0.5952829 0 0.2122345 0.5952829 0 0.4987685 0.6451134 0 0.431495 0.645117 0 0.2122345 0.5952829 0 0.1838328 0.595283 0 0.4880894 0.626994 0 0.459096 0.6269935 0 0.2115129 0.6033666 0 0.1825194 0.6033666 0 0.2405065 0.6033666 0 0.2115129 0.6033666 0 0.1348661 0.5078843 0 0.1352013 0.5081739 0 0.1352013 0.5134631 0 0.1348782 0.5137397 0 0.2030294 0.5133024 0 0.19286 0.5133024 0 0.1925248 0.5129893 0 0.1925248 0.5081833 0 0.1526536 0.4813444 0 0.1842357 0.4813444 0 0.1595581 0.4724977 0 0.1855654 0.4724977 0 0.1346821 0.4556377 0 0.1491281 0.4556377 0 0.1842357 0.4855402 0 0.1689478 0.513415 0 0.1587783 0.513415 0 0.1584432 0.5131083 0 0.1584432 0.5081772 0 0.2200703 0.5078843 0 0.2204054 0.5081974 0 0.2204054 0.5130034 0 0.2200822 0.5133024 0 0.1491281 0.4598336 0 0.1246848 0.5137397 0 0.1243615 0.5134631 0 0.1243615 0.5081739 0 0.192848 0.5078843 0 0.2030414 0.5078843 0 0.2033645 0.5081833 0 0.1346821 0.4598336 0 0.1526536 0.4855402 0 0.1491281 0.4556377 0 0.1587664 0.5078843 0 0.1689598 0.5078843 0 0.2010628 0.4813444 0 0.2010628 0.4855402 0 0.1855654 0.4766936 0 0.1595581 0.4766936 0 0.1491281 0.4598336 0 0.169283 0.5081772 0 0.2098888 0.5133024 0 0.2095655 0.5130034 0 0.2095655 0.5081974 0 0.169283 0.5131083 0 0.1246967 0.5078843 0 0.2099008 0.5078843 0 0.2033645 0.5129893 0 0.1876081 0.4556377 0 0.1876081 0.4598336 0 0.2168795 0.4556377 0 0.2168795 0.4598336 0 0.2267329 0.4724977 0 0.2267329 0.4766936 0</float_array>
+          <technique_common>
+            <accessor source="#geom-slidedoor_data_tunnel_damaged_03_02-map1-array" count="147" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-slidedoor_data_tunnel_damaged_03_02-vertices">
+          <input semantic="POSITION" source="#geom-slidedoor_data_tunnel_damaged_03_02-positions"/>
+        </vertices>
+        <triangles material="slidedoor_data_tunnel" count="124">
+          <input semantic="VERTEX" source="#geom-slidedoor_data_tunnel_damaged_03_02-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-slidedoor_data_tunnel_damaged_03_02-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-slidedoor_data_tunnel_damaged_03_02-map1" offset="2" set="0"/>
+          <p>26 0 32 27 1 33 1 2 1 1 2 1 0 3 0 26 0 32 27 4 33 28 5 34 2 6 2 2 6 2 1 7 1 27 4 33 31 8 39 30 9 38 4 10 5 4 10 5 5 11 7 31 8 39 32 12 40 31 13 39 5 14 7 5 14 7 6 15 8 32 12 40 33 16 41 32 17 40 6 18 8 6 18 8 7 19 10 33 16 41 24 20 30 25 21 31 13 22 16 13 22 16 14 23 17 24 20 30 29 24 35 28 25 34 17 26 20 17 26 20 18 27 21 29 24 35 14 23 17 8 28 11 24 20 30 9 29 12 10 30 13 23 31 29 23 31 29 10 30 13 11 32 14 23 31 29 11 32 14 12 33 15 8 28 11 9 29 12 23 31 29 23 31 29 24 20 30 8 28 11 23 31 29 12 33 15 25 21 31 25 21 31 24 20 30 23 31 29 15 34 18 16 35 19 27 1 33 27 1 33 26 0 32 15 34 18 16 36 19 17 37 20 28 5 34 28 5 34 27 4 33 16 36 19 3 38 3 2 39 2 28 25 34 28 25 34 29 24 35 3 38 3 20 40 25 19 41 24 30 9 38 30 9 38 31 8 39 20 40 25 21 42 26 20 43 25 31 13 39 31 13 39 32 12 40 21 42 26 22 44 27 21 45 26 32 17 40 32 17 40 33 16 41 22 44 27 26 0 32 0 3 0 34 46 77 34 46 77 35 47 78 26 0 32 33 16 42 7 19 9 46 48 79 46 48 79 47 49 80 33 16 42 29 24 36 18 27 22 52 50 81 52 50 81 53 51 82 29 24 36 15 34 18 26 0 32 35 47 83 35 47 83 61 52 84 15 34 18 3 38 4 29 24 36 53 51 85 53 51 85 63 53 86 3 38 4 22 44 28 33 16 42 47 49 87 47 49 87 67 54 88 22 44 28 35 47 44 34 46 43 37 55 46 37 55 46 36 56 45 35 47 44 36 57 45 37 58 46 39 59 48 39 59 48 38 60 47 36 57 45 4 10 6 30 9 37 41 61 89 41 61 89 40 62 90 4 10 6 43 63 50 42 64 49 40 62 52 40 62 52 41 61 51 43 63 50 45 65 54 44 66 53 42 67 49 42 67 49 43 68 50 45 65 54 47 49 56 46 48 55 44 69 53 44 69 53 45 70 54 47 49 56 50 71 59 49 72 58 48 73 57 48 73 57 51 74 60 50 71 59 53 51 62 52 50 61 54 75 63 54 75 63 38 76 47 53 51 62 49 72 58 50 71 59 55 77 64 56 78 65 58 79 67 57 80 66 58 79 67 59 81 68 57 80 66 58 79 67 60 82 69 59 81 68 55 77 64 50 71 59 58 79 67 58 79 67 56 78 65 55 77 64 58 79 67 50 71 59 51 74 60 51 74 60 60 82 69 58 79 67 61 52 70 35 47 44 36 56 45 36 56 45 62 83 71 61 52 70 62 84 71 36 57 45 38 60 47 38 60 47 54 85 63 62 84 71 63 53 72 53 51 62 38 76 47 38 76 47 39 86 48 63 53 72 30 9 37 19 41 23 64 87 91 64 87 91 41 61 92 30 9 37 65 88 73 43 63 50 41 61 51 41 61 51 64 87 74 65 88 73 66 89 75 45 65 54 43 68 50 43 68 50 65 90 73 66 89 75 67 54 76 47 49 56 45 70 54 45 70 54 66 91 75 67 54 76 11 92 103 10 93 104 57 94 130 57 94 130 59 95 131 11 92 103 10 93 104 9 96 145 56 97 146 56 97 146 57 94 130 10 93 104 9 98 101 8 99 102 55 100 107 55 100 107 56 101 124 9 98 101 8 102 102 14 103 128 49 104 129 49 104 129 55 105 107 8 102 102 14 106 105 13 107 106 48 108 116 48 108 116 49 109 123 14 106 105 13 110 106 25 111 125 51 112 132 51 112 132 48 113 116 13 110 106 25 114 125 12 115 141 60 116 142 60 116 142 51 117 132 25 114 125 12 115 141 11 118 143 59 119 144 59 119 144 60 116 142 12 115 141 1 120 94 2 121 95 3 122 96 3 123 96 63 124 117 39 125 118 39 126 118 37 127 119 34 128 138 3 129 96 39 130 118 34 131 138 1 132 94 3 133 96 34 134 138 0 135 93 1 136 94 34 137 138 40 138 98 42 139 99 44 140 100 44 141 100 46 142 120 7 143 121 40 144 98 44 145 100 7 146 121 7 147 121 6 148 122 5 149 140 40 150 98 7 151 121 5 152 140 4 153 97 40 154 98 5 155 140 61 156 109 62 157 110 54 158 111 54 159 111 52 160 126 18 161 127 61 162 109 54 163 111 18 164 127 18 165 127 17 166 133 16 167 137 61 168 109 18 169 127 16 170 137 15 171 108 61 172 109 16 173 137 20 174 113 21 175 114 22 176 115 22 177 115 67 178 134 66 179 135 66 180 135 65 181 136 64 182 139 22 183 115 66 184 135 64 185 139 20 186 113 22 187 115 64 188 139 19 189 112 20 190 113 64 191 139</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_images>
+    <image id="slide_door_data_tunnel_dds">
+      <init_from>file:///D:/Files/Google%20Drive/Work/ArtBully%20Productions/Frictional%20Games/Project%20Depth/slide_door_data_tunnel/slide_door_data_tunnel.dds</init_from>
+    </image>
+    <image id="slide_door_data_tunnel_spec_dds">
+      <init_from>file:///D:/Files/Google%20Drive/Work/ArtBully%20Productions/Frictional%20Games/Project%20Depth/slide_door_data_tunnel/slide_door_data_tunnel_spec.dds</init_from>
+    </image>
+  </library_images>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-slidedoor_data_tunnel_damaged_03_02" name="slidedoor_data_tunnel_damaged_03_02">
+        <translate>-0.2958291 -0.9568166 3.82618</translate>
+        <rotate>5.33851e-8 0.7071068 0.7071068 -180</rotate>
+        <instance_geometry url="#geom-slidedoor_data_tunnel_damaged_03_02">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="slidedoor_data_tunnel" target="#slidedoor_data_tunnel-material">
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

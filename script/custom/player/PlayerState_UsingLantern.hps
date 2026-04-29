@@ -1,0 +1,587 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "custom/player/PlayerState_UsingItem_Base.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+#include "custom/helpers/helper_player_custom.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/helpers/helper_items.hps"
+#include "helpers/helper_effects.hps"
+
+//------------------------------------------------------------
+
+const tString gsUsingLantern_PlayerStartLAnim = "player_magnetlampe_chargeup_start_larm";
+const tString gsUsingLantern_PlayerStartRAnim = "player_magnetlampe_chargeup_start_rarm";
+const tString gsUsingLantern_PlayerGunStartRAnim = "player_magnetlampe_chargeup_gun_start_rarm";
+const tString gsUsingLantern_PlayerEndLAnim = "player_magnetlampe_chargeup_end_larm";
+const tString gsUsingLantern_PlayerEndRAnim = "player_magnetlampe_chargeup_end_rarm";
+const tString gsUsingLantern_PlayerGunEndRAnim = "player_magnetlampe_chargeup_gun_end_rarm";
+const tString[] gsUsingLantern_PlayerChargeLAnim = { "player_magnetlampe_chargeup_pull_1_larm", 
+													  "player_magnetlampe_chargeup_pull_2_larm",
+													  "player_magnetlampe_chargeup_pull_3_larm" };
+const tString[] gsUsingLantern_PlayerChargeRAnim = { "player_magnetlampe_chargeup_pull_1_rarm", 
+													  "player_magnetlampe_chargeup_pull_2_rarm",
+													  "player_magnetlampe_chargeup_pull_3_rarm" };
+const tString[] gsUsingLantern_PlayerGunChargeRAnim = { "player_magnetlampe_chargeup_gun_pull_1_rarm", 
+														 "player_magnetlampe_chargeup_gun_pull_2_rarm",
+														 "player_magnetlampe_chargeup_gun_pull_3_rarm" };
+const tString[] gsUsingLantern_PlayerHeadChargeAnim = { "player_head_magnetlampe_chargeup_pull_1", 
+														 "player_head_magnetlampe_chargeup_pull_2",
+													     "player_head_magnetlampe_chargeup_pull_3" };
+
+const tString gsUsingLantern_LanternStartAnim = "magnetlampe_chargeup_start";
+const tString gsUsingLantern_LanternGunStartAnim = "magnetlampe_chargeup_gun_start";
+const tString gsUsingLantern_LanternEndAnim = "magnetlampe_chargeup_end";
+const tString gsUsingLantern_LanternGunEndAnim = "magnetlampe_chargeup_gun_end";
+const tString[] gsUsingLantern_LanternChargeAnim = { "magnetlampe_chargeup_pull_1", 
+													  "magnetlampe_chargeup_pull_2",
+													  "magnetlampe_chargeup_pull_3" };
+const tString[] gsUsingLantern_LanternGunChargeAnim = { "magnetlampe_chargeup_gun_pull_1", 
+														 "magnetlampe_chargeup_gun_pull_2",
+														 "magnetlampe_chargeup_gun_pull_3" };
+const tString gsUsingLantern_LanternIdleAnim = "magnetlampe_idle";
+
+const float gfUsingLantern_MinPitch = -cMath_ToRad(60.f);
+const float gfUsingLantern_MaxPitch = cMath_ToRad(30.f);
+const float gfUsingLantern_PitchFadeTime = 1.f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_UsingLantern : iScrPlayerState_UsingItem_Base, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+		
+	/////////////////////////////////////////
+	// INIT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Init()
+	{
+		iScrPlayerState_UsingItem_Base::Init();
+		
+		mItemHand = eItemHandlerHand_Left;
+		mbUsesOtherHandAnims = true;
+		mbDoZoom = false;
+		msOnEnterUnequipException = "Gun";
+		mfEquipLastItemOnLeaveDelay = 0.55f;
+		mlDefaultCrossHairState = -1;
+		
+		mvChargeAnimIds.resize(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// USER SETTINGS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void LoadUserConfig() override
+	{
+		iScrPlayerState_UsingItem_Base::LoadUserConfig();		
+		mlUseItemMode = cLux_GetUserConfig().GetInt("Accessibility", "ChargeFlashlightMode", 0);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{		
+		msOnEnterUnequipException = Item_GetHeldType(eItemHandlerHand_Right) == "VolleyGun" ? "VolleyGun" : "Gun";
+		
+		////////////////
+		// Enter base
+		iScrPlayerState_UsingItem_Base::OnEnterState(alPrevStateId);
+		
+		////////////////
+		// Setup state
+		mlUseAction = -1;
+		mbHeadAnimPlayed = false;
+		mbChargeQueued = false;
+		mbRestartCurrentStateAnimsNextFrame = false;
+		
+		mbAllowLeavingState = mlUseItemMode == eUseItemMode_Hold;
+		
+		////////////////
+		// Setup pitch
+		SetupPitchFade(gfUsingLantern_MinPitch, gfUsingLantern_MaxPitch, gfUsingLantern_PitchFadeTime, false);
+		
+		////////////////
+		// Add hint as given
+		tString sHint = Hint_GetCurrentEntry();
+		if (sHint == "HintDynamoLantern" || sHint == "HintDynamoLantern_Toggle")
+			Hint_StopHint();
+		
+		Hint_AddAsGiven("Hints", "HintDynamoLantern");
+		Hint_AddAsGiven("Hints", "HintDynamoLantern_Toggle");
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId)
+	{
+		////////////////
+		// Leave base
+		iScrPlayerState_UsingItem_Base::OnLeaveState(alNextStateId);
+		
+		////////////////
+		// Play idle anim on lantern
+		iLuxEntity@ pLantern = cLux_ID_Entity(m_idItemEntity);
+		if (pLantern !is null)
+		{
+			pLantern.PlayAnimation(gsUsingLantern_LanternIdleAnim, 0.1f, true);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		////////////////
+		// Update base
+		iScrPlayerState_UsingItem_Base::Update(afTimeStep);
+		
+		////////////////
+		// Input
+		bool bChargeButtonHeld = cInput_IsTriggered(eAction_Flashlight);
+		mfChargeButtonHeldTime = bChargeButtonHeld ? mfChargeButtonHeldTime + afTimeStep : 0.f;
+		
+		////////////////
+		// Leave state?
+		if (mlUseItemMode == eUseItemMode_Toggle)
+		{
+			if (mbLeaveState == false)
+				mbChargeQueued = true;
+		}
+		
+		if (mbLeaveState)
+		{
+			mfChargeButtonHeldTime = 0.f;
+		}
+		
+		////////////////
+		// Charge again?
+		if (mlUseItemMode == eUseItemMode_Hold && mfChargeButtonHeldTime >= 0.45f)
+		{
+			////////////////
+			// Queue if near end of charge anim
+			if (mlAnimState == eUsingItemAnimState_Loop)
+			{
+				cAnimationState@ pAnim = PlayerBody_GetAnimationState(msCurrentPlayerAnimR);
+				bool bAtEnd = pAnim !is null && pAnim.GetRelativeTimePosition() > 0.3f;
+				
+				if (bAtEnd)
+				{
+					if (mbLeaveState == false)
+						mbChargeQueued = true;
+				}
+			}
+			
+			////////////////
+			// Charge immediately if outro playing
+			else if (mlAnimState == eUsingItemAnimState_Outro)
+			{
+				ChangeAnimState(eUsingItemAnimState_Intro);
+			}
+			
+			mfChargeButtonHeldTime = 0.f;
+		}		
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateAnimationStates(float afTimeStep)
+	{
+		////////////////
+		// Restart anims?
+		bool bAnimsRestarted = false;		
+		if (mbRestartCurrentStateAnimsNextFrame)
+		{
+			RestartCurrentStateAnims();
+			
+			bAnimsRestarted = true;
+			mbRestartCurrentStateAnimsNextFrame = false;
+		}
+		
+		////////////////
+		// Intro
+		if (mlAnimState == eUsingItemAnimState_Intro)
+		{
+			///////////////
+			// Update state
+			tString sAnimR;
+			tString sAnimL;
+			tString sAnimHead;
+			tString sAnimLantern;
+			GetStateAnims(sAnimR, sAnimL, sAnimHead, sAnimLantern);
+			
+			int lState = UpdateStateAnims(sAnimR, sAnimL, sAnimHead, sAnimLantern, false, 0.3f, false);
+			
+			////////////////
+			// State over
+			if (lState == -1)
+			{
+				ChangeAnimState(eUsingItemAnimState_Loop);
+				mlChargeAnimId = GetRandomChargeAnimId();
+			}
+		}
+		
+		////////////////
+		// Charge
+		else if (mlAnimState == eUsingItemAnimState_Loop)
+		{
+			///////////////
+			// Update state
+			tString sAnimR;
+			tString sAnimL;
+			tString sAnimHead;
+			tString sAnimLantern;
+			GetStateAnims(sAnimR, sAnimL, sAnimHead, sAnimLantern);
+			
+			int lState = UpdateStateAnims(sAnimR, sAnimL, sAnimHead, sAnimLantern, false, 0.f, false);
+			
+			////////////////
+			// State started
+			if (lState == 1 || bAnimsRestarted)
+			{
+				DynamoLantern_Charge();
+				Effect_Rumble_Start(0.5, 0.5f, 0.0, 3.f);
+			}
+			
+			///////////////
+			// State over
+			else if (lState == -1)
+			{
+				////////////////
+				// Charge if queued!
+				if (mbChargeQueued)
+				{
+					ChangeAnimState(eUsingItemAnimState_Loop);
+					
+					mbChargeQueued = false;
+					mbRestartCurrentStateAnimsNextFrame = true;
+					mlChargeAnimId = GetRandomChargeAnimId();
+				}
+				
+				////////////////
+				// Go to outro
+				else
+				{
+					ChangeAnimState(eUsingItemAnimState_Outro);
+				}				 
+			}
+			
+			////////////////
+			// Leave?
+			else if (mbLeaveState && mlUseItemMode == eUseItemMode_Toggle)
+			{
+				cAnimationState@ pAnim = PlayerBody_GetAnimationState(sAnimR);
+				float fRelT = pAnim !is null ? pAnim.GetRelativeTimePosition() : -1.f;
+				if (fRelT > 0.6f && fRelT < 0.95f)
+					ChangeAnimState(eUsingItemAnimState_Outro);
+			}
+		}
+		
+		else
+		{
+			iScrPlayerState_UsingItem_Base::UpdateAnimationStates(afTimeStep);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void PlayOutroAndLeaveState()
+	{
+		///////////////
+		// Update state
+		tString sAnimR;
+		tString sAnimL;
+		tString sAnimHead;
+		tString sAnimLantern;
+		GetStateAnims(sAnimR, sAnimL, sAnimHead, sAnimLantern);
+		
+		float fFadeTime = 0.1f;
+		if (sAnimR != "") PlayerBody_PlayAnimation(sAnimR, ePlayerBodyAnimationLayer_RightArm, false, false, mItemHand != eItemHandlerHand_Right, fFadeTime, 1);
+		if (sAnimL != "") PlayerBody_PlayAnimation(sAnimL, ePlayerBodyAnimationLayer_LeftArm, false, false, mItemHand != eItemHandlerHand_Left, fFadeTime, 1);
+		if (sAnimHead != "") PlayerBody_PlayAdditiveCameraAnimation(sAnimHead, false, fFadeTime, 1.f);
+		
+		Item_RemoveTempRTUItem(sAnimL);
+		
+		if (sAnimLantern != "")
+		{
+			iLuxEntity@ pItem = cLux_ID_Entity(m_idItemEntity);
+			if (pItem !is null) pItem.PlayAnimation(sAnimLantern, fFadeTime, false);
+		}
+		
+		Item_SetFocusOutroAnimation(sAnimL);
+		
+		mBaseObj.mpPlayer.ChangeState(ePlayerState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed) override
+	{		
+		iScrPlayerState_UsingItem_Base::OnAction(alAction, abPressed);
+		
+		////////////////////
+		// Leave?
+		if (abPressed &&
+			alAction == eAction_Flashlight &&
+			mlUseItemMode == eUseItemMode_Toggle &&
+			mbLeaveState == false)
+		{
+			mbLeaveState = true;
+			mbAllowLeavingState = true;
+			Player_SetCanRun(true);
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// HELPERS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	int UpdateStateAnims(const tString &in asAnimR, const tString &in asAnimL, const tString &in asHeadAnim,
+						 const tString &in asLanternAnim, bool abLoop, float afFadeTime, bool abRightArmReturnToIdle)
+	{
+		////////////////
+		// Waiting for unequip? Escape!	
+		if (mbWaitForUnequip)
+			return 0;
+		
+		////////////////
+		// Setup vars	
+		msCurrentPlayerAnimR = asAnimR;
+		msCurrentPlayerAnimL = asAnimL;
+		msCurrentPlayerHeadAnim = asHeadAnim;
+		msCurrentLanternAnim = asLanternAnim;
+	
+		iLuxEntity@ pLantern = cLux_ID_Entity(m_idItemEntity);
+		cAnimationState@ pPlayerAnimR = PlayerBody_GetAnimationState(asAnimR);
+		cAnimationState@ pPlayerAnimL = PlayerBody_GetAnimationState(asAnimL);
+		cAnimationState@ pPlayerHeadAnim = PlayerBody_GetAnimationState(asHeadAnim);
+		cAnimationState@ pLanternAnim = pLantern !is null ? pLantern.GetMeshEntity().GetAnimationStateFromName(asLanternAnim) : null;
+		
+		bool bAnimStarted = pPlayerAnimR !is null && pPlayerAnimR.IsActive() == false;
+		bool bAnimOver = pPlayerAnimR !is null && pPlayerAnimR.IsActive() && pPlayerAnimR.IsOver();
+				
+		////////////////
+		// Play anims
+		if (pPlayerAnimR !is null && pPlayerAnimR.IsActive() == false)
+		{
+			PlayerBody_PlayAnimation(asAnimR, ePlayerBodyAnimationLayer_RightArm, abLoop, false, abRightArmReturnToIdle, afFadeTime);		
+		}
+		
+		if (pPlayerAnimL !is null && pPlayerAnimL.IsActive() == false)
+		{
+			PlayerBody_PlayAnimation(asAnimL, ePlayerBodyAnimationLayer_LeftArm, abLoop, false, false, afFadeTime);
+		}
+		
+		if (pPlayerHeadAnim !is null && mbHeadAnimPlayed == false)
+		{
+			mbHeadAnimPlayed = true;
+			PlayerBody_PlayAdditiveCameraAnimation(asHeadAnim, abLoop, afFadeTime, 1.f);
+		}
+		
+		if (pLanternAnim !is null && pLanternAnim.IsActive() == false)
+		{
+			pLantern.PlayAnimation(asLanternAnim, afFadeTime, abLoop);
+		}
+		
+		////////////////
+		// Return value
+		int lRet = 0;		
+		if (bAnimStarted)
+		{
+			lRet = 1;
+		}
+		else if (bAnimOver)
+		{
+			lRet = -1; 
+			mbHeadAnimPlayed = false;
+		}
+		
+		return lRet;
+	}
+	
+	//------------------------------------------------------------
+	
+	void RestartCurrentStateAnims()
+	{
+		////////////////
+		// Setup vars
+		iLuxEntity@ pLantern = cLux_ID_Entity(m_idItemEntity);
+		cAnimationState@ pPlayerAnimR = PlayerBody_GetAnimationState(msCurrentPlayerAnimR);
+		cAnimationState@ pPlayerAnimL = PlayerBody_GetAnimationState(msCurrentPlayerAnimL);
+		cAnimationState@ pPlayerHeadAnim = PlayerBody_GetAnimationState(msCurrentPlayerHeadAnim);
+		cAnimationState@ pLanternAnim = pLantern !is null ? pLantern.GetMeshEntity().GetAnimationStateFromName(msCurrentLanternAnim) : null;
+		
+		////////////////
+		// Restart
+		if (pPlayerAnimR !is null)
+		{
+			PlayerBody_PlayAnimation(msCurrentPlayerAnimR, ePlayerBodyAnimationLayer_RightArm, pPlayerAnimR.IsLooping(), false, false, 0.f);
+		}
+		
+		if (pPlayerAnimL !is null)
+		{
+			PlayerBody_PlayAnimation(msCurrentPlayerAnimL, ePlayerBodyAnimationLayer_LeftArm, pPlayerAnimL.IsLooping(), false, false, 0.f);
+		}
+		
+		if (pPlayerHeadAnim !is null)
+		{
+			PlayerBody_PlayAdditiveCameraAnimation(msCurrentPlayerHeadAnim, pPlayerHeadAnim.IsLooping(), 0.f, 1.f);
+		}
+		
+		if (pLanternAnim !is null)
+		{
+			pLantern.PlayAnimation(msCurrentLanternAnim, 0.f, pLanternAnim.IsLooping());	
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void GetStateAnims(tString &out asAnimR, tString &out asAnimL, tString &out asAnimHead, tString &out asAnimLantern)
+	{
+		////////////////
+		// Holding gun?
+		tString sHeldRightType = Item_GetHeldType(eItemHandlerHand_Right);
+		bool bHoldingGun = sHeldRightType == "Gun" || sHeldRightType == "VolleyGun";
+		
+		////////////////
+		// Intro
+		if (mlAnimState == eUsingItemAnimState_Intro)
+		{
+			if (bHoldingGun)
+			{
+				asAnimR = gsUsingLantern_PlayerGunStartRAnim;
+				asAnimL = gsUsingLantern_PlayerStartLAnim;
+				asAnimHead = "";
+				asAnimLantern = gsUsingLantern_LanternGunStartAnim;
+			}
+			else
+			{
+				asAnimR = gsUsingLantern_PlayerStartRAnim;
+				asAnimL = gsUsingLantern_PlayerStartLAnim;
+				asAnimHead = "";
+				asAnimLantern = gsUsingLantern_LanternStartAnim;
+			}
+		}
+		
+		////////////////
+		// Charge
+		else if (mlAnimState == eUsingItemAnimState_Loop)
+		{
+			if (bHoldingGun)
+			{
+				asAnimR = gsUsingLantern_PlayerGunChargeRAnim[mlChargeAnimId];
+				asAnimL = gsUsingLantern_PlayerChargeLAnim[mlChargeAnimId];
+				asAnimHead = gsUsingLantern_PlayerHeadChargeAnim[mlChargeAnimId];
+				asAnimLantern = gsUsingLantern_LanternGunChargeAnim[mlChargeAnimId];
+			}
+			else
+			{
+				asAnimR = gsUsingLantern_PlayerChargeRAnim[mlChargeAnimId];
+				asAnimL = gsUsingLantern_PlayerChargeLAnim[mlChargeAnimId];
+				asAnimHead = gsUsingLantern_PlayerHeadChargeAnim[mlChargeAnimId];
+				asAnimLantern = gsUsingLantern_LanternChargeAnim[mlChargeAnimId];
+			}
+		}
+		
+		////////////////
+		// Outro
+		else if (mlAnimState == eUsingItemAnimState_Outro)
+		{
+			if (bHoldingGun)
+			{
+				asAnimR = gsUsingLantern_PlayerGunEndRAnim;
+				asAnimL = gsUsingLantern_PlayerEndLAnim;
+				asAnimHead = "";
+				asAnimLantern = gsUsingLantern_LanternGunEndAnim;
+			}
+			else
+			{
+				asAnimR = gsUsingLantern_PlayerEndRAnim;
+				asAnimL = gsUsingLantern_PlayerEndLAnim;
+				asAnimHead = "";
+				asAnimLantern = gsUsingLantern_LanternEndAnim;
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	int GetRandomChargeAnimId()
+	{
+		if (mvChargeAnimIds.size() == 0)
+		{
+			mvChargeAnimIds.resize(3);
+			mvChargeAnimIds[0] = 0;
+			mvChargeAnimIds[1] = 1;
+			mvChargeAnimIds[2] = 2;
+		}	
+			
+		int lRandId = cMath_RandRectl(0, mvChargeAnimIds.size() - 1);
+		int lAnimId = mvChargeAnimIds[lRandId];
+		mvChargeAnimIds.removeAt(lRandId);
+		
+		return lAnimId;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DEBUG
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+		
+	float DrawDebugOutput(cGuiSet@ apSet, iFontData@ apFont, float afStartY)
+	{			
+		return afStartY;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// PROPERTIES
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool mbHeadAnimPlayed = false;
+	bool mbChargeQueued = false;
+	bool mbRestartCurrentStateAnimsNextFrame = false;
+	
+	int mlChargeAnimId = 0;
+		
+	tString msCurrentPlayerAnimL = "";
+	tString msCurrentPlayerAnimR = "";
+	tString msCurrentPlayerHeadAnim = "";
+	tString msCurrentLanternAnim = "";
+	
+	array<int> mvChargeAnimIds;
+	
+	float mfChargeButtonHeldTime = 0.f;
+	
+	//------------------------------------------------------------
+}

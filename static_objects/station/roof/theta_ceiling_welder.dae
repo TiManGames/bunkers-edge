@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///D:/work/DropBox/Team/Depth_marcus/models/Levels/02_05/roof/theta_ceiling_pieces.ma</source_data>
+    </contributor>
+    <created>2014-02-25T19:24:30</created>
+    <modified>2014-02-25T19:24:30</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="Material_Default" name="Material_Default">
+      <instance_effect url="#Material_Default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="Material_Default-fx">
+      <profile_COMMON>
+        <newparam sid="Image0001_sampler-surface">
+          <surface type="2D">
+            <init_from>Image0001_sampler</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0001_sampler-sampler">
+          <sampler2D>
+            <source>Image0001_sampler-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.2 0.2 0.2 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Image0001_sampler-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.2 0.2 0.2 1</color>
+            </specular>
+            <shininess>
+              <float>20</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Image0001_sampler" name="Image0001_sampler">
+      <init_from>file:///D:/work/depth/redist/static_objects/station/theta.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Image0001_sampler</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="theta_ceiling_connectorShape" name="theta_ceiling_connectorShape">
+      <mesh>
+        <source id="theta_ceiling_connectorShape-positions" name="theta_ceiling_connectorShape-positions">
+          <float_array id="theta_ceiling_connectorShape-positions-array" count="78">2 0.75 0.75 -2 0.75 0.75 2 0.5364899 0.3423923 -2 0.5364899 0.3423923 2 0 0 -2 0 0 2 0.6915155 0.6872024 -2 0.6915155 0.6872024 2 0.09667664 0.003162613 -2 0.09667664 0.003162613 2 0.4678836 0.2325912 -2 0.4678836 0.2325912 2 0.3573135 0.1332694 -2 0.3573135 0.1332694 2 0.2323117 0.05601078 -2 0.2323117 0.05601078 2 0.4656915 0.2520687 -2 0.4656912 0.2520687 2 0.6663113 0.6872024 -2 0.6663113 0.6872024 2 0.6915155 0.7205325 -2 0.6915155 0.7205325 2 0.5356396 0.3628693 -2 0.5356393 0.3628693 2 0.5219987 0.3327581 -2 0.5219987 0.3327581</float_array>
+          <technique_common>
+            <accessor source="#theta_ceiling_connectorShape-positions-array" count="26" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="theta_ceiling_connectorShape-normals" name="theta_ceiling_connectorShape-normals">
+          <float_array id="theta_ceiling_connectorShape-normals-array" count="102">0 -0.985458 0.1699194 0 -0.9991389 -0.04149094 0 -0.9991389 -0.04149094 0 -0.985458 0.1699194 0 -0.03269582 0.9994654 0 -0.03269582 0.9994654 0 -0.03269582 0.9994654 0 -0.03269582 0.9994654 0 -0.8514587 0.5244218 0 -1 0 0 -1 0 0 -0.8514587 0.5244218 0 -0.4462462 0.8949103 0 -0.4462462 0.8949103 0 -0.36305 0.9317697 0 -0.36305 0.9317697 0 -0.9692596 0.2460406 0 -0.9692596 0.2460406 0 -0.9937256 -0.1118458 0 -0.9937256 -0.1118458 0 -0.6682532 0.7439339 0 -0.6682532 0.7439339 0 -0.5993796 0.8004649 0 -0.5993796 0.8004649 0 -0.6990937 0.71503 0 -0.6990937 0.71503 0 0 1 0 -0.5595965 0.8287652 0 -0.5595965 0.8287652 0 0 1 0 -0.4499638 0.8930469 0 -0.4499638 0.8930469 0 -0.5536398 0.8327563 0 -0.5536398 0.8327563</float_array>
+          <technique_common>
+            <accessor source="#theta_ceiling_connectorShape-normals-array" count="34" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="theta_ceiling_connectorShape-Texture" name="theta_ceiling_connectorShape-Texture">
+          <float_array id="theta_ceiling_connectorShape-Texture-array" count="64">0.0202615 0.980538 0.858029 0.980538 0.8580391 0.8584155 0.02024955 0.858413 0.858029 0.980538 0.0202615 0.980538 0.0202474 0.9513839 0.858041 0.9513869 0.8580314 0.9514227 0.02025865 0.9514221 0.858039 0.9825067 0.03085005 0.3148559 0.8474314 0.4050394 0.02025858 0.9506857 0.8474338 0.374979 0.03085577 0.3749778 0.8474362 0.3449187 0.03085291 0.3449168 0.858031 0.9558502 0.02025909 0.9558497 0.02024976 0.9825042 0.8580315 0.9506863 0.03085864 0.4050388 0.8474387 0.3148584 0.8580319 0.9450861 0.02025803 0.9450854 0.8580309 0.9572213 0.02025922 0.9572208 0.8580388 0.8633663 0.02025004 0.8633638 0.8580294 0.9760755 0.02026106 0.9760755</float_array>
+          <technique_common>
+            <accessor source="#theta_ceiling_connectorShape-Texture-array" count="32" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="theta_ceiling_connectorShape-UV_Distortion" name="theta_ceiling_connectorShape-UV_Distortion">
+          <float_array id="theta_ceiling_connectorShape-UV_Distortion-array" count="160">0.4995046 0.5463337 0.5043974 1 0.4995046 0.5463336 0.5043974 1 0.499504 0.546333 0.504398 1 0.499504 0.546333 0.504398 1 0.4995072 0.5463362 0.5043948 1 0.4995072 0.5463362 0.5043948 1 0.4995072 0.5463362 0.5043948 1 0.4995046 0.5463337 0.5043973 1 0.4995047 0.5463337 0.5043973 1 0.4995072 0.5463362 0.5043948 1 0.4995072 0.5463362 0.5043948 1 0.4995064 0.5463353 0.5043957 1 0.4995064 0.5463353 0.5043957 1 0.4995072 0.5463362 0.5043948 1 0.4995072 0.5463362 0.5043948 1 0.4995055 0.5463345 0.5043965 1 0.4995055 0.5463345 0.5043965 1 0.4995064 0.5463353 0.5043957 1 0.4995064 0.5463353 0.5043957 1 0.4995073 0.5463364 0.5043947 1 0.4995073 0.5463364 0.5043947 1 0.499508 0.546337 0.504394 1 0.499508 0.546337 0.504394 1 0.4995046 0.5463337 0.5043973 1 0.4995047 0.5463337 0.5043973 1 0.499507 0.5463361 0.504395 1 0.499507 0.546336 0.504395 1 0.4995072 0.5463362 0.5043948 1 0.499507 0.546336 0.504395 1 0.4995074 0.5463364 0.5043947 1 0.4995074 0.5463364 0.5043947 1 0.499508 0.546337 0.504394 1 0.499508 0.546337 0.504394 1 0.4995048 0.5463339 0.5043973 1 0.4995048 0.5463337 0.5043972 1 0.4995048 0.5463337 0.5043972 1 0.4995079 0.5463369 0.5043941 1 0.4995079 0.5463369 0.5043941 1 0.499508 0.546337 0.504394 1 0.499508 0.546337 0.504394 1</float_array>
+          <technique_common>
+            <accessor source="#theta_ceiling_connectorShape-UV_Distortion-array" count="40" stride="4">
+              <param name="R" type="float"/>
+              <param name="G" type="float"/>
+              <param name="B" type="float"/>
+              <param name="A" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="theta_ceiling_connectorShape-vertices" name="theta_ceiling_connectorShape-vertices">
+          <input semantic="POSITION" source="#theta_ceiling_connectorShape-positions"/>
+        </vertices>
+        <triangles material="Geometry_MeshNodeSG" count="24">
+          <input semantic="VERTEX" source="#theta_ceiling_connectorShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#theta_ceiling_connectorShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#theta_ceiling_connectorShape-Texture" offset="2" set="1"/>
+          <input semantic="COLOR" source="#theta_ceiling_connectorShape-UV_Distortion" offset="3"/>
+          <p>23 0 29 0 3 1 3 0 22 3 28 0 22 3 28 0 3 1 3 0 2 2 2 0 9 4 20 0 5 5 6 0 8 7 10 0 8 7 10 0 5 5 6 0 4 6 7 0 21 8 27 0 7 9 9 0 20 11 26 0 20 11 26 0 7 9 9 0 6 10 8 0 14 12 16 0 15 13 17 0 8 15 23 0 8 15 23 0 15 13 17 0 9 14 11 0 16 16 18 0 17 17 19 0 10 19 21 0 10 19 21 0 17 17 19 0 11 18 13 0 10 20 12 0 11 21 22 0 12 23 14 0 12 23 14 0 11 21 22 0 13 22 15 0 12 23 14 0 13 22 15 0 14 12 16 0 14 12 16 0 13 22 15 0 15 13 17 0 24 24 30 0 25 25 31 0 16 16 18 0 16 16 18 0 25 25 31 0 17 17 19 0 7 26 9 0 19 27 25 0 6 29 8 0 6 29 8 0 19 27 25 0 18 28 24 0 0 30 1 0 1 31 0 0 20 11 26 0 20 11 26 0 1 31 0 0 21 8 27 0 19 27 25 0 23 0 29 0 18 28 24 0 18 28 24 0 23 0 29 0 22 3 28 0 2 32 4 0 3 33 5 0 24 24 30 0 24 24 30 0 3 33 5 0 25 25 31 0</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>theta_ceiling_connectorShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="theta_ceiling_pieces">
+      <node id="theta_ceiling_connector" name="theta_ceiling_connector" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#theta_ceiling_connectorShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="Geometry_MeshNodeSG" target="#Material_Default">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="1"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>theta_ceiling_connector</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

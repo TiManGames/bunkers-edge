@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=0;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=0;exportVertexColors=0;exportVertexColorsPerVertex=0;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=0;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///H:/Dropbox%20(Frictional%20Games)/Team/depth_marc/models/station/entities/2_6_elevator/2_6_elevator.mb</source_data>
+    </contributor>
+    <created>2014-10-13T11:53:24</created>
+    <modified>2014-10-13T11:53:24</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="Material-elevator_interior" name="elevator_interior">
+      <instance_effect url="#Effect-elevator_interior"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="Effect-elevator_interior">
+      <profile_COMMON>
+        <newparam sid="Image0010-surface">
+          <surface type="2D">
+            <init_from>Image0010</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0010-sampler">
+          <sampler2D>
+            <source>Image0010-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="Image0012-surface">
+          <surface type="2D">
+            <init_from>Image0012</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0012-sampler">
+          <sampler2D>
+            <source>Image0012-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Image0010-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <texture texture="Image0012-sampler" texcoord="TEX1">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </specular>
+            <shininess>
+              <float>16</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Image0012" name="Image0012">
+      <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/02_06_elevator/02_06_elevator_interior_spec.tga</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Image0012</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+    <image id="Image0010" name="Image0010">
+      <init_from>file:///E:/depth/redist/entities/station/special/02_06_elevator/02_06_elevator_interior_with_hatch.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Image0010</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="polySurfaceShape105" name="polySurfaceShape105">
+      <mesh>
+        <source id="polySurfaceShape105-positions" name="polySurfaceShape105-positions">
+          <float_array id="polySurfaceShape105-positions-array" count="60">1.151376 0.01732832 0.5886584 1.151376 -0.01720428 0.5886584 1.151376 -0.01720428 -0.5886584 1.151376 0.01732832 -0.5886584 -0.01400299 -0.01470453 0.5886584 -0.01217316 -0.01653447 0.5886584 -0.009673462 -0.01720428 0.5886584 -0.01467285 -0.01220478 0.5886584 -0.01467285 -0.01220478 -0.5886584 -0.009673462 -0.01720428 -0.5886584 -0.01217316 -0.01653447 -0.5886584 -0.01400299 -0.01470453 -0.5886584 -0.01217316 0.01665852 0.5886584 -0.01400299 0.01482857 0.5886584 -0.01467285 0.01232882 0.5886584 -0.009673462 0.01732832 0.5886584 -0.01400299 0.01482857 -0.5886584 -0.01217316 0.01665852 -0.5886584 -0.009673462 0.01732832 -0.5886584 -0.01467285 0.01232882 -0.5886584</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape105-positions-array" count="20" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape105-normals" name="polySurfaceShape105-normals">
+          <float_array id="polySurfaceShape105-normals-array" count="168">0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 -0.9999999 0 -0.1305287 -0.9914445 0 -0.1305287 -0.9914445 0 0 -0.9999999 0 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0.9999999 0 -0.1305293 0.9914445 0 -0.1305293 0.9914445 0 0 0.9999999 0 -0.9914435 0.1305365 0 -0.9914435 0.1305365 0 -0.9914436 -0.1305363 0 -0.9914436 -0.1305363 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 -0.5000153 -0.8660165 0 -0.5000153 -0.8660165 0 -0.8660279 -0.4999957 0 -0.8660279 -0.4999957 0 -0.8660277 0.4999959 0 -0.8660277 0.4999959 0 -0.5000158 0.8660163 0 -0.5000158 0.8660163 0 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape105-normals-array" count="56" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape105-map1" name="polySurfaceShape105-map1">
+          <float_array id="polySurfaceShape105-map1-array" count="96">0.8844332 0.5839875 0.8861388 0.5822814 0.8859103 0.5831341 0.8852862 0.583759 0.5086484 0.9550847 0.6703022 0.9549492 0.6702008 0.7913181 0.5086488 0.7913178 0.8844319 0.5722015 0.4881516 0.572286 0.4881541 0.5840721 0.8844331 0.5839875 0.5086491 0.7913183 0.6702017 0.7913192 0.5254269 0.5476887 0.5086489 0.9550859 0.5254273 0.5417333 0.0013991 0.5417333 0.001398325 0.5232178 0.5254268 0.5232178 0.7015846 0.572286 0.5378178 0.572286 0.5254276 0.5173546 0.5254268 0.5193055 0.001398623 0.5193055 0.001398623 0.5173546 0.5254266 0.5212542 0.001398504 0.5212542 0.525427 0.5437131 0.001398623 0.5437131 0.5254273 0.5457162 0.001398623 0.5457162 0.8844318 0.5722014 0.4881541 0.5840721 0.4881516 0.572286 0.8861387 0.5822815 0.8852862 0.583759 0.8859103 0.5831341 0.8861384 0.5739075 0.8852857 0.57243 0.8859098 0.573054 0.8861384 0.5739075 0.8859098 0.5730541 0.8852858 0.5724299 0.5378177 0.5840721 0.7015846 0.584072 0.001398504 0.5476887 0.670303 0.9549502</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape105-map1-array" count="48" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurfaceShape105-vertices" name="polySurfaceShape105-vertices">
+          <input semantic="POSITION" source="#polySurfaceShape105-positions"/>
+        </vertices>
+        <triangles material="elevator_interiorSG" count="36">
+          <input semantic="VERTEX" source="#polySurfaceShape105-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#polySurfaceShape105-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#polySurfaceShape105-map1" offset="2" set="0"/>
+          <p>6 0 0 7 1 1 5 3 3 5 3 3 7 1 1 4 2 2 1 4 4 6 5 5 2 7 7 2 7 7 6 5 5 9 6 6 18 8 8 3 9 9 9 11 11 9 11 11 3 9 9 2 10 10 3 12 12 18 13 13 0 15 15 0 15 15 18 13 13 15 14 47 14 16 16 19 17 17 7 19 19 7 19 19 19 17 17 8 18 18 3 20 20 0 21 21 2 23 45 2 23 45 0 21 21 1 22 44 6 5 22 5 24 23 9 6 25 9 6 25 5 24 23 10 25 24 5 24 23 4 26 26 10 25 24 10 25 24 4 26 26 11 27 27 4 26 26 7 19 19 11 27 27 11 27 27 7 19 19 8 18 18 14 16 16 13 28 28 19 17 17 19 17 17 13 28 28 16 29 29 13 28 28 12 30 30 16 29 29 16 29 29 12 30 30 17 31 31 12 30 30 15 14 14 17 31 31 17 31 31 15 14 14 18 13 46 15 32 32 6 33 0 0 35 34 0 35 34 6 33 0 1 34 33 8 36 35 9 37 11 11 39 37 11 39 37 9 37 11 10 38 36 14 40 38 15 41 32 13 43 40 13 43 40 15 41 32 12 42 39 14 44 38 7 45 1 15 47 32 15 47 32 7 45 1 6 46 0 18 48 8 9 49 11 19 51 41 19 51 41 9 49 11 8 50 35 18 52 8 19 53 41 17 55 43 17 55 43 19 53 41 16 54 42</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>polySurfaceShape105</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="__6_elevator">
+      <node id="polySurface102" name="polySurface102" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#polySurfaceShape105">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="elevator_interiorSG" target="#Material-elevator_interior">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="TEX1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>polySurface102</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

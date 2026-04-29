@@ -1,0 +1,357 @@
+#include "custom/player/PlayerState_UsingWeapon_Reload_Base.hps"
+#include "helpers/helper_effects.hps"
+
+//------------------------------------------------------------
+
+const tString gsUsingGun_Reload_PlayerEmptyBulletsAnim = "player_gun_reload_remove_bullets";
+const tString gsUsingGun_Reload_PlayerEmptyBulletsHeadAnim = "player_head_gun_reload_remove_bullets";
+const tString gsUsingGun_Reload_GunEmptyBulletsAnim = "gun_reload_remove_bullets";
+
+const tString gsUsingGun_Reload_PlayerSpinLAnim = "player_gun_reload_cylinder_spin_larm";
+const tString gsUsingGun_Reload_PlayerSpinRAnim = "player_gun_reload_cylinder_spin_rarm";
+const tString gsUsingGun_Reload_GunSpinAnim = "gun_reload_cylinder_spin";
+
+const float gfUsingGun_Reload_IntroAnim_FlickStart = 0.328f;
+const float gfUsingGun_Reload_IntroAnim_MoveStart = 0.485f;
+const float gfUsingGun_Reload_IntroAnim_MoveEnd = 0.9f;
+
+const float gfUsingGun_Reload_OutroAnim_FlickStart = 0.125f;
+const float gfUsingGun_Reload_OutroAnim_MoveStart = 0.5f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_UsingGun_Reload : iScrPlayerState_UsingWeapon_Reload_Base
+{
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// INIT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Init() override
+	{
+		msWeaponType = "Gun";
+		msAmmunitionType = "Ammunition";
+		msItemPrompt = "ReloadGun";
+		
+		msPlayerIntroAnim_R = "player_gun_bullet_check_open";
+		msPlayerIntroAnim_Head = "player_head_bullet_check_open";
+		msGunIntroAnim = "gun_bullet_check_open";
+		
+		msPlayerLoopAnim_R = "player_gun_bullet_check_idle";
+		msGunLoopAnim = "gun_bullet_check_idle";
+		
+		msPlayerOutroAnim_R = "player_gun_bullet_check_close";
+		msPlayerOutroAnim_Head = "player_head_bullet_check_close";
+		msGunOutroAnim = "gun_bullet_check_close";
+	
+		msPlayerReloadStartAnim_L = "player_gun_reload_start_larm";
+		msPlayerReloadStartAnim_R = "player_gun_reload_start_rarm";
+		msPlayerReloadStartAnim_Head = "";
+		msGunReloadStartAnim = "gun_reload_start";
+	
+		msPlayerReloadEndAnim_L = "player_gun_reload_end_larm";
+		msPlayerReloadEndAnim_R = "player_gun_reload_end_rarm";
+		msPlayerReloadEndAnim_Head = "";
+		msGunReloadEndAnim = "";
+	
+		msPlayerReloadAddBulletAnim_L = "player_gun_reload_add_bullet_larm";
+		msPlayerReloadAddBulletAnim_R = "player_gun_reload_add_bullet_rarm";
+		msPlayerReloadAddBulletAnim_Head = "";
+		msGunReloadAddBulletAnim = "gun_reload_add_bullet";
+		
+		iScrPlayerState_UsingWeapon_Reload_Base::Init();
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId) override
+	{	
+		mbUsesOtherHandAnims = false;
+		
+		iScrPlayerState_UsingWeapon_Reload_Base::OnEnterState(alPrevStateId);
+		
+		mbCustomBonePosActiveL = false;
+		mbCustomBonePosActiveR = false;
+		mfCustomBoneWeightL = 0.f;
+		mfCustomBoneWeightR = 0.f;
+		mvHandBonePosRelativeToCamL = cVector3f(0.f);
+		mvHandBonePosRelativeToCamR = cVector3f(0.190f, -0.325f, 0.045f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateAnimationStates(float afTimeStep) override
+	{
+		bool bUpdateArmStates = true;
+		
+		////////////////
+		// Start reload
+		if (mlAnimState == eUsingGun_ReloadState_StartReload)
+		{
+			int lState = UpdateStateAnims(msPlayerReloadStartAnim_R, 
+								 msPlayerReloadStartAnim_L,
+								 msPlayerReloadStartAnim_Head,
+								 msGunReloadStartAnim, 
+								 false, 0.1f, false, false);
+			if (lState == -1)
+			{
+				ChangeAnimState(Revolver_GetCurrentChamberEmpty(msWeaponType) ? eUsingGun_ReloadState_InsertBullet : eUsingGun_ReloadState_Spin);
+			}
+		}
+		
+		////////////////
+		// Spin
+		else if (mlAnimState == eUsingGun_ReloadState_Spin)
+		{
+			int lState = UpdateStateAnims(gsUsingGun_Reload_PlayerSpinRAnim, 
+								 gsUsingGun_Reload_PlayerSpinLAnim, 
+								 "",
+								 gsUsingGun_Reload_GunSpinAnim, 
+								 false, 0.f, false, false);
+			if (lState == -1)
+			{
+				if (Revolver_GetCurrentChamberEmpty(msWeaponType)) 	ChangeAnimState(eUsingGun_ReloadState_InsertBullet);
+				else								mbRestartCurrentStateAnimsNextFrame = true;
+			}
+		}
+		
+		////////////////
+		// Empty bullets
+		else if (mlAnimState == eUsingGun_ReloadState_EmptyBullets)
+		{			
+			int lState = UpdateStateAnims(gsUsingGun_Reload_PlayerEmptyBulletsAnim,
+								 "",
+								 gsUsingGun_Reload_PlayerEmptyBulletsHeadAnim,
+								 gsUsingGun_Reload_GunEmptyBulletsAnim, 
+								 false, 0.f, false, false);
+			if (lState == -1)
+			{
+				ChangeAnimState(eUsingItemAnimState_Loop);
+			}
+		}
+		
+		////////////////
+		// Other, update base
+		else
+		{
+			bUpdateArmStates = false;
+			iScrPlayerState_UsingWeapon_Reload_Base::UpdateAnimationStates(afTimeStep);
+		}
+		
+		////////////////
+		// Update arm states?
+		if (bUpdateArmStates)
+		{
+			UpdateArmStates();
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateArmStates() override
+	{
+		mbUsesOtherHandAnims = mlAnimState != eUsingItemAnimState_Intro;		
+		bool bLeftHandItemHeld = Item_GetHandHeldState(eItemHandlerHand_Left) != 0;
+		
+		if (mlAnimState == eUsingItemAnimState_Intro)
+		{			
+			mbCustomBonePosActiveR = true;
+			
+			PlayerBody_SetArmAnimationPitch(false, false, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(false, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}	
+		
+		////////////////
+		// Empty bullets
+		else if (mlAnimState == eUsingGun_ReloadState_EmptyBullets)
+		{			
+			mbCustomBonePosActiveR = true;
+			
+			PlayerBody_SetArmAnimationPitch(false, false, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(false, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}
+		
+		////////////////
+		// Loop
+		else if (mlAnimState == eUsingItemAnimState_Loop)
+		{	
+			mbCustomBonePosActiveR = true;
+			
+			PlayerBody_SetArmAnimationPitch(false, false, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(false, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}
+		
+		////////////////
+		// Start reload
+		else if (mlAnimState == eUsingGun_ReloadState_StartReload)
+		{
+			mbCustomBonePosActiveR = false;
+			
+			PlayerBody_SetArmAnimationPitch(true, true, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}
+
+		////////////////
+		// Insert bullet
+		else if (mlAnimState == eUsingGun_ReloadState_InsertBullet)
+		{
+			mbCustomBonePosActiveR = false;
+			
+			PlayerBody_SetArmAnimationPitch(true, true, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}	
+		
+		////////////////
+		// End reload
+		else if (mlAnimState == eUsingGun_ReloadState_EndReload)
+		{
+			mbCustomBonePosActiveR = true;
+			
+			PlayerBody_SetArmAnimationPitch(true, true, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(false, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}	
+	
+		////////////////
+		// Outro
+		else if (mlAnimState == eUsingItemAnimState_Outro)
+		{
+			mbCustomBonePosActiveR = false;
+			
+			PlayerBody_SetArmAnimationPitch(bLeftHandItemHeld, false, bLeftHandItemHeld);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}
+				
+		////////////////
+		// Spin
+		else if (mlAnimState == eUsingGun_ReloadState_Spin)
+		{
+			mbCustomBonePosActiveR = false;
+			
+			PlayerBody_SetArmAnimationPitch(true, true, bLeftHandItemHeld == false);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, false, true);
+			PlayerBody_SetCrouchArmRotationOffsetActive(true, bLeftHandItemHeld, false);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	bool SetupReload() override
+	{
+		////////////////
+		// Gun is not full?
+		if (Gun_GetFullyLoaded(msWeaponType))
+			return false;
+		if (ItemType_GetCountInInventory(msAmmunitionType) == 0)
+			return false;
+		
+		////////////////
+		// Insert bullet directly if chamber empty, otherwise setup spin!		
+		mbInsertBullet = true;
+		eUsingGun_ReloadState prevState = eUsingGun_ReloadState(mlAnimState);
+		
+		if (Revolver_GetCurrentChamberEmpty(msWeaponType))
+		{
+			ChangeAnimState(eUsingGun_ReloadState_InsertBullet);
+		}
+		else
+		{
+			if (mlAnimState == eUsingGun_ReloadState_InsertBullet) 
+			{
+				ChangeAnimState(eUsingGun_ReloadState_Spin);
+			}
+			else
+			{
+				ChangeAnimState(eUsingGun_ReloadState_StartReload);
+			}
+		}		
+		
+		////////////////
+		// If we were already in the new state, restart it!
+		if (mlAnimState == prevState)
+		{
+			mbRestartCurrentStateAnimsNextFrame = true;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetAnimStateRelTime(eUsingItemAnimState aState, eUsingItemAnimState aBlendState) override
+	{
+		float fBlendTime = _GetAnimStateRelTime_GetBlendTime(aBlendState);
+		if (fBlendTime >= 1.0f) return 0.0f;
+		
+/*		const float gfUsingGun_Reload_IntroAnim_FlickStart = 0.328f;
+		const float gfUsingGun_Reload_IntroAnim_MoveStart = 0.485f;
+		const float gfUsingGun_Reload_IntroAnim_MoveEnd = 0.9f;
+
+		const float gfUsingGun_Reload_OutroAnim_FlickStart = 0.25f;
+		const float gfUsingGun_Reload_OutroAnim_MoveStart = 0.5f;*/
+		
+		/////////////////////////////////
+		// Split the animations up into separate steps and blend between those
+		if (aState == eUsingItemAnimState_Outro && aBlendState == eUsingItemAnimState_Intro)
+		{
+			if (fBlendTime < gfUsingGun_Reload_IntroAnim_FlickStart)
+			{
+				float fStepRel = fBlendTime/gfUsingGun_Reload_IntroAnim_FlickStart;
+				return cMath_Easing(eEasing_Linear, 1.0f - fStepRel, gfUsingGun_Reload_OutroAnim_MoveStart, 1.0f);
+			}
+			if (fBlendTime < gfUsingGun_Reload_IntroAnim_MoveStart)
+			{
+				float fStepRel = (fBlendTime-gfUsingGun_Reload_IntroAnim_FlickStart)/(gfUsingGun_Reload_IntroAnim_MoveStart-gfUsingGun_Reload_IntroAnim_FlickStart);
+				return cMath_Easing(eEasing_Linear, 1.0f - fStepRel, gfUsingGun_Reload_OutroAnim_FlickStart, gfUsingGun_Reload_OutroAnim_MoveStart);
+			}
+			if (fBlendTime < gfUsingGun_Reload_IntroAnim_MoveEnd)
+			{
+				return gfUsingGun_Reload_OutroAnim_FlickStart;
+			}
+			
+			float fStepRel = (fBlendTime-gfUsingGun_Reload_IntroAnim_MoveEnd)/(1.0f-gfUsingGun_Reload_IntroAnim_MoveEnd);
+			return cMath_Easing(eEasing_Linear, 1.0f - fStepRel, 0, gfUsingGun_Reload_OutroAnim_FlickStart);
+		}
+		
+		if (aState == eUsingItemAnimState_Intro && aBlendState == eUsingItemAnimState_Outro)
+		{
+			return gfUsingGun_Reload_IntroAnim_FlickStart;
+		}
+		
+		// clamp and ease for the best possible look when blending the animations, this is all a bit magic numbery
+		float fRel = cMath_Max(fBlendTime, 0.2f);
+		return cMath_Easing(eEasing_ExpoIn, 1.0f - fRel);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GLOBAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void _Global_CanCheckAmmo() override
+	{
+		cAnimationState@ pAnim = PlayerBody_GetAnimationState(msPlayerOutroAnim_R);		
+		bool bCanCheckAmmo = pAnim !is null && (pAnim.IsActive()==false || pAnim.GetRelativeTimePosition() > gfUsingGun_Reload_OutroAnim_MoveStart);
+		cScript_SetGlobalReturnBool(bCanCheckAmmo);
+	}
+	
+	//------------------------------------------------------------	
+}

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=1;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/static_objects/station/details/curtain/curtain_railing_straight_noroof.dae</source_data>
+    </contributor>
+    <created>2015-07-27T17:22:43</created>
+    <modified>2015-07-27T17:22:43</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="Material_lab_set" name="Material_lab_set">
+      <instance_effect url="#Material_lab_set-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="Material_lab_set-fx">
+      <profile_COMMON>
+        <newparam sid="Image0003_sampler-surface">
+          <surface type="2D">
+            <init_from>Image0003_sampler</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0003_sampler-sampler">
+          <sampler2D>
+            <source>Image0003_sampler-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.2 0.2 0.2 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Image0003_sampler-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU sid="coverageU">1</coverageU>
+                    <coverageV sid="coverageV">1</coverageV>
+                    <fast sid="fast">0</fast>
+                    <mirrorU sid="mirrorU">0</mirrorU>
+                    <mirrorV sid="mirrorV">0</mirrorV>
+                    <noiseU sid="noiseU">0</noiseU>
+                    <noiseV sid="noiseV">0</noiseV>
+                    <offsetU sid="offsetU">0</offsetU>
+                    <offsetV sid="offsetV">0</offsetV>
+                    <repeatU sid="repeatU">1</repeatU>
+                    <repeatV sid="repeatV">1</repeatV>
+                    <rotateFrame sid="rotateFrame">0</rotateFrame>
+                    <rotateUV sid="rotateUV">0</rotateUV>
+                    <stagger sid="stagger">0</stagger>
+                    <translateFrameU sid="translateFrameU">0</translateFrameU>
+                    <translateFrameV sid="translateFrameV">0</translateFrameV>
+                    <wrapU sid="wrapU">1</wrapU>
+                    <wrapV sid="wrapV">1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.2 0.2 0.2 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">256</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Image0003_sampler" name="Image0003_sampler_1">
+      <init_from>file:///E:/depth/redist/static_objects/station/special/04_02_infirmary_curtain_pieces/04_02_infirmary_curtain_pieces.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Image0003_sampler_1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="Geometry_mesh019NodeShape" name="Geometry_mesh019NodeShape">
+      <mesh>
+        <source id="Geometry_mesh019NodeShape-positions" name="Geometry_mesh019NodeShape-positions">
+          <float_array id="Geometry_mesh019NodeShape-positions-array" count="48">-0.5 -0.035181 0 -0.5 -0.024882 -0.024878 -0.5 -2e-6 -0.035183 -0.5 0.024876 -0.024878 -0.5 0.035181 0 -0.5 0.024876 0.024878 -0.5 -2e-6 0.035183 -0.5 -0.024882 0.024878 0.5 -0.035181 0 0.5 -0.024882 -0.024878 0.5 -2e-6 -0.035183 0.5 0.024876 -0.024878 0.5 0.035181 0 0.5 0.024876 0.024878 0.5 -2e-6 0.035183 0.5 -0.024882 0.024878</float_array>
+          <technique_common>
+            <accessor source="#Geometry_mesh019NodeShape-positions-array" count="16" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Geometry_mesh019NodeShape-normals" name="Geometry_mesh019NodeShape-normals">
+          <float_array id="Geometry_mesh019NodeShape-normals-array" count="144">0 0.6037453 -0.7971774 0 0.7971708 -0.6037539 0 0.9906018 -0.136778 0 0.9906019 0.136777 0 0.9906018 -0.136778 0 0.7971708 -0.6037539 0 -0.6037703 0.7971584 0 -0.7972381 0.6036651 0 -0.990611 0.136711 0 -0.9906109 -0.136712 0 -0.990611 0.136711 0 -0.7972381 0.6036651 0 -0.136754 -0.9906051 0 0.136782 -0.9906012 0 0.6037453 -0.7971774 0 0.7971708 -0.6037539 0 0.6037453 -0.7971774 0 0.136782 -0.9906012 0 0.1367811 0.9906014 0 -0.136752 0.9906054 0 -0.6037703 0.7971584 0 -0.7972381 0.6036651 0 -0.6037703 0.7971584 0 -0.136752 0.9906054 0 -0.7972381 -0.6036651 0 -0.603772 -0.7971571 0 -0.136754 -0.9906051 0 0.136782 -0.9906012 0 -0.136754 -0.9906051 0 -0.603772 -0.7971571 0 0.7971708 0.6037539 0 0.6037437 0.7971786 0 0.1367811 0.9906014 0 -0.136752 0.9906054 0 0.1367811 0.9906014 0 0.6037437 0.7971786 0 -0.990611 0.136711 0 -0.9906109 -0.136712 0 -0.7972381 -0.6036651 0 -0.603772 -0.7971571 0 -0.7972381 -0.6036651 0 -0.9906109 -0.136712 0 0.9906018 -0.136778 0 0.9906019 0.136777 0 0.7971708 0.6037539 0 0.6037437 0.7971786 0 0.7971708 0.6037539 0 0.9906019 0.136777</float_array>
+          <technique_common>
+            <accessor source="#Geometry_mesh019NodeShape-normals-array" count="48" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Geometry_mesh019NodeShape-Geometry_mesh019NodeShape-uvSet1" name="Geometry_mesh019NodeShape-Geometry_mesh019NodeShape-uvSet1">
+          <float_array id="Geometry_mesh019NodeShape-Geometry_mesh019NodeShape-uvSet1-array" count="36">0.122338 0.9954618 0.122338 -0.00253672 -0.002794409 0.9954618 -0.002794409 -0.00253672 0.622834 0.9954618 0.622834 -0.00253672 0.4977021 0.9954618 0.4977021 -0.00253672 0.2474535 0.9954618 0.2474535 -0.00253672 0.7479495 0.9954618 0.7479495 -0.00253672 0.3725866 0.9954618 0.3725866 -0.00253672 0.8730829 0.9954618 0.8730829 -0.00253672 0.9981984 0.9954618 0.9981984 -0.00253672</float_array>
+          <technique_common>
+            <accessor source="#Geometry_mesh019NodeShape-Geometry_mesh019NodeShape-uvSet1-array" count="18" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Geometry_mesh019NodeShape-vertices" name="Geometry_mesh019NodeShape-vertices">
+          <input semantic="POSITION" source="#Geometry_mesh019NodeShape-positions"/>
+        </vertices>
+        <triangles material="Material_lab_setSG" count="16">
+          <input semantic="VERTEX" source="#Geometry_mesh019NodeShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Geometry_mesh019NodeShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Geometry_mesh019NodeShape-Geometry_mesh019NodeShape-uvSet1" offset="2" set="0"/>
+          <p>11 0 0 3 1 1 12 2 2 4 3 3 12 4 2 3 5 1 15 6 4 7 7 5 8 8 6 0 9 7 8 10 6 7 11 5 10 12 8 2 13 9 11 14 0 3 15 1 11 16 0 2 17 9 14 18 10 6 19 11 15 20 4 7 21 5 15 22 4 6 23 11 9 24 12 1 25 13 10 26 8 2 27 9 10 28 8 1 29 13 13 30 14 5 31 15 14 32 10 6 33 11 14 34 10 5 35 15 8 36 6 0 37 7 9 38 12 1 39 13 9 40 12 0 41 7 12 42 16 4 43 17 13 44 14 5 45 15 13 46 14 4 47 17</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>Geometry_mesh019NodeShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="curtain_railing_straight_noroof">
+      <node id="Geometry_mesh019Node" name="Geometry_mesh019Node" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#Geometry_mesh019NodeShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="Material_lab_setSG" target="#Material_lab_set">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>Geometry_mesh019Node</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

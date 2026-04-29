@@ -1,0 +1,516 @@
+//------------------------------------------------------------
+// Parkour helper functions for MinimalCustomMap.
+//------------------------------------------------------------
+
+const tString gsParkourModuleName = "ParkourHandler";
+
+const float gfParkourWallDetect_EntryRayLength = 0.5f;
+const float gfParkourWallDetect_SustainRayLength = 1.00f;
+const float gfParkourWallDetect_MaxNormalY = 0.35f;
+const float gfParkourWallDetect_ForwardProbeMul = 0.55f;
+const float gfParkourWallDetect_ForwardProbeMulWide = 1.15f;
+const float gfParkourWallDetect_MinTravelBasisSpeed = 0.35f;
+
+const int geParkourFlowEvent_WallRunStart = 0;
+const int geParkourFlowEvent_WallJump = 1;
+const int geParkourFlowEvent_WallScrambleStart = 2;
+const int geParkourFlowEvent_WallScrambleJump = 3;
+const int geParkourFlowEvent_RollSuccess = 4;
+const int geParkourFlowEvent_HardLanding = 5;
+const int geParkourFlowEvent_LedgeSuccess = 6;
+const int geParkourFlowEvent_LedgeFail = 7;
+const int geParkourFlowEvent_FrontWallImpact = 8;
+const int geParkourFlowEvent_WallRunDropped = 9;
+const int geParkourFlowEvent_WallRunTimeout = 10;
+const int geParkourFlowEvent_PoleSwingGrab = 11;
+const int geParkourFlowEvent_PoleSwingGoodRelease = 12;
+const int geParkourFlowEvent_PoleSwingBadRelease = 13;
+const int geParkourFlowEvent_PoleSwingDrop = 14;
+const int geParkourFlowEvent_SlideStart = 15;
+const int geParkourFlowEvent_SlideJump = 16;
+const int geParkourFlowEvent_SlideComplete = 17;
+const int geParkourFlowEvent_SpeedVault = 18;
+
+//------------------------------------------------------------
+
+bool Parkour_GetEnabled()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetEnabled");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_SetEnabled(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_SetEnabled");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetDebug()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetDebug");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetAirLockConsumesMoveInput()
+{
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_GetParkourAirLockConsumesMoveInput");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_SetDebug(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_SetDebug");
+}
+
+//------------------------------------------------------------
+
+float Parkour_GetRunSpeedMul()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetRunSpeedMul");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//------------------------------------------------------------
+
+float Parkour_GetFlow()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetFlow");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//------------------------------------------------------------
+
+void Parkour_UpdateGroundFlow(float afTimeStep,
+							  bool abRunning,
+							  bool abForwardIntent,
+							  float afFlatSpeed,
+							  const cVector3f &in avMoveDir)
+{
+	cScript_SetGlobalArgFloat(0, afTimeStep);
+	cScript_SetGlobalArgBool(1, abRunning);
+	cScript_SetGlobalArgBool(2, abForwardIntent);
+	cScript_SetGlobalArgFloat(3, afFlatSpeed);
+	cScript_SetGlobalArgVector3f(4, avMoveDir);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_UpdateGroundFlow");
+}
+
+//------------------------------------------------------------
+
+void Parkour_NotifyFlowEvent(int alEventId, float afScale = 1.f)
+{
+	cScript_SetGlobalArgInt(0, alEventId);
+	cScript_SetGlobalArgFloat(1, afScale);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_NotifyFlowEvent");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartWallRun(float afRunJumpAge)
+{
+	cScript_SetGlobalArgFloat(0, afRunJumpAge);
+	cScript_SetGlobalArgBool(1, false);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartWallRun");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartWallRunChain(float afChainAge)
+{
+	cScript_SetGlobalArgFloat(0, afChainAge);
+	cScript_SetGlobalArgBool(1, true);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartWallRun");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_ArmWallJumpChain(const cVector3f &in avWallNormal)
+{
+	cScript_SetGlobalArgVector3f(0, avWallNormal);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_ArmWallJumpChain");
+}
+
+//------------------------------------------------------------
+
+float Parkour_GetWallJumpChainAge()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetWallJumpChainAge");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//------------------------------------------------------------
+
+float Parkour_GetWallRunPowerMul()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetWallRunPowerMul");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartWallScrambleChain(float afChainAge)
+{
+	cScript_SetGlobalArgFloat(0, afChainAge);
+	cScript_SetGlobalArgBool(1, true);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartWallScramble");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_ArmWallScrambleJumpChain(const cVector3f &in avWallNormal)
+{
+	cScript_SetGlobalArgVector3f(0, avWallNormal);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_ArmWallScrambleJumpChain");
+}
+
+//------------------------------------------------------------
+
+float Parkour_GetWallScrambleJumpChainAge()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetWallScrambleJumpChainAge");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartLedgeGrab(bool abRequireNormalMoveState = true)
+{
+	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartLedgeGrab");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartSpeedVault()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartSpeedVault");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_RegisterLedgeCandidate(const cVector3f &in avFeetPos,
+									bool abCrouchOnFinish,
+									const cVector3f &in avAreaDir,
+									const cVector3f &in avAreaPos,
+									float afGrabRadius,
+									float afRequiredFacingDot,
+									float afMinFallSpeed,
+									float afMaxPlayerFeetY)
+{
+	cScript_SetGlobalArgVector3f(0, avFeetPos);
+	cScript_SetGlobalArgBool(1, abCrouchOnFinish);
+	cScript_SetGlobalArgVector3f(2, avAreaDir);
+	cScript_SetGlobalArgVector3f(3, avAreaPos);
+	cScript_SetGlobalArgFloat(4, afGrabRadius);
+	cScript_SetGlobalArgFloat(5, afRequiredFacingDot);
+	cScript_SetGlobalArgFloat(6, afMinFallSpeed);
+	cScript_SetGlobalArgFloat(7, afMaxPlayerFeetY);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_RegisterLedgeCandidate");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartPoleSwing(const cVector3f &in avPivot,
+							   const cVector3f &in avPoleAxis,
+							   const cVector3f &in avSwingForward,
+							   const cVector3f &in avLaunchTarget,
+							   bool abHasLaunchTarget,
+							   float afPoleLength,
+							   float afGrabRadius,
+							   float afMinApproachSpeed,
+							   float afMinVerticalSpeed,
+							   float afSwingDuration,
+							   float afPeakStart,
+							   float afPeakEnd,
+							   float afLaunchSpeed,
+							   float afLaunchUpSpeed,
+							   float afFlowLaunchBonus)
+{
+	cScript_SetGlobalArgVector3f(0, avPivot);
+	cScript_SetGlobalArgVector3f(1, avPoleAxis);
+	cScript_SetGlobalArgVector3f(2, avSwingForward);
+	cScript_SetGlobalArgVector3f(3, avLaunchTarget);
+	cScript_SetGlobalArgBool(4, abHasLaunchTarget);
+	cScript_SetGlobalArgFloat(5, afPoleLength);
+	cScript_SetGlobalArgFloat(6, afGrabRadius);
+	cScript_SetGlobalArgFloat(7, afMinApproachSpeed);
+	cScript_SetGlobalArgFloat(8, afMinVerticalSpeed);
+	cScript_SetGlobalArgFloat(9, afSwingDuration);
+	cScript_SetGlobalArgFloat(10, afPeakStart);
+	cScript_SetGlobalArgFloat(11, afPeakEnd);
+	cScript_SetGlobalArgFloat(12, afLaunchSpeed);
+	cScript_SetGlobalArgFloat(13, afLaunchUpSpeed);
+	cScript_SetGlobalArgFloat(14, afFlowLaunchBonus);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartPoleSwing");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetWallRunBasis(iCharacterBody@ apBody,
+							 cVector3f &out avForward,
+							 cVector3f &out avRight)
+{
+	if (apBody is null) return false;
+	
+	avForward = apBody.GetVelocity(1.0f / 60.0f);
+	avForward.y = 0.f;
+	if (avForward.Length() <= gfParkourWallDetect_MinTravelBasisSpeed)
+	{
+		avForward = apBody.GetForceVelocity();
+		avForward.y = 0.f;
+	}
+	if (avForward.Length() <= gfParkourWallDetect_MinTravelBasisSpeed)
+	{
+		avForward = apBody.GetForward();
+		avForward.y = 0.f;
+	}
+	if (avForward.SqrLength() <= 0.001f)
+	{
+		avForward = cLux_GetPlayer().GetCamera().GetForward();
+		avForward.y = 0.f;
+	}
+	if (avForward.SqrLength() <= 0.001f) return false;
+	avForward.Normalize();
+	
+	avRight = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, avForward));
+	if (avRight.SqrLength() <= 0.001f) return false;
+	avRight.Normalize();
+	
+	return true;
+}
+
+//------------------------------------------------------------
+
+bool Parkour_IsValidWallRunNormal(const cVector3f &in avNormal)
+{
+	if (avNormal.SqrLength() <= 0.001f) return false;
+	return cMath_Abs(avNormal.y) <= gfParkourWallDetect_MaxNormalY;
+}
+
+//------------------------------------------------------------
+
+int Parkour_GetWallRunSideFromNormal(const cVector3f &in avNormal,
+									 const cVector3f &in avRight)
+{
+	return cMath_Vector3Dot(avNormal, avRight) < 0.f ? 1 : -1;
+}
+
+//------------------------------------------------------------
+
+bool Parkour_CastWallRunRay(const cVector3f &in avStart,
+							const cVector3f &in avDir,
+							float afRayLength,
+							float &out afDistance,
+							cVector3f &out avNormal,
+							bool &out abBodyHit)
+{
+	afDistance = 1000.f;
+	avNormal = cVector3f_Zero;
+	abBodyHit = false;
+	
+	cVector3f vDir = avDir;
+	vDir.y = 0.f;
+	if (vDir.SqrLength() <= 0.001f) return false;
+	vDir.Normalize();
+	
+	iPhysicsBody@ pHit = cLux_GetClosestCharCollideBody(avStart, vDir, afRayLength, afDistance, avNormal);
+	if (pHit is null)
+		@pHit = cLux_GetClosestBody(avStart, vDir, afRayLength, afDistance, avNormal);
+	
+	if (pHit is null) return false;
+	abBodyHit = true;
+	
+	if (Parkour_IsValidWallRunNormal(avNormal) == false) return false;
+	
+	avNormal.y = 0.f;
+	if (avNormal.SqrLength() <= 0.001f) return false;
+	avNormal.Normalize();
+	
+	return true;
+}
+
+//------------------------------------------------------------
+
+bool Parkour_FindFrontWall(iCharacterBody@ apBody,
+						   float afRayLength,
+						   bool abUseCameraForward,
+						   cVector3f &out avNormal,
+						   float &out afDistance,
+						   tString &out asFailReason)
+{
+	avNormal = cVector3f_Zero;
+	afDistance = 1000.f;
+	asFailReason = "no front wall hit";
+	
+	if (apBody is null)
+	{
+		asFailReason = "no player body";
+		return false;
+	}
+	
+	cVector3f vForward;
+	cVector3f vRight;
+	if (abUseCameraForward)
+	{
+		vForward = cLux_GetPlayer().GetCamera().GetForward();
+		vForward.y = 0.f;
+		if (vForward.SqrLength() > 0.001f)
+			vForward.Normalize();
+		else if (Parkour_GetWallRunBasis(apBody, vForward, vRight) == false)
+		{
+			asFailReason = "no camera/body basis";
+			return false;
+		}
+		
+		vRight = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, vForward));
+	}
+	else
+	{
+		if (Parkour_GetWallRunBasis(apBody, vForward, vRight) == false)
+		{
+			asFailReason = "no camera/body basis";
+			return false;
+		}
+	}
+	
+	if (vForward.SqrLength() <= 0.001f || vRight.SqrLength() <= 0.001f)
+	{
+		asFailReason = "no front wall basis";
+		return false;
+	}
+	vForward.Normalize();
+	vRight.Normalize();
+	
+	array<float> vHeights = { 0.65f, 1.05f, 1.45f };
+	array<float> vSideOffsets = { -0.22f, 0.f, 0.22f };
+	bool bFoundWall = false;
+	bool bAnyBodyHit = false;
+	
+	for (uint h = 0; h < vHeights.size(); ++h)
+	{
+		for (uint s = 0; s < vSideOffsets.size(); ++s)
+		{
+			cVector3f vStart = apBody.GetFeetPosition() + cVector3f(0.f, vHeights[h], 0.f) + vRight * vSideOffsets[s];
+			float fDistance;
+			cVector3f vNormal;
+			bool bBodyHit;
+			
+			if (Parkour_CastWallRunRay(vStart, vForward, afRayLength, fDistance, vNormal, bBodyHit))
+			{
+				if (bFoundWall == false || fDistance < afDistance)
+				{
+					afDistance = fDistance;
+					avNormal = vNormal;
+					bFoundWall = true;
+				}
+			}
+			else if (bBodyHit)
+			{
+				bAnyBodyHit = true;
+			}
+		}
+	}
+	
+	if (bFoundWall) return true;
+	if (bAnyBodyHit)
+		asFailReason = "invalid front wall normal";
+	
+	return false;
+}
+
+//------------------------------------------------------------
+
+bool Parkour_FindWallRunWall(iCharacterBody@ apBody,
+							 int alSideFilter,
+							 float afRayLength,
+							 bool abUseWideForwardProbe,
+							 cVector3f &out avNormal,
+							 int &out alWallSide,
+							 float &out afDistance,
+							 tString &out asFailReason)
+{
+	avNormal = cVector3f_Zero;
+	alWallSide = 0;
+	afDistance = 1000.f;
+	asFailReason = "no wall hit";
+	
+	cVector3f vForward;
+	cVector3f vRight;
+	if (Parkour_GetWallRunBasis(apBody, vForward, vRight) == false)
+	{
+		asFailReason = "no camera/body basis";
+		return false;
+	}
+	
+	array<float> vHeights = { 0.65f, 1.05f, 1.45f };
+	array<float> vForwardProbeMuls = { 0.f, gfParkourWallDetect_ForwardProbeMul };
+	if (abUseWideForwardProbe)
+		vForwardProbeMuls.push_back(gfParkourWallDetect_ForwardProbeMulWide);
+	
+	bool bAnyBodyHit = false;
+	bool bAnyInvalidNormal = false;
+	bool bFoundWall = false;
+	
+	for (int lSide = -1; lSide <= 1; lSide += 2)
+	{
+		if (alSideFilter < 0 && lSide > 0) continue;
+		if (alSideFilter > 0 && lSide < 0) continue;
+		
+		cVector3f vSideDir = vRight * float(lSide);
+		
+		for (uint h = 0; h < vHeights.size(); ++h)
+		{
+			cVector3f vStart = apBody.GetFeetPosition() + cVector3f(0.f, vHeights[h], 0.f);
+			
+			for (uint d = 0; d < vForwardProbeMuls.size(); ++d)
+			{
+				cVector3f vProbeDir = vSideDir + vForward * vForwardProbeMuls[d];
+				float fDistance;
+				cVector3f vNormal;
+				bool bBodyHit;
+				
+				if (Parkour_CastWallRunRay(vStart, vProbeDir, afRayLength, fDistance, vNormal, bBodyHit))
+				{
+					int lDetectedSide = Parkour_GetWallRunSideFromNormal(vNormal, vRight);
+					if (alSideFilter < 0 && lDetectedSide > 0) continue;
+					if (alSideFilter > 0 && lDetectedSide < 0) continue;
+					
+					if (bFoundWall == false || fDistance < afDistance)
+					{
+						afDistance = fDistance;
+						avNormal = vNormal;
+						alWallSide = lDetectedSide;
+						bFoundWall = true;
+					}
+				}
+				else if (bBodyHit)
+				{
+					bAnyBodyHit = true;
+					bAnyInvalidNormal = true;
+				}
+			}
+		}
+	}
+	
+	if (bFoundWall) return true;
+	if (bAnyBodyHit || bAnyInvalidNormal)
+		asFailReason = "invalid wall normal";
+	
+	return false;
+}
+
+//------------------------------------------------------------

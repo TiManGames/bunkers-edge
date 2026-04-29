@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>Marc</author>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>
+                Plug-in: [Build 68192];
+                Use Absolute Path: No;
+                Merge Reference Items: No;
+                Save Hidden Items: No;
+                Save Cameras: No;
+                Save Lights: No;
+                Save Locators: Yes;
+                Save Triangles as Triangles: No;
+                Order Vertex Maps Alphabetically: No;
+                Bake Matrices: Yes;
+                Save Vertex Normals: Yes;
+                Save UV Texture Coordinates: Yes;
+                Save Vertex Colors: Yes;
+                Save Vertex Weights: Yes;
+                Save Animation: No;
+                Sample Animation: No;
+                Sample Animation Start: 0;
+                Sample Animation End: 1;
+                Save modo Profile: No;
+                Save Maya Profile: No;
+                Save 3ds Max Profile: No;
+                Formatted Arrays: Yes;
+            </comments>
+            <source_data>file:///D:/Work/studio/Frictional%20Games/Depth/redist/static_objects/station/walls/living_area_roofedge_straight.dae</source_data>
+        </contributor>
+        <created>2015-02-10T20:42:08Z</created>
+        <modified>2015-02-10T20:42:08Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/wall_living_area_cabin.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-lambert3" name="lambert3">
+            <instance_effect url="#Effect-lambert3" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-lambert3" name="lambert3">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="pPlaneShape5-map1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                        <transparent opaque="RGB_ZERO">
+                            <color sid="transparent_effect_rgb">0 0 0 1</color>
+                        </transparent>
+                        <transparency>
+                            <float sid="transparency_effect_float">1</float>
+                        </transparency>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-pPlane5" name="pPlane5">
+            <mesh>
+                <source id="Geometry-pPlane5-positions" name="positions">
+                    <float_array id="Geometry-pPlane5-positions-array" count="30">
+                        -1 0 0
+                        1 0 0
+                        -1 0.397022 0.361333
+                        1 0.397022 0.361333
+                        -1 0.5 0.667105
+                        1 0.5 0.667105
+                        -1 0.397023 0.654234
+                        -1 0.409894 0.667105
+                        1 0.409894 0.667105
+                        1 0.397023 0.654234
+                    </float_array>
+                    <technique_common>
+                        <accessor count="10" source="#Geometry-pPlane5-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-pPlane5-normals" name="normals">
+                    <float_array id="Geometry-pPlane5-normals-array" count="12">
+                        0 -0.673085 0.739565
+                        0 -1 1.42449e-006
+                        0 0 1
+                        0 -0.707107 0.707107
+                    </float_array>
+                    <technique_common>
+                        <accessor count="4" source="#Geometry-pPlane5-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-pPlane5-pPlaneShape5-map1" name="pPlaneShape5-map1">
+                    <float_array id="Geometry-pPlane5-pPlaneShape5-map1-array" count="20">
+                        0.614364 0.816723
+                        0.983602 0.816723
+                        0.614364 0.905947
+                        0.983602 0.905947
+                        0.614364 0.963992
+                        0.983602 0.963991
+                        0.614364 0.969199
+                        0.983602 0.969198
+                        0.614364 0.987425
+                        0.983602 0.987425
+                    </float_array>
+                    <technique_common>
+                        <accessor count="10" source="#Geometry-pPlane5-pPlaneShape5-map1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-pPlane5-UV_Distortion" name="UV_Distortion">
+                    <float_array id="Geometry-pPlane5-UV_Distortion-array" count="21">
+                        0.525057 0.523559 0.478683
+                        0.481012 0.526107 0.522746
+                        0.481013 0.526108 0.522745
+                        0.476108 0.520743 0.527612
+                        0.476109 0.520744 0.52761
+                        0.400361 0.437894 0.602767
+                        0.400358 0.437892 0.60277
+                    </float_array>
+                    <technique_common>
+                        <accessor count="7" source="#Geometry-pPlane5-UV_Distortion-array" stride="3">
+                            <param name="R" type="float" />
+                            <param name="G" type="float" />
+                            <param name="B" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-pPlane5-vertices">
+                    <input semantic="POSITION" source="#Geometry-pPlane5-positions" />
+                </vertices>
+                <polylist count="8" material="Material-lambert3">
+                    <input semantic="VERTEX" source="#Geometry-pPlane5-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-pPlane5-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-pPlane5-pPlaneShape5-map1" offset="2" set="0" />
+                    <input semantic="COLOR" source="#Geometry-pPlane5-UV_Distortion" offset="3" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3</vcount>
+                    <p>0 0 0 0 1 0 1 0 2 0 2 0 2 0 2 0 1 0 1 0 3 0 3 0 2 1 2 1 3 1 3 1 6 1 4 1 6 1 4 2 3 1 3 2 9 1 5 2 7 2 6 3 8 2 7 3 4 2 8 3 4 2 8 4 8 2 7 4 5 2 9 4 7 3 6 5 6 3 4 5 8 3 7 5 8 3 7 6 6 3 4 6 9 3 5 6</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-pPlane5Node" name="pPlane5" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <instance_geometry url="#Geometry-pPlane5">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-lambert3" target="#Material-lambert3">
+                                <bind_vertex_input semantic="pPlaneShape5-map1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="Camera-camera008Node" name="Camera" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 0.996195 0.0871557 0.75
+        0 -0.0871557 0.996195 4
+        0 0 0 1
+    </matrix>
+                <instance_camera url="#Camera-camera008" />
+            </node>
+            <node id="groupLocator028Node" name="Texture_Group" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <node id="txtrLocator024Node" name="wall_living_area_cabin__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+            </node>
+            <node id="Light-sunLight016Node" name="Directional_Light" type="NODE">
+                <matrix sid="transform">
+        0.707107 0.353553 -0.612372 -2
+        0 0.866025 0.5 2
+        0.707107 -0.353553 0.612372 2
+        0 0 0 1
+    </matrix>
+                <instance_light url="#Light-sunLight016" />
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

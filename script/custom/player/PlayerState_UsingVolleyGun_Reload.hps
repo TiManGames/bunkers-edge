@@ -1,0 +1,146 @@
+#include "custom/player/PlayerState_UsingGun_Reload.hps"
+
+//------------------------------------------------------------
+
+class cScrPlayerState_UsingVolleyGun_Reload : cScrPlayerState_UsingGun_Reload
+{
+	void Init() override
+	{
+		cScrPlayerState_UsingGun_Reload::Init();
+		
+		msWeaponType = "VolleyGun";
+		msAmmunitionType = "Ammunition";
+		msItemPrompt = "ReloadGun";
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId) override
+	{
+		cScrPlayerState_UsingGun_Reload::OnEnterState(alPrevStateId);
+		
+		mlUseAction = -1;
+		mbAllowLeavingState = true;
+		mbVolleyReleaseHandled = false;
+		mbVolleyLeaveAfterEmpty = false;
+		VolleyGun_SetQueuedFire(false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateAnimationStates(float afTimeStep) override
+	{
+		bool bHoldingFire = cInput_IsTriggered(eAction_Interact);
+		
+		if (bHoldingFire == false)
+			mbReloadQueued = false;
+		
+		HandleHeldLoad(bHoldingFire);
+		cScrPlayerState_UsingGun_Reload::UpdateAnimationStates(afTimeStep);
+		HandleHeldLoad(bHoldingFire);
+		HandleFireRelease(bHoldingFire);
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed) override
+	{
+		if (alAction == eAction_Crouch)
+			return true;
+			
+		if (alAction == eAction_Interact)
+			return false;
+		
+		return cScrPlayerState_UsingGun_Reload::OnAction(alAction, abPressed);
+	}
+	
+	//------------------------------------------------------------
+	
+	void HandleHeldLoad(bool abHoldingFire)
+	{
+		if (abHoldingFire == false || mbVolleyReleaseHandled)
+			return;
+			
+		if (Gun_GetFullyLoaded(msWeaponType))
+			return;
+		
+		if (mlAnimState == eUsingItemAnimState_Loop ||
+			mlAnimState == eUsingGun_ReloadState_EndReload)
+		{
+			if (ItemType_GetCountInInventory(msAmmunitionType) == 0 && cLux_GetGodModeActivated() == false)
+			{
+				Item_FlashItemCount(3);
+				return;
+			}
+			
+			SetupReload();
+		}
+		else if (mlAnimState == eUsingGun_ReloadState_InsertBullet)
+		{
+			mbReloadQueued = true;
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void HandleFireRelease(bool abHoldingFire)
+	{
+		if (abHoldingFire || mbVolleyReleaseHandled)
+			return;
+			
+		if (mlAnimState != eUsingItemAnimState_Loop &&
+			mlAnimState != eUsingGun_ReloadState_EndReload)
+			return;
+			
+		if (mbVolleyLeaveAfterEmpty)
+		{
+			mbVolleyLeaveAfterEmpty = false;
+			mbVolleyReleaseHandled = true;
+			QueueAimState(false);
+			return;
+		}
+		
+		mbVolleyReleaseHandled = true;
+		
+		if (Gun_GetFullyLoaded(msWeaponType))
+		{
+			QueueAimState(true);
+			return;
+		}
+		
+		if (VolleyGun_GetLoadedBulletCount() > 0 || Gun_GetHasSpentBullets(msWeaponType))
+		{
+			Player_SetCanRun(false);
+			ChangeAnimState(eUsingGun_ReloadState_EmptyBullets);
+			mbVolleyLeaveAfterEmpty = true;
+			mbVolleyReleaseHandled = false;
+			return;
+		}
+		
+		QueueAimState(false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void QueueAimState(bool abShoot)
+	{
+		VolleyGun_SetQueuedFire(abShoot);
+		
+		mbLeaveState = true;
+		mbAllowLeavingState = true;
+		Player_SetCanRun(true);
+		
+		cScript_SetGlobalArgInt(0, Gun_GetAimStateId(msWeaponType));
+		cScript_SetGlobalArgInt(1, eItemHandlerHand_Right);
+		cScript_SetGlobalArgString(2, msItemType);
+		cScript_RunGlobalFunc("State_Normal", "", "_Global_SetQueuedState");
+		
+		if (mlAnimState != eUsingItemAnimState_Outro)
+			ChangeAnimState(eUsingItemAnimState_Outro);
+	}
+	
+	//------------------------------------------------------------
+	
+	bool mbVolleyReleaseHandled = false;
+	bool mbVolleyLeaveAfterEmpty = false;
+}

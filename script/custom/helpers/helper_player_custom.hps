@@ -1,0 +1,829 @@
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+#include "custom/helpers/helper_items.hps"
+
+//-------------------------------------------------
+
+//-------------------------------------------------
+// ENUMS
+//-------------------------------------------------
+
+//-------------------------------------------------
+
+shared enum eUseItemMode
+{
+	eUseItemMode_Hold,
+	eUseItemMode_Toggle
+}
+
+//-------------------------------------------------
+
+shared enum eCheckHealthMode
+{
+	eCheckHealthMode_Hold,
+	eCheckHealthMode_Toggle
+}
+
+//-------------------------------------------------
+
+//-------------------------------------------------
+// General
+//-------------------------------------------------
+
+//-------------------------------------------------
+
+bool Player_IsOnSand()
+{
+	return cScript_GetGlobalVarBool("PlayerOnSand");
+}
+
+//-------------------------------------------------
+
+bool Player_GetCanUseLightSource()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetCanUseLightSource");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_SetCanUseLightSource(bool abCanUseLightSource = true)
+{
+	cScript_SetGlobalArgBool(0, abCanUseLightSource);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetCanUseLightSource");
+}
+
+//-------------------------------------------------
+
+void Player_ToggleLightSource()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_ToggleLightSource");
+}
+
+//-------------------------------------------------
+
+float Player_GetLightSwitchCounter()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetLightSwitchCounter");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+bool Player_GetIsRunningCarelessly()
+{
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_GetIsRunningCarelessly");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_SetCheckHealthAllowed(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetCheckHealthAllowed");
+}
+
+//-------------------------------------------------
+
+bool Player_GetCheckHealthAllowed()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetCheckHealthAllowed");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_SetCanEquipItems(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetCanEquipItems");
+}
+
+//-------------------------------------------------
+
+bool Player_GetCanEquipItems()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetCanEquipItems");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_ApplyHeal(bool abFullHeal=false, bool abFeedbackOnly=false)
+{
+	cLuxMap@ pMap = cLux_GetCurrentMap();
+	if (pMap is null) return;
+	
+	float fHealAmount = abFullHeal ? 1.f : 0.5f;
+	cScript_SetGlobalArgFloat(0, fHealAmount);
+	cScript_SetGlobalArgBool(1, abFeedbackOnly);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_Heal");
+}
+
+//-------------------------------------------------
+
+void Player_DoDamageEffects(float afAmount, float afShake = 0.05f)
+{
+	cScript_SetGlobalArgFloat(0, afAmount);
+	cScript_SetGlobalArgFloat(1, afShake);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_DoDamageEffects");
+}
+
+//-------------------------------------------------
+
+void Player_SetBleedingActive(bool abActive)
+{
+	cScript_SetGlobalArgBool(0, abActive);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetBleedingActive");
+}
+	
+//------------------------------------------------------------
+
+bool Player_GetBleedingIsActive()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetBleedingIsActive");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_StopBleeding()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_StopBleeding");
+}
+
+//-------------------------------------------------
+
+bool Player_GetBleedingStopped()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetBleedingStopped");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+bool Player_GetIsBleeding()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetIsBleeding");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+//-------------------------------------------------
+// Vision / Exposure
+//-------------------------------------------------
+
+//-------------------------------------------------
+
+void Player_Exposure_SetAdd(float afAdd)
+{
+	cScript_SetGlobalArgFloat(0,afAdd);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_Exposure_SetAdd");
+}
+
+//-------------------------------------------------
+
+float Player_Exposure_GetAdd()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_Exposure_GetAdd");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+void Player_Exposure_Increase(float afSpeed, float afAmount)
+{
+	cScript_SetGlobalArgFloat(0,afSpeed);
+	cScript_SetGlobalArgFloat(1,afAmount);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_Exposure_Increase");
+}
+
+//-------------------------------------------------
+
+float Player_GetLightLevel(bool abIgnoreLighter = true, bool abIgnoreLantern = false)
+{
+	cScript_SetGlobalArgBool(0, abIgnoreLighter);
+	cScript_SetGlobalArgBool(1, abIgnoreLantern);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetLightLevel");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+void Player_SetNightVisionEnabled(bool abEnabled)
+{
+	cScript_SetGlobalArgBool(0, abEnabled);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetNightVisionEnabled");
+}
+
+//-------------------------------------------------
+
+void Player_SetNightVisionStrength(float afMul)
+{
+	cScript_SetGlobalArgFloat(0, afMul);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetNightVisionStrength");
+}
+
+//-------------------------------------------------
+
+void Player_SetForceNightVision(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetForceNightVision");
+}
+
+//-------------------------------------------------
+
+/**
+ * Sets the night vision brightness
+ * 
+ * @param afBrightness, brightness of night vision. Default value 1.0f
+ **/
+void Player_SetNightVisionBrightness(float afBrightness)
+{
+	cScript_SetGlobalArgFloat(0, afBrightness);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetNightVisionBrightness");
+}
+
+//-------------------------------------------------
+
+float Player_GetNightVisionBrightness()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetNightVisionBrightness");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+void Player_SetNightVisionRadius(float afRadius)
+{
+	cScript_SetGlobalArgFloat(0, afRadius);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetNightVisionRadius");
+}
+
+//-------------------------------------------------
+
+void Player_SetNightVisionAgentRadiusAdd(float afAdd)
+{
+	cScript_SetGlobalArgFloat(0, afAdd);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetNightVisionAgentRadiusAdd");
+}
+
+//-------------------------------------------------
+
+bool Player_IsNightVisionActive()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_IsNightVisionActive");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+float Player_GetNightVisionRadiusMax()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetNightVisionRadiusMax");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+//-------------------------------------------------
+// Health check light
+//-------------------------------------------------
+
+void Player_FadeCheckHealthLightBrightness(float afBrightness, float afTime)
+{
+	cScript_SetGlobalArgFloat(0, afBrightness);
+	cScript_SetGlobalArgFloat(1, afTime);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_FadeCheckHealthLightBrightness");
+}
+
+//-------------------------------------------------
+// Shadows
+//-------------------------------------------------
+
+//-------------------------------------------------
+
+void Player_SetMapDeepShadow(float afLevel)
+{
+	cScript_SetGlobalArgFloat(0,afLevel);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetMapDeepShadow");
+}
+
+//-------------------------------------------------
+
+float Player_GetMapDeepShadow()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_GetMapDeepShadow");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+bool Player_IsInShadow()
+{
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_IsInShadow");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+//-------------------------------------------------
+// Effects
+//-------------------------------------------------
+
+//-------------------------------------------------
+
+void Player_Disorient(float afDuration, bool abAffectMovement = true, bool abBlur = false)
+{
+	cScript_SetGlobalArgFloat(0, afDuration);
+	cScript_SetGlobalArgBool(1, abAffectMovement);
+	cScript_SetGlobalArgBool(2, abBlur);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_Disorient");
+}
+
+//-------------------------------------------------
+
+void Player_StopDisorient()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_StopDisorient");
+}
+
+//-------------------------------------------------
+
+void Player_SetRemainingDisorientDuration(float afDuration)
+{
+	cScript_SetGlobalArgFloat(0, afDuration);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetRemainingDisorientDuration");
+}
+
+//-------------------------------------------------
+
+void Player_SetLookAcceleration(float afValue)
+{
+	float fValue = cMath_Clamp(afValue, 0.0f, 1.0f);
+	cScript_SetGlobalArgFloat(0, fValue);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_SetLookAcceleration");
+}
+
+//-------------------------------------------------
+
+void Player_FadeLookAccelerationTo(float afValue, float afTime)
+{
+	float fValue = cMath_Clamp(afValue, 0.0f, 1.0f);
+	cScript_SetGlobalArgFloat(0, fValue);
+	cScript_SetGlobalArgFloat(1, afTime);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_FadeLookAccelerationTo");
+}
+
+//-------------------------------------------------
+
+void Player_FadeNightVisionStrength(float afValue, float afTime)
+{
+	cScript_SetGlobalArgFloat(0, afValue);
+	cScript_SetGlobalArgFloat(1, afTime);
+	cScript_RunGlobalFunc("LuxPlayer","","_Global_FadeNightVisionStrength");
+}
+
+//-------------------------------------------------
+
+void Player_SetHealthSpeedMulActive(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetHealthSpeedMulActive");
+}
+
+//-------------------------------------------------
+
+bool Player_GetHealthRegenActive()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetHealthRegenActive");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_SetHealthRegenActive(bool abX, bool abForce = false)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_SetGlobalArgBool(1, abForce);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetHealthRegenActive");
+}
+
+//-------------------------------------------------
+
+void Player_SetHealthRegenSpeedMul(float afX)
+{
+	cScript_SetGlobalArgFloat(0, afX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetHealthRegenSpeedMul");
+}
+
+//-------------------------------------------------
+
+void Player_SetCanBeScared(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetCanBeScared");
+}
+
+//-------------------------------------------------
+
+void Player_SetScared(float afTime)
+{
+	cScript_SetGlobalArgFloat(0, afTime);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetScared");
+}
+
+//-------------------------------------------------
+
+void Player_AddScaredSource(float afDist, bool abVisible)
+{
+	cScript_SetGlobalArgFloat(0, afDist);
+	cScript_SetGlobalArgBool(1, abVisible);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_AddScaredSource");
+}
+
+//-------------------------------------------------
+
+bool Player_GetScared()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetScared");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_SetVertigoActive(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetVertigoActive");
+}
+
+//-------------------------------------------------
+
+bool Player_GetVertigoActive()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetVertigoActive");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_FadeVertigoIntensity(float afX, float afTime)
+{
+	cScript_SetGlobalArgFloat(0, afX);
+	cScript_SetGlobalArgFloat(1, afTime);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_FadeVertigoIntensity");
+}
+
+//-------------------------------------------------
+
+void Player_SetSlidingActive(bool abEnabled, float afAngleThreshold = 45.f, bool abSandOnly = true)
+{
+	cScript_SetGlobalArgBool(0, abEnabled);
+	cScript_SetGlobalArgFloat(1, afAngleThreshold);
+	cScript_SetGlobalArgBool(2, abSandOnly);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetSlidingActive");
+}
+
+//-------------------------------------------------
+
+void Player_SetSlidingUseParticles(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetSlidingUseParticles");
+}
+
+//-------------------------------------------------
+
+/** Gets the amount of oxygen remaining in seconds
+ */
+float Player_GetOxygenCount()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetOxygenCount");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+/** Sets the amount of oxygen remaining in seconds.
+ * @param afX, the amount of oxygen in seconds.
+ */
+void Player_SetOxygenCount(float afX)
+{
+	cScript_SetGlobalArgFloat(0, afX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetOxygenCount");
+}
+
+//-------------------------------------------------
+
+void Player_SetCutsceneStopsVoiceUnderwater(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetCutsceneStopsVoiceUnderwater");
+}
+
+//-------------------------------------------------
+
+bool Player_GetCutsceneStopsVoiceUnderwater()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetCutsceneStopsVoiceUnderwater");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------- 
+
+float Player_GetTimeSinceGrabInteract()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetTimeSinceGrabInteract");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------------
+
+bool Player_CanUseGun(const tString &in asGunType)
+{
+	cScript_RunGlobalFunc("State_Using"+asGunType+"_Aim", "", "_Global_CanUseGun");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------------
+
+bool Player_CanCheckGunAmmo(const tString &in asGunType)
+{
+	cScript_RunGlobalFunc("State_Using"+asGunType+"_Reload", "", "_Global_CanCheckAmmo");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_ShowDisableInteractionCross(const bool abState)
+{
+	cScript_SetGlobalArgBool(0, abState);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_ShowDisableInteractionCross");
+}
+
+//-------------------------------------------------
+
+tString Player_GetPrevMap()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetPrevMap");
+	return cScript_GetGlobalReturnString();
+}
+
+//-------------------------------------------------
+
+void Player_SetEquipGasMask(bool abX)
+{
+	tString sAction = abX ? "_Global_EquipGasMask" : "_Global_UnequipGasMask";
+	cScript_RunGlobalFunc("LuxPlayer", "", sAction);
+}
+
+//-------------------------------------------------
+
+void Player_UnequipGasMaskInstantly()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_UnequipGasMaskInstantly");
+}
+
+//-------------------------------------------------
+
+bool Player_GetGasMaskEquipped()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetGasMaskEquipped");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Player_SetIgnoreGasDamage(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetIgnoreGasDamage");
+}
+
+//-------------------------------------------------
+
+bool Player_GetIgnoreGasDamage()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetIgnoreGasDamage");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+bool Player_GetCrossHairVisible()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetCrosshairVisible");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+bool Player_GetIsHiding()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetIsHiding");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+tID Player_GetCurrentHideAreaConnectedProp()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetCurrentHideAreaConnectedProp");
+	return cScript_GetGlobalReturnID();
+}
+
+//-------------------------------------------------
+
+tID Player_GetCurrentHideArea()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetCurrentHideArea");
+	return cScript_GetGlobalReturnID();
+}
+
+//-------------------------------------------------
+
+int Player_GetCurrentHideAreaAnimKillDir()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "Player_GetCurrentHideAreaAnimKillDir");
+	return cScript_GetGlobalReturnInt();
+}
+
+//-------------------------------------------------
+
+tString Player_GetBloodTrailEntityBaseName()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetBloodTrailEntityBaseName");
+	return cScript_GetGlobalReturnString();
+}
+
+//-------------------------------------------------
+
+float Player_GetTimeSinceLastThrowInteraction()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_GetTimeSinceLastThrowInteraction");
+	return cScript_GetGlobalReturnFloat();
+}
+
+//-------------------------------------------------
+
+void Player_SetAllowItemCrosshair(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetAllowItemCrosshair");
+}
+
+//-------------------------------------------------
+
+bool Player_GetIsUsingItem()
+{
+	return cScript_GetGlobalVarBool("Player_IsUsingItem");
+}
+
+//-------------------------------------------------
+
+void Player_SetIsUsingItem(bool abX)
+{
+	cScript_SetGlobalVarBool("Player_IsUsingItem", abX);
+}
+
+//-------------------------------------------------
+
+bool Player_GetShowUseItemPromptForState(int alState)
+{
+	if (Player_GetIsInUsingItemState() == false)
+		return false;
+	
+	cLuxPlayer@ pPlayer = cLux_GetPlayer();
+	
+	if (pPlayer is null) return false;
+	if (pPlayer.GetCurrentStateId() != alState)
+		return false;
+		
+	cScript_RunGlobalFunc(pPlayer.GetCurrentStateName(), "", "_Global_GetShowUseItemPrompt");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+bool Player_GetIsInUsingItemState()
+{
+	int lStateId = cLux_GetPlayer().GetCurrentStateId();	
+	bool bPlayerInItemUseState = lStateId == ePlayerState_Custom_UsingGun_Aim ||
+								 lStateId == ePlayerState_Custom_UsingGun_Reload ||
+								 lStateId == ePlayerState_Custom_UsingShotgun_Aim ||
+								 lStateId == ePlayerState_Custom_UsingShotgun_Reload ||
+								 lStateId == ePlayerState_Custom_UsingVolleyGun_Aim ||
+								 lStateId == ePlayerState_Custom_UsingVolleyGun_Reload ||
+								 lStateId == ePlayerState_Custom_UsingLantern;		
+		
+	if (Item_GetUsingState(Item_GetHeldType(eItemHandlerHand_Right)) == lStateId) 	bPlayerInItemUseState = true;
+	if (Item_GetUsingState(Item_GetHeldType(eItemHandlerHand_Left)) == lStateId) 	bPlayerInItemUseState = true;
+	
+	return bPlayerInItemUseState;
+}
+
+//-------------------------------------------------
+
+void Player_FadeDreamLights(float afAlpha, float afTime)
+{
+	cScript_SetGlobalArgFloat(0, afAlpha);
+	cScript_SetGlobalArgFloat(1, afTime);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_FadeDreamLights");
+}
+
+//-------------------------------------------------
+
+void Player_SetupDreamLightsSound(const tString &in asGuiSound, const tString &in asVoiceScene = "", float afSpectrumMul = -1.f)
+{
+	cScript_SetGlobalArgString(0, asGuiSound);
+	cScript_SetGlobalArgString(1, asVoiceScene);
+	cScript_SetGlobalArgFloat(2, afSpectrumMul);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetupDreamLightSound");
+}
+
+//-------------------------------------------------
+
+void Player_AttachHelmet(const tString &in asHelmetEnt)
+{
+	cLuxMap@ pMap = cLux_GetCurrentMap();
+	iScrPlayerBodyHandler_Interface@ pPlayerBody = cast<iScrPlayerBodyHandler_Interface>(cLux_GetUserModuleFromID(eModuleType_PlayerBodyHandler));
+	
+	if (pMap is null) return;
+	if (pPlayerBody is null) return;
+	
+	cNode3D@ pSocket = pPlayerBody.GetSocket("CameraSocket");
+	iLuxEntity@ pHelmet = pMap.GetEntityByName(asHelmetEnt, eLuxEntityType_Prop);
+	cMeshEntity@ pHelmetMeshEnt = pHelmet !is null ? pHelmet.GetMeshEntity() : null;
+		
+	if (pHelmet is null) return;
+	if (pHelmetMeshEnt is null) return;
+	if (pSocket is null) return;
+	
+	pHelmet.SetActive(true);
+			
+	cMatrixf mtxSocket = pSocket.GetWorldMatrix();
+	cMatrixf mtxHelmet = pHelmet.GetMatrix();
+	cVector3f vOffset =  mtxSocket.GetTranspose().GetForward() * -0.13f + mtxSocket.GetTranspose().GetUp() * -0.015f;
+			
+	mtxHelmet.SetTranslation(mtxSocket.GetTranslation() + vOffset);
+	mtxHelmet.SetRotation(mtxSocket.GetRotation());		
+	pHelmet.SetMatrix(mtxHelmet);
+			
+	pHelmetMeshEnt.SetRenderFlagBit(eRenderableFlag_VisibleInNonReflection, false);
+	pHelmetMeshEnt.SetRenderFlagBit(eRenderableFlag_VisibleInReflection, false);
+	
+	bool bShadowsActive = cLux_GetUserConfig().GetBool("Graphics", "BodyShadows", true);
+	pHelmetMeshEnt.SetRenderFlagBit(eRenderableFlag_ShadowCaster, bShadowsActive);
+	
+		
+	Entity_AttachToSocket(asHelmetEnt, pPlayerBody.GetEntityName(), "CameraSocket", true, false);
+}
+
+//-------------------------------------------------
+
+void Player_AddAimAssistTarget(tID a_idEntity)
+{
+	cScript_SetGlobalArgID(0, a_idEntity);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_AddAimAssistTarget");
+}
+
+//-------------------------------------------------
+
+void Player_AddAimAssistTarget(tID a_idEntity, const tString &in asBone, const tString &in asSkipBoolVar, 
+							   const cVector3f &in avOffset, float afTargetRadiusMul, float afMaxDist, 
+							   float afMinCoverage, bool abUseJointChildPos, bool abRemoveOnSkip, int alWeaponType)
+{
+	cScript_SetGlobalArgID(0, a_idEntity);
+	cScript_SetGlobalArgString(1, asBone);
+	cScript_SetGlobalArgString(2, asSkipBoolVar);
+	cScript_SetGlobalArgVector3f(3, avOffset);
+	cScript_SetGlobalArgFloat(4, afTargetRadiusMul);
+	cScript_SetGlobalArgFloat(5, afMaxDist);
+	cScript_SetGlobalArgFloat(6, afMinCoverage);
+	cScript_SetGlobalArgBool(7, abUseJointChildPos);
+	cScript_SetGlobalArgBool(8, abRemoveOnSkip);
+	cScript_SetGlobalArgInt(9, alWeaponType);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_AddCustomAimAssistTarget");
+}
+
+//-------------------------------------------------
+
+void Player_RemoveAimAssistTarget(tID a_idEntity)
+{
+	cScript_SetGlobalArgID(0, a_idEntity);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_RemoveAimAssistTarget");
+}
+
+//-------------------------------------------------
+
+void Player_SetAimAssistRangeMul(float afMul)
+{
+	cScript_SetGlobalArgFloat(0, afMul);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_SetAimAssistRangeMul");
+}
+
+//-------------------------------------------------

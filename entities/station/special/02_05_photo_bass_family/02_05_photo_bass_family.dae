@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><contributor><author></author><authoring_tool>FBX COLLADA exporter</authoring_tool><comments></comments></contributor><created>2015-08-03T13:35:15Z</created><keywords></keywords><modified>2015-08-03T13:35:15Z</modified><revision></revision><subject></subject><title></title><unit meter="0.010000" name="centimeter"></unit><up_axis>Y_UP</up_axis></asset>
+  <library_images>
+    <image id="file2-image" name="file2"><init_from>file://D:/work/svn_soma/redist/entities/station/special/02_05_photo_bass_family/02_05_photo_bass_family.mat</init_from></image>
+    <image id="file1-image" name="file1"><init_from>file://D:/work/svn_soma/redist/entities/station/special/02_05_brandon_alice_photo/02_05_brandon_alice_photo.mat</init_from></image>
+  </library_images>
+  <library_materials>
+    <material id="_05_photo_bass_family" name="_05_photo_bass_family">
+      <instance_effect url="#_05_photo_bass_family-fx"/>
+    </material>
+    <material id="lambert2" name="lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_05_photo_bass_family-fx" name="_05_photo_bass_family">
+      <profile_COMMON>
+        <technique sid="standard">
+          <lambert>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.000000  0.000000 0.000000 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file2-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>NONE</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0.000000  0.000000 0.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">1.000000</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert2-fx" name="lambert2">
+      <profile_COMMON>
+        <technique sid="standard">
+          <lambert>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.000000  0.000000 0.000000 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>NONE</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0.000000  0.000000 0.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">1.000000</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="photo-lib" name="photoMesh">
+      <mesh>
+        <source id="photo-POSITION">
+          <float_array id="photo-POSITION-array" count="12">
+-16.869034 0.884388 -12.194647
+-16.869034 0.884389 12.194647
+16.869026 0.884388 12.194647
+16.869026 0.884388 -12.194647
+</float_array>
+          <technique_common>
+            <accessor source="#photo-POSITION-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photo-Normal0">
+          <float_array id="photo-Normal0-array" count="18">
+0.000000 1.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 1.000000 0.000000
+</float_array>
+          <technique_common>
+            <accessor source="#photo-Normal0-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photo-UV0">
+          <float_array id="photo-UV0-array" count="8">
+0.715430 0.998632
+0.000000 0.998632
+0.000000 0.002010
+0.715430 0.002010
+</float_array>
+          <technique_common>
+            <accessor source="#photo-UV0-array" count="4" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="photo-VERTEX">
+          <input semantic="POSITION" source="#photo-POSITION"/>
+        </vertices>
+        <triangles count="2" material="_05_photo_bass_family"><input semantic="VERTEX" offset="0" source="#photo-VERTEX"/><input semantic="NORMAL" offset="1" source="#photo-Normal0"/><input semantic="TEXCOORD" offset="2" set="0" source="#photo-UV0"/><p> 3 0 0 0 1 1 2 2 3 2 3 3 0 4 1 1 5 2</p></triangles>
+      </mesh>
+    </geometry>
+    <geometry id="frame-lib" name="frameMesh">
+      <mesh>
+        <source id="frame-POSITION">
+          <float_array id="frame-POSITION-array" count="72">
+-17.958191 1.727685 13.357759
+-17.958193 -0.000002 13.357759
+17.958191 1.727688 13.357759
+17.958191 -0.000002 13.357759
+17.958187 1.727684 -13.357761
+17.958187 0.000000 -13.357761
+-17.958193 1.727685 -13.357761
+-17.958191 0.000000 -13.357759
+-17.048111 1.727685 -12.422909
+-17.048107 1.727684 12.422911
+17.048107 1.727686 12.422909
+17.048107 1.727688 -12.422909
+-16.702011 0.884388 -12.073908
+-16.702011 0.884389 12.073908
+16.702007 0.884388 12.073908
+16.702007 0.884388 -12.073910
+18.291534 1.382147 -13.634064
+18.291531 1.382147 13.634062
+-18.291534 1.382148 13.634062
+-18.291534 1.382149 -13.634062
+18.291531 0.345533 -13.634064
+18.291531 0.345535 13.634064
+-18.291533 0.345538 13.634064
+-18.291533 0.345534 -13.634064
+</float_array>
+          <technique_common>
+            <accessor source="#frame-POSITION-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="frame-Normal0">
+          <float_array id="frame-Normal0-array" count="378">
+0.000000 -0.624520 0.781009
+0.000001 -0.624519 0.781009
+0.000000 -0.624520 0.781009
+0.000000 -0.624520 0.781009
+0.000001 -0.624519 0.781009
+0.000001 -0.624519 0.781009
+0.719692 -0.694293 -0.000000
+0.719691 -0.694294 -0.000000
+0.719692 -0.694293 -0.000000
+0.719692 -0.694293 -0.000000
+0.719691 -0.694294 -0.000000
+0.719691 -0.694294 -0.000000
+0.000002 -0.624524 -0.781005
+-0.000002 -0.624523 -0.781007
+0.000002 -0.624524 -0.781005
+0.000002 -0.624524 -0.781005
+-0.000002 -0.624523 -0.781007
+-0.000002 -0.624523 -0.781007
+-0.719697 -0.694288 0.000000
+-0.719690 -0.694295 0.000000
+-0.719697 -0.694288 0.000000
+-0.719697 -0.694288 0.000000
+-0.719690 -0.694295 0.000000
+-0.719690 -0.694295 0.000000
+0.000000 -1.000000 0.000000
+0.000000 -1.000000 0.000000
+0.000000 -1.000000 0.000000
+0.000000 -1.000000 0.000000
+0.000000 -1.000000 0.000000
+0.000000 -1.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 1.000000 0.000000
+0.000001 1.000000 -0.000000
+0.000001 1.000000 -0.000000
+0.000000 1.000000 0.000000
+0.000001 1.000000 -0.000000
+-0.000000 1.000000 -0.000001
+-0.000000 1.000000 -0.000001
+-0.000000 1.000000 -0.000001
+-0.000000 1.000000 -0.000001
+-0.000000 1.000000 -0.000001
+-0.000000 1.000000 -0.000001
+-0.000003 1.000000 0.000000
+-0.000003 1.000000 0.000000
+0.000001 1.000000 -0.000000
+0.000001 1.000000 -0.000000
+-0.000003 1.000000 0.000000
+0.000001 1.000000 -0.000000
+-0.000000 1.000000 -0.000006
+-0.000000 1.000000 -0.000006
+0.000001 1.000000 0.000001
+0.000001 1.000000 0.000001
+-0.000000 1.000000 -0.000006
+0.000001 1.000000 0.000001
+0.925118 0.379680 -0.000000
+0.925118 0.379680 -0.000000
+0.925118 0.379680 -0.000000
+0.925118 0.379680 -0.000000
+0.925118 0.379680 -0.000000
+0.925118 0.379680 -0.000000
+-0.000000 0.382400 -0.923997
+-0.000000 0.382400 -0.923997
+-0.000000 0.382398 -0.923998
+-0.000000 0.382398 -0.923998
+-0.000000 0.382400 -0.923997
+-0.000000 0.382399 -0.923997
+-0.925117 0.379682 0.000000
+-0.925117 0.379682 0.000000
+-0.925119 0.379677 0.000000
+-0.925119 0.379677 0.000000
+-0.925117 0.379682 0.000000
+-0.925119 0.379677 0.000000
+0.000000 0.382398 0.923998
+0.000000 0.382398 0.923998
+0.000000 0.382398 0.923998
+0.000000 0.382398 0.923998
+0.000000 0.382398 0.923998
+0.000000 0.382399 0.923997
+0.719696 0.694289 -0.000000
+0.719699 0.694286 -0.000000
+0.719696 0.694289 -0.000000
+0.719696 0.694289 -0.000000
+0.719699 0.694286 -0.000000
+0.719699 0.694286 -0.000000
+-0.000001 0.624515 0.781013
+0.000000 0.624518 0.781011
+-0.000001 0.624515 0.781013
+-0.000001 0.624515 0.781013
+0.000000 0.624518 0.781011
+0.000000 0.624518 0.781011
+-0.719694 0.694292 0.000000
+-0.719692 0.694293 0.000000
+-0.719694 0.694292 0.000000
+-0.719694 0.694292 0.000000
+-0.719692 0.694293 0.000000
+-0.719692 0.694293 0.000000
+0.000001 0.624519 -0.781010
+-0.000001 0.624519 -0.781009
+0.000001 0.624519 -0.781010
+0.000001 0.624519 -0.781010
+-0.000001 0.624519 -0.781009
+-0.000001 0.624519 -0.781009
+1.000000 0.000005 -0.000000
+1.000000 0.000005 -0.000000
+1.000000 -0.000004 -0.000000
+1.000000 -0.000004 -0.000000
+1.000000 0.000005 -0.000000
+1.000000 -0.000005 -0.000000
+0.000002 0.000003 1.000000
+-0.000001 0.000002 1.000000
+0.000002 0.000003 1.000000
+0.000002 0.000003 1.000000
+-0.000001 0.000002 1.000000
+-0.000001 0.000002 1.000000
+-1.000000 0.000000 0.000000
+-1.000000 0.000000 0.000000
+-1.000000 0.000000 0.000000
+-1.000000 0.000000 0.000000
+-1.000000 0.000000 0.000000
+-1.000000 0.000000 0.000000
+-0.000000 0.000001 -1.000000
+-0.000000 0.000001 -1.000000
+-0.000000 0.000001 -1.000000
+-0.000000 0.000001 -1.000000
+-0.000000 0.000001 -1.000000
+-0.000000 0.000001 -1.000000
+</float_array>
+          <technique_common>
+            <accessor source="#frame-Normal0-array" count="126" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="frame-UV0">
+          <float_array id="frame-UV0-array" count="104">
+0.728192 0.022224
+0.276796 0.022224
+0.276796 0.013539
+0.728192 0.013539
+0.996209 0.022848
+0.660450 0.022848
+0.660450 0.014163
+0.996209 0.014162
+0.456679 0.022225
+0.005283 0.022225
+0.005283 0.013540
+0.456679 0.013540
+0.782008 0.022846
+0.446248 0.022846
+0.446248 0.014161
+0.782008 0.014161
+0.007176 0.986461
+0.007176 0.118046
+0.329394 0.118046
+0.329394 0.986461
+0.457997 0.080464
+0.446248 0.057587
+0.782007 0.057588
+0.770258 0.080463
+0.288234 0.080464
+0.276796 0.056965
+0.728192 0.056966
+0.716754 0.080464
+0.672198 0.080466
+0.660450 0.057590
+0.996209 0.057590
+0.984460 0.080466
+0.016721 0.080464
+0.005283 0.056966
+0.456679 0.056966
+0.445241 0.080464
+0.462383 0.101661
+0.765872 0.101661
+0.292584 0.101662
+0.712404 0.101661
+0.676585 0.101662
+0.980074 0.101663
+0.021071 0.101662
+0.440891 0.101662
+0.660450 0.048904
+0.996209 0.048904
+0.276796 0.048280
+0.728192 0.048280
+0.446248 0.048902
+0.782007 0.048902
+0.005283 0.048280
+0.456679 0.048281
+</float_array>
+          <technique_common>
+            <accessor source="#frame-UV0-array" count="52" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="frame-VERTEX">
+          <input semantic="POSITION" source="#frame-POSITION"/>
+        </vertices>
+        <triangles count="42" material="lambert2"><input semantic="VERTEX" offset="0" source="#frame-VERTEX"/><input semantic="NORMAL" offset="1" source="#frame-Normal0"/><input semantic="TEXCOORD" offset="2" set="0" source="#frame-UV0"/><p> 21 0 0 22 1 1 3 2 3 3 3 3 22 4 1 1 5 2 20 6 4 21 7 5 5 8 7 5 9 7 21 10 5 3 11 6 23 12 8 20 13 9 7 14 11 7 15 11 20 16 9 5 17 10 22 18 12 23 19 13 1 20 15 1 21 15 23 22 13 7 23 14 3 24 16 1 25 17 5 26 19 5 27 19 1 28 17 7 29 18 8 30 20 6 31 21 9 32 23 9 33 23 6 34 21 0 35 22 9 36 24 0 37 25 10 38 27 10 39 27 0 40 25 2 41 26 10 42 28 2 43 29 11 44 31 11 45 31 2 46 29 4 47 30 11 48 32 4 49 33 8 50 35 8 51 35 4 52 33 6 53 34 12 54 36 8 55 20 13 56 37 13 57 37 8 58 20 9 59 23 13 60 38 9 61 24 14 62 39 14 63 39 9 64 24 10 65 27 14 66 40 10 67 28 15 68 41 15 69 41 10 70 28 11 71 31 15 72 42 11 73 32 12 74 43 12 75 43 11 76 32 8 77 35 4 78 30 2 79 29 16 80 45 16 81 45 2 82 29 17 83 44 2 84 26 0 85 25 17 86 47 17 87 47 0 88 25 18 89 46 0 90 22 6 91 21 18 92 49 18 93 49 6 94 21 19 95 48 6 96 34 4 97 33 19 98 51 19 99 51 4 100 33 16 101 50 17 102 44 21 103 5 16 104 45 16 105 45 21 106 5 20 107 4 22 108 1 21 109 0 18 110 46 18 111 46 21 112 0 17 113 47 19 114 48 23 115 13 18 116 49 18 117 49 23 118 13 22 119 12 16 120 50 20 121 9 19 122 51 19 123 51 20 124 9 23 125 8</p></triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="02_05_photo_bass_family" name="02_05_photo_bass_family">
+      <node name="photo" id="photo" sid="photo"><matrix sid="matrix">1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000</matrix><instance_geometry url="#photo-lib"><bind_material><technique_common><instance_material symbol="_05_photo_bass_family" target="#_05_photo_bass_family"/></technique_common></bind_material></instance_geometry><extra><technique profile="FCOLLADA"><visibility>1.000000</visibility></technique></extra></node>
+      <node name="frame" id="frame" sid="frame"><matrix sid="matrix">1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000</matrix><instance_geometry url="#frame-lib"><bind_material><technique_common><instance_material symbol="lambert2" target="#lambert2"/></technique_common></bind_material></instance_geometry><extra><technique profile="FCOLLADA"><visibility>1.000000</visibility></technique></extra></node>
+      <extra><technique profile="MAX3D"><frame_rate>24.000000</frame_rate></technique><technique profile="FCOLLADA"><start_time>0.041667</start_time><end_time>2.000000</end_time></technique></extra>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#02_05_photo_bass_family"></instance_visual_scene>
+  </scene>
+</COLLADA>

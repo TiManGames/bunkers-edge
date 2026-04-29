@@ -1,0 +1,118 @@
+<Entity>
+    <ModelData>
+        <Entities />
+        <Mesh Filename="entities/station/doors/slidedoor_hatch_maintenance_tunnels/slidedoor_hatch_maintenance_tunnels.fbx">
+            <SubMesh ID="0" Name="door" CreStamp="0" ModStamp="0" WorldPos="0 0 0" Rotation="0 0 0" Scale="1 1 1" TriCount="1418" Material="" />
+        </Mesh>
+        <Bones>
+            <Bone ID="1" Name="root" />
+            <Bone ID="2" Name="bottom (2)" />
+            <Bone ID="3" Name="bottom (3)" />
+            <Bone ID="4" Name="top_right (2)" />
+            <Bone ID="5" Name="top_right (3)" />
+            <Bone ID="6" Name="top_left (2)" />
+            <Bone ID="7" Name="top_left (3)" />
+            <Bone ID="8" Name="top_left_lock (2)" />
+            <Bone ID="9" Name="top_left_lock (3)" />
+            <Bone ID="10" Name="top_right_lock (2)" />
+            <Bone ID="11" Name="top_right_lock (3)" />
+            <Bone ID="12" Name="lock_right" />
+            <Bone ID="13" Name="lock_right (2)" />
+            <Bone ID="14" Name="lock_left" />
+            <Bone ID="15" Name="lock_left (2)" />
+            <Bone ID="16" Name="door" />
+        </Bones>
+        <Shapes>
+            <Shape ID="18" Name="ShapeBox_2" CreStamp="1412941504" ModStamp="1412941535" WorldPos="-0.00939953 0.793949 0.268386" Rotation="0 0 0" Scale="1.71415 1.51086 0.22631" RelativeTranslation="0 0 0" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="21" Name="ShapeBox_3" CreStamp="1412941572" ModStamp="1412943967" WorldPos="-0.0302356 1.47155 0.222026" Rotation="0 0 0" Scale="0.998469 0.207528 0.171427" RelativeTranslation="-0.0111121 0.705665 -0.0211965" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="23" Name="ShapeBox_4" CreStamp="1412943974" ModStamp="1412943983" WorldPos="-0.683087 0.0602194 0.264419" Rotation="0 0 0" Scale="0.518036 0.207528 0.171427" RelativeTranslation="-0.663963 -0.705665 0.0211965" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="24" Name="ShapeBox_5" CreStamp="1412943984" ModStamp="1412943986" WorldPos="0.64484 0.0602194 0.264419" Rotation="0 0 0" Scale="0.518036 0.207528 0.171427" RelativeTranslation="0.663963 -0.705665 0.0211965" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+        </Shapes>
+        <Bodies>
+            <Body ID="19" Name="Body_Closed" CreStamp="0" ModStamp="1412944018" WorldPos="-0.00939953 0.793949 0.268386" Rotation="0 0 0" Scale="1 1 1" Material="Metal Solid" Mass="0" AngularDamping="0.1" LinearDamping="0.1" MaxAngularSpeed="20" MaxLinearSpeed="20" BuoyancyDensityMul="1" BlocksSound="false" ContinuousCollision="true" CanAttachCharacter="false" PushedByCharacterGravity="false" CollideCharacter="true" CollideNonCharacter="true" Volatile="true" UseSurfaceEffects="true" HasGravity="true" BlocksLight="true">
+                <Shape ID="18" />
+            </Body>
+            <Body ID="26" Name="Body_Open" CreStamp="0" ModStamp="1412944058" WorldPos="-0.0191235 0.765885 0.243223" Rotation="0 0 0" Scale="1 1 1" Material="Metal Solid" Mass="0" AngularDamping="0.1" LinearDamping="0.1" MaxAngularSpeed="20" MaxLinearSpeed="20" BuoyancyDensityMul="1" BlocksSound="false" ContinuousCollision="true" CanAttachCharacter="false" PushedByCharacterGravity="false" CollideCharacter="false" CollideNonCharacter="true" Volatile="true" UseSurfaceEffects="true" HasGravity="true" BlocksLight="true">
+                <Shape ID="23" />
+                <Shape ID="24" />
+                <Shape ID="21" />
+            </Body>
+        </Bodies>
+        <Joints />
+        <Animations>
+            <Animation Name="open" File="entities/station/doors/slidedoor_hatch_maintenance_tunnels/animation/slidedoor_hatch_maintenance_tunnels_open.fbx" Layer="Default" Speed="1">
+                <Event Name="opensound" Time="0" Type="PlaySound" DestSocket="" Value="Entities_Station/doors/security_hatch/open" />
+            </Animation>
+            <Animation Name="close" File="entities/station/doors/slidedoor_hatch_maintenance_tunnels/animation/slidedoor_hatch_maintenance_tunnels_close.fbx" Layer="Default" Speed="1">
+                <Event Name="closesound" Time="0" Type="PlaySound" DestSocket="" Value="Entities_Station/doors/security_hatch/close" />
+            </Animation>
+            <Animation Name="closed_state" File="entities/station/doors/slidedoor_hatch_maintenance_tunnels/animation/slidedoor_hatch_maintenance_tunnels_closedstate.fbx" Layer="Default" Speed="1" />
+            <Animation Name="open_state" File="entities/station/doors/slidedoor_hatch_maintenance_tunnels/animation/slidedoor_hatch_maintenance_tunnels_openstate.fbx" Layer="Default" Speed="1" />
+        </Animations>
+        <ProcAnimations />
+    </ModelData>
+    <UserDefinedVariables EntityType="Prop_SlideDoor">
+        <Var Name="Health" Value="100" />
+        <Var Name="Toughness" Value="0" />
+        <Var Name="MaxInteractDistance" Value="0" />
+        <Var Name="EventTag" Value="" />
+        <Var Name="ShowHints" Value="true" />
+        <Var Name="LifeLength" Value="0" />
+        <Var Name="DissolveDuringLifeDecrease" Value="true" />
+        <Var Name="BlocksLineOfSight" Value="true" />
+        <Var Name="MainPhysicsBody" Value="" />
+        <Var Name="CustomScriptFile" Value="" />
+        <Var Name="CustomScriptClass" Value="" />
+        <Var Name="ShowMesh" Value="true" />
+        <Var Name="DissolveOnDestruction" Value="false" />
+        <Var Name="DissolveTime" Value="1.0" />
+        <Var Name="RandomizeAnimationStart" Value="true" />
+        <Var Name="EffectsOnSound" Value="" />
+        <Var Name="EffectsOffSound" Value="" />
+        <Var Name="EffectsOnTime" Value="0.2" />
+        <Var Name="EffectsOffTime" Value="0.2" />
+        <Var Name="StaticMoveCheckCollision" Value="false" />
+        <Var Name="StaticMoveStartSound" Value="" />
+        <Var Name="StaticMoveStopSound" Value="" />
+        <Var Name="StaticMoveLoopSound" Value="" />
+        <Var Name="StaticMoveLoopSoundFade" Value="true" />
+        <Var Name="BreakActive" Value="false" />
+        <Var Name="BreakOnlyOnMainBody" Value="false" />
+        <Var Name="BreakDestroyJoints" Value="false" />
+        <Var Name="BreakMinEnergy" Value="100" />
+        <Var Name="BreakEntity" Value="" />
+        <Var Name="BreakEntityAlignBody" Value="" />
+        <Var Name="BreakSound" Value="" />
+        <Var Name="BreakParticleSystem" Value="" />
+        <Var Name="BreakImpulse" Value="4" />
+        <Var Name="OpenableByInteraction" Value="true" />
+        <Var Name="DoorParts_Body" Value="" />
+        <Var Name="DoorParts_MoveDir" Value="" />
+        <Var Name="DoorParts_MoveAmount" Value="" />
+        <Var Name="OpenSpeed" Value="1" />
+        <Var Name="CloseSpeed" Value="1" />
+        <Var Name="OpenAcc" Value="1" />
+        <Var Name="CloseAcc" Value="1" />
+        <Var Name="OpenSlowDownDist" Value="0.1" />
+        <Var Name="CloseSlowDownDist" Value="0.1" />
+        <Var Name="CheckCollision" Value="true" />
+        <Var Name="PushImpulse" Value="0.08" />
+        <Var Name="PushMaxMass" Value="40" />
+        <Var Name="OpenSound_Start" Value="Entities_Station/doors/security_hatch/open" />
+        <Var Name="OpenSound_End" Value="" />
+        <Var Name="CloseSound_Start" Value="Entities_Station/doors/security_hatch/close" />
+        <Var Name="CloseSound_End" Value="" />
+        <Var Name="OpenSound_Loop" Value="" />
+        <Var Name="CloseSound_Loop" Value="" />
+        <Var Name="UseAnimations" Value="true" />
+        <Var Name="Animation_Opening" Value="open" />
+        <Var Name="Animation_Closing" Value="close" />
+        <Var Name="Animation_Open" Value="open_state" />
+        <Var Name="Animation_Closed" Value="closed_state" />
+        <Var Name="Animation_ReplaceMovement" Value="true" />
+        <Var Name="Animation_CollisionOpenBody" Value="Body_Open" />
+        <Var Name="Animation_CollisionClosedBody" Value="Body_Closed" />
+        <Var Name="Animation_CollisionOpenTime" Value="1.883" />
+        <Var Name="Animation_CollisionClosedTime" Value="0.8" />
+    </UserDefinedVariables>
+</Entity>

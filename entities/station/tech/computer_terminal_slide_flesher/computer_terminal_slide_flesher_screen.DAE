@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.0">
+  <asset>
+    <contributor>
+      <author></author>
+      <authoring_tool>FBX COLLADA exporter</authoring_tool>
+      <comments></comments>
+    </contributor>
+    <created>2012-07-29T16:44:56Z</created>
+    <modified>2012-07-29T16:44:56Z</modified>
+    <revision></revision>
+    <title></title>
+    <subject></subject>
+    <keywords></keywords>
+    <unit meter="0.010000"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_images>
+    <image id="Map__2-image" name="Map__2">
+      <init_from>file://C:\Users\Peter\Desktop\computer_terminal_slide_flesher\originals\computer_terminal_slide_flesher.psd</init_from>
+    </image>
+  </library_images>
+  <library_materials>
+    <material id="default" name="default">
+      <instance_effect url="#default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="default-fx" name="default">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.588000  0.588000 0.588000 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map__2-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>ADD</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.000000  0.000000 0.000000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">2.000000</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0.000000  0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">1.000000</float>
+            </reflectivity>
+            <transparent>
+              <color sid="transparent">1.000000  1.000000 1.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">0.000000</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="Object616-lib" name="Object616Mesh">
+      <mesh>
+        <source id="Object616-lib-Position">
+          <float_array id="Object616-lib-Position-array" count="12">
+35.593094 -1.292593 -10.508821
+35.593094 -1.385030 10.460981
+4.406906 -1.385033 10.460983
+4.406904 -1.292598 -10.508817
+</float_array>
+          <technique_common>
+            <accessor source="#Object616-lib-Position-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Object616-lib-Normal0">
+          <float_array id="Object616-lib-Normal0-array" count="18">
+0.000000 -0.999990 -0.004408
+0.000000 -0.999990 -0.004408
+0.000000 -0.999990 -0.004408
+0.000000 -0.999990 -0.004408
+0.000000 -0.999990 -0.004408
+0.000000 -0.999990 -0.004408
+</float_array>
+          <technique_common>
+            <accessor source="#Object616-lib-Normal0-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Object616-lib-UV0">
+          <float_array id="Object616-lib-UV0-array" count="8">
+0.366127 0.451197
+0.366127 0.119332
+0.859670 0.119332
+0.859670 0.451197
+</float_array>
+          <technique_common>
+            <accessor source="#Object616-lib-UV0-array" count="4" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Object616-lib-Vertex">
+          <input semantic="POSITION" source="#Object616-lib-Position"/>
+        </vertices>
+        <polygons material="default" count="2">
+          <input semantic="VERTEX" offset="0" source="#Object616-lib-Vertex"/>
+          <input semantic="NORMAL" offset="1" source="#Object616-lib-Normal0"/>
+          <input semantic="TEXCOORD" offset="2" set="0" source="#Object616-lib-UV0"/>
+          <p>2 0 0 3 1 1 0 2 2</p>
+          <p>0 3 2 1 4 3 2 5 0</p>
+        </polygons>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="RootNode" name="RootNode">
+      <node id="Object616" name="Object616">
+        <matrix sid="matrix">1.000000 0.000000 0.000000 -192.830353 0.000000 0.000000 1.000000 35.858421 0.000000 -1.000000 0.000000 38.335388 0.000000 0.000000 0.000000 1.000000</matrix>
+        <instance_geometry url="#Object616-lib">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="default" target="#default"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#RootNode"/>
+  </scene>
+</COLLADA>
+

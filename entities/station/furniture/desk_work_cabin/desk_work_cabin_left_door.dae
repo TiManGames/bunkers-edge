@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=1;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=0;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=0;exportVertexColors=1;exportVertexColorsPerVertex=0;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=0;doublePrecision=0
+		</comments>
+      <source_data>file:///F:/depth/redist/entities/station/furniture/desk_work_cabin/desk_work_cabin.dae</source_data>
+    </contributor>
+    <created>2013-03-14T08:57:52</created>
+    <modified>2013-03-14T08:57:52</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="file1">
+      <init_from>./desk_work_cabin.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="left_doorShape" name="left_doorShape">
+      <mesh>
+        <source id="left_doorShape-positions" name="left_doorShape-positions">
+          <float_array id="left_doorShape-positions-array" count="102">-0.6292605 0.7082043 -0.03127747 0.6569936 0.7082043 -0.03127747 -0.6292605 -0.7082047 -0.03127747 0.6569936 -0.7082047 -0.03127747 -0.6569924 -0.6768707 0.03127754 0.6569936 -0.6768707 0.03127754 -0.6569935 0.7082043 0.03127754 0.6569936 0.7082043 0.03127754 -0.6292605 0.5747025 -0.03127747 -0.6569924 0.5747025 0.03127754 -0.6569924 0.2844003 0.03127754 -0.6292605 0.2844003 -0.03127747 0.6569936 0.0195993 0.03127754 -0.6569924 -0.2634576 0.03127754 -0.6292605 -0.2634576 -0.03127747 -0.6292605 -0.5438557 -0.03127747 -0.6569924 -0.5438557 0.03127754 -0.5870014 -0.5438557 0.03127754 -0.5870014 -0.2634576 0.03127754 -0.5870014 0.2844003 0.03127754 -0.5870014 0.5747025 0.03127754 0.6569936 0.0195993 -0.03127747 -0.5870014 -0.5438557 -0.03127747 -0.5870014 -0.2634576 -0.03127747 -0.5870014 0.2844003 -0.03127747 -0.5870014 0.5747025 -0.03127747 -0.6569935 0.7082043 -0.01247246 -0.6569924 0.5747025 -0.01247246 -0.6569924 0.2844003 -0.01247246 -0.6569924 -0.2634576 -0.01247246 -0.6569924 -0.5438557 -0.01247246 -0.6569924 -0.6971957 -0.01247246 -0.6346885 -0.7082047 -0.02657646 0.6569936 -0.7082047 -0.02591545</float_array>
+          <technique_common>
+            <accessor source="#left_doorShape-positions-array" count="34" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="left_doorShape-normals" name="left_doorShape-normals">
+          <float_array id="left_doorShape-normals-array" count="576">-0.29355 0 -0.9559438 0 0 -1 -0.29355 0 -0.9559438 -0.29355 0 -0.9559438 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 -1 0 -0.00103 -0.9643852 0.2645001 0 -1 0 0 -1 0 -0.00103 -0.9643852 0.2645001 -0.00103 -0.9643852 0.2645001 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 -1 0 0 -0.883524 0 -0.468386 -1 0 0 -1 0 0 -0.883524 0 -0.468386 -0.883524 0 -0.468386 -1 0 0 -0.8835254 0 -0.4683832 -1 0 0 -1 0 0 -0.8835254 0 -0.4683832 -0.8835254 0 -0.4683832 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 -1 0 0 -0.8837278 -0.001492 -0.4679989 -1 0 0 -1 0 0 -0.8837278 -0.001492 -0.4679989 -0.8837278 -0.001492 -0.4679989 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -0.293546 0 -0.955945 -0.293546 0 -0.955945 0 0 -1 -0.293546 0 -0.955945 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 -0.293963 -0.00138 -0.9558159 0 0 -1 -0.293963 -0.00138 -0.9558159 0 0 -1 0 0 -1 -0.293963 -0.00138 -0.9558159 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -0.883524 0 -0.468386 -0.293546 0 -0.955945 -0.883524 0 -0.468386 -0.883524 0 -0.468386 -0.293546 0 -0.955945 -0.293546 0 -0.955945 -0.8835254 0 -0.4683832 -0.29355 0 -0.9559438 -0.8835254 0 -0.4683832 -0.8835254 0 -0.4683832 -0.29355 0 -0.9559438 -0.29355 0 -0.9559438 -0.293963 -0.00138 -0.9558159 -0.5619489 -0.002636999 -0.8271678 -0.293963 -0.00138 -0.9558159 -0.293963 -0.00138 -0.9558159 -0.5619489 -0.002636999 -0.8271678 -0.8837278 -0.001492 -0.4679989 -0.8837278 -0.001492 -0.4679989 -0.5619489 -0.002636999 -0.8271678 -0.8837278 -0.001492 -0.4679989 -9.94e-4 -0.8846109 0.4663289 -9.94e-4 -0.8846109 0.4663289 0 -0.9069111 0.421322 -0.00103 -0.9643852 0.2645001 -9.94e-4 -0.8846109 0.4663289 -0.00103 -0.9643852 0.2645001 -0.00103 -0.9643852 0.2645001 -9.94e-4 -0.8846109 0.4663289 -9.94e-4 -0.8846109 0.4663289</float_array>
+          <technique_common>
+            <accessor source="#left_doorShape-normals-array" count="192" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="left_doorShape-left_doorShape-map1" name="left_doorShape-left_doorShape-map1">
+          <float_array id="left_doorShape-left_doorShape-map1-array" count="142">0.967104 0.113444 0.95866 0.113444 0.710856 0.087077 0.95866 0.058891 0.967104 0.058891 0.95866 0.142351 0.710856 0.155645 0.710856 0.013685 0.95866 0.03097 0.972646 0.113444 0.972646 0.058891 0.967104 0.155645 0.967104 0.142351 0.967104 0.03097 0.967104 0.013685 0.972646 0.155645 0.972646 0.142351 0.972646 0.03097 0.972646 0.015708 0.654645 0.165963 0.654645 0.174498 0.622383 0.326199 0.622384 0.165963 0.72439 0.174498 0.698356 0.087077 0.857232 0.174498 0.857232 0.165963 0.72439 0.165963 0.928374 0.174498 0.960924 0.326199 0.960925 0.165963 0.928374 0.165963 0.975982 0.169345 0.975981 0.326199 0.969304 0.165963 0.037508 0.850222 0.037508 0.846494 0.612803 0.326199 0.612804 0.169345 0.617406 0.165963 0.981388 0.155645 0.026434 0.850222 0.026434 0.875834 0.981388 0.142351 0.981388 0.113444 0.037508 0.875834 0.037508 0.846494 0.981388 0.058891 0.981388 0.03097 0.026433 0.850222 0.026434 0.882009 0.981388 0.017732 0.034179 0.882009 0.034179 0.844047 0.026434 0.844047 0.037508 0.879562 0.026433 0.844047 0.034179 0.844047 0.037508 0.875834 0.037508 0.879562 0.034179 0.882009 0.026434 0.882009 0.026434 0.875834 0.037508 0.850222 0.698356 0.017732 0.698356 0.155645 0.792714 0.326199 0.968189 0.014081 0.974675 0.168683 0.97469 0.326199 0.709785 0.014032</float_array>
+          <technique_common>
+            <accessor source="#left_doorShape-left_doorShape-map1-array" count="71" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="left_doorShape-vertices" name="left_doorShape-vertices">
+          <input semantic="POSITION" source="#left_doorShape-positions"/>
+        </vertices>
+        <triangles material="lambert2SG" count="64">
+          <input semantic="VERTEX" source="#left_doorShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#left_doorShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#left_doorShape-left_doorShape-map1" offset="2" set="0"/>
+          <p>11 0 0 24 1 1 14 2 4 14 3 4 24 4 1 23 5 3 24 6 1 21 7 2 23 8 3 3 9 33 33 10 69 2 11 32 2 12 32 33 13 69 32 14 68 9 15 19 20 16 20 6 17 22 20 18 20 7 19 21 6 20 22 6 21 22 7 22 21 26 23 39 26 24 39 7 25 21 0 26 38 7 27 21 1 28 37 0 29 38 6 30 40 26 31 15 9 32 43 9 33 43 26 34 15 27 35 16 10 36 44 28 37 9 13 38 47 13 39 47 28 40 9 29 41 10 13 42 26 18 43 25 10 44 27 10 45 27 18 46 25 19 47 23 16 48 48 30 49 17 4 50 51 4 51 51 30 52 17 31 53 18 16 54 31 4 55 30 17 56 28 4 57 30 5 58 29 17 59 28 17 60 28 5 61 29 18 62 25 18 63 25 5 64 29 12 65 66 12 66 66 7 67 21 19 68 23 19 69 23 7 70 21 20 71 20 19 72 23 18 73 25 12 74 66 21 75 2 12 76 24 3 77 7 3 78 7 12 79 24 33 80 70 12 81 24 5 82 64 33 83 70 8 84 12 0 85 11 25 86 5 0 87 11 1 88 6 25 89 5 25 90 5 1 91 6 24 92 1 24 93 1 1 94 6 21 95 2 15 96 13 22 97 8 2 98 14 22 99 8 3 100 7 2 101 14 21 102 2 3 103 7 23 104 3 23 105 3 3 106 7 22 107 8 1 108 6 7 109 65 21 110 2 21 111 2 7 112 65 12 113 24 22 114 58 15 115 59 17 116 62 15 117 59 30 118 60 17 119 62 30 120 60 16 121 61 17 122 62 23 123 63 22 124 58 18 125 49 18 126 49 22 127 58 17 128 62 23 129 63 18 130 49 14 131 46 14 132 46 18 133 49 29 134 57 18 135 49 13 136 56 29 137 57 25 138 35 20 139 41 8 140 36 8 141 36 20 142 41 27 143 53 20 144 41 9 145 54 27 146 53 24 147 45 11 148 55 19 149 42 11 150 55 28 151 52 19 152 42 28 153 52 10 154 50 19 155 42 25 156 35 24 157 45 20 158 41 20 159 41 24 160 45 19 161 42 26 162 15 0 163 11 27 164 16 27 165 16 0 166 11 8 167 12 28 168 9 11 169 0 29 170 10 29 171 10 11 172 0 14 173 4 2 174 14 32 175 67 15 176 13 15 177 13 32 178 67 30 179 17 30 180 17 32 181 67 31 182 18 31 183 34 5 184 29 4 185 30 33 186 69 5 187 29 32 188 68 32 189 68 5 190 29 31 191 34</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>left_doorShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="desk_work_cabin">
+      <node id="left_door" name="left_door" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#left_doorShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>left_door</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marcus</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.3.1;  Revision: 847M;  Platform: x64;  Configuration: Release_Max2011_static</authoring_tool>
+      <source_data>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/microscope/101812/microscope/originals/microscope.max</source_data>
+    </contributor>
+    <created>2012-10-23T01:29:20</created>
+    <modified>2012-10-23T01:29:20</modified>
+    <unit name="inch" meter="0.0254"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="_1_-_Default">
+      <profile_COMMON>
+        <newparam sid="microscope_dds-surface">
+          <surface type="2D">
+            <init_from>microscope_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="microscope_dds-sampler">
+          <sampler2D>
+            <source>microscope_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="microscope_spec_dds-surface">
+          <surface type="2D">
+            <init_from>microscope_spec_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="microscope_spec_dds-sampler">
+          <sampler2D>
+            <source>microscope_spec_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="microscope_nrm_dds-surface">
+          <surface type="2D">
+            <init_from>microscope_nrm_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="microscope_nrm_dds-sampler">
+          <sampler2D>
+            <source>microscope_nrm_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.588 0.588 0.588 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="microscope_dds-sampler" texcoord="CHANNEL1"/>
+            </diffuse>
+            <specular>
+              <color>0.9 0.9 0.9 1</color>
+            </specular>
+            <shininess>
+              <float>10</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+          <extra>
+            <technique profile="OpenCOLLADA3dsMax">
+              <specularLevel>
+                <texture texture="microscope_spec_dds-sampler" texcoord="CHANNEL1"/>
+              </specularLevel>
+              <bump bumptype="HEIGHTFIELD">
+                <texture texture="microscope_nrm_dds-sampler" texcoord="CHANNEL1"/>
+              </bump>
+            </technique>
+          </extra>
+        </technique>
+      </profile_COMMON>
+      <extra>
+        <technique profile="OpenCOLLADA3dsMax">
+          <extended_shader>
+            <apply_reflection_dimming>0</apply_reflection_dimming>
+            <dim_level>0</dim_level>
+            <falloff_type>0</falloff_type>
+            <index_of_refraction>1.5</index_of_refraction>
+            <opacity_type>0</opacity_type>
+            <reflection_level>3</reflection_level>
+            <wire_size>1</wire_size>
+            <wire_units>0</wire_units>
+          </extended_shader>
+          <shader>
+            <ambient_diffuse_lock>1</ambient_diffuse_lock>
+            <ambient_diffuse_texture_lock>1</ambient_diffuse_texture_lock>
+            <diffuse_specular_lock>0</diffuse_specular_lock>
+            <soften>0.1</soften>
+            <use_self_illum_color>0</use_self_illum_color>
+          </shader>
+        </technique>
+      </extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="_1_-_Default-material" name="_1_-_Default">
+      <instance_effect url="#_1_-_Default"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-screen" name="screen">
+      <mesh>
+        <source id="geom-screen-positions">
+          <float_array id="geom-screen-positions-array" count="12">-3.392712 -5.100035 18.34489 -3.850872 -7.080495 13.87572 3.850869 -7.080494 13.87572 3.392687 -5.100035 18.34489</float_array>
+          <technique_common>
+            <accessor source="#geom-screen-positions-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-screen-normals">
+          <float_array id="geom-screen-normals-array" count="12">4.05542e-8 -0.9142542 0.4051411 6.30413e-8 -0.9142542 0.4051411 2.53322e-8 -0.9142542 0.4051411 0 -0.9142542 0.405141</float_array>
+          <technique_common>
+            <accessor source="#geom-screen-normals-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-screen-map1">
+          <float_array id="geom-screen-map1-array" count="12">0.6832904 0.169317 0 0.6939911 0.2834896 0 0.5141079 0.2834883 0 0.5248103 0.1693158 0</float_array>
+          <technique_common>
+            <accessor source="#geom-screen-map1-array" count="4" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-screen-map1-textangents">
+          <float_array id="geom-screen-map1-textangents-array" count="12">-1 2.95928e-6 6.7781e-6 -1 2.96379e-6 6.84379e-6 -1 2.97319e-6 6.77193e-6 -1 2.97128e-6 6.70509e-6</float_array>
+          <technique_common>
+            <accessor source="#geom-screen-map1-textangents-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-screen-map1-texbinormals">
+          <float_array id="geom-screen-map1-texbinormals-array" count="12">7.39583e-6 0.4051411 0.9142542 7.45771e-6 0.4051411 0.9142542 7.39583e-6 0.4051411 0.9142542 7.33394e-6 0.405141 0.9142542</float_array>
+          <technique_common>
+            <accessor source="#geom-screen-map1-texbinormals-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-screen-vertices">
+          <input semantic="POSITION" source="#geom-screen-positions"/>
+        </vertices>
+        <triangles material="_1_-_Default_1" count="2">
+          <input semantic="VERTEX" source="#geom-screen-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-screen-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-screen-map1" offset="2" set="0"/>
+          <input semantic="TEXTANGENT" source="#geom-screen-map1-textangents" offset="3" set="1"/>
+          <input semantic="TEXBINORMAL" source="#geom-screen-map1-texbinormals" offset="3" set="1"/>
+          <p>0 0 0 0 1 1 1 1 2 2 2 2 2 2 2 2 3 3 3 3 0 0 0 0</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_images>
+    <image id="microscope_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/microscope/101812/microscope/lab/microscope/microscope.dds</init_from>
+    </image>
+    <image id="microscope_nrm_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/microscope/101812/microscope/lab/microscope/microscope_nrm.dds</init_from>
+    </image>
+    <image id="microscope_spec_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/microscope/101812/microscope/lab/microscope/microscope_spec.dds</init_from>
+    </image>
+  </library_images>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-screen" name="screen">
+        <instance_geometry url="#geom-screen">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="_1_-_Default_1" target="#_1_-_Default-material">
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

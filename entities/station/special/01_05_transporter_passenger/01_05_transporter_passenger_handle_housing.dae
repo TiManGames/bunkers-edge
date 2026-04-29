@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>Blender User</author>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 68192]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: Yes; Sample Animation Start: 0; Sample Animation End: 1; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_interactables.lxo</source_data>
+        </contributor>
+        <created>2014-11-04T11:03:38Z</created>
+        <modified>2014-11-04T11:03:38Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_destinationpicker_split_monitor.tga</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_gloss.tga</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_interactables.psd</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_interactables_nrm.tga</init_from>
+        </image>
+        <image id="Image0005" name="Image0005">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_interactables_spec.tga</init_from>
+        </image>
+        <image id="Image0006" name="Image0006">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_nrm.tga</init_from>
+        </image>
+        <image id="Image0007" name="Image0007">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger_spec.tga</init_from>
+        </image>
+        <image id="Image0008" name="Image0008">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/special/01_05_transporter_passenger/train_passenger.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-interactables" name="interactables">
+            <instance_effect url="#Effect-interactables" />
+        </material>
+        <material id="Material-screen" name="screen">
+            <instance_effect url="#Effect-screen" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-interactables" name="interactables">
+            <profile_COMMON>
+                <newparam sid="Image0003-surface">
+                    <surface type="2D">
+                        <init_from>Image0003</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0003-sampler">
+                    <sampler2D>
+                        <source>Image0003-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <newparam sid="Image0005-surface">
+                    <surface type="2D">
+                        <init_from>Image0005</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0005-sampler">
+                    <sampler2D>
+                        <source>Image0005-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0003-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <texture texture="Image0005-sampler" texcoord="uvSet1" />
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">32</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-screen" name="screen">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.305 0.305 0.305 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh003" name="handle_housing">
+            <mesh>
+                <source id="Geometry-mesh003-positions" name="positions">
+                    <float_array id="Geometry-mesh003-positions-array" count="156">-0.290773 1.07743 -4.20096 0.294804 1.07743 -4.20096 0.294804 1.09409 -4.20096 -0.290773 1.09409 -4.20096 -0.221454 1.24838 -4.64268 0.257235 1.24838 -4.64268 0.257235 1.24838 -4.68843 -0.221454 1.24838 -4.68843 0.257235 1.14852 -4.72488 -0.221454 1.14852 -4.72488 -0.221454 1.10928 -4.41262 -0.169596 1.06871 -4.47119 0.205372 1.06871 -4.47119 0.205372 1.17767 -4.6514 -0.169596 1.17767 -4.6514 0.257235 1.10928 -4.41262 0.205372 1.12435 -4.43754 -0.169596 1.12435 -4.43754 0.205372 1.23331 -4.61776 -0.169596 1.23331 -4.61776 0.286415 1.13665 -4.75166 0.269464 1.07743 -4.66063 -0.235894 1.07743 -4.66063 -0.253004 1.13665 -4.75166 -0.198112 1.10696 -4.37981 -0.192517 1.10736 -4.38539 -0.196473 1.10724 -4.38375 0.22865 1.10736 -4.38539 0.234244 1.10696 -4.37981 0.232606 1.10724 -4.38375 0.234244 1.0993 -4.27303 0.22865 1.0989 -4.26745 0.232606 1.09902 -4.26908 -0.192517 1.0989 -4.26745 -0.198112 1.0993 -4.27303 -0.196473 1.09902 -4.26908 -0.193036 1.10988 -4.37858 -0.191507 1.10999 -4.38011 -0.192588 1.10995 -4.37966 0.22764 1.10999 -4.38011 0.229169 1.10988 -4.37858 0.228721 1.10995 -4.37966 0.229169 1.10237 -4.27382 0.22764 1.10226 -4.2723 0.228721 1.10229 -4.27274 -0.191507 1.10226 -4.2723 -0.193036 1.10237 -4.27382 -0.192588 1.10229 -4.27274 0.227377 1.10986 -4.37832 0.227377 1.10239 -4.27408 -0.191244 1.10239 -4.27408 -0.191244 1.10986 -4.37832</float_array>
+                    <technique_common>
+                        <accessor count="52" source="#Geometry-mesh003-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh003-normals" name="normals">
+                    <float_array id="Geometry-mesh003-normals-array" count="213">0 0 1 4.83795e-006 0.916951 0.398999 -7.8768e-006 0.946815 0.32178 0 1 0 0 0.34296 -0.93935 -1 0 0 -0.99715 0.0748539 0.00940725 -0.993567 0.112362 0.0141211 0 0.855748 0.517393 7.82705e-006 0.937372 0.348331 -4.91097e-006 0.910042 0.414515 6.42424e-006 0.855762 0.51737 -1.26653e-005 0.855756 0.51738 -6.25308e-006 0.855738 0.517409 1.26979e-005 0.855744 0.517399 0 0.517435 -0.855722 0 -0.517419 0.855732 1 0 0 0.997934 0.0637463 0.00801129 0.995341 0.0956692 0.0120232 -0.0805366 0.955935 0.282316 0 0.997435 0.0715842 -0.236922 0.971497 -0.00787157 0.673257 0.556166 0.487242 0.877384 0.395891 0.271051 0.829219 0.53543 0.160343 0.970692 0.198303 0.13577 0.942192 0.334776 -0.0141187 0.906265 0.408844 0.107381 -0.945061 0.291476 0.147993 -0.966387 0.215062 0.14087 0.867938 0.496231 -0.0209278 0.660394 0.748228 -0.0635215 0.998484 0 -0.0550429 0.995284 0.095737 -0.0156382 -0.642346 0.581591 0.499143 -0.85933 0.427815 0.280227 -0.992949 0 -0.118544 -0.992585 0.112653 -0.0456527 -0.45889 0.88424 -0.0868305 -0.15737 0.987351 0.0193203 0 0.914186 -0.405294 0 0.914186 -0.405294 0.290168 0.956916 0.0107079 0.179129 0.969448 -0.167578 3.12898e-007 0.997441 0.0715005 0.0404294 0.969993 -0.239746 0.0673449 0.94536 0.318997 0.236446 0.939759 0.246874 3.47593e-006 0.997443 0.0714719 0.253996 0.959807 0.119405 -0.250619 0.958456 0.136206 -0.179087 0.935658 0.304092 -4.19945e-006 0.997444 0.0714571 -0.0403545 0.925901 0.375604 -0.0673964 0.981189 -0.180904 -0.236488 0.96535 -0.110332 -3.91797e-007 0.997441 0.0714996 -0.308463 0.950834 0.0276618 0.29138 0.84605 0.446427 0.49179 0.855998 0.159406 0.130454 0.897169 -0.421982 -0.0651902 0.898092 -0.434948 -0.497992 0.857855 0.126841 -0.384791 0.852731 0.353252 0.0651817 0.826909 0.558545 0.384748 0.894399 -0.228078 -0.48503 0.871831 -0.0682426 -0.130329 0.827833 0.545625 0.491793 0.869978 -0.0357334 -0.291477 0.901066 -0.321125</float_array>
+                    <technique_common>
+                        <accessor count="71" source="#Geometry-mesh003-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh003-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh003-uvSet1-array" count="164">0.750557 0.667412 0.880946 0.667724 0.750557 0.671596 0.880946 0.671596 0.59194 0.261157 0.593686 0.385134 0.580096 0.261331 0.581842 0.385299 0.552569 0.261713 0.55431 0.385685 0.814015 0.887143 0.8067 0.859691 0.826188 0.888242 0.890761 0.85673 0.972854 0.868271 0.972533 0.973336 0.913844 0.868079 0.913528 0.973143 0.661565 0.260064 0.663311 0.384032 0.654221 0.273608 0.655569 0.370717 0.60103 0.37159 0.599678 0.274476 0.995946 0.868326 0.995639 0.973386 0.977737 0.868271 0.977416 0.973336 0.972474 0.995953 0.913464 0.995756 0.972533 0.97773 0.913528 0.977538 0.890427 0.973088 0.890743 0.868024 0.908645 0.973143 0.908962 0.868079 0.913904 0.844978 0.972909 0.84517 0.913844 0.863196 0.972854 0.863389 0.726775 0.862206 0.738884 0.860547 0.72072 0.889963 0.804828 0.889076 0.873445 0.722028 0.760909 0.722024 0.880946 0.803749 0.873445 0.79663 0.884914 0.77951 0.74714 0.779918 0.760909 0.796664 0.884914 0.671596 0.750557 0.803945 0.74714 0.671596 0.900153 0.793613 0.899871 0.793495 0.900215 0.793134 0.899754 0.793211 0.928125 0.793201 0.928006 0.793488 0.927646 0.793144 0.927724 0.793604 0.927798 0.682502 0.928078 0.682618 0.927735 0.68298 0.928196 0.682904 0.899828 0.682903 0.899945 0.68262 0.900305 0.682964 0.900227 0.682504 0.929029 0.79451 0.92799 0.79494 0.898418 0.793476 0.898492 0.682637 0.928064 0.681166 0.929103 0.681597 0.92946 0.793467 0.898848 0.794516 0.899961 0.681168 0.929532 0.682641 0.899886 0.794948 0.898923 0.681598</float_array>
+                    <technique_common>
+                        <accessor count="82" source="#Geometry-mesh003-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh003-UV_Distortion" name="UV_Distortion">
+                    <float_array id="Geometry-mesh003-UV_Distortion-array" count="195">0.546296 0.500146 0.457276 0.567733 0.476515 0.435671 0.499138 0.545933 0.504761 0.499156 0.545952 0.504744 0.49912 0.545913 0.504779 0.499072 0.545859 0.504828 0.483788 0.529143 0.519992 0.483671 0.529015 0.520108 0.461338 0.504589 0.542266 0.461356 0.504608 0.542249 0.499435 0.546257 0.504467 0.498677 0.545428 0.505219 0.49904 0.545825 0.504859 0.499251 0.546055 0.50465 0.49939 0.546208 0.504511 0.498798 0.54556 0.505099 0.498956 0.545733 0.504943 0.499198 0.545998 0.504702 0.461477 0.504741 0.542128 0.461295 0.504541 0.542309 0.461283 0.504529 0.542321 0.461356 0.504608 0.542248 0.461349 0.504601 0.542255 0.461349 0.504601 0.542255 0.461358 0.504611 0.542246 0.461341 0.504592 0.542263 0.483819 0.529177 0.519961 0.483646 0.528988 0.520132 0.546526 0.499892 0.457044 0.561484 0.483403 0.441969 0.560782 0.484177 0.442676 0.624826 0.413577 0.378128 0.572502 0.471257 0.430864 0.513123 0.536715 0.490711 0.546717 0.499682 0.456852 0.503456 0.547371 0.500454 0.589361 0.452673 0.413872 0.543553 0.50317 0.460041 0.527668 0.520681 0.476051 0.540339 0.506714 0.463281 0.491254 0.537309 0.512584 0.495419 0.541865 0.508451 0.488091 0.533849 0.515723 0.497601 0.544251 0.506287 0.493069 0.539294 0.510783 0.493873 0.540173 0.509986 0.49162 0.537709 0.512221 0.496961 0.543551 0.506922 0.53035 0.517725 0.473348 0.529157 0.51904 0.474551 0.530551 0.517503 0.473146 0.492046 0.538175 0.511798 0.493049 0.539273 0.510803 0.528324 0.519958 0.47539 0.529579 0.518574 0.474125 0.52983 0.518298 0.473872 0.49248 0.53865 0.511367 0.529211 0.51898 0.474496 0.529865 0.518259 0.473837 0.530147 0.517948 0.473553 0.528653 0.519595 0.475059 0.529829 0.518299 0.473873 0.529977 0.518136 0.473724 0.492982 0.539199 0.510869 0.491843 0.537954 0.511999</float_array>
+                    <technique_common>
+                        <accessor count="65" source="#Geometry-mesh003-UV_Distortion-array" stride="3">
+                            <param name="R" type="float" />
+                            <param name="G" type="float" />
+                            <param name="B" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh003-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh003-positions" />
+                </vertices>
+                <triangles count="82" material="Material-interactables">
+                    <input semantic="VERTEX" source="#Geometry-mesh003-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh003-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh003-uvSet1" offset="2" set="0" />
+                    <input semantic="COLOR" source="#Geometry-mesh003-UV_Distortion" offset="3" set="0" />
+                    <p>0 0 0 0 1 0 1 0 3 0 2 0 3 0 2 1 1 0 1 1 2 0 3 1 4 1 4 2 5 2 5 2 7 3 6 2 7 3 6 3 5 2 5 3 6 3 7 3 7 4 6 4 6 4 7 4 9 4 8 4 9 4 8 5 6 4 7 5 8 4 9 5 7 5 10 6 9 6 11 6 4 5 12 6 9 6 11 7 10 7 13 7 4 5 12 7 11 8 14 8 12 8 15 8 14 8 16 8 14 8 16 9 12 8 15 9 13 8 17 9 10 9 18 10 15 10 19 10 17 11 20 10 17 11 20 11 15 10 19 11 16 12 21 11 15 10 19 12 5 2 5 12 16 12 21 12 16 12 21 13 5 2 5 13 18 13 22 13 5 2 5 14 4 1 4 14 18 13 22 14 18 13 22 15 4 1 4 15 19 14 23 15 4 1 4 16 10 9 18 16 19 14 23 16 19 14 23 17 10 9 18 17 17 11 20 17 17 15 24 18 16 15 25 18 11 15 26 18 11 15 26 19 16 15 25 19 12 15 27 19 16 5 28 20 18 5 29 20 12 5 30 20 12 5 30 21 18 5 29 21 13 5 31 21 18 16 32 22 19 16 33 22 13 16 34 22 13 16 34 23 19 16 33 23 14 16 35 23 19 17 36 24 17 17 37 24 14 17 38 24 14 17 38 25 17 17 37 25 11 17 39 25 6 17 40 26 5 17 41 26 8 18 42 26 15 19 43 27 8 18 42 27 5 17 41 27 15 10 44 28 10 20 45 28 2 21 3 28 2 21 3 29 10 20 45 29 3 22 2 29 20 23 46 30 8 24 47 30 21 25 48 30 8 26 47 31 15 27 44 31 21 28 48 31 22 29 49 32 10 7 45 32 9 30 50 32 21 25 48 33 15 31 44 33 2 32 3 33 2 33 3 34 1 33 51 34 21 34 48 34 23 35 52 35 22 36 49 35 9 36 50 35 3 37 2 36 22 38 49 36 0 37 53 36 22 39 49 37 3 22 2 37 10 40 45 37 23 41 52 38 9 42 50 38 20 42 46 38 20 42 46 39 9 42 50 39 8 42 47 39 40 43 54 40 41 44 55 40 48 45 56 40 41 44 55 41 39 46 57 41 48 45 56 41 43 47 58 42 44 48 59 42 49 49 60 42 44 48 59 43 42 50 61 43 49 49 60 43 46 51 62 44 47 52 63 44 50 53 64 44 47 52 63 45 45 54 65 45 50 53 64 45 37 55 66 46 38 56 67 46 51 57 68 46 38 56 67 47 36 58 69 47 51 57 68 47 32 59 70 48 30 60 71 48 44 48 59 48 42 50 61 48 44 48 59 48 30 60 71 48 27 61 72 49 25 62 73 49 39 46 57 49 37 55 66 49 39 46 57 49 25 62 73 49 34 63 74 50 35 64 75 50 46 51 62 50 47 52 63 50 46 51 62 50 35 64 75 50 50 53 64 51 45 54 65 51 43 47 58 51 43 47 58 51 49 49 60 51 50 53 64 51 36 58 69 52 46 51 62 52 51 57 68 52 50 53 64 52 51 57 68 52 46 51 62 52 31 65 76 53 32 59 70 53 43 47 58 53 44 48 59 53 43 47 58 53 32 59 70 53 29 66 77 54 27 61 72 54 41 44 55 54 39 46 57 54 41 44 55 54 27 61 72 54 24 67 78 55 34 63 74 55 36 58 69 55 46 51 62 55 36 58 69 55 34 63 74 55 48 45 56 56 39 46 57 56 37 55 66 56 37 55 66 56 51 57 68 56 48 45 56 56 33 68 79 57 31 65 76 57 45 54 65 57 43 47 58 57 45 54 65 57 31 65 76 57 28 69 80 58 29 66 77 58 40 43 54 58 41 44 55 58 40 43 54 58 29 66 77 58 26 70 81 59 24 67 78 59 38 56 67 59 36 58 69 59 38 56 67 59 24 67 78 59 35 64 75 60 33 68 79 60 47 52 63 60 45 54 65 60 47 52 63 60 33 68 79 60 28 69 80 61 40 43 54 61 30 60 71 61 42 50 61 61 30 60 71 61 40 43 54 61 25 62 73 62 26 70 81 62 37 55 66 62 38 56 67 62 37 55 66 62 26 70 81 62 42 50 61 63 40 43 54 63 49 49 60 63 48 45 56 63 49 49 60 63 40 43 54 63 50 53 64 64 49 49 60 64 51 57 68 64 48 45 56 64 51 57 68 64 49 49 60 64</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh003Node" name="handle_housing" type="NODE">
+                <instance_geometry url="#Geometry-mesh003">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-interactables" target="#Material-interactables">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator045Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator035Node" name="01_05_transporter_passenger_gloss__Image___Texture_" type="NODE">
+                    <translate sid="translation038">0 0 0</translate>
+                    <rotate sid="rotation037Y">0 1 0 0</rotate>
+                    <rotate sid="rotation037X">1 0 0 0</rotate>
+                    <rotate sid="rotation037Z">0 0 1 0</rotate>
+                    <scale sid="scale036">1 1 1</scale>
+                </node>
+                <node id="txtrLocator030Node" name="01_05_transporter_passenger_destinationpicker_split_monitor__Image___Texture_" type="NODE">
+                    <translate sid="translation033">0 0 0</translate>
+                    <rotate sid="rotation032Y">0 1 0 0</rotate>
+                    <rotate sid="rotation032X">1 0 0 0</rotate>
+                    <rotate sid="rotation032Z">0 0 1 0</rotate>
+                    <scale sid="scale031">1 1 1</scale>
+                </node>
+                <node id="txtrLocator022Node" name="01_05_transporter_passenger_interactables_spec__Image___Texture_" type="NODE">
+                    <translate sid="translation026">0 0 0</translate>
+                    <rotate sid="rotation025Y">0 1 0 0</rotate>
+                    <rotate sid="rotation025X">1 0 0 0</rotate>
+                    <rotate sid="rotation025Z">0 0 1 0</rotate>
+                    <scale sid="scale023">1 1 1</scale>
+                </node>
+                <node id="txtrLocator017Node" name="01_05_transporter_passenger_interactables_nrm__Image___Texture_" type="NODE">
+                    <translate sid="translation020">0 0 0</translate>
+                    <rotate sid="rotation019Y">0 1 0 0</rotate>
+                    <rotate sid="rotation019X">1 0 0 0</rotate>
+                    <rotate sid="rotation019Z">0 0 1 0</rotate>
+                    <scale sid="scale018">1 1 1</scale>
+                </node>
+                <node id="txtrLocator012Node" name="01_05_transporter_passenger_interactables__Image___Texture_" type="NODE">
+                    <translate sid="translation015">0 0 0</translate>
+                    <rotate sid="rotation014Y">0 1 0 0</rotate>
+                    <rotate sid="rotation014X">1 0 0 0</rotate>
+                    <rotate sid="rotation014Z">0 0 1 0</rotate>
+                    <scale sid="scale013">1 1 1</scale>
+                </node>
+                <node id="txtrLocator052Node" name="01_05_transporter_passenger_spec__Image___Texture_" type="NODE">
+                    <translate sid="translation055">0 0 0</translate>
+                    <rotate sid="rotation054Y">0 1 0 0</rotate>
+                    <rotate sid="rotation054X">1 0 0 0</rotate>
+                    <rotate sid="rotation054Z">0 0 1 0</rotate>
+                    <scale sid="scale053">1 1 1</scale>
+                </node>
+                <node id="txtrLocator047Node" name="01_05_transporter_passenger_nrm__Image___Texture_" type="NODE">
+                    <translate sid="translation050">0 0 0</translate>
+                    <rotate sid="rotation049Y">0 1 0 0</rotate>
+                    <rotate sid="rotation049X">1 0 0 0</rotate>
+                    <rotate sid="rotation049Z">0 0 1 0</rotate>
+                    <scale sid="scale048">1 1 1</scale>
+                </node>
+                <node id="txtrLocator041Node" name="train_passenger__Image___Texture_" type="NODE">
+                    <translate sid="translation044">0 0 0</translate>
+                    <rotate sid="rotation043Y">0 1 0 0</rotate>
+                    <rotate sid="rotation043X">1 0 0 0</rotate>
+                    <rotate sid="rotation043Z">0 0 1 0</rotate>
+                    <scale sid="scale042">1 1 1</scale>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

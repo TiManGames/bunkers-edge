@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 68192]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 1; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_floor.lxo</source_data>
+        </contributor>
+        <created>2014-09-17T15:04:17Z</created>
+        <modified>2014-09-17T15:04:17Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_first_floor_default_nrm.tga</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_first_floor_tilable.psd</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_floor.psd</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_floor_grey.psd</init_from>
+        </image>
+        <image id="Image0005" name="Image0005">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_floor_nrm.tga</init_from>
+        </image>
+        <image id="Image0006" name="Image0006">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/pplant_floor_spec.tga</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default" name="Default">
+            <instance_effect url="#Effect-Default" />
+        </material>
+        <material id="Material-pplant_first_floor_tileable" name="pplant_first_floor_tileable">
+            <instance_effect url="#Effect-pplant_first_floor_tileable" />
+        </material>
+        <material id="Material-pplant_floor" name="pplant_floor">
+            <instance_effect url="#Effect-pplant_floor" />
+        </material>
+        <material id="Material-pplant_floor_grey" name="pplant_floor_grey">
+            <instance_effect url="#Effect-pplant_floor_grey" />
+        </material>
+        <material id="Material-robot_tunnel" name="robot_tunnel">
+            <instance_effect url="#Effect-robot_tunnel" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default" name="Default">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-pplant_first_floor_tileable" name="pplant_first_floor_tileable">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-pplant_floor" name="pplant_floor">
+            <profile_COMMON>
+                <newparam sid="Image0003-surface">
+                    <surface type="2D">
+                        <init_from>Image0003</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0003-sampler">
+                    <sampler2D>
+                        <source>Image0003-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <newparam sid="Image0006-surface">
+                    <surface type="2D">
+                        <init_from>Image0006</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0006-sampler">
+                    <sampler2D>
+                        <source>Image0006-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0003-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <texture texture="Image0006-sampler" texcoord="uvSet1" />
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">14.42</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-pplant_floor_grey" name="pplant_floor_grey">
+            <profile_COMMON>
+                <newparam sid="Image0004-surface">
+                    <surface type="2D">
+                        <init_from>Image0004</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0004-sampler">
+                    <sampler2D>
+                        <source>Image0004-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0004-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-robot_tunnel" name="robot_tunnel">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.5 0.5 0.5 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                        <reflective>
+                            <color sid="reflective_effect_rgb">0 0 0 1</color>
+                        </reflective>
+                        <reflectivity>
+                            <float sid="reflectivity_effect_float">0.5</float>
+                        </reflectivity>
+                        <transparent opaque="RGB_ZERO">
+                            <color sid="transparent_effect_rgb">0 0 0 1</color>
+                        </transparent>
+                        <transparency>
+                            <float sid="transparency_effect_float">1</float>
+                        </transparency>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh061" name="edge_convex_sunk_grey">
+            <mesh>
+                <source id="Geometry-mesh061-positions" name="positions">
+                    <float_array id="Geometry-mesh061-positions-array" count="102">0.5 0 0 0.404329 0.0190301 0 0.323223 0.0732233 0 0.26903 0.154329 0 0.25 0.25 0 0.56 0 0 0 0 -0.5 0 0.0190301 -0.404329 0 0.0732233 -0.323223 0 0.154329 -0.26903 0 0.25 -0.25 0 0 -0.56 0.0904925 0.249122 -0.225137 0.0975928 0.152714 -0.242788 0.117839 0.070475 -0.293182 0.148112 0.0165967 -0.368604 0.183548 -0.000881747 -0.456899 0.205573 -0.000987556 -0.511727 0.168753 0.248829 -0.168753 0.182082 0.152175 -0.182082 0.220144 0.0695589 -0.220143 0.277088 0.0157855 -0.277089 0.343631 -0.00117566 -0.343631 0.384867 -0.00131674 -0.384867 0.225137 0.249122 -0.0904925 0.242788 0.152714 -0.0975929 0.293182 0.070475 -0.117839 0.368603 0.0165967 -0.148112 0.456899 -0.000881744 -0.183548 0.511727 -0.000987554 -0.205573 0 0.25 0 0 0 -2 2 0 0 2 -0.00109728 -2</float_array>
+                    <technique_common>
+                        <accessor count="34" source="#Geometry-mesh061-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh061-normals" name="normals">
+                    <float_array id="Geometry-mesh061-normals-array" count="117">0.000842754 0.999999 -0.00115566 -4.37537e-005 1 4.37502e-005 0.00269351 0.999996 -1.9037e-005 -0.00016284 0.999996 -0.00273363 0.000929715 0.999972 -0.00739416 0.00347035 0.999988 -0.00347035 0.00416198 0.999983 -0.00416198 0 0.999953 -0.00970702 0.00739416 0.999972 -0.000929716 0.00970701 0.999953 0 -0.000293887 0.999996 -0.00267625 -4.9157e-011 0.999988 -0.00480384 0.00267625 0.999996 0.000293888 0.00480386 0.999988 -3.14605e-009 0.0382916 0.995492 -0.0867781 0.0277721 0.994807 -0.0979175 0.0740492 0.994518 -0.0738248 0.0745051 0.996669 -0.0331749 0.0979174 0.994807 -0.0277721 0.311228 0.946406 -0.0863279 0.342202 0.926848 -0.154436 0.624667 0.411204 -0.663854 0.403632 0.37843 -0.83299 0.694092 0.190975 -0.694093 0.369786 0.192212 -0.909018 0.252845 0.312244 -0.915736 0.261898 0.188281 -0.946551 0.104679 0.922904 -0.370528 0.183828 0.927221 -0.326295 0.304504 0.910621 -0.27937 0.642522 0.745614 -0.176707 0.641422 0.705896 -0.30048 0.315251 0.703975 -0.636425 0.204812 0.647537 -0.733994 0.508316 0.702622 -0.497934 0.86902 0.433634 -0.238255 0.834122 0.352111 -0.424567 0.946687 0.190465 -0.259822 0.884534 0.193222 -0.424576</float_array>
+                    <technique_common>
+                        <accessor count="39" source="#Geometry-mesh061-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh061-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh061-uvSet1-array" count="68">0.0503958 0.100973 0.25 0.5 0.0269367 0.132118 0.0659359 0.05397 0.0281421 0.0226231 0.0210941 0.0421882 0 0 0.03125 0 0.0113116 0.0562842 0 0.0625 0.25 0 0.0732843 0 0 0.5 0 0.151106 0.0244482 0.12057 0 0.136031 0.0460706 0.0924784 0.0600695 0.0490039 0.0649968 0 0.0547926 0 0.0506585 0.0426151 0.0265571 0.0541013 0.0149757 0.0692844 0 0.0779997 0 0.111994 0.0211762 0.101953 0.0392853 0.0791734 0.0451582 0 0.0418916 0.0372525 0.0179319 0.0847989 0 0.0916158 0.0327056 0.0664693 0.0387207 0 0.0341488 0.0320022</float_array>
+                    <technique_common>
+                        <accessor count="34" source="#Geometry-mesh061-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh061-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh061-positions" />
+                </vertices>
+                <triangles count="50" material="Material-pplant_floor_grey">
+                    <input semantic="VERTEX" source="#Geometry-mesh061-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh061-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh061-uvSet1" offset="2" set="0" />
+                    <p>23 0 0 33 1 1 17 2 2 29 3 3 33 1 1 23 0 0 24 4 4 18 5 5 30 6 6 4 7 7 24 4 4 30 6 6 12 8 8 10 9 9 30 6 6 18 5 5 12 8 8 30 6 6 33 1 1 29 3 3 32 10 10 5 11 11 32 10 10 29 3 3 33 1 1 31 12 12 17 2 2 11 13 13 17 2 2 31 12 12 17 2 2 11 13 13 16 14 14 6 15 15 16 14 14 11 13 13 23 0 0 17 2 2 22 16 16 16 14 14 22 16 16 17 2 2 29 3 3 23 0 0 28 17 17 22 16 16 28 17 17 23 0 0 0 18 18 28 17 17 1 19 19 27 20 20 1 19 19 28 17 17 19 21 21 13 22 22 18 23 5 12 24 8 18 23 5 13 22 22 13 22 22 9 25 23 12 24 8 10 26 9 12 24 8 9 25 23 6 15 15 7 27 24 16 14 14 15 28 25 16 14 14 7 27 24 16 14 14 15 28 25 22 16 16 21 29 26 22 16 16 15 28 25 28 17 17 22 16 16 27 20 20 21 29 26 27 20 20 22 16 16 1 19 19 27 20 20 2 30 27 26 31 28 2 30 27 27 20 20 15 28 25 7 27 24 14 32 29 8 33 30 14 32 29 7 27 24 21 29 26 15 28 25 20 34 31 14 32 29 20 34 31 15 28 25 27 20 20 21 29 26 26 31 28 20 34 31 26 31 28 21 29 26 2 30 27 26 31 28 3 35 32 25 36 33 3 35 32 26 31 28 14 32 29 8 33 30 13 22 22 9 25 23 13 22 22 8 33 30 20 34 31 14 32 29 19 21 21 13 22 22 19 21 21 14 32 29 26 31 28 20 34 31 25 36 33 19 21 21 25 36 33 20 34 31 3 35 32 25 36 33 4 37 7 24 38 4 4 37 7 25 36 33 29 3 3 28 17 17 5 11 11 0 18 18 5 11 11 28 17 17 19 21 21 18 23 5 25 36 33 24 38 4 25 36 33 18 23 5</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="groupLocator031Node" name="low__2_" type="NODE">
+                <node id="Geometry-mesh061Node" name="edge_convex_sunk_grey" type="NODE">
+                    <translate sid="translation064">0 0 0</translate>
+                    <rotate sid="rotation063Y">0 1 0 0</rotate>
+                    <rotate sid="rotation063X">1 0 0 0</rotate>
+                    <rotate sid="rotation063Z">0 0 1 0</rotate>
+                    <scale sid="scale062">1 1 1</scale>
+                    <instance_geometry url="#Geometry-mesh061">
+                        <bind_material>
+                            <technique_common>
+                                <instance_material symbol="Material-pplant_floor_grey" target="#Material-pplant_floor_grey">
+                                    <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
+                            </technique_common>
+                        </bind_material>
+                    </instance_geometry>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

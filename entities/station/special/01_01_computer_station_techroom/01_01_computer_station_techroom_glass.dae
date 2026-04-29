@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><contributor><author></author><authoring_tool>FBX COLLADA exporter</authoring_tool><comments></comments></contributor><created>2015-08-31T08:55:09Z</created><keywords></keywords><modified>2015-08-31T08:55:09Z</modified><revision></revision><subject></subject><title></title><unit meter="0.010000" name="centimeter"></unit><up_axis>Y_UP</up_axis></asset>
+  <library_images>
+    <image id="file1-image" name="file1"><init_from>file://D:/work/svn_soma/redist/entities/station/special/01_01_computer_station_techroom/01_01_computer_station_techroom_glass.dds</init_from></image>
+  </library_images>
+  <library_materials>
+    <material id="glass_material" name="glass_material">
+      <instance_effect url="#glass_material-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="glass_material-fx" name="glass_material">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.000000  0.000000 0.000000 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>NONE</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.500000  0.500000 0.500000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">256.000000</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0.000000  0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">0.000000</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <texture texture="file1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>NONE</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </transparent>
+            <transparency>
+              <float sid="transparency">1.000000</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="glass-lib" name="glassMesh">
+      <mesh>
+        <source id="glass-POSITION">
+          <float_array id="glass-POSITION-array" count="42">
+-97.002762 107.216660 36.642868
+-97.002762 105.120949 40.952507
+-97.002762 102.321259 44.606033
+-97.002762 98.197235 47.047138
+-97.002762 92.564133 47.707996
+-77.804153 107.216660 36.642868
+-77.804153 105.120949 40.952507
+-77.804153 102.321259 44.606033
+-77.804153 98.197235 47.047138
+-77.804153 92.564133 47.707996
+-97.002762 119.592361 -10.145556
+-77.804153 119.592361 -10.145556
+-97.002762 81.401543 47.858376
+-77.804153 81.401543 47.858376
+</float_array>
+          <technique_common>
+            <accessor source="#glass-POSITION-array" count="14" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="glass-Normal0">
+          <float_array id="glass-Normal0-array" count="42">
+0.000000 0.962158 0.272491
+0.000000 0.851897 0.523709
+0.000000 0.660736 0.750619
+0.000000 0.302975 0.952999
+0.000000 0.048244 0.998836
+0.000000 0.962158 0.272491
+0.000000 0.851897 0.523709
+0.000000 0.660736 0.750619
+0.000000 0.302975 0.952999
+0.000000 0.048244 0.998836
+0.000000 0.966754 0.255710
+0.000000 0.966754 0.255710
+0.000000 0.013470 0.999909
+0.000000 0.013470 0.999909
+</float_array>
+          <technique_common>
+            <accessor source="#glass-Normal0-array" count="14" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="glass-UV0">
+          <float_array id="glass-UV0-array" count="28">
+0.031820 -0.181700
+0.031818 -0.296775
+0.031820 -0.419287
+0.031818 -0.531890
+0.031818 -0.665007
+0.975735 -0.181700
+0.975735 -0.296773
+0.975735 -0.419287
+0.975731 -0.531888
+0.975731 -0.665005
+0.031820 1.000000
+0.975737 1.000000
+0.031818 -0.920210
+0.975731 -0.920210
+</float_array>
+          <technique_common>
+            <accessor source="#glass-UV0-array" count="14" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="glass-VERTEX">
+          <input semantic="POSITION" source="#glass-POSITION"/>
+          <input semantic="NORMAL" source="#glass-Normal0"/>
+        </vertices>
+        <triangles count="12" material="glass_material"><input semantic="VERTEX" offset="0" source="#glass-VERTEX"/><input semantic="TEXCOORD" offset="1" set="0" source="#glass-UV0"/><p> 5 5 0 0 6 6 1 1 6 6 0 0 2 2 7 7 6 6 2 2 6 6 1 1 2 2 8 8 7 7 8 8 2 2 3 3 3 3 9 9 8 8 9 9 3 3 4 4 4 4 12 12 9 9 9 9 12 12 13 13 5 5 11 11 0 0 0 0 11 11 10 10</p></triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="01_01_computer_station_techroom_glass" name="01_01_computer_station_techroom_glass">
+      <node name="glass" id="glass" sid="glass"><matrix sid="matrix">1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 1.000000</matrix><instance_geometry url="#glass-lib"><bind_material><technique_common><instance_material symbol="glass_material" target="#glass_material"/></technique_common></bind_material></instance_geometry><extra><technique profile="FCOLLADA"><visibility>1.000000</visibility></technique></extra></node>
+      <extra><technique profile="MAX3D"><frame_rate>24.000000</frame_rate></technique><technique profile="FCOLLADA"><start_time>0.041667</start_time><end_time>2.000000</end_time></technique></extra>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#01_01_computer_station_techroom_glass"></instance_visual_scene>
+  </scene>
+</COLLADA>

@@ -1,0 +1,223 @@
+//#include "helpers/helper_modules_custom.hps";
+#include "custom/player/PlayerTypes_Custom.hps"
+
+//-------------------------------------------------
+
+//////////////////////////////////
+// GUN
+//////////////////////////////////
+
+//-------------------------------------------------
+
+enum eGunEvent
+{
+	eGunEvent_FireStart = 0,
+	eGunEvent_EmptyBullets = 2,
+	eGunEvent_ReloadEnd = 3,
+	eGunEvent_Spin = 4,
+	eGunEvent_OpenCylinder = 5,
+	eGunEvent_CloseCylinder = 6,
+	eGunEvent_ShowReloadBullet = 7,
+	eGunEvent_HideReloadBullet = 8,
+	eGunEvent_HideEjectedBullet = 9,
+	eGunEvent_ShowEjectedBullet = 10,
+	eGunEvent_ShotgunHammerReset = 11,
+	eGunEvent_ShotgunPumpAction = 12,
+	eGunEvent_ShotgunFeedNewShell = 13,
+	
+	eGunEvent_AlignCylinderForReload = 14
+}
+
+//-------------------------------------------------
+
+void Gun_ShowBulletCount(const tString &in asBulletType, bool abEmpty, bool abRemainOnScreen = true)
+{
+	iScrItemHandler_Interface@ pHandler = cast<iScrItemHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_ItemHandler) );
+	pHandler.ShowBulletCount(asBulletType, abEmpty, abRemainOnScreen);
+}
+
+//-------------------------------------------------
+
+bool Gun_IsWeaponType(const tString &in asType)
+{
+	return asType == "Gun" ||
+		   asType == "Shotgun" ||
+		   asType == "VolleyGun";
+}
+
+//-------------------------------------------------
+
+bool Gun_IsRevolverClassWeapon(const tString &in asType)
+{
+	return asType == "Gun" ||
+		   asType == "VolleyGun";
+}
+
+//-------------------------------------------------
+
+int Gun_GetAimStateId(const tString &in asType)
+{
+	if (asType == "Gun") 		return ePlayerState_Custom_UsingGun_Aim;
+	if (asType == "Shotgun") 	return ePlayerState_Custom_UsingShotgun_Aim;
+	if (asType == "VolleyGun") 	return ePlayerState_Custom_UsingVolleyGun_Aim;
+	
+	return 0;
+}
+
+//-------------------------------------------------
+
+int Gun_GetReloadStateId(const tString &in asType)
+{
+	if (asType == "Gun") 		return ePlayerState_Custom_UsingGun_Reload;
+	if (asType == "Shotgun") 	return ePlayerState_Custom_UsingShotgun_Reload;
+	if (asType == "VolleyGun") 	return ePlayerState_Custom_UsingVolleyGun_Reload;
+	
+	return 0;
+}
+
+//-------------------------------------------------
+
+void Gun_TriggerEvent(const tString &in asType, eGunEvent aEvent)
+{
+	if (Item_GetHeldType(eItemHandlerHand_Right) != asType)
+		return;
+		
+	tString sEnt = Item_GetHeldEntity(eItemHandlerHand_Right);
+	cScript_SetGlobalArgInt(0, int(aEvent));
+	cScript_RunGlobalFunc(sEnt, "cScrPropWeapon_Base", "_Global_TriggerEvent");
+}
+
+//-------------------------------------------------
+
+bool Gun_GetFullyLoaded(const tString &in asType)
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_RunGlobalFunc(sEnt, "cScrPropWeapon_Base", "_Global_GetFullyLoaded");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+bool Gun_GetHasSpentBullets(const tString &in asType)
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_RunGlobalFunc(sEnt, "cScrPropWeapon_Base", "_Global_GetHasSpentBullets");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+bool Gun_GetCanFire(const tString &in asType)
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_RunGlobalFunc(sEnt, "cScrPropWeapon_Base", "_Global_GetCanFire");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Gun_ActivateMuffledEffect(float afDuration)
+{
+	cScript_SetGlobalArgFloat(0, afDuration);
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_StartEarRingingEffect");
+}
+
+//-------------------------------------------------
+
+void Gun_DeactivateMuffledEffect()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_StopEarRingingSound");
+}
+
+//-------------------------------------------------
+
+bool Gun_GetMuffledEffectActive()
+{
+	return cLux_HasHideModeEffectUsers();
+}
+
+//-------------------------------------------------
+
+bool Gun_GetReloadAnimationDone(const tString &in asType)
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_RunGlobalFunc(sEnt, "cScrPropWeapon_Base", "_Global_GetReloadAnimationDone");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+//////////////////////////////////
+// REVOLVER
+//////////////////////////////////
+
+//-------------------------------------------------
+
+int Revolver_GetUnspentBulletCount(const tString &in asType = "Gun")
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_RunGlobalFunc(sEnt, "cScrPropGun", "_Global_GetUnspentBulletCount");
+	return cScript_GetGlobalReturnInt();
+}
+
+//-------------------------------------------------
+
+bool Revolver_GetCurrentChamberEmpty(const tString &in asType = "Gun")
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_RunGlobalFunc(sEnt, "cScrPropGun", "_Global_GetCurrentChamberEmpty");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+void Revolver_LoadChamber(int alChamber = -1, const tString &in asType = "Gun")
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory(asType));
+	cScript_SetGlobalArgInt(0, alChamber);
+	cScript_RunGlobalFunc(sEnt, "cScrPropGun", "_Global_LoadChamber");
+}
+
+//-------------------------------------------------
+
+int VolleyGun_GetLoadedBulletCount()
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory("VolleyGun"));
+	cScript_RunGlobalFunc(sEnt, "cScrPropVolleyGun", "_Global_GetLoadedBulletCount");
+	return cScript_GetGlobalReturnInt();
+}
+
+//-------------------------------------------------
+
+void VolleyGun_SetQueuedFire(bool abX)
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory("VolleyGun"));
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc(sEnt, "cScrPropVolleyGun", "_Global_SetQueuedVolleyFire");
+}
+
+//-------------------------------------------------
+
+bool VolleyGun_GetQueuedFire()
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory("VolleyGun"));
+	cScript_RunGlobalFunc(sEnt, "cScrPropVolleyGun", "_Global_GetQueuedVolleyFire");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------
+
+//////////////////////////////////
+// SHOTGUN
+//////////////////////////////////
+
+//-------------------------------------------------
+
+bool Shotgun_GetShellIsChambered()
+{
+	tString sEnt = Item_GetItemEntity(ItemType_GetFirstInInventory("Shotgun"));
+	cScript_RunGlobalFunc(sEnt, "cScrPropShotgun", "_Global_GetShellIsChambered");
+	return cScript_GetGlobalReturnBool();
+}
+
+//-------------------------------------------------

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset><contributor><author></author><authoring_tool>FBX COLLADA exporter</authoring_tool><comments></comments></contributor><created>2014-12-08T10:06:33Z</created><keywords></keywords><modified>2014-12-08T10:06:33Z</modified><revision></revision><subject></subject><title></title><unit meter="1.000000" name="centimeter"></unit><up_axis>Y_UP</up_axis></asset>
+  <library_images>
+    <image id="Map #1-image" name="Map #1"><init_from>file://D:\SOMA\trunk\redist\static_objects\station\special\tau_8sided_room.dds</init_from></image>
+  </library_images>
+  <library_materials>
+    <material id="lambert8" name="lambert8">
+      <instance_effect url="#lambert8-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert8-fx" name="lambert8">
+      <profile_COMMON>
+        <technique sid="standard">
+          <phong>
+            <emission>
+              <color sid="emission">0.000000  0.000000 0.000000 1.000000</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.000000  0.000000 0.000000 1.000000</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map #1-image" texcoord="CHANNEL0">
+                <extra>
+                  <technique profile="MAYA">
+                    <wrapU sid="wrapU0">TRUE</wrapU>
+                    <wrapV sid="wrapV0">TRUE</wrapV>
+                    <blend_mode>ADD</blend_mode>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.000000  0.000000 0.000000 1.000000</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">1.071773</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0.000000  0.000000 0.000000 1.000000</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">1.000000</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">1.000000  1.000000 1.000000 1.000000</color>
+            </transparent>
+            <transparency>
+              <float sid="transparency">0.000000</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="Object010-lib" name="Object010Mesh">
+      <mesh>
+        <source id="Object010-POSITION">
+          <float_array id="Object010-POSITION-array" count="24">
+1.500000 -2.500000 0.000000
+1.742266 -2.082994 0.000000
+1.787076 -1.987811 0.056461
+-2.500000 1.500000 0.000001
+2.500000 0.499999 4.000002
+0.468144 2.499999 4.000002
+-1.988140 1.787112 0.056654
+-2.082994 1.742266 0.000001
+</float_array>
+          <technique_common>
+            <accessor source="#Object010-POSITION-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Object010-Normal0">
+          <float_array id="Object010-Normal0-array" count="54">
+-0.000000 0.000000 -1.000000
+-0.000000 0.000000 -1.000000
+-0.000000 0.000000 -1.000000
+-0.000000 0.000000 -1.000000
+-0.000000 0.000000 -1.000000
+-0.000000 0.000000 -1.000000
+0.610546 0.620271 -0.492439
+0.610546 0.620271 -0.492439
+0.610546 0.620271 -0.492439
+0.613241 0.613314 -0.497777
+0.613241 0.613314 -0.497777
+0.613241 0.613314 -0.497777
+0.350285 0.350357 -0.868648
+0.350285 0.350357 -0.868648
+0.350285 0.350357 -0.868648
+0.351788 0.351789 -0.867462
+0.351788 0.351789 -0.867462
+0.351788 0.351789 -0.867462
+</float_array>
+          <technique_common>
+            <accessor source="#Object010-Normal0-array" count="18" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Object010-UV0">
+          <float_array id="Object010-UV0-array" count="16">
+0.431280 0.518287
+0.427477 0.489308
+0.432379 0.525371
+0.603231 0.490179
+0.471022 0.808044
+0.559601 0.807789
+0.598249 0.526197
+0.599357 0.519125
+</float_array>
+          <technique_common>
+            <accessor source="#Object010-UV0-array" count="8" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Object010-VERTEX">
+          <input semantic="POSITION" source="#Object010-POSITION"/>
+        </vertices>
+        <triangles count="6" material="lambert8"><input semantic="VERTEX" offset="0" source="#Object010-VERTEX"/><input semantic="NORMAL" offset="1" source="#Object010-Normal0"/><input semantic="TEXCOORD" offset="2" set="0" source="#Object010-UV0"/><p> 7 0 7 1 1 0 0 2 1 0 3 1 3 4 3 7 5 7 6 6 6 5 7 5 4 8 4 4 9 4 2 10 2 6 11 6 6 12 6 2 13 2 1 14 0 1 15 0 7 16 7 6 17 6</p></triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="04_02_tau_top_small" name="04_02_tau_top_small">
+      <node name="Object010" id="Object010" sid="Object010"><matrix sid="matrix">0.707107 -0.707107 -0.000000 2.808114 0.000000 0.000000 1.000000 -0.000000 -0.707107 -0.707107 0.000000 -0.720404 0.000000 0.000000 0.000000 1.000000</matrix><instance_geometry url="#Object010-lib"><bind_material><technique_common><instance_material symbol="lambert8" target="#lambert8"/></technique_common></bind_material></instance_geometry><extra><technique profile="FCOLLADA"><visibility>1.000000</visibility></technique></extra></node>
+      <extra><technique profile="MAX3D"><frame_rate>30.000000</frame_rate></technique><technique profile="FCOLLADA"><start_time>0.000000</start_time><end_time>3.333333</end_time></technique></extra>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#04_02_tau_top_small"></instance_visual_scene>
+  </scene>
+</COLLADA>

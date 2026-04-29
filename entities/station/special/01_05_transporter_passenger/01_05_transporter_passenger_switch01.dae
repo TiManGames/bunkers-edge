@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///D:/work/DropBox/Team/Depth_marcus/models/Levels/01_05/transporter_personnel/train_passenger_UVdone.ma</source_data>
+    </contributor>
+    <created>2012-11-26T15:00:35</created>
+    <modified>2012-11-26T15:00:35</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="MAT" name="MAT">
+      <instance_effect url="#MAT-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="MAT-fx">
+      <profile_COMMON>
+        <newparam sid="file10-surface">
+          <surface type="2D">
+            <init_from>file10</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file10-sampler">
+          <sampler2D>
+            <source>file10-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file10-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float>0.3</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file10" name="file10">
+      <init_from>file:///D:/work/depth/redist/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file10</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="switchShape7" name="switchShape7">
+      <mesh>
+        <source id="switchShape7-positions" name="switchShape7-positions">
+          <float_array id="switchShape7-positions-array" count="114">0.02429428 0.01552109 -0.007965393 0.0242511 0.002434082 -0.03018036 0.02435799 -0.03811554 0.02363007 0.02436951 -0.01315201 0.03008484 -0.02432632 0.01552109 -0.007869873 -0.02436951 0.002434082 -0.03008484 -0.02426262 -0.03811554 0.02372559 -0.0242511 -0.01315201 0.03018036 0.0243029 -0.01784073 -0.003276672 -0.02431686 -0.01784073 -0.003181458 -0.02425056 -0.02803085 0.03013641 0.02436874 -0.02803085 0.03003784 0.02426735 0.01137482 -0.02225281 -0.02435326 0.01137482 -0.02215729 -0.01285469 -0.02803085 0.03011414 -0.0128553 -0.01315201 0.03015808 -0.0129306 0.01552109 -0.007892151 -0.01295769 0.01137451 -0.02217987 0.01192062 -0.02803101 0.03006317 0.01192139 -0.01315201 0.03011017 0.01184624 0.01552109 -0.007940063 0.0118177 0.01137482 -0.02223114 0.01190659 -0.02241226 0.02260895 -0.01287018 -0.02241226 0.02265686 -0.01294563 0.00679718 -0.01610443 0.01182945 0.006797485 -0.01615631 0.01189194 -0.03143463 0.01570496 0.01181549 -0.002225342 -0.02305664 -0.01288345 -0.03143463 0.01575592 -0.01295975 -0.002225342 -0.02300507 0.02432686 0.01274689 0.008016052 0.02435577 0.001443481 0.02301422 0.01187729 0.01274643 0.00803772 0.01190773 0.001443024 0.02303955 -0.02429382 0.01274658 0.008111267 -0.02426521 0.001443024 0.02311005 -0.01289795 0.01274658 0.008089294 -0.01286987 0.001443024 0.02308777</float_array>
+          <technique_common>
+            <accessor source="#switchShape7-positions-array" count="38" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="switchShape7-normals" name="switchShape7-normals">
+          <float_array id="switchShape7-normals-array" count="354">7.86669e-4 0.9175806 0.3975491 7.86669e-4 0.9175806 0.3975491 3.32406e-4 0.9852607 0.1710592 3.32406e-4 0.9852607 0.1710592 -5.14963e-4 0.9603909 -0.278656 -5.14963e-4 0.9603909 -0.278656 0.001979312 -0.003128001 0.9999931 0.001979312 -0.003128001 0.9999931 0.001979312 -0.003128001 0.9999931 0.001979312 -0.003128001 0.9999931 0.001530006 0.6350453 0.7724734 0.001530006 0.6350453 0.7724734 0.9999979 0 -0.002031377 0.9999979 0 -0.002050672 0.999998 0 -0.002013911 0.9999982 0 -0.001953378 0.9999982 0 -0.001953378 0.9999979 0 -0.002031377 0.999998 0 -0.002013911 0.999998 0 -0.00200627 0.9999979 0 -0.002079836 0.9999979 0 -0.002079836 0.999998 0 -0.002013911 -0.999998 0 0.001995531 -0.9999979 0 0.002064575 -0.9999979 0 0.002064575 -0.999998 0 0.00198252 -0.9999981 0 0.001958747 -0.9999981 0 0.001958747 -0.999998 0 0.001970445 -0.999998 0 0.00198252 -0.999998 0 0.001970445 -0.999998 0 0.00198027 -0.999998 0 0.00198252 0.001676937 -0.5364147 0.8439528 0.001676937 -0.5364147 0.8439528 0.001676937 -0.5364147 0.8439528 -0.001476959 0.663408 -0.7482564 0.001992279 -0.003112001 0.9999931 0.001992279 -0.003112001 0.9999931 0.001515479 0.6350507 0.7724689 0.001515479 0.6350507 0.7724689 7.67354e-4 0.9175802 0.3975498 7.67354e-4 0.9175802 0.3975498 3.25082e-4 0.985257 0.1710807 3.25082e-4 0.985257 0.1710807 -0.001476959 0.663408 -0.7482564 -0.001476959 0.663408 -0.7482564 0.001180867 0.7986398 0.6018082 0.001180867 0.7986398 0.6018082 0.001180867 0.7986398 0.6018082 0.001180867 0.7986398 0.6018082 -0.9999975 0 0.002252901 -0.9999975 0 0.002252901 -0.9999975 0 0.002252901 0.9999974 0 -0.002260543 0.9999974 0 -0.002260543 0.9999974 0 -0.002260543 -0.9999979 0 0.002025963 -0.9999979 0 0.002025963 -0.9999979 0 0.002025963 0.001172112 0.7986711 0.6017666 0.001172112 0.7986711 0.6017666 0.001172112 0.7986711 0.6017666 0.001172112 0.7986711 0.6017666 0.9999985 0 -0.00173366 0.9999985 0 -0.00173366 0.9999985 0 -0.00173366 0.999998 0 -0.001967281 0.999998 0 -0.001967281 0.999998 0 -0.001967281 0.999998 0 -0.001967281 0.999998 0 -0.0019749 0.999998 0 -0.0019749 -0.999998 0 0.0019749 -0.999998 0 0.0019749 -0.999998 0 0.0019749 -0.999998 0 0.0019749 -0.999998 0 0.002004441 -0.999998 0 0.002004441 -0.999998 0 0.002004441 -0.999998 0 0.002004441 -0.999998 0 0.002034542 -0.999998 0 0.002034542 -0.001573785 0.6075472 -0.794282 -0.001573785 0.6075472 -0.794282 -0.001573785 0.6075472 -0.794282 -0.001573785 0.6075472 -0.794282 0.999998 0 -0.0019749 0.999998 0 -0.0019749 0.999998 0 -0.001981606 0.999998 0 -0.001981606 0.001562689 -0.6075248 0.7942991 0.001562689 -0.6075248 0.7942991 0.001562689 -0.6075248 0.7942991 0.001562689 -0.6075248 0.7942991 0.999998 0 -0.002013911 0.999998 0 -0.001962826 0.999998 0 -0.00200627 -0.999998 0 0.00198252 -0.9999981 0 0.001952065 -0.999998 0 0.001995531 0.999998 0 -0.002013911 0.9999979 0 -0.002050672 0.999998 0 -0.001962826 -0.9999981 0 0.001952065 -0.999998 0 0.00198252 -0.999998 0 0.00198027 0.001676937 -0.5364147 0.8439528 0.001676937 -0.5364147 0.8439528 0.001676937 -0.5364147 0.8439528 0.001979312 -0.003128001 0.9999931 0.001676937 -0.5364147 0.8439528 -0.001476959 0.663408 -0.7482564 -0.001476959 0.663408 -0.7482564 -0.001476959 0.663408 -0.7482564 -5.14963e-4 0.9603909 -0.278656 -0.001476959 0.663408 -0.7482564</float_array>
+          <technique_common>
+            <accessor source="#switchShape7-normals-array" count="118" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="switchShape7-map1" name="switchShape7-map1">
+          <float_array id="switchShape7-map1-array" count="148">0.6931521 0.3859962 0.6905701 0.3859701 0.6905995 0.382609 0.6931822 0.3826309 0.6906241 0.3795246 0.6932061 0.3795463 0.6904515 0.3963103 0.6904906 0.3932248 0.6930733 0.3932568 0.6930344 0.3963414 0.6905321 0.3898638 0.6931124 0.3898911 0.6946192 0.392899 0.6931124 0.3898911 0.6996062 0.3880094 0.6995379 0.3949924 0.6970716 0.3947738 0.694719 0.3830188 0.697208 0.3811961 0.6996785 0.3810237 0.694719 0.3830188 0.697208 0.3811961 0.6996785 0.3810237 0.6996062 0.3880094 0.6995379 0.3949924 0.6970716 0.3947738 0.6946192 0.392899 0.7483295 0.4235739 0.7458509 0.4235719 0.7458534 0.4209903 0.7458561 0.4158525 0.7458582 0.413489 0.7483357 0.4134915 0.7458582 0.413489 0.7483357 0.4134915 0.7483295 0.4235739 0.7458509 0.4235719 0.7458534 0.4209903 0.7458561 0.4158525 0.6932061 0.3795463 0.6931822 0.3826309 0.6905995 0.382609 0.6906241 0.3795246 0.6931521 0.3859962 0.6905701 0.3859701 0.6905321 0.3898638 0.6930733 0.3932568 0.6904906 0.3932248 0.6930344 0.3963414 0.6904515 0.3963103 0.743916 0.420989 0.74392 0.4158509 0.6890668 0.382962 0.6865962 0.383025 0.6866156 0.3810888 0.6864951 0.3930879 0.6889656 0.3928418 0.6864795 0.3946648 0.6864951 0.3930879 0.6889656 0.3928418 0.6864795 0.3946648 0.743916 0.420989 0.74392 0.4158509 0.6890668 0.382962 0.6865962 0.383025 0.6866156 0.3810888 0.6841394 0.3930809 0.6842415 0.3830191 0.7415614 0.4209882 0.7415639 0.4158509 0.6841394 0.3930809 0.6842415 0.3830191 0.7415614 0.4209882 0.7415639 0.4158509</float_array>
+          <technique_common>
+            <accessor source="#switchShape7-map1-array" count="74" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="switchShape7-vertices" name="switchShape7-vertices">
+          <input semantic="POSITION" source="#switchShape7-positions"/>
+        </vertices>
+        <triangles material="blinn5SG" count="66">
+          <input semantic="VERTEX" source="#switchShape7-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#switchShape7-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#switchShape7-map1" offset="2" set="0"/>
+          <p>34 0 0 36 1 1 4 3 3 4 3 3 36 1 1 16 2 2 16 2 2 17 4 4 4 3 3 4 3 3 17 4 4 13 5 5 14 6 6 15 7 7 10 9 9 10 9 9 15 7 7 7 8 8 15 7 7 37 10 10 7 8 8 7 8 8 37 10 10 35 11 11 0 12 12 30 13 13 8 14 14 0 17 12 8 18 14 12 16 16 1 15 15 12 16 16 8 18 14 3 19 17 11 20 18 8 22 14 11 20 18 2 21 19 8 22 14 4 23 20 13 24 21 9 26 23 13 24 21 5 25 22 9 26 23 7 29 26 9 30 23 10 28 25 6 27 24 10 28 25 9 30 23 7 31 26 35 32 11 9 33 23 2 34 27 11 35 28 18 36 29 17 4 37 5 37 35 13 5 36 11 35 39 3 38 40 18 36 42 18 36 42 3 38 40 19 39 41 3 38 40 31 40 43 19 39 41 19 39 41 31 40 43 33 41 44 32 42 45 30 43 13 20 45 47 20 45 47 30 43 13 0 44 46 0 44 46 12 46 48 20 45 47 20 45 47 12 46 48 21 47 49 22 48 50 23 49 51 18 51 29 18 51 29 23 49 51 14 50 30 19 52 52 22 53 53 18 54 54 23 55 55 15 56 56 14 57 57 25 58 58 20 59 59 21 60 60 21 61 38 17 62 37 25 64 62 25 64 62 17 62 37 24 63 61 16 65 63 24 66 64 17 67 65 24 73 64 16 68 63 23 72 55 16 68 63 36 69 1 23 72 55 36 69 1 37 70 10 23 72 55 37 70 10 15 71 56 23 72 55 25 78 58 22 79 53 20 77 59 20 77 59 22 79 53 32 76 45 32 76 45 22 79 53 33 75 44 19 74 52 33 75 44 22 79 53 22 80 53 25 81 58 26 83 67 26 83 67 25 81 58 27 82 66 23 84 51 22 85 50 28 87 69 28 87 69 22 85 50 26 86 68 23 89 55 28 90 70 24 88 64 24 88 64 28 90 70 29 91 71 25 92 62 24 93 61 27 95 73 27 95 73 24 93 61 29 94 72 8 96 14 31 97 43 3 98 17 9 99 23 34 100 0 4 101 20 31 40 43 30 43 13 33 41 44 33 41 44 30 43 13 32 42 45 34 0 0 35 11 11 36 1 1 36 1 1 35 11 11 37 10 10 8 102 14 30 103 13 31 104 43 34 105 0 9 106 23 35 107 11 6 108 32 14 6 30 10 9 31 2 109 27 18 110 29 6 112 32 6 112 32 18 110 29 14 111 30 1 114 34 5 115 35 21 113 38 21 113 38 5 115 35 17 116 37 12 46 33 1 117 34 21 47 38</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>switchShape7</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+    <geometry id="switch1_knobShape" name="switch1_knobShape">
+      <mesh>
+        <source id="switch1_knobShape-positions" name="switch1_knobShape-positions">
+          <float_array id="switch1_knobShape-positions-array" count="96">0.01169853 -9.86023e-4 0.01911377 0.011661 0.009892578 6.43921e-4 0.01162048 0.004525909 -0.02010529 0.01159966 -0.01394257 -0.03098389 0.01160965 -0.03469406 -0.0256192 0.01164711 -0.04557266 -0.007149658 0.01168602 -0.04020599 0.01360046 0.01170967 -0.02173767 0.0244812 -0.01307976 -9.85718e-4 0.0191626 -0.01311646 0.009892883 6.92444e-4 -0.01315704 0.004526062 -0.02005676 -0.01317902 -0.01394226 -0.03093475 -0.01316879 -0.0346936 -0.02557068 -0.01313148 -0.04557251 -0.00710144 -0.01308937 -0.04020569 0.01365173 -0.01306854 -0.02173737 0.02453033 0.006936569 0.002774658 0.01274109 0.006924896 0.006132812 0.007037048 -0.008353806 0.006132812 0.007069397 -0.008343658 0.002774658 0.01276947 0.002941818 0.008490906 0.01611359 0.002930832 0.01184937 0.01041382 -0.004350662 0.01184937 0.01042908 -0.004339523 0.008490906 0.01612915 0.006545944 0.03400742 0.03489929 0.006524048 0.04065399 0.02361389 -0.007887878 0.04065399 0.02364136 -0.007865295 0.03400742 0.03492584 0.00318573 0.04202789 0.03608276 0.003174896 0.04557266 0.03006256 -0.004512405 0.04557266 0.03008087 -0.004501419 0.04202789 0.0360968</float_array>
+          <technique_common>
+            <accessor source="#switch1_knobShape-positions-array" count="32" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="switch1_knobShape-normals" name="switch1_knobShape-normals">
+          <float_array id="switch1_knobShape-normals-array" count="96">0.00191615 0.2503851 0.9681444 -4.88706e-4 0.9681486 -0.2503754 -4.88706e-4 0.9681486 -0.2503754 -0.001706814 0.50754 -0.8616264 -0.001944043 -0.250369 -0.9681485 -0.001017649 -0.8616285 -0.5075385 4.92689e-4 -0.9681435 0.2503956 0.001680569 -0.5075452 0.8616235 0.00191615 0.2503851 0.9681444 -4.88706e-4 0.9681486 -0.2503754 -4.88706e-4 0.9681486 -0.2503754 -0.001706814 0.50754 -0.8616264 -0.001944043 -0.250369 -0.9681485 -0.001017649 -0.8616285 -0.5075385 4.92689e-4 -0.9681435 0.2503956 0.001680569 -0.5075452 0.8616235 0.001072089 0.8616033 0.5075812 0.001060348 0.8616291 0.5075374 9.79263e-4 0.8616182 0.5075559 9.90993e-4 0.8615924 0.5075999 0.8568758 0.445001 0.260265 0.8568758 0.445001 0.260265 -0.001727534 0.4628251 -0.886448 -0.8560923 0.4446459 0.263431 0.9935458 -0.09687803 -0.05900345 0.9935458 -0.09687803 -0.05900345 -0.00154139 0.6244168 -0.7810898 -0.993785 -0.09678297 -0.05499268 0.001010943 0.8616777 0.5074548 0.001010943 0.8616777 0.5074548 0.001010943 0.8616777 0.5074548 0.001010943 0.8616777 0.5074548</float_array>
+          <technique_common>
+            <accessor source="#switch1_knobShape-normals-array" count="32" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="switch1_knobShape-map1" name="switch1_knobShape-map1">
+          <float_array id="switch1_knobShape-map1-array" count="88">0.6898375 0.4219986 0.6898932 0.4234547 0.6883075 0.4236075 0.6880873 0.4221726 0.7512963 0.4384366 0.7513127 0.4339994 0.7564518 0.434014 0.7564352 0.438464 0.7513192 0.4295576 0.7564583 0.4295645 0.7513278 0.4251142 0.7564656 0.4251207 0.7510436 0.460634 0.7511101 0.4561913 0.7562472 0.4562637 0.7561823 0.4607074 0.7511717 0.4517479 0.7563083 0.4518157 0.7512274 0.4473112 0.7563655 0.4473659 0.7512735 0.4428745 0.7564094 0.4429138 0.7522728 0.4399769 0.7522666 0.4413478 0.7554433 0.4399972 0.7554346 0.4413695 0.6895721 0.4124006 0.6919914 0.4121442 0.6919507 0.4137768 0.6902645 0.4138202 0.6941156 0.4123098 0.6937518 0.4137806 0.6955957 0.4124838 0.6952136 0.4138775 0.6875538 0.4127904 0.68863 0.4138688 0.6919723 0.4203743 0.6897449 0.4203532 0.6944879 0.4203188 0.6969604 0.4203066 0.6870149 0.420382 0.6920089 0.4220249 0.6942989 0.4219649 0.6960393 0.4221311</float_array>
+          <technique_common>
+            <accessor source="#switch1_knobShape-map1-array" count="44" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="switch1_knobShape-vertices" name="switch1_knobShape-vertices">
+          <input semantic="POSITION" source="#switch1_knobShape-positions"/>
+          <input semantic="NORMAL" source="#switch1_knobShape-normals"/>
+        </vertices>
+        <triangles material="blinn5SG" count="48">
+          <input semantic="VERTEX" source="#switch1_knobShape-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#switch1_knobShape-map1" offset="1" set="0"/>
+          <p>28 0 29 1 31 3 31 3 29 1 30 2 1 4 2 5 9 7 9 7 2 5 10 6 2 5 3 8 10 6 10 6 3 8 11 9 3 8 4 10 11 9 11 9 4 10 12 11 4 12 5 13 12 15 12 15 5 13 13 14 5 13 6 16 13 14 13 14 6 16 14 17 6 16 7 18 14 17 14 17 7 18 15 19 7 18 0 20 15 19 15 19 0 20 8 21 0 20 1 4 16 23 16 23 1 4 17 22 1 4 9 7 17 22 17 22 9 7 18 24 9 7 8 21 18 24 18 24 8 21 19 25 8 21 0 20 19 25 19 25 0 20 16 23 16 26 17 27 20 29 20 29 17 27 21 28 17 27 18 30 21 28 21 28 18 30 22 31 18 30 19 32 22 31 22 31 19 32 23 33 19 34 16 26 23 35 23 35 16 26 20 29 20 29 21 28 24 37 24 37 21 28 25 36 21 28 22 31 25 36 25 36 22 31 26 38 22 31 23 33 26 38 26 38 23 33 27 39 23 35 20 29 27 40 27 40 20 29 24 37 24 37 25 36 28 0 28 0 25 36 29 41 25 36 26 38 29 41 29 41 26 38 30 42 26 38 27 39 30 42 30 42 27 39 31 43 27 40 24 37 31 3 31 3 24 37 28 0</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>switch1_knobShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="train_passenger_UVdone">
+      <node id="switch7" name="switch7" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#switchShape7">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="blinn5SG" target="#MAT">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <node id="switch1_knob" name="switch1_knob" type="NODE">
+          <translate sid="translate">0 0 0</translate>
+          <scale sid="scale">1 1 1</scale>
+          <instance_geometry url="#switch1_knobShape">
+            <bind_material>
+              <technique_common>
+                <instance_material symbol="blinn5SG" target="#MAT">
+                  <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                </instance_material>
+              </technique_common>
+            </bind_material>
+          </instance_geometry>
+          <extra>
+            <technique profile="OpenCOLLADAMaya">
+              <originalMayaNodeId>switch1_knob</originalMayaNodeId>
+            </technique>
+          </extra>
+        </node>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>switch7</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=0;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/untitled</source_data>
+    </contributor>
+    <created>2014-06-19T11:41:37</created>
+    <modified>2014-06-19T11:41:37</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert4" name="lambert4">
+      <instance_effect url="#lambert4-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert4-fx">
+      <profile_COMMON>
+        <newparam sid="file3-surface">
+          <surface type="2D">
+            <init_from>file3</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file3-sampler">
+          <sampler2D>
+            <source>file3-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file3-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file3" name="file3">
+      <init_from>file:///E:/depth/redist/entities/station/special/03_02_tape_blockoff/03_02_tape_blockoff.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file3</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_controllers>
+    <controller id="polySurfaceShape5-skin" name="polySurfaceShape5-skin">
+      <skin source="#polySurfaceShape5">
+        <bind_shape_matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</bind_shape_matrix>
+        <source id="polySurfaceShape5-skin-joints" name="polySurfaceShape5-skin-joints">
+          <Name_array id="polySurfaceShape5-skin-joints-array" count="10">joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10</Name_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape5-skin-joints-array" count="10" stride="1">
+              <param name="JOINT" type="name"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape5-skin-bind_poses" name="polySurfaceShape5-skin-bind_poses">
+          <float_array id="polySurfaceShape5-skin-bind_poses-array" count="160">0 0 -1 0.5 0 1 0 0.07222291 1 0 0 2 0 0 0 1 1 0 0 2 0 1 0 0.07222291 0 0 1 0 0 0 0 1 1 0 0 1.5 0 1 0 0.1419597 0 0 1 0 0 0 0 1 1 0 0 1 0 1 0 0.2043288 0 0 1 0 0 0 0 1 1 0 0 0.5 0 1 0 0.2668001 0 0 1 0 0 0 0 1 1 0 0 0 0 1 0 0.2939242 0 0 1 0 0 0 0 1 1 0 0 -0.5 0 1 0 0.2666841 0 0 1 0 0 0 0 1 1 0 0 -1 0 1 0 0.2199867 0 0 1 0 0 0 0 1 1 0 0 -1.5 0 1 0 0.1499407 0 0 1 0 0 0 0 1 1 0 0 -2 0 1 0 0.06822033 0 0 1 0 0 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape5-skin-bind_poses-array" count="10" stride="16">
+              <param name="TRANSFORM" type="float4x4"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape5-skin-weights" name="polySurfaceShape5-skin-weights">
+          <float_array id="polySurfaceShape5-skin-weights-array" count="138">1 2.42919e-4 0.4998785 0.4998785 2.49571e-4 0.4998752 0.4998752 0.853869 0.1458294 3.01566e-4 0.9029839 0.09684222 1.73856e-4 0.2526535 0.7464359 9.10585e-4 0.04945689 0.9503794 1.63718e-4 0.5510536 0.4486594 2.86997e-4 0.4820933 0.5177564 1.50271e-4 0.1749865 0.8246189 3.94635e-4 0.2235817 0.776005 4.1328e-4 0.1820212 0.8176021 3.76723e-4 0.2873278 0.7123678 3.04377e-4 0.2035863 0.7960096 4.04144e-4 0.1268183 0.872727 4.54689e-4 0.1476838 0.8520627 2.53522e-4 0.2883923 0.7111011 5.06618e-4 0.2053359 0.7942256 4.38526e-4 0.1590037 0.8405814 4.14772e-4 0.2022596 0.7972424 4.98064e-4 0.1037715 0.8958313 3.97265e-4 0.1660357 0.8337118 2.52549e-4 0.3440925 0.6555495 3.58047e-4 0.9997504 1.98609e-4 2.42919e-4 0.4998785 0.4998785 0.999482 4.17502e-4 1.00511e-4 2.49571e-4 0.4998752 0.4998752 0.853869 0.1458294 3.01566e-4 0.9029839 0.09684222 1.73856e-4 0.2526535 0.7464359 9.10585e-4 0.04945689 0.9503794 1.63718e-4 0.5510536 0.4486594 2.86997e-4 0.4820933 0.5177564 1.50271e-4 0.1749865 0.8246189 3.94635e-4 0.2235817 0.776005 4.1328e-4 0.1820212 0.8176021 3.76723e-4 0.2873278 0.7123678 3.04377e-4 0.2035863 0.7960096 4.04144e-4 0.1268183 0.872727 4.54689e-4 0.1476838 0.8520627 2.53522e-4 0.2883923 0.7111011 5.06618e-4 0.2053359 0.7942256 4.38526e-4 0.1590037 0.8405814 4.14772e-4 0.2022596 0.7972424 4.98064e-4 0.1037715 0.8958313 3.97265e-4 0.1660357 0.8337118 2.52549e-4 0.3440925 0.6555495 3.58047e-4 </float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape5-skin-weights-array" count="138" stride="1">
+              <param name="WEIGHT" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <joints>
+          <input semantic="JOINT" source="#polySurfaceShape5-skin-joints"/>
+          <input semantic="INV_BIND_MATRIX" source="#polySurfaceShape5-skin-bind_poses"/>
+        </joints>
+        <vertex_weights count="46">
+          <input semantic="JOINT" source="#polySurfaceShape5-skin-joints" offset="0"/>
+          <input semantic="WEIGHT" source="#polySurfaceShape5-skin-weights" offset="1"/>
+          <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 2 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 </vcount>
+          <v>7 1 8 2 9 3 7 4 8 5 9 6 0 7 1 8 2 9 0 10 1 11 2 12 0 13 1 14 2 15 0 16 1 17 2 18 0 19 1 20 2 21 0 22 1 23 2 24 4 25 5 26 6 27 4 28 5 29 6 30 6 31 7 32 8 33 6 34 7 35 8 36 2 37 3 38 4 39 2 40 3 41 4 42 5 43 6 44 7 45 5 46 6 47 7 48 3 49 4 50 5 51 3 52 4 53 5 54 1 55 2 56 3 57 1 58 2 59 3 60 7 61 8 62 9 63 7 64 8 65 9 66 0 67 1 68 7 69 8 70 9 71 0 72 1 73 2 74 7 75 8 76 9 77 0 78 1 79 2 80 0 81 1 82 2 83 0 84 1 85 2 86 0 87 1 88 2 89 0 90 1 91 2 92 0 93 1 94 2 95 4 96 5 97 6 98 4 99 5 100 6 101 6 102 7 103 8 104 6 105 7 106 8 107 2 108 3 109 4 110 2 111 3 112 4 113 5 114 6 115 7 116 5 117 6 118 7 119 3 120 4 121 5 122 3 123 4 124 5 125 1 126 2 127 3 128 1 129 2 130 3 131 7 132 8 133 9 134 7 135 8 136 9 137 </v>
+        </vertex_weights>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>polySurfaceShape5-skin</originalMayaNodeId>
+          </technique>
+        </extra>
+      </skin>
+    </controller>
+  </library_controllers>
+  <library_geometries>
+    <geometry id="polySurfaceShape5" name="polySurfaceShape5">
+      <mesh>
+        <source id="polySurfaceShape5-positions" name="polySurfaceShape5-positions">
+          <float_array id="polySurfaceShape5-positions-array" count="138">2.0514 -0.131998 0 2.0514 0 0 -2 0 0.08605639 -2 -0.131998 0.08605639 -1.91913 0 0 -1.91913 -0.131998 0 -1.978133 0 0.02743826 -1.978133 -0.131998 0.02743826 0.06613464 -0.2257697 0 0.06613464 -0.3577676 0 1.058767 -0.1464752 0 1.058767 -0.2784732 0 -0.9264979 -0.1464752 0 -0.9264979 -0.2784732 0 0.5624509 -0.2030922 0 0.5624509 -0.3350902 0 -0.4301816 -0.2030922 0 -0.4301816 -0.3350902 0 -1.422814 -0.08143631 0 -1.422814 -0.2134344 0 1.555083 -0.08143646 0 1.555083 -0.2134344 0 -2 -0.131998 0.5 2.0514 -0.131998 0 -2 0 0.5 2.0514 0 0 -2 0 0.08605639 -2 -0.131998 0.08605639 -1.91913 0 0 -1.91913 -0.131998 0 -1.978133 0 0.02743826 -1.978133 -0.131998 0.02743826 0.06613464 -0.2257697 0 0.06613464 -0.3577676 0 1.058767 -0.1464752 0 1.058767 -0.2784732 0 -0.9264979 -0.1464752 0 -0.9264979 -0.2784732 0 0.5624509 -0.2030922 0 0.5624509 -0.3350902 0 -0.4301816 -0.2030922 0 -0.4301816 -0.3350902 0 -1.422814 -0.08143631 0 -1.422814 -0.2134344 0 1.555083 -0.08143646 0 1.555083 -0.2134344 0</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape5-positions-array" count="46" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape5-normals" name="polySurfaceShape5-normals">
+          <float_array id="polySurfaceShape5-normals-array" count="138">0 0 -0.9999999 0 0 -0.9999999 -0.9369315 0 -0.3495131 -0.9369315 0 -0.3495131 -0.2159287 0 -0.9764091 -0.2159287 0 -0.9764091 -0.7342188 0 -0.6789128 -0.7342188 0 -0.6789128 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0.9999999 0 0 0 0 0.9999999 0.9999999 0 0 0 0 0.9999999 0.9841067 0 0.1775789 0.9841067 0 0.1775789 0.2159287 0 0.9764091 0.2159287 0 0.9764091 0.7342188 0 0.6789128 0.7342188 0 0.6789128 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape5-normals-array" count="46" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape5-map1" name="polySurfaceShape5-map1">
+          <float_array id="polySurfaceShape5-map1-array" count="100">0.5801045 0.5030309 0.7674929 0.5030309 0.7674929 0.7057004 0.5801045 0.7057014 0.1747353 0.7541779 0.1747352 0.9568493 0.1984034 0.7541779 0.2230346 0.7541779 0.2230346 0.9568491 0.1984034 0.9568491 0.7925652 0.7541779 0.9812204 0.7541779 0.01719379 0.7057026 0.7925652 0.9568491 0.2050575 0.5030314 0.3925751 0.5030314 0.3925751 0.7057021 0.2050575 0.7057028 0.413308 0.7541779 0.6030715 0.7541779 0.6030712 0.9568493 0.413308 0.9568493 0.9812204 0.9568491 0.01719379 0.5030314 0.5801045 0.5030309 0.7674929 0.5030309 0.7674929 0.7057004 0.5801045 0.7057014 0.01852185 0.7541779 0.1747353 0.7541779 0.1747352 0.9568493 0.01852188 0.9568493 0.1984034 0.7541779 0.2230346 0.7541779 0.2230346 0.9568491 0.1984034 0.9568491 0.7925652 0.7541779 0.9812204 0.7541779 0.9812204 0.9568491 0.7925652 0.9568491 0.2050575 0.5030314 0.3925751 0.5030314 0.3925751 0.7057021 0.2050575 0.7057028 0.413308 0.7541779 0.6030715 0.7541779 0.6030712 0.9568493 0.413308 0.9568493 0.01719379 0.5030314 0.01719379 0.7057026</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape5-map1-array" count="50" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurfaceShape5-vertices" name="polySurfaceShape5-vertices">
+          <input semantic="POSITION" source="#polySurfaceShape5-positions"/>
+          <input semantic="NORMAL" source="#polySurfaceShape5-normals"/>
+        </vertices>
+        <triangles material="lambert4SG" count="42">
+          <input semantic="VERTEX" source="#polySurfaceShape5-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#polySurfaceShape5-map1" offset="1" set="0"/>
+          <p>21 0 20 3 0 1 0 1 20 3 1 2 7 6 6 9 5 7 5 7 6 9 4 8 3 4 2 5 7 6 7 6 2 5 6 9 16 13 8 22 17 10 17 10 8 22 9 11 15 14 14 17 11 15 11 15 14 17 10 16 18 21 12 20 19 18 19 18 12 20 13 19 9 23 8 12 15 14 15 14 8 12 14 17 12 20 16 13 13 19 13 19 16 13 17 10 4 8 18 21 5 7 5 7 18 21 19 18 11 15 10 16 21 0 21 0 10 16 20 3 45 24 23 25 44 27 44 27 23 25 25 26 22 28 27 29 24 31 24 31 27 29 26 30 31 32 29 33 30 35 30 35 29 33 28 34 27 29 31 32 26 30 26 30 31 32 30 35 33 37 32 38 41 36 41 36 32 38 40 39 39 40 35 41 38 43 38 43 35 41 34 42 37 45 36 46 43 44 43 44 36 46 42 47 33 48 39 40 32 49 32 49 39 40 38 43 41 36 40 39 37 45 37 45 40 39 36 46 43 44 42 47 29 33 29 33 42 47 28 34 35 41 45 24 34 42 34 42 45 24 44 27</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>polySurfaceShape5</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="untitled">
+      <node id="joint1" name="joint1" sid="joint1" type="JOINT">
+        <translate sid="translate">-2 -0.07222291 0.5</translate>
+        <rotate sid="jointOrientZ">0 0 1 0</rotate>
+        <rotate sid="jointOrientY">0 1 0 90</rotate>
+        <rotate sid="jointOrientX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <node id="joint2" name="joint2" sid="joint2" type="JOINT">
+          <translate sid="translate">0.5 0 0</translate>
+          <rotate sid="jointOrientZ">0 0 1 0</rotate>
+          <rotate sid="jointOrientY">0 1 0 -90</rotate>
+          <rotate sid="jointOrientX">1 0 0 0</rotate>
+          <scale sid="scale">1 1 1</scale>
+          <node id="joint3" name="joint3" sid="joint3" type="JOINT">
+            <translate sid="translate">0.5 -0.06973683 0</translate>
+            <rotate sid="jointOrientZ">0 0 1 0</rotate>
+            <rotate sid="jointOrientY">0 1 0 0</rotate>
+            <rotate sid="jointOrientX">1 0 0 0</rotate>
+            <scale sid="scale">1 1 1</scale>
+            <node id="joint4" name="joint4" sid="joint4" type="JOINT">
+              <translate sid="translate">0.5 -0.06236901 0</translate>
+              <rotate sid="jointOrientZ">0 0 1 0</rotate>
+              <rotate sid="jointOrientY">0 1 0 0</rotate>
+              <rotate sid="jointOrientX">1 0 0 0</rotate>
+              <scale sid="scale">1 1 1</scale>
+              <node id="joint5" name="joint5" sid="joint5" type="JOINT">
+                <translate sid="translate">0.5 -0.06247135 0</translate>
+                <rotate sid="jointOrientZ">0 0 1 0</rotate>
+                <rotate sid="jointOrientY">0 1 0 0</rotate>
+                <rotate sid="jointOrientX">1 0 0 0</rotate>
+                <scale sid="scale">1 1 1</scale>
+                <node id="joint6" name="joint6" sid="joint6" type="JOINT">
+                  <translate sid="translate">0.5 -0.02712414 0</translate>
+                  <rotate sid="jointOrientZ">0 0 1 0</rotate>
+                  <rotate sid="jointOrientY">0 1 0 0</rotate>
+                  <rotate sid="jointOrientX">1 0 0 0</rotate>
+                  <scale sid="scale">1 1 1</scale>
+                  <node id="joint7" name="joint7" sid="joint7" type="JOINT">
+                    <translate sid="translate">0.5 0.02724013 0</translate>
+                    <rotate sid="jointOrientZ">0 0 1 0</rotate>
+                    <rotate sid="jointOrientY">0 1 0 0</rotate>
+                    <rotate sid="jointOrientX">1 0 0 0</rotate>
+                    <scale sid="scale">1 1 1</scale>
+                    <node id="joint8" name="joint8" sid="joint8" type="JOINT">
+                      <translate sid="translate">0.5 0.04669736 0</translate>
+                      <rotate sid="jointOrientZ">0 0 1 0</rotate>
+                      <rotate sid="jointOrientY">0 1 0 0</rotate>
+                      <rotate sid="jointOrientX">1 0 0 0</rotate>
+                      <scale sid="scale">1 1 1</scale>
+                      <node id="joint9" name="joint9" sid="joint9" type="JOINT">
+                        <translate sid="translate">0.5 0.07004604 0</translate>
+                        <rotate sid="jointOrientZ">0 0 1 0</rotate>
+                        <rotate sid="jointOrientY">0 1 0 0</rotate>
+                        <rotate sid="jointOrientX">1 0 0 0</rotate>
+                        <scale sid="scale">1 1 1</scale>
+                        <node id="joint10" name="joint10" sid="joint10" type="JOINT">
+                          <translate sid="translate">0.5 0.08172038 0</translate>
+                          <rotate sid="jointOrientZ">0 0 1 0</rotate>
+                          <rotate sid="jointOrientY">0 1 0 0</rotate>
+                          <rotate sid="jointOrientX">1 0 0 0</rotate>
+                          <scale sid="scale">1 1 1</scale>
+                          <extra>
+                            <technique profile="OpenCOLLADAMaya">
+                              <originalMayaNodeId>joint10</originalMayaNodeId>
+                            </technique>
+                          </extra>
+                        </node>
+                        <extra>
+                          <technique profile="OpenCOLLADAMaya">
+                            <originalMayaNodeId>joint9</originalMayaNodeId>
+                          </technique>
+                        </extra>
+                      </node>
+                      <extra>
+                        <technique profile="OpenCOLLADAMaya">
+                          <originalMayaNodeId>joint8</originalMayaNodeId>
+                        </technique>
+                      </extra>
+                    </node>
+                    <extra>
+                      <technique profile="OpenCOLLADAMaya">
+                        <originalMayaNodeId>joint7</originalMayaNodeId>
+                      </technique>
+                    </extra>
+                  </node>
+                  <extra>
+                    <technique profile="OpenCOLLADAMaya">
+                      <originalMayaNodeId>joint6</originalMayaNodeId>
+                    </technique>
+                  </extra>
+                </node>
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <originalMayaNodeId>joint5</originalMayaNodeId>
+                  </technique>
+                </extra>
+              </node>
+              <extra>
+                <technique profile="OpenCOLLADAMaya">
+                  <originalMayaNodeId>joint4</originalMayaNodeId>
+                </technique>
+              </extra>
+            </node>
+            <extra>
+              <technique profile="OpenCOLLADAMaya">
+                <originalMayaNodeId>joint3</originalMayaNodeId>
+              </technique>
+            </extra>
+          </node>
+          <extra>
+            <technique profile="OpenCOLLADAMaya">
+              <originalMayaNodeId>joint2</originalMayaNodeId>
+            </technique>
+          </extra>
+        </node>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>joint1</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+      <node id="polySurface3" name="polySurface3" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <instance_controller url="#polySurfaceShape5-skin">
+          <skeleton>#joint1</skeleton>
+          <skeleton>#joint10</skeleton>
+          <skeleton>#joint2</skeleton>
+          <skeleton>#joint3</skeleton>
+          <skeleton>#joint4</skeleton>
+          <skeleton>#joint5</skeleton>
+          <skeleton>#joint6</skeleton>
+          <skeleton>#joint7</skeleton>
+          <skeleton>#joint8</skeleton>
+          <skeleton>#joint9</skeleton>
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lambert4SG" target="#lambert4">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_controller>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>polySurface3</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

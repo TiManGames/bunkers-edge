@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>hall</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depthworkfiles/pamplet%20powerbox/pamphlet.obj</source_data>
+    </contributor>
+    <created>2015-08-31T13:22:17</created>
+    <modified>2015-08-31T13:22:17</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="_1_01_omnitool_pamphletSG1" name="_1_01_omnitool_pamphletSG1">
+      <instance_effect url="#_1_01_omnitool_pamphletSG1-fx"/>
+    </material>
+    <material id="lambert2SG1" name="lambert2SG1">
+      <instance_effect url="#lambert2SG1-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_1_01_omnitool_pamphletSG1-fx">
+      <profile_COMMON>
+        <newparam sid="_1_01_omnitool_pamphletSG1F-surface">
+          <surface type="2D">
+            <init_from>_1_01_omnitool_pamphletSG1F</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="_1_01_omnitool_pamphletSG1F-sampler">
+          <sampler2D>
+            <source>_1_01_omnitool_pamphletSG1F-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="_1_01_omnitool_pamphletSG1F1-surface">
+          <surface type="2D">
+            <init_from>_1_01_omnitool_pamphletSG1F1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="_1_01_omnitool_pamphletSG1F1-sampler">
+          <sampler2D>
+            <source>_1_01_omnitool_pamphletSG1F1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="_1_01_omnitool_pamphletSG1F-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <texture texture="_1_01_omnitool_pamphletSG1F1-sampler" texcoord="TEX1">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </specular>
+            <shininess>
+              <float>50</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color>0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert2SG1-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="file1">
+      <init_from>file:///E:/depth/redist/entities/station/special/03_02_empty_batterybox_pamphlet/03_02_empty_batterybox_pamphlet_back.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+    <image id="_1_01_omnitool_pamphletSG1F1" name="_1_01_omnitool_pamphletSG1F1">
+      <init_from>file:///E:/depthworkfiles/pamplet%20powerbox/01_01_omnitool_pamphlet_spec.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>_1_01_omnitool_pamphletSG1F1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+    <image id="_1_01_omnitool_pamphletSG1F" name="_1_01_omnitool_pamphletSG1F">
+      <init_from>file:///E:/depthworkfiles/pamplet%20powerbox/03_02_empty_batterybox_pamphlet.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>_1_01_omnitool_pamphletSG1F</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="pamphletShape1" name="pamphletShape1">
+      <mesh>
+        <source id="pamphletShape1-positions" name="pamphletShape1-positions">
+          <float_array id="pamphletShape1-positions-array" count="78">0.1327734 0.01914978 -0.09000534 -0.1471167 0.00712646 -0.08992096 -0.1471167 0.00540894 0.1056921 0.1329932 0.01288452 0.1057006 0.1331531 0.01097565 0.04044235 -0.1471655 0.00352325 0.04047882 0.1328992 0.00933517 -0.02459274 -0.1472595 0.00760391 -0.0247316 0.1329553 0.01310791 -0.06050705 0.08926697 0.01119385 -0.0900396 -0.05702881 0.02496338 0.1042514 -0.05707214 0.02149902 0.03894135 -0.05830078 0.02659302 -0.02626953 -0.05898987 0.02097351 -0.09145737 0.03694214 0.00463989 0.1063311 0.0370578 0.00390625 0.04072372 0.03639465 0.00978241 -0.02410065 0.03611176 0.0078949 -0.08927521 -0.0550708 0.02494141 0.1042517 -0.05511108 0.02138641 0.03893555 -0.05632751 0.02671783 -0.02626709 -0.05700867 0.02093628 -0.09145477 0.03498444 0.0046228 0.1063307 0.03509674 0.00379791 0.04072952 0.03442169 0.00991104 -0.02410286 0.03413055 0.00786072 -0.08927773</float_array>
+          <technique_common>
+            <accessor source="#pamphletShape1-positions-array" count="26" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pamphletShape1-normals" name="pamphletShape1-normals">
+          <float_array id="pamphletShape1-normals-array" count="288">-0.09634898 0.9941908 -0.04797599 -0.07208598 0.9973238 0.012207 -0.200509 0.9796247 0.011475 -0.200509 0.9796247 0.011475 -0.07208598 0.9973238 0.012207 -0.1887011 0.9818974 0.01641901 -0.07208598 0.9973238 0.012207 -0.135565 0.9907638 -0.003051999 -0.1887011 0.9818974 0.01641901 -0.06412002 0.9964973 0.05368202 -0.041749 0.9984511 0.036775 -0.13343 0.9819894 0.133766 -0.08575902 0.9938852 -0.06955402 -0.1887011 0.9818974 0.01641901 -0.135565 0.9907638 -0.003051999 -0.1764329 0.9640837 0.1985299 -0.06412002 0.9964973 0.05368202 -0.13343 0.9819894 0.133766 0.108556 0.9930623 -0.04519901 -0.07208598 0.9973238 0.012207 -0.09634898 0.9941908 -0.04797599 -0.07208598 0.9973238 0.012207 0.108556 0.9930623 -0.04519901 0.123632 0.9922262 0.014222 0.123632 0.9922262 0.014222 0.05350099 0.9985679 0 -0.07208598 0.9973238 0.012207 -0.07208598 0.9973238 0.012207 0.05350099 0.9985679 0 -0.135565 0.9907638 -0.003051999 0.05350099 0.9985679 0 0.07989899 0.9929419 -0.08765099 -0.135565 0.9907638 -0.003051999 0.07989899 0.9929419 -0.08765099 -0.08575902 0.9938852 -0.06955402 -0.135565 0.9907638 -0.003051999 -0.07718403 0.9967363 -0.02365301 -0.05203602 0.9982314 0.02874901 -0.04382601 0.9989213 -0.01535101 -0.05203602 0.9982314 0.02874901 -0.041749 0.9984511 0.036775 0.02719299 0.9988618 0.03918699 -0.041749 0.9984511 0.036775 -0.05203602 0.9982314 0.02874901 -0.07718403 0.9967363 -0.02365301 0.02719299 0.9988618 0.03918699 -0.06412002 0.9964973 0.05368202 -0.03897299 0.9987907 -0.02996999 0.02719299 0.9988618 0.03918699 -0.041749 0.9984511 0.036775 -0.06412002 0.9964973 0.05368202 -0.07718403 0.9967363 -0.02365301 -0.04382601 0.9989213 -0.01535101 -0.08566601 0.9958931 -0.029299 -0.09634898 0.9941908 -0.04797599 -0.200509 0.9796247 0.011475 -0.212474 0.9767641 -0.028047 -0.08575902 0.9938852 -0.06955402 -0.155341 0.9878319 -0.007568999 -0.1887011 0.9818974 0.01641901 0.108556 0.9930623 -0.04519901 0.07284901 0.9967242 0.03512801 0.123632 0.9922262 0.014222 0.07284901 0.9967242 0.03512801 0.108556 0.9930623 -0.04519901 0.10581 0.9943104 -0.012299 0.123632 0.9922262 0.014222 0.124915 0.9917203 0.02978601 0.05350099 0.9985679 0 0.124915 0.9917203 0.02978601 0.123632 0.9922262 0.014222 0.07284901 0.9967242 0.03512801 0.05350099 0.9985679 0 0.124915 0.9917203 0.02978601 0.07635897 0.9961526 -0.04300198 0.05350099 0.9985679 0 0.07635897 0.9961526 -0.04300198 0.07989899 0.9929419 -0.08765099 -0.04382601 0.9989213 -0.01535101 0.07284901 0.9967242 0.03512801 0.10581 0.9943104 -0.012299 0.07284901 0.9967242 0.03512801 -0.04382601 0.9989213 -0.01535101 -0.05203602 0.9982314 0.02874901 0.02719299 0.9988618 0.03918699 0.07284901 0.9967242 0.03512801 -0.05203602 0.9982314 0.02874901 0.07284901 0.9967242 0.03512801 0.02719299 0.9988618 0.03918699 0.124915 0.9917203 0.02978601 0.02719299 0.9988618 0.03918699 -0.03897299 0.9987907 -0.02996999 0.124915 0.9917203 0.02978601 0.124915 0.9917203 0.02978601 -0.03897299 0.9987907 -0.02996999 0.07635897 0.9961526 -0.04300198</float_array>
+          <technique_common>
+            <accessor source="#pamphletShape1-normals-array" count="96" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pamphletShape1-map1" name="pamphletShape1-map1">
+          <float_array id="pamphletShape1-map1-array" count="52">0.3271365 0.3492553 0.326986 0.5633402 0.01494503 0.5583003 0.3339181 0.3492544 0.0146192 0.7720581 0.01511389 0.3445329 0.3337784 0.5633591 0.3227307 0.7770995 0.6462162 0.5574785 0.3295651 0.7770915 0.320344 0.9907835 0.6458268 0.3424397 0.643878 0.7699974 0.3272057 0.9907749 0.01511371 0.9857473 0.6526075 0.3424383 0.6507114 0.76999 0.6428696 0.9836388 0.6530083 0.5574973 0.6497315 0.9836305 0.9858373 0.5584199 0.9849579 0.7716032 0.8338367 0.9861361 0.9852836 0.344505 0.9851527 0.8893291 0.9845229 0.9860238</float_array>
+          <technique_common>
+            <accessor source="#pamphletShape1-map1-array" count="26" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="pamphletShape1-vertices" name="pamphletShape1-vertices">
+          <input semantic="POSITION" source="#pamphletShape1-positions"/>
+        </vertices>
+        <triangles material="_1_01_omnitool_pamphletSG" count="32">
+          <input semantic="VERTEX" source="#pamphletShape1-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#pamphletShape1-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#pamphletShape1-map1" offset="2" set="0"/>
+          <p>10 0 0 11 1 1 5 2 2 5 3 2 11 4 1 7 5 4 11 6 1 12 7 7 7 8 4 9 9 22 6 10 21 8 11 24 13 12 10 7 13 4 12 14 7 0 15 25 9 16 22 8 17 24 18 18 3 11 19 1 10 20 0 11 21 1 18 22 3 19 23 6 19 24 6 20 25 9 11 26 1 11 27 1 20 28 9 12 29 7 20 30 9 21 31 13 12 32 7 21 33 13 13 34 10 12 35 7 4 36 20 15 37 18 14 38 15 15 39 18 6 40 21 16 41 16 6 42 21 15 43 18 4 44 20 16 45 16 9 46 22 17 47 19 16 48 16 6 49 21 9 50 22 4 51 20 14 52 15 3 53 23 10 54 0 5 55 2 2 56 5 13 57 10 1 58 14 7 59 4 18 60 3 23 61 8 19 62 6 23 63 8 18 64 3 22 65 11 19 66 6 24 67 12 20 68 9 24 69 12 19 70 6 23 71 8 20 72 9 24 73 12 25 74 17 20 75 9 25 76 17 21 77 13 14 78 15 23 79 8 22 80 11 23 81 8 14 82 15 15 83 18 16 84 16 23 85 8 15 86 18 23 87 8 16 88 16 24 89 12 16 90 16 17 91 19 24 92 12 24 93 12 17 94 19 25 95 17</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>pamphletShape1</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+    <geometry id="pamphlet_bShape1" name="pamphlet_bShape1">
+      <mesh>
+        <source id="pamphlet_bShape1-positions" name="pamphlet_bShape1-positions">
+          <float_array id="pamphlet_bShape1-positions-array" count="78">0.1327734 0.01814941 -0.09000534 -0.1471167 0.0061261 -0.08992096 -0.1471167 0.00440796 0.1056921 0.1329932 0.01188477 0.1057006 0.1331531 0.00997559 0.04044235 -0.1471655 0.00252319 0.04047882 0.1328992 0.00833511 -0.02459274 -0.1472595 0.006604 -0.0247316 0.1329553 0.01210754 -0.06050713 0.08926697 0.01019409 -0.0900396 -0.05702881 0.02396362 0.1042514 -0.05707214 0.02049896 0.03894135 -0.05830078 0.02559296 -0.02626953 -0.05898987 0.01997375 -0.09145737 0.03694214 0.00364014 0.1063311 0.0370578 0.00290619 0.04072371 0.03639465 0.00878235 -0.02410065 0.03611176 0.00689514 -0.08927521 -0.0550708 0.02394165 0.1042517 -0.05511108 0.02038635 0.03893555 -0.05632751 0.02571777 -0.02626709 -0.05700867 0.01993652 -0.09145477 0.03498444 0.00362305 0.1063307 0.03509674 0.00279785 0.04072952 0.03442169 0.00891098 -0.02410286 0.03413055 0.00686096 -0.08927773</float_array>
+          <technique_common>
+            <accessor source="#pamphlet_bShape1-positions-array" count="26" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pamphlet_bShape1-normals" name="pamphlet_bShape1-normals">
+          <float_array id="pamphlet_bShape1-normals-array" count="288">0.09634898 -0.9941908 0.04797599 0.200509 -0.9796247 -0.011475 0.07208598 -0.9973238 -0.012207 0.200509 -0.9796247 -0.011475 0.1887011 -0.9818974 -0.01641901 0.07208598 -0.9973238 -0.012207 0.07208598 -0.9973238 -0.012207 0.1887011 -0.9818974 -0.01641901 0.135565 -0.9907638 0.003051999 0.06412002 -0.9964973 -0.05368202 0.13343 -0.9819894 -0.133766 0.041749 -0.9984511 -0.036775 0.08575902 -0.9938852 0.06955402 0.135565 -0.9907638 0.003051999 0.1887011 -0.9818974 -0.01641901 0.1764329 -0.9640837 -0.1985299 0.13343 -0.9819894 -0.133766 0.06412002 -0.9964973 -0.05368202 -0.108556 -0.9930623 0.04519901 0.07208598 -0.9973238 -0.012207 -0.123632 -0.9922262 -0.014222 0.07208598 -0.9973238 -0.012207 -0.108556 -0.9930623 0.04519901 0.09634898 -0.9941908 0.04797599 -0.05350099 -0.9985679 0 -0.123632 -0.9922262 -0.014222 0.07208598 -0.9973238 -0.012207 0.07208598 -0.9973238 -0.012207 0.135565 -0.9907638 0.003051999 -0.05350099 -0.9985679 0 0.135565 -0.9907638 0.003051999 -0.07989899 -0.9929419 0.08765099 -0.05350099 -0.9985679 0 -0.07989899 -0.9929419 0.08765099 0.135565 -0.9907638 0.003051999 0.08575902 -0.9938852 0.06955402 0.07718403 -0.9967363 0.02365301 0.04382601 -0.9989213 0.01535101 0.05203602 -0.9982314 -0.02874901 0.05203602 -0.9982314 -0.02874901 0.041749 -0.9984511 -0.036775 0.07718403 -0.9967363 0.02365301 0.041749 -0.9984511 -0.036775 0.05203602 -0.9982314 -0.02874901 -0.02719299 -0.9988618 -0.03918699 -0.02719299 -0.9988618 -0.03918699 0.03897299 -0.9987907 0.02996999 0.06412002 -0.9964973 -0.05368202 -0.02719299 -0.9988618 -0.03918699 0.06412002 -0.9964973 -0.05368202 0.041749 -0.9984511 -0.036775 0.07718403 -0.9967363 0.02365301 0.08566601 -0.9958931 0.029299 0.04382601 -0.9989213 0.01535101 0.09634898 -0.9941908 0.04797599 0.212474 -0.9767641 0.028047 0.200509 -0.9796247 -0.011475 0.08575902 -0.9938852 0.06955402 0.1887011 -0.9818974 -0.01641901 0.155341 -0.9878319 0.007568999 -0.108556 -0.9930623 0.04519901 -0.07284901 -0.9967242 -0.03512801 -0.10581 -0.9943104 0.012299 -0.07284901 -0.9967242 -0.03512801 -0.108556 -0.9930623 0.04519901 -0.123632 -0.9922262 -0.014222 -0.123632 -0.9922262 -0.014222 -0.124915 -0.9917203 -0.02978601 -0.07284901 -0.9967242 -0.03512801 -0.124915 -0.9917203 -0.02978601 -0.123632 -0.9922262 -0.014222 -0.05350099 -0.9985679 0 -0.05350099 -0.9985679 0 -0.07635897 -0.9961526 0.04300198 -0.124915 -0.9917203 -0.02978601 -0.07635897 -0.9961526 0.04300198 -0.05350099 -0.9985679 0 -0.07989899 -0.9929419 0.08765099 0.04382601 -0.9989213 0.01535101 -0.07284901 -0.9967242 -0.03512801 0.05203602 -0.9982314 -0.02874901 -0.07284901 -0.9967242 -0.03512801 0.04382601 -0.9989213 0.01535101 -0.10581 -0.9943104 0.012299 -0.07284901 -0.9967242 -0.03512801 -0.02719299 -0.9988618 -0.03918699 0.05203602 -0.9982314 -0.02874901 -0.02719299 -0.9988618 -0.03918699 -0.07284901 -0.9967242 -0.03512801 -0.124915 -0.9917203 -0.02978601 -0.124915 -0.9917203 -0.02978601 0.03897299 -0.9987907 0.02996999 -0.02719299 -0.9988618 -0.03918699 0.03897299 -0.9987907 0.02996999 -0.124915 -0.9917203 -0.02978601 -0.07635897 -0.9961526 0.04300198</float_array>
+          <technique_common>
+            <accessor source="#pamphlet_bShape1-normals-array" count="96" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pamphlet_bShape1-map1" name="pamphlet_bShape1-map1">
+          <float_array id="pamphlet_bShape1-map1-array" count="52">0.6772425 0.3404107 0.9955817 0.5546122 0.6773958 0.5597761 0.9954095 0.3355717 0.9959131 0.7736428 0.6703272 0.3404097 0.681735 0.7788085 0.6704696 0.5597956 0.6841681 0.9977633 0.6747659 0.7788003 0.3518792 0.5537698 0.6771709 0.9977546 0.9954088 0.9926029 0.3542634 0.7715309 0.352276 0.3334268 0.3552918 0.9904425 0.3453619 0.3334254 0.3472954 0.7715235 0.3482947 0.990434 0.3449532 0.5537895 0.005570233 0.5547346 0.006466836 0.7731764 0.1605643 0.9930014 0.006134391 0.335543 0.00626836 0.8938069 0.006910709 0.9928862</float_array>
+          <technique_common>
+            <accessor source="#pamphlet_bShape1-map1-array" count="26" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="pamphlet_bShape1-vertices" name="pamphlet_bShape1-vertices">
+          <input semantic="POSITION" source="#pamphlet_bShape1-positions"/>
+        </vertices>
+        <triangles material="lambert2SG" count="32">
+          <input semantic="VERTEX" source="#pamphlet_bShape1-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#pamphlet_bShape1-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#pamphlet_bShape1-map1" offset="2" set="0"/>
+          <p>10 0 0 5 1 1 11 2 2 5 3 1 7 4 4 11 5 2 11 6 2 7 7 4 12 8 6 9 9 22 8 10 24 6 11 21 13 12 8 12 13 6 7 14 4 0 15 25 8 16 24 9 17 22 18 18 5 11 19 2 19 20 7 11 21 2 18 22 5 10 23 0 20 24 9 19 25 7 11 26 2 11 27 2 12 28 6 20 29 9 12 30 6 21 31 11 20 32 9 21 33 11 12 34 6 13 35 8 4 36 20 14 37 16 15 38 19 15 39 19 6 40 21 4 41 20 6 42 21 15 43 19 16 44 17 16 45 17 17 46 18 9 47 22 16 48 17 9 49 22 6 50 21 4 51 20 3 52 23 14 53 16 10 54 0 2 55 3 5 56 1 13 57 8 7 58 4 1 59 12 18 60 5 23 61 10 22 62 14 23 63 10 18 64 5 19 65 7 19 66 7 24 67 13 23 68 10 24 69 13 19 70 7 20 71 9 20 72 9 25 73 15 24 74 13 25 75 15 20 76 9 21 77 11 14 78 16 23 79 10 15 80 19 23 81 10 14 82 16 22 83 14 23 84 10 16 85 17 15 86 19 16 87 17 23 88 10 24 89 13 24 90 13 17 91 18 16 92 17 17 93 18 24 94 13 25 95 15</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>pamphlet_bShape1</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="pamphlet">
+      <node id="pamphlet1" name="pamphlet1" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#pamphletShape1">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="_1_01_omnitool_pamphletSG" target="#_1_01_omnitool_pamphletSG1">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="TEX1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <node id="pamphlet_b1" name="pamphlet_b1" type="NODE">
+          <translate sid="translate">0 0 0</translate>
+          <scale sid="scale">1 1 1</scale>
+          <instance_geometry url="#pamphlet_bShape1">
+            <bind_material>
+              <technique_common>
+                <instance_material symbol="lambert2SG" target="#lambert2SG1">
+                  <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                </instance_material>
+              </technique_common>
+            </bind_material>
+          </instance_geometry>
+          <extra>
+            <technique profile="OpenCOLLADAMaya">
+              <originalMayaNodeId>pamphlet_b1</originalMayaNodeId>
+            </technique>
+          </extra>
+        </node>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>pamphlet1</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

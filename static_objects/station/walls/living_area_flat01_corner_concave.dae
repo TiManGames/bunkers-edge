@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>Marc</author>
+            <authoring_tool>modo 801 [Build 70287], Microsoft Windows 8 (6.2.9200)</authoring_tool>
+            <comments>Plug-in: [Build 70287]; Use Absolute Path: Yes; Merge Reference Items: Yes; Save Hidden Items: No; Save Cameras: Yes; Save Lights: Yes; Save Locators: Yes; Save Triangles as Triangles: No; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 120; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file://Untitled</source_data>
+        </contributor>
+        <created>2015-06-08T13:08:00Z</created>
+        <modified>2015-06-08T13:08:00Z</modified>
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_cameras>
+        <camera id="Camera-camera003" name="Camera">
+            <optics>
+                <technique_common>
+                    <perspective>
+                        <xfov sid="HFOV">39.5978</xfov>
+                        <yfov sid="YFOV">26.9915</yfov>
+                        <znear sid="near_clip">0.01</znear>
+                        <zfar sid="far_clip">10000</zfar>
+                    </perspective>
+                </technique_common>
+            </optics>
+        </camera>
+    </library_cameras>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/workfiles/station.jpg</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-living_area_flat01_corner_concave_lambert2" name="living_area_flat01_corner_concave_lambert2">
+            <instance_effect url="#Effect-living_area_flat01_corner_concave_lambert2" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-living_area_flat01_corner_concave_lambert2" name="living_area_flat01_corner_concave_lambert2">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                        <transparent opaque="RGB_ZERO">
+                            <color sid="transparent_effect_rgb">0 0 0 1</color>
+                        </transparent>
+                        <transparency>
+                            <float sid="transparency_effect_float">1</float>
+                        </transparency>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-polySurface11" name="polySurface11">
+            <mesh>
+                <source id="Geometry-polySurface11-positions" name="positions">
+                    <float_array id="Geometry-polySurface11-positions-array" count="150">2 0 0 2 0.173418 -0.060914 2 2.75 -0.185914 2 3 -0.105216 2 1.46171 -0.185914 -0.105216 3 -0.105216 0 2.75 -0.185914 0 1.46171 -0.185914 -0.060914 0.173418 -0.060914 0 0 0 2 4 0 0 4 0 0 0 2 -0.060914 0.173418 2 -0.185914 2.75 2 -0.105216 3 2 -0.185914 1.46171 2 0 4 2 -0.185914 2.75 0 -0.185914 1.46171 0 2 2.75781 -0.060914 2 2.75 -0.0687257 -0.060914 2.75781 -0.060914 2 2.88236 -0.0635236 2 2.86719 -0.060914 -0.060914 2.86719 -0.060914 -0.063524 2.88236 -0.0635236 2 0.114214 -0.00534604 2 0.100706 0 0 0.100706 0 -0.005346 0.114214 -0.00534604 2 3.13362 0 2 3.11981 -0.00501157 -0.005012 3.11981 -0.00501157 0 3.13362 0 2 1.41431 -0.076538 2 1.39051 -0.060914 -0.060914 1.39051 -0.060914 -0.005012 3.11981 2 0 3.13362 2 -0.060914 2.86719 2 -0.063524 2.88236 2 -0.068726 2.75 2 -0.060914 2.75781 2 -0.060914 1.39051 2 -0.076538 1.41431 2 0 0.100706 2 -0.005346 0.114214 2 -0.076538 1.41431 -0.076538 -0.068726 2.75 -0.0687257</float_array>
+                    <technique_common>
+                        <accessor count="50" source="#Geometry-polySurface11-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-polySurface11-normals" name="normals">
+                    <float_array id="Geometry-polySurface11-normals-array" count="108">0 -1 0 0 -0.923876 0.382693 0 0.0850462 0.996377 0 -0.382674 0.923883 0 0.187316 0.9823 0 0 1 0 0.535663 0.844432 0 0.684363 0.729141 0 -0.173256 0.984877 0 0.252682 0.967549 0 0.345715 0.93834 0 -0.498952 0.866629 0 -0.641545 0.767085 0 0.917557 0.397604 0 0.765244 0.64374 0 0.286407 0.958108 1 0 0 0.984874 -0.173273 0 0.767084 -0.641546 0 0.866621 -0.498966 0 0.967546 0.252694 0 0.938339 0.345717 0 0.996376 0.0850612 0 0.923878 -0.382687 0 0.38268 -0.923881 0 0.397604 0.917557 0 0.643741 0.765243 0 0.958108 0.286406 0 0.844433 0.53566 0 0.729141 0.684363 0 0.982301 0.187312 0 0.7071 -0.00421038 0.707101 0.898942 0 0.438067 0.842211 -0.00411254 0.539132 0.438067 0 0.898942 0.539132 -0.00411257 0.842211</float_array>
+                    <technique_common>
+                        <accessor count="36" source="#Geometry-polySurface11-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-polySurface11-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1" name="polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1">
+                    <float_array id="Geometry-polySurface11-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1-array" count="126">0.156458 0.705132 0.14527 0.705132 0.156458 0.521143 0.134362 0.705132 0.134362 0.521143 0.143881 0.705132 0.143881 0.521143 0.412099 0.705132 0.412099 0.519875 0.421877 0.705132 0.421877 0.519875 0.410327 0.705132 0.403888 0.705132 0.410327 0.519875 0.403888 0.519875 0.156458 0.523667 0.276001 0.705132 0.276002 0.523667 0.0268667 0.521143 0.106173 0.521143 0.0268665 0.705132 0.106172 0.705132 0.133041 0.705132 0.121644 0.705132 0.133041 0.521143 0.121644 0.521143 0.107838 0.705132 0.107838 0.521143 0.276002 0.519875 0.287907 0.705132 0.290766 0.705132 0.290766 0.519875 0.0268667 0.519875 0.106173 0.519875 0.0268665 0.703243 0.106172 0.703242 0.121644 0.703243 0.107838 0.703242 0.121644 0.519875 0.107838 0.519875 0.133041 0.519875 0.133041 0.703242 0.134362 0.703242 0.134362 0.519875 0.143881 0.703243 0.143881 0.519875 0.156458 0.703243 0.14527 0.519875 0.156458 0.519875 0.276001 0.703243 0.287907 0.519875 0.134362 0.703242 0.107838 0.703242 0.14527 0.521143 0.14527 0.703243 0.680389 0.744553 0.666885 0.744143 0.679601 0.850968 0.666885 0.850843 0.979331 0.850326 0.993489 0.851015 0.9801 0.744263 0.993488 0.744318</float_array>
+                    <technique_common>
+                        <accessor count="63" source="#Geometry-polySurface11-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-polySurface11-vertices">
+                    <input semantic="POSITION" source="#Geometry-polySurface11-positions" />
+                </vertices>
+                <polylist count="64" material="Material-living_area_flat01_corner_concave_lambert2">
+                    <input semantic="VERTEX" source="#Geometry-polySurface11-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-polySurface11-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-polySurface11-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>2 0 0 21 1 1 6 0 2 24 2 3 25 2 4 20 3 5 20 3 5 25 2 4 22 3 6 28 4 7 29 4 8 0 5 9 0 5 9 29 4 8 9 5 10 27 6 11 1 7 12 30 6 13 30 6 13 1 7 12 8 7 14 2 5 0 6 5 15 4 5 16 4 5 16 6 5 15 7 5 17 11 5 18 34 8 19 10 5 20 10 5 20 34 8 19 31 8 21 23 9 22 3 10 23 26 9 24 26 9 24 3 10 23 5 10 25 32 11 26 33 11 27 3 12 23 3 12 23 33 11 27 5 12 25 7 13 28 35 14 29 4 13 16 36 15 30 37 15 31 1 5 12 1 5 12 37 15 31 8 5 14 17 16 32 39 17 33 11 16 34 11 16 34 39 17 33 34 17 35 5 18 36 33 19 37 15 18 38 15 18 38 33 19 37 38 19 39 41 20 40 26 20 41 15 21 38 15 21 38 26 20 41 5 21 36 25 22 42 40 22 43 22 23 44 22 23 44 40 22 43 43 23 45 18 0 46 42 24 47 14 0 48 18 16 46 14 16 48 19 16 49 19 16 49 14 16 48 16 16 28 16 25 28 45 26 50 19 25 16 37 27 30 44 27 31 8 16 12 8 16 12 44 27 31 13 16 14 47 28 13 30 28 11 13 29 14 13 29 14 30 28 11 8 29 12 29 30 7 46 30 8 9 16 9 9 16 9 46 30 8 12 16 10 20 3 5 22 3 6 21 1 1 42 24 47 22 23 44 43 23 45 24 2 3 23 9 22 25 2 4 25 2 4 23 9 22 26 9 24 26 20 41 41 20 40 25 22 51 25 22 51 41 20 40 40 22 43 28 4 7 27 6 11 29 4 8 29 4 8 27 6 11 30 6 13 30 28 11 47 28 13 29 30 7 29 30 7 47 28 13 46 30 8 31 8 21 34 8 19 32 11 26 32 11 26 34 8 19 33 11 27 33 19 52 34 17 35 38 19 39 38 19 39 34 17 35 39 17 33 36 15 30 35 14 29 37 15 31 37 27 30 45 26 50 44 27 31 6 0 2 21 1 1 49 1 53 48 14 50 35 14 29 7 13 28 49 24 54 42 24 47 18 0 46 19 25 16 45 26 50 48 26 29 48 31 55 7 32 56 49 33 57 49 33 57 7 32 56 6 32 58 49 31 59 18 34 60 48 35 61 18 34 60 19 34 62 48 35 61 21 1 1 22 3 6 49 1 53 49 24 54 22 23 44 42 24 47 37 15 31 35 14 29 48 14 50 48 26 29 45 26 50 37 27 30</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_lights>
+        <light id="Light-polyRender006" name="Render">
+            <technique_common>
+                <ambient>
+                    <color sid="ambient_light_rgb">0 0 0</color>
+                </ambient>
+            </technique_common>
+        </light>
+        <light id="Light-sunLight013" name="Directional_Light">
+            <technique_common>
+                <directional>
+                    <color sid="directional_light_rgb">1 1 1</color>
+                </directional>
+            </technique_common>
+        </light>
+    </library_lights>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="polyRender006" name="Render" type="NODE">
+                <instance_light url="#Light-polyRender006" />
+            </node>
+            <node id="Geometry-mesh002Node" name="Mesh" type="NODE" />
+            <node id="Camera-camera003Node" name="Camera" type="NODE">
+                <translate sid="translation004">0 0.75 4</translate>
+                <rotate sid="rotation005Y">0 1 0 0</rotate>
+                <rotate sid="rotation005X">1 0 0 -5</rotate>
+                <rotate sid="rotation005Z">0 0 1 0</rotate>
+                <instance_camera url="#Camera-camera003" />
+            </node>
+            <node id="groupLocator032Node" name="living_area_flat01_corner_concave" type="NODE">
+                <node id="Geometry-polySurface11Node" name="polySurface11" type="NODE">
+                    <translate sid="translation022">0 0 0</translate>
+                    <rotate sid="rotation023Z">0 0 1 0</rotate>
+                    <rotate sid="rotation023Y">0 1 0 0</rotate>
+                    <rotate sid="rotation023X">1 0 0 0</rotate>
+                    <scale sid="scale024">1 1 1</scale>
+                    <instance_geometry url="#Geometry-polySurface11">
+                        <bind_material>
+                            <technique_common>
+                                <instance_material symbol="Material-living_area_flat01_corner_concave_lambert2" target="#Material-living_area_flat01_corner_concave_lambert2">
+                                    <bind_vertex_input semantic="polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-polySurfaceShape15-map1" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
+                            </technique_common>
+                        </bind_material>
+                    </instance_geometry>
+                </node>
+                <node id="txtrLocator021Node" name="station__Image___Texture_" type="NODE">
+                    <translate sid="translation031">0 0 0</translate>
+                    <rotate sid="rotation030Y">0 1 0 0</rotate>
+                    <rotate sid="rotation030X">1 0 0 0</rotate>
+                    <rotate sid="rotation030Z">0 0 1 0</rotate>
+                    <scale sid="scale029">1 1 1</scale>
+                </node>
+            </node>
+            <node id="Light-sunLight013Node" name="Directional_Light" type="NODE">
+                <translate sid="translation015">-2 2 2</translate>
+                <rotate sid="rotation016Y">0 1 0 -45</rotate>
+                <rotate sid="rotation016X">1 0 0 -30</rotate>
+                <rotate sid="rotation016Z">0 0 1 0</rotate>
+                <instance_light url="#Light-sunLight013" />
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

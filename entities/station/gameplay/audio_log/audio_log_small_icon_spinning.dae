@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>
+                Plug-in: [Build 68192];
+                Use Absolute Path: No;
+                Merge Reference Items: No;
+                Save Hidden Items: No;
+                Save Cameras: No;
+                Save Lights: No;
+                Save Locators: Yes;
+                Save Triangles as Triangles: No;
+                Order Vertex Maps Alphabetically: No;
+                Bake Matrices: Yes;
+                Save Vertex Normals: Yes;
+                Save UV Texture Coordinates: Yes;
+                Save Vertex Colors: Yes;
+                Save Vertex Weights: Yes;
+                Save Animation: No;
+                Sample Animation: No;
+                Sample Animation Start: 0;
+                Sample Animation End: 1;
+                Save modo Profile: No;
+                Save Maya Profile: No;
+                Save 3ds Max Profile: No;
+                Formatted Arrays: Yes;
+            </comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/audio_log/audio_log_small.lxo</source_data>
+        </contributor>
+        <created>2015-07-14T07:33:21Z</created>
+        <modified>2015-07-14T07:33:21Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/audio_log/audio_log.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/audio_log/audio_log_illum.tga</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/audio_log/audio_log_nrm.tga</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/audio_log/audio_log_spec.tga</init_from>
+        </image>
+        <image id="Image0005" name="Image0005">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/button_square_small/button_square_small_nrm.tga</init_from>
+        </image>
+        <image id="Image0006" name="Image0006">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/phone_theta_audio_log/audiolog_icon_spinning.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-default" name="default">
+            <instance_effect url="#Effect-default" />
+        </material>
+        <material id="Material-icon_spinning" name="icon_spinning">
+            <instance_effect url="#Effect-icon_spinning" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-default" name="default">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <newparam sid="Image0004-surface">
+                    <surface type="2D">
+                        <init_from>Image0004</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0004-sampler">
+                    <sampler2D>
+                        <source>Image0004-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="UVChannel_1" />
+                        </diffuse>
+                        <shininess>
+                            <float sid="specular_effect_rgb">2</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-icon_spinning" name="icon_spinning">
+            <profile_COMMON>
+                <newparam sid="Image0006-surface">
+                    <surface type="2D">
+                        <init_from>Image0006</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0006-sampler">
+                    <sampler2D>
+                        <source>Image0006-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0006-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh001" name="Mesh">
+            <mesh>
+                <source id="Geometry-mesh001-positions" name="positions">
+                    <float_array id="Geometry-mesh001-positions-array" count="174">
+                        0.0320906 0.0289307 -0.0480957
+                        0.0402018 0.0289307 -0.0480957
+                        0.0402018 0.0289307 -0.0480957
+                        0.0320906 0.0289307 -0.0480957
+                        0.0200082 0.0289307 -0.0731851
+                        0.0250654 0.0289307 -0.0795267
+                        -0.00714083 0.0289307 -0.0793817
+                        -0.00894574 0.0289307 -0.0872895
+                        -0.0289126 0.0289307 -0.0620193
+                        -0.0362206 0.0289307 -0.0655386
+                        -0.0289126 0.0289307 -0.0341721
+                        -0.0362206 0.0289307 -0.0306528
+                        -0.00714083 0.0289307 -0.0168097
+                        -0.00894574 0.0289307 -0.00890185
+                        0.0200082 0.0289307 -0.0230063
+                        0.0250654 0.0289307 -0.0166647
+                        0.0391939 0.0289307 -0.0570414
+                        0.031286 0.0289307 -0.0552365
+                        0.0289126 0.0289307 -0.0620193
+                        0.0362206 0.0289307 -0.0655386
+                        0.0250894 0.0289307 -0.0681039
+                        0.031431 0.0289307 -0.0731611
+                        0.0174429 0.0289307 -0.0843163
+                        0.0139236 0.0289307 -0.0770083
+                        0.00714083 0.0289307 -0.0793817
+                        0.00894574 0.0289307 -0.0872895
+                        -1.08238e-009 0.0289307 -0.0801863
+                        -1.08238e-009 0.0289307 -0.0882975
+                        -0.0174429 0.0289307 -0.0843163
+                        -0.0139236 0.0289307 -0.0770083
+                        -0.0200082 0.0289307 -0.0731851
+                        -0.0250654 0.0289307 -0.0795267
+                        -0.0250894 0.0289307 -0.0681039
+                        -0.031431 0.0289307 -0.0731611
+                        -0.0391939 0.0289307 -0.0570414
+                        -0.031286 0.0289307 -0.0552365
+                        -0.0320906 0.0289307 -0.0480957
+                        -0.0402018 0.0289307 -0.0480957
+                        -0.031286 0.0289307 -0.0409549
+                        -0.0391939 0.0289307 -0.03915
+                        -0.031431 0.0289307 -0.0230303
+                        -0.0250894 0.0289307 -0.0280875
+                        -0.0200082 0.0289307 -0.0230063
+                        -0.0250654 0.0289307 -0.0166647
+                        -0.0139236 0.0289307 -0.0191831
+                        -0.0174429 0.0289307 -0.0118751
+                        -1.08238e-009 0.0289307 -0.00789391
+                        -1.08238e-009 0.0289307 -0.0160051
+                        0.00714083 0.0289307 -0.0168097
+                        0.00894574 0.0289307 -0.00890185
+                        0.0139236 0.0289307 -0.0191831
+                        0.0174429 0.0289307 -0.0118751
+                        0.0250894 0.0289307 -0.0280875
+                        0.031431 0.0289307 -0.0230303
+                        0.0289126 0.0289307 -0.0341721
+                        0.0362206 0.0289307 -0.0306528
+                        0.031286 0.0289307 -0.0409549
+                        0.0391939 0.0289307 -0.03915
+                    </float_array>
+                    <technique_common>
+                        <accessor count="58" source="#Geometry-mesh001-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh001-normals" name="normals">
+                    <float_array id="Geometry-mesh001-normals-array" count="3">
+                        0 1 0
+                    </float_array>
+                    <technique_common>
+                        <accessor count="1" source="#Geometry-mesh001-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh001-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh001-uvSet1-array" count="32">
+                        1 0.75
+                        1 1
+                        4.16334e-017 0.75
+                        5.55112e-017 1
+                        4.44089e-016 0.75
+                        8.88178e-016 1
+                        1 0.5
+                        2.77556e-017 0.5
+                        0 0.5
+                        1 0.25
+                        1.38778e-017 0.25
+                        -4.44089e-016 0.25
+                        1 0
+                        0 5.55112e-017
+                        1 -8.88178e-016
+                        -8.88178e-016 8.88178e-016
+                    </float_array>
+                    <technique_common>
+                        <accessor count="16" source="#Geometry-mesh001-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh001-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh001-positions" />
+                </vertices>
+                <polylist count="56" material="Material-icon_spinning">
+                    <input semantic="VERTEX" source="#Geometry-mesh001-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh001-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh001-uvSet1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>21 0 0 5 0 1 20 0 2 4 0 3 20 0 2 5 0 1 27 0 0 7 0 1 26 0 2 6 0 3 26 0 2 7 0 1 33 0 0 9 0 1 32 0 2 8 0 3 32 0 2 9 0 1 39 0 0 11 0 1 38 0 2 10 0 3 38 0 2 11 0 1 45 0 0 13 0 1 44 0 2 12 0 3 44 0 2 13 0 1 51 0 0 15 0 1 50 0 2 14 0 3 50 0 2 15 0 1 57 0 0 1 0 1 56 0 4 0 0 5 56 0 4 1 0 1 19 0 6 21 0 0 18 0 7 20 0 2 18 0 7 21 0 0 25 0 6 27 0 0 24 0 7 26 0 2 24 0 7 27 0 0 31 0 6 33 0 0 30 0 7 32 0 2 30 0 7 33 0 0 37 0 6 39 0 0 36 0 7 38 0 2 36 0 7 39 0 0 43 0 6 45 0 0 42 0 7 44 0 2 42 0 7 45 0 0 49 0 6 51 0 0 48 0 7 50 0 2 48 0 7 51 0 0 55 0 6 57 0 0 54 0 8 56 0 4 54 0 8 57 0 0 16 0 9 19 0 6 17 0 10 18 0 7 17 0 10 19 0 6 22 0 9 25 0 6 23 0 10 24 0 7 23 0 10 25 0 6 28 0 9 31 0 6 29 0 10 30 0 7 29 0 10 31 0 6 34 0 9 37 0 6 35 0 10 36 0 7 35 0 10 37 0 6 40 0 9 43 0 6 41 0 10 42 0 7 41 0 10 43 0 6 46 0 9 49 0 6 47 0 10 48 0 7 47 0 10 49 0 6 53 0 9 55 0 6 52 0 11 54 0 8 52 0 11 55 0 6 2 0 12 16 0 9 3 0 13 17 0 10 3 0 13 16 0 9 5 0 12 22 0 9 4 0 13 23 0 10 4 0 13 22 0 9 7 0 12 28 0 9 6 0 13 29 0 10 6 0 13 28 0 9 9 0 12 34 0 9 8 0 13 35 0 10 8 0 13 34 0 9 11 0 12 40 0 9 10 0 13 41 0 10 10 0 13 40 0 9 13 0 12 46 0 9 12 0 13 47 0 10 12 0 13 46 0 9 15 0 14 53 0 9 14 0 15 52 0 11 14 0 15 53 0 9</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh001Node" name="Mesh" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <instance_geometry url="#Geometry-mesh001">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-icon_spinning" target="#Material-icon_spinning">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator017Node" name="Texture_Group" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <node id="txtrLocator002Node" name="audio_log_illum__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator024Node" name="audio_log_spec__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator019Node" name="audio_log_nrm__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator013Node" name="audio_log__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator065Node" name="button_square_small_nrm__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator003Node" name="audiolog_icon_spinning__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

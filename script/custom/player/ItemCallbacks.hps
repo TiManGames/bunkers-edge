@@ -1,0 +1,570 @@
+#include "custom/helpers/helper_modules_custom.hps"
+#include "helpers/helper_player.hps"
+#include "helpers/helper_audio.hps"
+#include "custom/helpers/helper_items.hps"
+#include "custom/helpers/helper_areas_custom.hps"
+#include "custom/helpers/helper_player_custom.hps"
+#include "custom/components/ComponentInterfaces_Custom.hps"
+#include "helpers/helper_effects.hps"
+#include "helpers/helper_audio.hps"
+#include "helpers/helper_game.hps"
+#include "custom/helpers/helper_props_custom.hps"
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// ITEM CALLBACKS
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+class cScrItemCallbacks : iScrItemCallbacks
+{
+	//---------------------------------------------------
+	
+	/////////////////////////////////////////
+	// Interface
+	/////////////////////////////////////////
+	
+	//---------------------------------------------------
+	
+	void OnPickUp(const tString& in asItemType, iScrItem@ apItem, const tString& in asItemEntity)
+	{
+		//////////////
+		// Ammunition
+		if (asItemType == "Ammunition")
+		{
+			if (ItemType_IsInInventory("Gun") || ItemType_IsInInventory("VolleyGun"))
+			{
+				Hint_StopHint();
+				tString sHint = "HintCheckAmmo";
+				if (cLux_GetUserConfig().GetInt("Accessibility", "ReloadWeaponMode", 0) == 1 && Hint_IsGiven("Hints", sHint) == false)
+					sHint += "_Toggle";			
+				Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, true, 15.f, true, true);
+				
+				Hint_AddAsGiven("Hints", "HintCheckAmmo");
+				Hint_AddAsGiven("Hints", "HintCheckAmmo_Toggle");
+			}
+		}
+		
+		/////////////
+		// Pocket Bag
+		if (asItemType == "PocketBag")
+		{
+			Item_RemoveFromInventory(apItem.GetID());
+			
+			Hint_ShowPrompt("Hints", "HintPocketBag", false, 1.f, false);
+			
+			const int lNewInventorySlotsCount = Item_GetCurrentSlotsCount() + 1;
+			Item_SetCurrentSlotsCount(lNewInventorySlotsCount);
+			
+			const int lNonRandomizedPocketBags = 2;
+			int lTotalPocketBagCount = Randomizer_GetTotalItemCount("PocketBag") + lNonRandomizedPocketBags;
+			
+			if (lNewInventorySlotsCount - Item_GetPlayerInventoryDefaultSlotsCount() >= lTotalPocketBagCount)
+				Achievement_Unlock(eAchievement_PackRat);
+		}
+		
+		////////////////
+		// Craftable
+		if (asItemType == "EmptyBottle" ||
+			asItemType == "ClothPiece" ||
+			asItemType == "Stick")
+		{
+			tString sHint = "HintPickedUpCraftable";
+			if (cLux_GetCurrentMap().GetName() != "trenches")
+				sHint = "HintPickedUpCraftableAlt";
+			else
+				Hint_AddAsGiven("Hints", "HintPickedUpCraftableAlt");
+			
+			Hint_StopHint();
+			Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, true, 5.f, true, true);
+		}
+		
+		if (asItemType == "GasMask")
+		{
+			Hint_StopHint();
+			Hint_ShowHint_Hold("Hints", "HintGasMask", true, 1.5f, true, 5.f, false, true);
+			
+			Achievement_Unlock(eAchievement_EasyBreather);
+		}
+		
+		if (asItemType == "Lighter")
+		{
+			Achievement_Unlock(eAchievement_FlintSteel);
+		}
+		
+		if (asItemType == "Shotgun")
+		{
+			if (cLux_GetCurrentMap().GetName()=="training_grounds")
+			{
+				//cLux_AddDebugMessage("Don't allow the canonnier achievement here.");
+				return;
+			}
+			Achievement_Unlock(eAchievement_Canonnier);
+		}
+		
+		if (asItemType == "RabbitDoll")
+		{
+			Achievement_Unlock(eAchievement_ToyCollector);
+			
+			if (cString_GetFirstStringPos(asItemEntity, "respawn_rabbit_pickup") != -1)
+			{
+				Achievement_Unlock(eAchievement_ToyFanatic);
+			}
+		}
+	}
+	
+	//---------------------------------------------------
+	
+	/**
+	* This function is called when the player tries to
+	* combine two items in their inventory (e.g.) use
+	* item A on item B.
+	* You should take action here, and return true if the
+	* combine was successful.
+	* REMEMBER: check if the items are used in the reverse
+	* order, if each can be combined on the other!
+	*/
+	bool OnItemsCombined(const tString& in asItemTypeA, iScrItem@ pItemA, const tString& in asItemTypeB, iScrItem@ pItemB, eInventoryInstance aInventoryInstanceA, eInventoryInstance aInventoryInstanceB)
+	{
+		cLux_AddDebugMessage("COMBINE: " + asItemTypeA + " + "+asItemTypeB);
+		return CombineAndAddItem(GetCombineOutcome(asItemTypeA, asItemTypeB), pItemA, pItemB, aInventoryInstanceA, aInventoryInstanceB);
+	}
+	
+	//---------------------------------------------------
+	
+	/**
+	* This function is called to check if the item can be used on the player.
+	* Note that it won't be called AT ALL unless Use OnSelf="true" in Inventory.cfg
+	* If CanUseOnSelfMapCallback="xxx" exists, that'll be called instead, if it exists in the map.
+	*/
+	bool CanUseOnSelf(const tString& in asItemType, iScrItem@ pItem)
+	{
+		// ==============================================
+		// Healing items
+		// ==============================================
+		if (asItemType == "Medkit")
+		{
+			if (Player_GetHealth() < 1.f)
+			{
+				return true;
+			}
+			else
+			{
+				Hint_ShowPrompt("Hints", "HintNotInjured", false, 1.f, false);
+				return false;
+			}
+		}
+		else if (asItemType == "Bandage")
+		{
+			float fHealth = Player_GetHealth();
+			bool bRet = fHealth < 1.f;
+			
+			if (GameDifficulty_GetSettingValueByID_Bool(eGameDifficultySetting_HardcoreHealthSystem))
+			{
+				if (bRet && (Player_GetBleedingStopped() || fHealth > 0.9f))
+					bRet = false;
+				
+				if (bRet == false)
+					Hint_ShowPrompt("Hints", "HintNotBleeding", false, 1.f, false);
+			}
+			else
+			{
+				if (bRet == false)
+					Hint_ShowPrompt("Hints", "HintNotInjured", false, 1.f, false);
+			}
+			
+			return bRet;
+		}
+		
+		return false;
+	}
+
+	//---------------------------------------------------
+	
+	/**
+	* This function is called when the player uses an item on themselves.
+	* Note that it won't be called AT ALL unless Use OnSelf="true" in Inventory.cfg
+	* If UseOnSelfMapCallback="xxx" exists, that'll be called instead, if it exists in the map.
+	* @return true If you have handled this item.
+	*/
+	bool UseOnSelf(const tString& in asItemType, iScrItem@ apItem, const tString& in asItemEntity, float afTimeElapsed, float afTimeStep)
+	{		
+		// ==============================================
+		// Gun
+		// ==============================================
+		if (asItemType == "Gun" || asItemType == "VolleyGun")
+		{
+			return true;
+		}
+
+		// ==============================================
+		// Healing items
+		// ==============================================
+		if (asItemType=="Medkit")
+		{
+			Item_RemoveFromInventory(apItem.GetID());
+			Player_ApplyHeal(true);
+			
+			return true;
+		}
+		
+		if (asItemType=="Bandage")
+		{
+			Item_RemoveFromInventory(apItem.GetID());
+			Player_ApplyHeal(false);
+			
+			return true;
+		}
+		
+		// ==============================================
+		// Gas Mask
+		// ==============================================
+		if (asItemType == "GasMask")
+		{
+			Player_SetEquipGasMask(Player_GetGasMaskEquipped()==false);
+			return true;
+		}
+		
+		return false;
+	}
+	
+	//---------------------------------------------------
+	
+	void OnStoppedUsing(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity)
+	{
+		
+	}
+	
+	//---------------------------------------------------
+	
+	/**
+	* This function is called to check if the item can be used on an entity in the world.
+	* Note that it won't be called AT ALL unless Use OnWorld="true" in Inventory.cfg
+	* If CanUseOnWorldMapCallback="xxx" exists, that'll be called instead, if it exists in the map.
+	*/
+	bool CanUseOnWorld(const tString& in asItemType, iScrItem@ pItem, const tString& in asPickedEntity)
+	{
+		if (asItemType == "Fuse")
+		{
+			tString sArea = Generator_GetFuseInteractArea();
+			return sArea != "" && cString_GetFirstStringPos(asPickedEntity, sArea) != -1;
+		}
+		
+		return false;
+	}
+	
+	//---------------------------------------------------
+
+	/**
+	* This function is called when the player uses an item on the world.
+	* Note that it won't be called AT ALL unless Use OnWorld="true" in Inventory.cfg
+	* If UseOnWorldMapCallback="xxx" exists, that'll be called instead, if it exists in the map.
+	* @return true If you have handled this item.
+	*/
+	bool UseOnWorld(const tString& in asItemType, iScrItem@ pItem, const tString& in asTargetEntity, const tString& in asItemEntity, float afTimeElapsed, float afTimeStep)
+	{
+		if (asItemType == "Fuse")
+		{
+			Fuse_OnUse(Generator_GetFuseBoxEntity());
+			return false;
+		}
+		
+		return false;
+	}
+	
+	//---------------------------------------------------
+	
+	/**
+	* Called when an item is taken out.
+	*/
+	void OnTakeOut(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, eItemHandlerHand aHand)
+	{
+		//////////
+		// Molotov
+		if (asItemType == "MolotovCocktail")
+		{
+			//////////////
+			// Disable the fire and light on equip
+			iLuxEntity@ pMolotovEnt = Map_GetEntity(asItemEntity);
+			if (pMolotovEnt !is null)
+			{
+				iLight@ pFireLight = pMolotovEnt.GetLightFromName("Light_Fire");
+				if (pFireLight !is null)
+					pFireLight.SetBrightness(0.f);
+			}
+		}
+		
+		///////////////
+		// Pocket watch
+		else if (asItemType == "PocketWatch")
+		{
+			bool bThreats = RatHandler_GetAttackingRatCount() > 0 || Blackboard_GetHuntingAgentCount() > 0;
+			if (bThreats && PocketWatch_GetWindUpNeeded())
+				PocketWatch_WindUpInstant(asItemEntity);
+		}
+		
+		///////////////
+		// Fuel
+		else if (asItemType == "Fuel")
+		{
+			//////////////
+			// Hide the mesh temporarily
+			iLuxEntity@ pEnt = Map_GetEntity(asItemEntity);
+			if (pEnt !is null)
+			{
+				pEnt.GetMeshEntity().SetVisible(false);
+				Item_SetItemMeshVisible(aHand);
+			}
+		}
+		
+		if (asItemEntity != "") Item_SetEntityHealth(asItemEntity, pItem.GetHealth());
+	}
+
+	//---------------------------------------------------
+
+	void OnHeld(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, eItemHandlerHand aHand)
+	{
+		///////////////
+		// Gun
+		if (asItemType == "Gun" || asItemType == "VolleyGun")
+		{
+			Hint_StopHint();
+			tString sHint = "HintAimGun";
+			if (cLux_GetUserConfig().GetInt("Accessibility", "UseItemMode", 0) == 1 && Hint_IsGiven("Hints", sHint) == false)
+				sHint += "_Toggle";			
+			Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, true, 15.f);
+			
+			Hint_AddAsGiven("Hints", "HintAimGun");
+			Hint_AddAsGiven("Hints", "HintAimGun_Toggle");
+		}
+		
+		///////////////
+		// Lantern
+		else if (asItemType == "DynamoLantern")
+		{
+			Hint_StopHint();
+			tString sHint = "HintDynamoLantern";
+			if (cLux_GetUserConfig().GetInt("Accessibility", "ChargeFlashlightMode", 0) == 1 && Hint_IsGiven("Hints", sHint) == false)
+				sHint += "_Toggle";
+			Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, false, 15.f, true, true);
+		}
+		
+		///////////////
+		// Pocket watch
+		else if (asItemType == "PocketWatch")
+		{
+			Hint_StopHint();
+			tString sHint = "HintPocketWatch";
+			if (cLux_GetUserConfig().GetInt("Accessibility", "UseItemMode", 0) == 1 && Hint_IsGiven("Hints", sHint) == false)
+				sHint += "_Toggle";
+			Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, true, 15.f);
+			
+			Hint_AddAsGiven("Hints", "HintPocketWatch");
+			Hint_AddAsGiven("Hints", "HintPocketWatch_Toggle");
+			
+			PocketWatch_WindUpIfNeeded(false);
+		}
+				
+		///////////////
+		// Other
+		else
+		{
+			///////////////
+			// If equipping fuel, show until you've used a fuel item
+			bool bAddAsGiven = false;
+			if (asItemType == "Fuel" &&
+				(Hint_IsGiven("Hints", "HintUseItem") || Hint_IsGiven("Hints", "HintUseItem_Toggle")) &&
+				cScript_GetGlobalVarBool("HasUsedFuelItem") == false)
+			{
+				bAddAsGiven = true;
+				Hint_RemoveFromGiven("Hints", "HintUseItem");
+				Hint_RemoveFromGiven("Hints", "HintUseItem_Toggle");
+			}
+			
+			///////////////
+			// Show hint
+			Hint_StopHint();
+			tString sHint = "HintUseItem";
+			if (cLux_GetUserConfig().GetInt("Accessibility", "UseItemMode", 0) == 1 && Hint_IsGiven("Hints", sHint) == false)
+				sHint += "_Toggle";
+			Hint_ShowHint_Hold("Hints", sHint, true, 1.5f, false, 15.f, true, true);
+			
+			///////////////
+			// Add as given?
+			if (bAddAsGiven)
+			{
+				Hint_AddAsGiven("Hints", "HintUseItem");
+				Hint_AddAsGiven("Hints", "HintUseItem_Toggle");
+			}
+		}
+	}
+
+	//---------------------------------------------------
+
+	/**
+	* Called when an item is put away
+	*/	
+	void OnStartPutAway(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity)
+	{
+	}
+	
+	//---------------------------------------------------
+	
+	/**
+	* Called when an item is put away (after put away animation)
+	*/	
+	void OnPutAway(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity)
+	{
+		
+	}
+
+	//---------------------------------------------------
+	
+	void OnRemoveFromInventory(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, eInventoryInstance aInventoryInstance)
+	{
+		// ==============================================
+		// Gas Mask
+		// ==============================================
+		if (asItemType == "GasMask")
+		{
+			if (Player_GetGasMaskEquipped())
+				Player_SetEquipGasMask(false);
+		}
+		
+		if (asItemEntity != "") Item_SetEntityHealth(asItemEntity, pItem.GetHealth());
+	}
+	
+	//---------------------------------------------------
+	
+	void OnDrop(const tString& in asItemType, const tString& in asItemEntity)
+	{
+		// ==============================================
+		// Torch
+		// ==============================================
+		if (asItemType == "Torch")
+		{
+			if (Player_GetCurrentStateName() == "State_UsingTorch")
+				Player_ChangeStateToNormal();
+		}
+		
+		
+	}
+	
+	//---------------------------------------------------
+
+	// TODO: Remove when FP body is working!
+	void OnLeftHandEquip(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity)
+	{
+	}
+
+	//---------------------------------------------------
+
+	// TODO: Remove when FP body is working!
+	void OnLeftHandUnequip(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity)
+	{
+	}
+
+	//---------------------------------------------------
+	
+	/////////////////////////////////////////
+	// General
+	/////////////////////////////////////////
+	
+	//---------------------------------------------------
+	
+	tString GetCombineOutcome(const tString&in asItemTypeA, const tString&in asItemTypeB)
+	{
+		///////
+		// Fuel
+		if (asItemTypeA=="Fuel")
+		{
+			if (asItemTypeB=="EmptyBottle")
+				return "FuelBottle";
+				
+			if (asItemTypeB=="EmptyMolotovCocktail")
+				return "MolotovCocktail";
+		}
+		
+		///////////////
+		// Empty Bottle
+		if (asItemTypeA=="EmptyBottle")
+		{
+			if (asItemTypeB=="Fuel")
+				return "FuelBottle";
+				
+			if (asItemTypeB=="ClothPiece")
+				return "EmptyMolotovCocktail";
+		}
+		
+		//////////////////////////
+		// Empty molotov
+		if (asItemTypeA=="EmptyMolotovCocktail")
+		{
+			if (asItemTypeB=="Fuel")
+				return "MolotovCocktail";
+				
+			if (asItemTypeB=="FuelBottle")
+				return "MolotovCocktail";
+		}
+		
+		//////////////////////////
+		// Bottle filled with fuel
+		if (asItemTypeA=="FuelBottle")
+		{
+			if (asItemTypeB=="ClothPiece")
+				return "MolotovCocktail";
+			if (asItemTypeB=="EmptyMolotovCocktail")
+				return "MolotovCocktail";
+		}
+		
+		////////
+		// Cloth
+		if (asItemTypeA=="ClothPiece")
+		{
+			if (asItemTypeB=="EmptyBottle")
+				return "EmptyMolotovCocktail";
+				
+			if (asItemTypeB=="FuelBottle")
+				return "MolotovCocktail";
+			
+			if (asItemTypeB=="Stick")
+				return "Torch";
+				
+			if (asItemTypeB=="ClothPiece")
+				return "Bandage";
+		}
+		
+		//////////////
+		// Torch Stick
+		if (asItemTypeA=="Stick")
+		{
+			if (asItemTypeB=="ClothPiece")
+				return "Torch";
+		}
+		
+		return "";
+	}
+	
+	//---------------------------------------------------
+	
+	bool CombineAndAddItem(const tString&in asItemTypeToAdd, iScrItem@ pItemA, iScrItem@ pItemB, eInventoryInstance aInventoryInstanceA, eInventoryInstance aInventoryInstanceB)
+	{
+		Item_RemoveFromInventory(pItemA.GetID(), aInventoryInstanceA);
+		Item_RemoveFromInventory(pItemB.GetID(), aInventoryInstanceB);
+		
+		cLux_AddDebugMessage("aInventoryInstanceA: " + aInventoryInstanceA);
+		cLux_AddDebugMessage("aInventoryInstanceB: " + aInventoryInstanceB);
+		
+		if (Item_AddToInventory(asItemTypeToAdd, aInventoryInstanceA, true) == "")
+			return false;
+		
+		GameStats_IncreaseEntryAmount(eHeroStats_ItemsCrafted);
+		return true;
+	}
+	
+	//---------------------------------------------------
+}
+
+//---------------------------------------------------

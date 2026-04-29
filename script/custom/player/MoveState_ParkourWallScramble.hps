@@ -1,0 +1,369 @@
+#include "interfaces/MoveState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+
+#include "helpers/helper_player.hps"
+#include "helpers/helper_items.hps"
+#include "helper_effects.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourWallScramble_MaxTime = 1.02f;
+const float gfParkourWallScramble_MinVerticalVel = -0.25f;
+const float gfParkourWallScramble_UpSpeedStart = 2.35f;
+const float gfParkourWallScramble_UpSpeedEnd = 0.25f;
+const float gfParkourWallScramble_WallStickSpeed = 0.52f;
+const float gfParkourWallScramble_LostWallGrace = 0.14f;
+const float gfParkourWallScramble_GroundExitGrace = 0.16f;
+const float gfParkourWallScramble_AntiGravityMul = 0.60f;
+const float gfParkourWallScramble_TurnTime = 0.22f;
+const float gfParkourWallScramble_JumpSideImpulse = 235.f;
+const float gfParkourWallScramble_JumpUpImpulse = 255.f;
+const float gfParkourWallScramble_JumpForwardImpulse = 95.f;
+
+//------------------------------------------------------------
+
+class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
+{
+	//------------------------------------------------------------
+	
+	void Init() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void Reset() {}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{
+		mfTimer = 0.f;
+		mfLostWallTimer = gfParkourWallScramble_LostWallGrace;
+		mfGroundTimer = gfParkourWallScramble_GroundExitGrace;
+		mfTurnTimer = -1.f;
+		mbTurned = false;
+		mbTurning = false;
+		msLastWallRefreshFail = "";
+		mvWallNormal = cScript_GetGlobalVarVector3f("Parkour_WallScramble_Normal");
+		mfPowerMul = cMath_Clamp(Parkour_GetWallRunPowerMul(), 0.1f, 1.15f);
+		
+		if (mvWallNormal.SqrLength() > 0.001f) mvWallNormal.Normalize();
+		
+		Player_SetDisableCrawling(true);
+		Player_SetCrouching(false, false, true);
+		Player_SetCrouchDisabled(true);
+		Player_SetCrouchActionDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_CancelJump();
+		
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			cVector3f vVel = pBody.GetForceVelocity();
+			vVel.y = cMath_Max(vVel.y, gfParkourWallScramble_MinVerticalVel);
+			pBody.SetForceVelocity(vVel);
+		}
+		
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, 0.05f, 0.05f), 8.f, 5.f, 0.08f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Wall scramble entered.", true);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId)
+	{
+		Player_SetDisableCrawling(false);
+		Player_SetCrouchDisabled(false);
+		Player_SetCrouchActionDisabled(false);
+		Player_SetLeanDisabled(false);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			EndWallScramble("no player body");
+			return;
+		}
+		
+		mfTimer += afTimeStep;
+		UpdateTurn(pBody, afTimeStep);
+		
+		if (Player_GetUnderwater())
+		{
+			EndWallScramble("underwater");
+			return;
+		}
+		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal)
+		{
+			EndWallScramble("player state changed");
+			return;
+		}
+		if (mfTimer > gfParkourWallScramble_MaxTime)
+		{
+			EndWallScramble("timer expired");
+			return;
+		}
+		
+		if (pBody.IsOnGround())
+			mfGroundTimer -= afTimeStep;
+		else
+			mfGroundTimer = gfParkourWallScramble_GroundExitGrace;
+		
+		if (mfGroundTimer <= 0.f)
+		{
+			EndWallScramble("grounded");
+			return;
+		}
+		
+		cVector3f vNewNormal;
+		if (RefreshWallNormal(pBody, vNewNormal) == false)
+		{
+			mfLostWallTimer -= afTimeStep;
+			if (mfLostWallTimer <= 0.f)
+			{
+				EndWallScramble(msLastWallRefreshFail);
+				return;
+			}
+		}
+		else
+		{
+			mfLostWallTimer = gfParkourWallScramble_LostWallGrace;
+			mvWallNormal = vNewNormal;
+		}
+		
+		float fT = cMath_Clamp(mfTimer / gfParkourWallScramble_MaxTime, 0.f, 1.f);
+		float fUpSpeed = cMath_InterpolateLinear(gfParkourWallScramble_UpSpeedStart, gfParkourWallScramble_UpSpeedEnd, fT) * mfPowerMul;
+		
+		cVector3f vTarget = mvWallNormal * -gfParkourWallScramble_WallStickSpeed;
+		vTarget.y = fUpSpeed;
+		pBody.SetForceVelocity(vTarget);
+		
+		iPhysicsWorld@ pPhysicsWorld = cLux_GetCurrentMap().GetPhysicsWorld();
+		cVector3f vGravity = pBody.GetCustomGravityActive() ? pBody.GetCustomGravity() : pPhysicsWorld.GetGravity();
+		pBody.AddForce(cVector3f(0.f, -vGravity.y * pBody.GetMass() * gfParkourWallScramble_AntiGravityMul, 0.f));
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if ((alAction == eAction_LeanLeft || alAction == eAction_LeanRight) && abPressed)
+		{
+			StartTurn(alAction == eAction_LeanRight ? 1 : -1);
+			return false;
+		}
+		
+		if (alAction == eAction_Jump && abPressed)
+		{
+			if (Parkour_TryStartLedgeGrab(false))
+				return false;
+
+			WallScrambleJump();
+			return false;
+		}
+		
+		if (alAction == eAction_Crouch && abPressed)
+		{
+			EndWallScramble();
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (alAnalogId == eAnalogType_Lean)
+		{
+			if (cMath_Abs(avAmount.x) > 0.2f)
+				StartTurn(avAmount.x > 0.f ? 1 : -1);
+			
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody,const cVector3f &in avVel) {}
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY) { return afStartY; }
+	
+	//------------------------------------------------------------
+	
+	bool RefreshWallNormal(iCharacterBody@ apBody, cVector3f &out avNormal)
+	{
+		avNormal = cVector3f_Zero;
+		msLastWallRefreshFail = "";
+		
+		cVector3f vRayDir = mvWallNormal * -1.f;
+		vRayDir.y = 0.f;
+		if (vRayDir.SqrLength() <= 0.001f) return false;
+		vRayDir.Normalize();
+		
+		array<float> vHeights = { 0.65f, 1.05f, 1.45f };
+		float fBestDistance = 1000.f;
+		bool bFoundWall = false;
+		bool bAnyBodyHit = false;
+		
+		for (uint h = 0; h < vHeights.size(); ++h)
+		{
+			cVector3f vStart = apBody.GetFeetPosition() + cVector3f(0.f, vHeights[h], 0.f);
+			float fDistance;
+			cVector3f vNormal;
+			bool bBodyHit;
+			
+			if (Parkour_CastWallRunRay(vStart, vRayDir, gfParkourWallDetect_SustainRayLength, fDistance, vNormal, bBodyHit))
+			{
+				if (bFoundWall == false || fDistance < fBestDistance)
+				{
+					fBestDistance = fDistance;
+					avNormal = vNormal;
+					bFoundWall = true;
+				}
+			}
+			else if (bBodyHit)
+			{
+				bAnyBodyHit = true;
+			}
+		}
+		
+		if (bFoundWall)
+			return true;
+		
+		if (bAnyBodyHit)
+			msLastWallRefreshFail = "invalid wall normal";
+		else
+			msLastWallRefreshFail = "lost front wall";
+		return false;
+	}
+	
+	//------------------------------------------------------------
+	
+	void StartTurn(int alDir)
+	{
+		if (mbTurned) return;
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null) return;
+		
+		mlTurnDir = alDir >= 0 ? 1 : -1;
+		mfTurnStartYaw = pBody.GetYaw();
+		mfTurnTimer = 0.f;
+		mbTurning = true;
+		mbTurned = true;
+		Effect_Shake_Start(0.04f, 0.10f, 0.f, 0.08f, cVector3f(1, 1, 1), 14);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Wall scramble quick turn.", true);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateTurn(iCharacterBody@ apBody, float afTimeStep)
+	{
+		if (mbTurning == false) return;
+		
+		mfTurnTimer += afTimeStep;
+		float fT = cMath_Clamp(mfTurnTimer / gfParkourWallScramble_TurnTime, 0.f, 1.f);
+		fT = cMath_Easing(eEasing_SineInOut, fT);
+		
+		float fTargetYaw = mfTurnStartYaw + cMath_Pi * float(mlTurnDir) * fT;
+		float fDiff = cMath_GetAngleDistanceRad(apBody.GetYaw(), fTargetYaw);
+		apBody.AddYaw(fDiff);
+		
+		if (fT >= 1.f)
+			mbTurning = false;
+	}
+	
+	//------------------------------------------------------------
+	
+	void WallScrambleJump()
+	{
+		if (mbTurned == false)
+		{
+			if (Parkour_GetDebug())
+				cLux_AddDebugMessage("[Parkour] Wall scramble jump ignored: turn first.", true);
+			return;
+		}
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			EndWallScramble("jump without body");
+			return;
+		}
+		
+		cVector3f vCamFwd = cLux_GetPlayer().GetCamera().GetForward();
+		vCamFwd.y = 0.f;
+		if (vCamFwd.SqrLength() > 0.001f)
+			vCamFwd.Normalize();
+		else
+			vCamFwd = mvWallNormal;
+		
+		cVector3f vImpulse = mvWallNormal * gfParkourWallScramble_JumpSideImpulse * mfPowerMul;
+		vImpulse += cVector3f_Up * gfParkourWallScramble_JumpUpImpulse * mfPowerMul;
+		vImpulse += vCamFwd * gfParkourWallScramble_JumpForwardImpulse * mfPowerMul;
+		
+		pBody.SetForceVelocity(cVector3f_Zero);
+		pBody.AddImpulse(vImpulse);
+		Parkour_NotifyFlowEvent(geParkourFlowEvent_WallScrambleJump, 1.f);
+		Parkour_ArmWallScrambleJumpChain(mvWallNormal);
+		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void EndWallScramble(const tString &in asReason = "")
+	{
+		if (Parkour_GetDebug() && asReason != "")
+			cLux_AddDebugMessage("[Parkour] Wall scramble ended: " + asReason, true);
+		
+		if (asReason == "timer expired")
+		{
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_WallRunTimeout, 1.f);
+		}
+		else if (asReason == "lost front wall" ||
+				 asReason == "no wall hit" ||
+				 asReason == "invalid wall normal")
+		{
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_WallRunDropped, 1.f);
+		}
+		
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	float mfTimer = 0.f;
+	float mfLostWallTimer = 0.f;
+	float mfGroundTimer = 0.f;
+	float mfPowerMul = 1.f;
+	float mfTurnTimer = -1.f;
+	float mfTurnStartYaw = 0.f;
+	int mlTurnDir = 1;
+	bool mbTurned = false;
+	bool mbTurning = false;
+	tString msLastWallRefreshFail = "";
+	cVector3f mvWallNormal = cVector3f_Forward;
+	
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

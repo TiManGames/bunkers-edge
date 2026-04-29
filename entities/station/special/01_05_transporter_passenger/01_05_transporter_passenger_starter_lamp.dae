@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///C:/Users/marcus/Documents/maya/projects/default/untitled</source_data>
+    </contributor>
+    <created>2012-12-14T14:53:49</created>
+    <modified>2012-12-14T14:53:49</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="MAT" name="MAT">
+      <instance_effect url="#MAT-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="MAT-fx">
+      <profile_COMMON>
+        <newparam sid="file6-surface">
+          <surface type="2D">
+            <init_from>file6</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file6-sampler">
+          <sampler2D>
+            <source>file6-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file6-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float>0.3</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file6" name="file6">
+      <init_from>file:///D:/work/depth/redist/entities/station/special/01_05_transporter_passenger/01_05_transporter_passenger.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file6</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="transporter_baseShape" name="starter_machine_lightShape">
+      <mesh>
+        <source id="transporter_baseShape-positions" name="transporter_baseShape-positions">
+          <float_array id="transporter_baseShape-positions-array" count="36">-0.04433269 -0.002380212 -0.02121577 -0.04433269 -0.002380212 0.02126669 -0.04156713 0.006405334 -0.01895214 -0.04156713 0.006405334 0.01900307 0.04122779 0.006405334 -0.01895214 0.04122779 0.006405334 0.01900307 0.04385997 -0.002380211 -0.02121577 0.04385997 -0.002380211 0.02126669 -0.01815445 0.01214233 0.008223419 -0.01815445 0.01214233 -0.008805771 0.01806833 0.01214233 -0.008805771 0.01806833 0.01214233 0.008223419</float_array>
+          <technique_common>
+            <accessor source="#transporter_baseShape-positions-array" count="12" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="transporter_baseShape-normals" name="transporter_baseShape-normals">
+          <float_array id="transporter_baseShape-normals-array" count="72">-0.9538576 0.3002595 0 -0.9538576 0.3002595 0 -0.9538576 0.3002595 0 -0.9538576 0.3002595 0 0.957931 0.2869989 0 0.957931 0.2869989 0 0.957931 0.2869989 0 0.957931 0.2869989 0 0 0.2495049 0.9683736 0 0.2495049 0.9683736 0 0.2495049 0.9683736 0 0.2495049 0.9683736 0 0.2495049 -0.9683736 0 0.2495049 -0.9683736 0 0.2495049 -0.9683736 0 0.2495049 -0.9683736 -0.06118415 0.990792 0.1207794 0.08286155 0.9833216 0.1619028 0.0619714 0.9899836 -0.1268536 -0.1238805 0.9586548 -0.2561929 -0.1234821 0.961943 0.2437575 -0.08224199 0.9819922 -0.1700818 0.1247725 0.9617677 0.2437925 0.1251749 0.9584768 -0.2562294</float_array>
+          <technique_common>
+            <accessor source="#transporter_baseShape-normals-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="transporter_baseShape-transporter_baseShape-map1" name="transporter_baseShape-transporter_baseShape-map1">
+          <float_array id="transporter_baseShape-transporter_baseShape-map1-array" count="32">0.751188 0.422467 0.751191 0.418276 0.751852 0.422467 0.751854 0.418276 0.760766 0.422473 0.760769 0.418282 0.76143 0.422473 0.761432 0.418282 0.751855 0.417614 0.760769 0.417619 0.760765 0.423136 0.75185 0.42313 0.7543605 0.4194564 0.7543596 0.42129 0.7582595 0.4212926 0.7582608 0.419459</float_array>
+          <technique_common>
+            <accessor source="#transporter_baseShape-transporter_baseShape-map1-array" count="16" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="transporter_baseShape-vertices" name="transporter_baseShape-vertices">
+          <input semantic="POSITION" source="#transporter_baseShape-positions"/>
+        </vertices>
+        <triangles material="MATSG" count="18">
+          <input semantic="VERTEX" source="#transporter_baseShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#transporter_baseShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#transporter_baseShape-transporter_baseShape-map1" offset="2" set="0"/>
+          <p>2 0 2 0 1 0 3 3 3 3 3 3 0 1 0 1 2 1 6 4 6 4 5 4 7 7 7 7 7 7 4 5 4 5 6 5 5 9 5 3 10 3 7 8 9 7 8 9 3 10 3 1 11 8 4 12 4 6 13 10 2 15 2 2 15 2 6 13 10 0 14 11 8 16 12 11 17 15 10 18 14 3 20 3 8 16 12 2 19 2 2 19 2 8 16 12 9 21 13 3 20 3 5 22 5 8 16 12 8 16 12 5 22 5 11 17 15 5 22 5 4 23 4 11 17 15 11 17 15 4 23 4 10 18 14 2 19 2 9 21 13 4 23 4 4 23 4 9 21 13 10 18 14 8 16 12 10 18 14 9 21 13</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>starter_machine_lightShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="untitled">
+      <node id="transporter_base" name="starter_machine_light" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#transporter_baseShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="MATSG" target="#MAT">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>starter_machine_light</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

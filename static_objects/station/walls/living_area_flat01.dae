@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=1;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///F:/Dropbox/Team/depth_marc/models/station_curie/static_objects/walls/living_area2.mb</source_data>
+    </contributor>
+    <created>2011-11-04T08:17:35</created>
+    <modified>2011-11-04T08:17:35</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="living_area_flat01_lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="living_area_flat01_file1">
+      <init_from>file:///F:/depth/redist/static_objects/station/station.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>living_area_flat01_file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="pPlaneShape6" name="pPlaneShape6">
+      <mesh>
+        <source id="pPlaneShape6-positions" name="pPlaneShape6-positions">
+          <float_array id="pPlaneShape6-positions-array" count="144">-2 0 0 2 0 0 -2 4 0 2 4 0 2 1.461709 -0.185914 -2 1.461709 -0.185914 -2 3 -0.105216 2 3 -0.105216 -2 0.173418 -0.060914 2 0.173418 -0.060914 -2 2.75 -0.185914 2 2.75 -0.185914 0 4 0 0 3 -0.105216 0 2.75 -0.185914 0 1.461709 -0.185914 0 0.173418 -0.060914 0 0 0 2 1.414313 -0.076538 2 1.390515 -0.060914 0 1.390515 -0.060914 0 1.414313 -0.076538 2 3.133617 0 2 3.119813 -0.005011571 0 3.119813 -0.005011571 0 3.133617 0 2 2.882363 -0.06352355 2 2.867188 -0.060914 0 2.867188 -0.060914 0 2.882363 -0.06352355 2 0.1142139 -0.005346036 2 0.1007063 0 0 0.1007063 0 0 0.1142139 -0.005346036 2 2.757812 -0.060914 2 2.75 -0.06872572 0 2.75 -0.06872572 0 2.757812 -0.060914 -2 3.119813 -0.005011571 -2 3.133617 0 -2 2.867188 -0.060914 -2 2.882363 -0.06352355 -2 2.75 -0.06872572 -2 2.757812 -0.060914 -2 1.390515 -0.060914 -2 1.414313 -0.076538 -2 0.1007063 0 -2 0.1142139 -0.005346036</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape6-positions-array" count="48" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pPlaneShape6-normals" name="pPlaneShape6-normals">
+          <float_array id="pPlaneShape6-normals-array" count="210">0 0.2864056 0.9581085 0 0.286406 0.9581084 0 0 1 0 0 1 0 -0.4989494 0.8666311 0 -0.4989493 0.8666312 0 -0.6415458 0.7670847 0 -0.6415458 0.7670847 0 0.3340519 0.9425547 0 0.2526841 0.9675488 0 0.2526845 0.9675487 0 0.3340519 0.9425547 0 0.9175577 0.3976029 0 0.7652434 0.6437411 0 0.7652431 0.6437415 0 0.9175577 0.3976029 0 0.1873187 0.9822992 0 0.1873187 0.9822992 0 0 1 0 0 1 0 0.6843638 0.7291408 0 0.5356652 0.8444304 0 0.5356652 0.8444304 0 0.6843638 0.7291408 0 0 1 0 0 1 0 0 1 0 0 1 0 -0.9238819 0.3826777 0 -0.9238819 0.3826777 0 -1 0 0 -1 0 0 0.08504931 0.9963768 0 0.08504877 0.9963768 0 -0.3826892 0.9238771 0 -0.3826892 0.9238771 0 0 1 0 -0.1732522 0.9848776 0 -0.1732522 0.9848776 0 0 1 0 0 1 0 -0.1732522 0.9848775 0 0 1 0 -0.4989491 0.8666313 0 -0.6415458 0.7670847 0 -0.6415458 0.7670847 0 0.3340519 0.9425547 0 0.2526838 0.967549 0 0.3340519 0.9425547 0 0.08504824 0.9963769 0 -0.3826892 0.9238771 0 -0.9238819 0.3826776 0 -1 0 0 -1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0.9175577 0.3976029 0 0.7652437 0.6437408 0 0.9175577 0.3976029 0 0.2864065 0.9581082 0 0 1 0 0 1 0 0.6843638 0.7291408 0 0.5356652 0.8444304 0 0.6843638 0.7291408 0 0.1873187 0.9822992 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape6-normals-array" count="70" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pPlaneShape6-pPlaneShape6-pPlaneShape6-map1" name="pPlaneShape6-pPlaneShape6-pPlaneShape6-map1">
+          <float_array id="pPlaneShape6-pPlaneShape6-pPlaneShape6-map1-array" count="168">0.1564578 0.519875 0.1564578 0.519875 0.2760013 0.705132 0.2907659 0.519875 0.4038884 0.705132 0.2907659 0.705132 0.2907659 0.519875 0.4038884 0.705132 0.2760013 0.519875 0.2879068 0.519875 0.2879068 0.705132 0.1078378 0.519875 0.1216438 0.705132 0.1078378 0.705132 0.1078378 0.519875 0.1216438 0.705132 0.02686648 0.519875 0.1061723 0.519875 0.1061723 0.705132 0.02686648 0.705132 0.1216438 0.519875 0.1330408 0.705132 0.412099 0.519875 0.421818 0.519875 0.421818 0.705132 0.412099 0.705132 0.412099 0.519875 0.421818 0.519875 0.421818 0.705132 0.4038884 0.519875 0.4103274 0.519875 0.4103274 0.705132 0.1452697 0.519875 0.1564578 0.705132 0.1452697 0.705132 0.1452697 0.519875 0.1564578 0.705132 0.1343621 0.705132 0.1343621 0.519875 0.1438809 0.519875 0.1438809 0.705132 0.02686648 0.519875 0.1061723 0.705132 0.02686648 0.705132 0.1216438 0.519875 0.1330408 0.705132 0.1343621 0.705132 0.1343621 0.519875 0.1438809 0.705132 0.2760013 0.519875 0.2879068 0.705132 0.2760013 0.705132 0.4038884 0.519875 0.4103274 0.705132 0.2907659 0.705132 0.2879068 0.705132 0.2879068 0.519875 0.2907659 0.705132 0.2879068 0.519875 0.2907659 0.519875 0.1078378 0.705132 0.1061723 0.705132 0.1061723 0.519875 0.1078378 0.705132 0.1061723 0.519875 0.1078378 0.519875 0.1343621 0.705132 0.1330408 0.519875 0.1343621 0.519875 0.1343621 0.705132 0.1330408 0.519875 0.1343621 0.519875 0.412099 0.705132 0.4103274 0.705132 0.4103274 0.519875 0.412099 0.705132 0.4103274 0.519875 0.412099 0.519875 0.1452697 0.705132 0.1438809 0.705132 0.1438809 0.519875 0.1452697 0.705132 0.1438809 0.519875 0.1452697 0.519875</float_array>
+          <technique_common>
+            <accessor source="#pPlaneShape6-pPlaneShape6-pPlaneShape6-map1-array" count="84" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="pPlaneShape6-vertices" name="pPlaneShape6-vertices">
+          <input semantic="POSITION" source="#pPlaneShape6-positions"/>
+        </vertices>
+        <triangles material="living_area_flat01_lambert2SG" count="60">
+          <input semantic="VERTEX" source="#pPlaneShape6-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#pPlaneShape6-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#pPlaneShape6-pPlaneShape6-pPlaneShape6-map1" offset="2" set="0"/>
+          <p>19 0 54 20 1 3 9 3 4 9 3 4 20 1 3 16 2 29 23 4 60 24 5 11 7 7 12 7 7 12 24 5 11 13 6 20 13 8 20 29 9 67 7 11 12 7 11 12 29 9 67 26 10 21 15 12 8 21 13 9 4 15 2 4 15 2 21 13 9 18 14 10 31 16 72 32 17 22 1 19 24 1 19 24 32 17 22 17 18 23 16 20 29 33 21 30 9 23 4 9 23 4 33 21 30 30 22 31 14 24 1 15 25 8 11 27 33 11 27 33 15 25 8 4 26 2 35 28 78 36 29 32 11 31 33 11 31 33 36 29 32 14 30 1 27 32 37 28 33 38 34 35 40 34 35 40 28 33 38 37 34 39 12 36 16 25 37 17 3 39 19 3 39 19 25 37 17 22 38 18 2 40 41 39 41 64 12 42 43 12 42 43 39 41 64 25 37 42 24 5 13 38 43 14 13 45 15 13 45 15 38 43 14 6 44 44 6 46 44 41 47 70 13 48 15 13 48 15 41 47 70 29 9 45 28 33 46 40 49 47 37 34 48 37 34 48 40 49 47 43 50 82 36 29 34 42 51 35 14 53 36 14 53 36 42 51 35 10 52 0 10 54 0 5 55 49 14 57 36 14 57 36 5 55 49 15 56 51 5 58 49 45 59 58 15 60 51 15 60 51 45 59 58 21 13 50 20 1 5 44 61 6 16 63 7 16 63 7 44 61 6 8 62 52 8 64 52 47 65 76 16 66 7 16 66 7 47 65 76 33 21 53 32 17 25 46 67 26 17 69 28 17 69 28 46 67 26 0 68 27 19 0 54 18 14 55 20 1 3 20 1 3 18 14 55 21 13 56 20 1 57 21 13 50 44 61 59 44 61 59 21 13 50 45 59 58 23 4 60 22 38 61 24 5 11 24 5 11 22 38 61 25 37 62 24 5 63 25 37 42 38 43 65 38 43 65 25 37 42 39 41 64 27 32 66 26 10 21 28 33 68 28 33 68 26 10 21 29 9 67 28 33 69 29 9 45 40 49 71 40 49 71 29 9 45 41 47 70 31 16 72 30 22 73 32 17 22 32 17 22 30 22 73 33 21 74 32 17 75 33 21 53 46 67 77 46 67 77 33 21 53 47 65 76 35 28 78 34 35 79 36 29 32 36 29 32 34 35 79 37 34 80 36 29 81 37 34 48 42 51 83 42 51 83 37 34 48 43 50 82</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>pPlaneShape6</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="living_area2">
+      <node id="pPlane6" name="pPlane6" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#pPlaneShape6">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="living_area_flat01_lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>pPlane6</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

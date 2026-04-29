@@ -1,0 +1,87 @@
+<Entity>
+    <ModelData>
+        <Entities />
+        <Mesh Filename="entities/station/doors/slidedoor_theta_airlock/slidedoor_theta_airlock_slidedoor.dae">
+            <SubMesh ID="0" Material="" Name="door_left" Rotation="0 0 0" Scale="1 1 1" TriCount="442" WorldPos="0 0 0" />
+            <SubMesh ID="1" Material="" Name="door_right" Rotation="0 0 0" Scale="1 1 1" TriCount="442" WorldPos="0 0 0" />
+            <SubMesh ID="2" Material="" Name="glass" Rotation="0 0 0" Scale="1 1 1" TriCount="4" WorldPos="0 0 0" />
+            <SubMesh ID="3" Material="" Name="glass__2_" Rotation="0 0 0" Scale="1 1 1" TriCount="4" WorldPos="0 0 0" />
+        </Mesh>
+        <Bones />
+        <Shapes>
+            <Shape ID="4" Name="ShapeBox_1" RelativeRotation="0 -0 0" RelativeScale="1 1 1" RelativeTranslation="0 0 0" Rotation="0 0 0" Scale="0.734573 2.68583 0.0796007" ShapeType="Box" WorldPos="-0.376601 1.38008 0" />
+            <Shape ID="5" Name="ShapeBox_2" RelativeRotation="0 -0 0" RelativeScale="1 1 1" RelativeTranslation="0 0 0" Rotation="0 0 0" Scale="0.734573 2.68583 0.0796007" ShapeType="Box" WorldPos="0.377614 1.38008 0" />
+        </Shapes>
+        <Bodies>
+            <Body AngularDamping="0.1" BlocksLight="true" BlocksSound="false" BuoyancyDensityMul="1" CanAttachCharacter="false" CollideCharacter="true" CollideNonCharacter="true" ContinuousCollision="true" HasGravity="true" ID="6" LinearDamping="0.1" Mass="0" Material="Plastic" MaxAngularSpeed="20" MaxLinearSpeed="20" Name="door_right_body" PushedByCharacterGravity="false" Rotation="0 0 0" Scale="1 1 1" UseSurfaceEffects="true" Volatile="false" WorldPos="0.377614 1.38008 0">
+                <Children>
+                    <Child ID="1" />
+                    <Child ID="2" />
+                </Children>
+                <Shape ID="5" />
+            </Body>
+            <Body AngularDamping="0.1" BlocksLight="true" BlocksSound="false" BuoyancyDensityMul="1" CanAttachCharacter="false" CollideCharacter="true" CollideNonCharacter="true" ContinuousCollision="true" HasGravity="true" ID="7" LinearDamping="0.1" Mass="0" Material="Plastic" MaxAngularSpeed="20" MaxLinearSpeed="20" Name="door_left_body" PushedByCharacterGravity="false" Rotation="0 0 0" Scale="1 1 1" UseSurfaceEffects="true" Volatile="false" WorldPos="-0.376601 1.38008 0">
+                <Children>
+                    <Child ID="3" />
+                    <Child ID="0" />
+                </Children>
+                <Shape ID="4" />
+            </Body>
+        </Bodies>
+        <Joints />
+        <Animations />
+    </ModelData>
+    <UserDefinedVariables EntityType="Prop_SlideDoor">
+        <Var Name="Health" Value="100" />
+        <Var Name="Toughness" Value="0" />
+        <Var Name="MaxInteractDistance" Value="0" />
+        <Var Name="EventTag" Value="" />
+        <Var Name="ShowHints" Value="true" />
+        <Var Name="LifeLength" Value="0" />
+        <Var Name="DissolveDuringLifeDecrease" Value="true" />
+        <Var Name="BlocksLineOfSight" Value="true" />
+        <Var Name="MainPhysicsBody" Value="" />
+        <Var Name="CustomScriptFile" Value="" />
+        <Var Name="CustomScriptClass" Value="" />
+        <Var Name="ShowMesh" Value="true" />
+        <Var Name="DissolveOnDestruction" Value="false" />
+        <Var Name="DissolveTime" Value="1.0" />
+        <Var Name="RandomizeAnimationStart" Value="true" />
+        <Var Name="EffectsOnSound" Value="" />
+        <Var Name="EffectsOffSound" Value="" />
+        <Var Name="EffectsOnTime" Value="0.2" />
+        <Var Name="EffectsOffTime" Value="0.2" />
+        <Var Name="StaticMoveCheckCollision" Value="false" />
+        <Var Name="StaticMoveStartSound" Value="" />
+        <Var Name="StaticMoveStopSound" Value="" />
+        <Var Name="StaticMoveLoopSound" Value="" />
+        <Var Name="BreakActive" Value="false" />
+        <Var Name="BreakOnlyOnMainBody" Value="false" />
+        <Var Name="BreakDestroyJoints" Value="false" />
+        <Var Name="BreakMinEnergy" Value="100" />
+        <Var Name="BreakEntity" Value="" />
+        <Var Name="BreakEntityAlignBody" Value="" />
+        <Var Name="BreakSound" Value="" />
+        <Var Name="BreakParticleSystem" Value="" />
+        <Var Name="BreakImpulse" Value="4" />
+        <Var Name="OpenableByInteraction" Value="true" />
+        <Var Name="DoorParts_Body" Value="door_left_body door_right_body" />
+        <Var Name="DoorParts_MoveDir" Value="-1 0 1 0" />
+        <Var Name="DoorParts_MoveAmount" Value="1 1" />
+        <Var Name="OpenSpeed" Value="1" />
+        <Var Name="CloseSpeed" Value="1" />
+        <Var Name="OpenAcc" Value="4" />
+        <Var Name="CloseAcc" Value="4" />
+        <Var Name="OpenSlowDownDist" Value="0.1" />
+        <Var Name="CloseSlowDownDist" Value="0.1" />
+        <Var Name="CheckCollision" Value="true" />
+        <Var Name="PushImpulse" Value="0.08" />
+        <Var Name="PushMaxMass" Value="40" />
+        <Var Name="OpenSound_Start" Value="" />
+        <Var Name="OpenSound_End" Value="" />
+        <Var Name="CloseSound_Start" Value="" />
+        <Var Name="CloseSound_End" Value="" />
+        <Var Name="OpenSound_Loop" Value="Entities_Station/doors/auto_plastic_scan_door/open" />
+        <Var Name="CloseSound_Loop" Value="Entities_Station/doors/auto_plastic_scan_door/close" />
+    </UserDefinedVariables>
+</Entity>

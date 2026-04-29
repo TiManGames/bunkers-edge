@@ -1,0 +1,300 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+
+#include "helpers/helper_player.hps"
+#include "helpers/helper_items.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourSpeedVault_MinDuration = 0.44f;
+const float gfParkourSpeedVault_MaxCameraPitchDeg = 7.0f;
+const float gfParkourSpeedVault_MaxCameraRollDeg = 4.0f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_ParkourSpeedVault : iScrPlayerState, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+	
+	void OnAttachBodyToStickyArea() {}
+	
+	//------------------------------------------------------------
+	
+	void Init() {}
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void OnMapLeave(cLuxMap @apMap) {}
+	void CreateWorldEntities(cLuxMap @apMap) {}
+	void DestroyWorldEntities(cLuxMap @apMap) {}
+	void Reset() {}
+	void PostUpdate(float afTimeStep) {}
+	bool OnExitPressed() { return true; }
+	
+	//------------------------------------------------------------
+	
+	void SetupParkourSpeedVault()
+	{
+		mvEndFeet = cScript_GetGlobalArgVector3f(1);
+		mvVaultDir = cScript_GetGlobalArgVector3f(2);
+		mfDuration = cScript_GetGlobalArgFloat(4);
+		mfExitSpeed = cScript_GetGlobalArgFloat(5);
+		mfArcHeight = cScript_GetGlobalArgFloat(6);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		NormalizeSetup();
+		
+		mbFinished = false;
+		mfTimer = 0.f;
+		mfStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
+		mfStartYaw = pBody.GetYaw();
+		mvStartFeet = pBody.GetFeetPosition();
+		
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+		pBody.SetGravityActive(false);
+		pBody.SetTestCollision(false);
+		pBody.SetPhysicsBodyActive(false);
+		pBody.StopMovement();
+		
+		Player_SetDisableCrawling(true);
+		Player_SetCrouching(false);
+		Player_SetCrouchDisabled(true);
+		Player_SetCrouchActionDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_CancelJump();
+		
+		PlayerBody_SetVisible(false);
+		
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+		
+		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_WorldClean, 0.65f, true);
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, -0.08f, 0.10f), 8.f, 5.f, 0.12f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Speed vault state entered.", true);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId)
+	{
+		RestoreBody();
+		Player_ResetCameraLimits();
+		Player_SetDisableCrawling(false);
+		Player_SetCrouchDisabled(false);
+		Player_SetCrouchActionDisabled(false);
+		Player_SetLeanDisabled(false);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 9.f, cMath_ToRad(180.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 5.f, 0.16f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		if (mbFinished) return;
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		mfTimer += afTimeStep;
+		float fT = cMath_Clamp(mfTimer / cMath_Max(mfDuration, gfParkourSpeedVault_MinDuration), 0.f, 1.f);
+		float fMoveT = GetVaultMoveT(fT);
+		
+		cVector3f vFeet = LerpVector(mvStartFeet, mvEndFeet, fMoveT);
+		vFeet.y += cMath_Sin(fT * cMath_Pi) * mfArcHeight;
+		pBody.SetFeetPosition(vFeet, true);
+		pBody.SetYaw(mfStartYaw);
+		
+		if (fT > 0.72f)
+		{
+			float fCarryT = cMath_Clamp((fT - 0.72f) / 0.28f, 0.f, 1.f);
+			ApplyExitCarryVelocity(pBody, cMath_Easing(eEasing_QuadIn, fCarryT));
+		}
+		
+		float fArc = cMath_Sin(fT * cMath_Pi);
+		float fRoll = cMath_Sin(fT * cMath_PiMul2) * gfParkourSpeedVault_MaxCameraRollDeg;
+		cLux_GetPlayer().GetCamera().SetPitch(mfStartPitch + cMath_ToRad(fArc * gfParkourSpeedVault_MaxCameraPitchDeg));
+		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, cMath_ToRad(fRoll));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
+										  cVector3f(0.f, -0.10f - fArc * 0.10f, 0.10f + fArc * 0.05f),
+										  8.f,
+										  5.f,
+										  0.08f);
+		
+		if (fT >= 1.f)
+			FinishVault();
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if (abPressed == false) return false;
+		
+		if (alAction == eAction_Jump ||
+			alAction == eAction_Crouch ||
+			alAction == eAction_Run ||
+			alAction == eAction_Interact)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (alAnalogId == eAnalogType_Look ||
+			alAnalogId == eAnalogType_Move ||
+			alAnalogId == eAnalogType_GamepadMove ||
+			alAnalogId == eAnalogType_Lean)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool AllowBuoyancy(iPhysicsBody @apBody)
+	{
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody, const cVector3f &in avVel) {}
+	
+	//------------------------------------------------------------
+	
+	float DrawDebugOutput(cGuiSet @apSet, iFontData @apFont, float afStartY)
+	{
+		return afStartY;
+	}
+	
+	//------------------------------------------------------------
+	
+	void NormalizeSetup()
+	{
+		mvVaultDir.y = 0.f;
+		if (mvVaultDir.SqrLength() > 0.001f)
+			mvVaultDir.Normalize();
+		else
+			mvVaultDir = cVector3f_Forward;
+		
+		mfDuration = cMath_Max(gfParkourSpeedVault_MinDuration, mfDuration);
+		mfExitSpeed = cMath_Max(0.1f, mfExitSpeed);
+		mfArcHeight = cMath_Max(0.05f, mfArcHeight);
+	}
+	
+	//------------------------------------------------------------
+	
+	void FinishVault()
+	{
+		if (mbFinished) return;
+		
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		mbFinished = true;
+		RestoreBody();
+		pBody.SetFeetPosition(mvEndFeet, true);
+		ApplyExitCarryVelocity(pBody, 1.f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Speed vault complete. exitSpeed=" + mfExitSpeed, true);
+		
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void RestoreBody()
+	{
+		PlayerBody_SetVisible(true);
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			pBody.SetGravityActive(true);
+			pBody.SetTestCollision(true);
+			pBody.SetPhysicsBodyActive(true);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	float GetVaultMoveT(float afT)
+	{
+		float fSmoothT = cMath_Easing(eEasing_SineInOut, afT);
+		float fLinearBlend = cMath_Easing(eEasing_QuadIn, afT);
+		return cMath_InterpolateLinear(fSmoothT, afT, fLinearBlend);
+	}
+	
+	//------------------------------------------------------------
+	
+	void ApplyExitCarryVelocity(iCharacterBody@ apBody, float afMul)
+	{
+		if (apBody is null) return;
+		
+		float fMul = cMath_Clamp(afMul, 0.f, 1.f);
+		cVector3f vVel = apBody.GetForceVelocity();
+		vVel.x = mvVaultDir.x * mfExitSpeed * fMul;
+		vVel.z = mvVaultDir.z * mfExitSpeed * fMul;
+		vVel.y = cMath_Max(vVel.y, 0.10f * fMul);
+		apBody.SetForceVelocity(vVel);
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f LerpVector(const cVector3f &in avA, const cVector3f &in avB, float afT)
+	{
+		return avA * (1.f - afT) + avB * afT;
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f mvStartFeet = cVector3f_Zero;
+	cVector3f mvEndFeet = cVector3f_Zero;
+	cVector3f mvVaultDir = cVector3f_Forward;
+	
+	bool mbFinished = false;
+	
+	float mfDuration = 0.42f;
+	float mfExitSpeed = 3.0f;
+	float mfArcHeight = 0.42f;
+	float mfTimer = 0.f;
+	float mfStartPitch = 0.f;
+	float mfStartYaw = 0.f;
+	
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

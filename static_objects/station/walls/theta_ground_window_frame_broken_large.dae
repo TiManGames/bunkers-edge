@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///D:/work/DropBox/Team/Depth_marcus/models/Levels/02_01/statics/theta_window.ma</source_data>
+    </contributor>
+    <created>2014-02-19T17:47:49</created>
+    <modified>2014-02-19T17:47:49</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="window" name="window">
+      <instance_effect url="#window-fx"/>
+    </material>
+    <material id="lambert2" name="lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="window-fx">
+      <profile_COMMON>
+        <newparam sid="file2-surface">
+          <surface type="2D">
+            <init_from>file2</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file2-sampler">
+          <sampler2D>
+            <source>file2-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file2-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float>0.3</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="A_ONE">
+              <texture texture="file2-sampler" texcoord="TEX1">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file2" name="file2">
+      <init_from>file:///D:/work/depth/redist/static_objects/station/pplant_glass_broken.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file2</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+    <image id="file1" name="file1">
+      <init_from>file:///D:/work/depth/redist/static_objects/station/theta.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="glassShape" name="glassShape">
+      <mesh>
+        <source id="glassShape-positions" name="glassShape-positions">
+          <float_array id="glassShape-positions-array" count="24">2.084676 0.9984256 -0.26 -2.084677 0.9984256 -0.26 2.084676 3.287127 -0.26 -2.084677 3.287127 -0.26 -2.084677 0.9984256 -0.24 2.084676 0.9984256 -0.24 -2.084677 3.287127 -0.24 2.084676 3.287127 -0.24</float_array>
+          <technique_common>
+            <accessor source="#glassShape-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="glassShape-normals" name="glassShape-normals">
+          <float_array id="glassShape-normals-array" count="24">0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#glassShape-normals-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="glassShape-map1" name="glassShape-map1">
+          <float_array id="glassShape-map1-array" count="16">0 0 1 0 0 1 1 1 0 0 1 0 1 1 0 1</float_array>
+          <technique_common>
+            <accessor source="#glassShape-map1-array" count="8" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="glassShape-vertices" name="glassShape-vertices">
+          <input semantic="POSITION" source="#glassShape-positions"/>
+          <input semantic="NORMAL" source="#glassShape-normals"/>
+        </vertices>
+        <triangles material="blinn2SG" count="4">
+          <input semantic="VERTEX" source="#glassShape-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#glassShape-map1" offset="1" set="0"/>
+          <p>2 2 0 0 3 3 3 3 0 0 1 1 5 5 7 6 4 4 4 4 7 6 6 7</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>glassShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+    <geometry id="theta_ground_window_frameShape" name="theta_ground_window_frameShape">
+      <mesh>
+        <source id="theta_ground_window_frameShape-positions" name="theta_ground_window_frameShape-positions">
+          <float_array id="theta_ground_window_frameShape-positions-array" count="360">-2.121508 3.089944 -0.5368222 -2.13563 3.099122 -0.5218232 -2.121508 1.195607 -0.5368222 -2.13563 1.186427 -0.5218232 -2.036214 3.034498 -0.5218232 -2.0504 3.04372 -0.5368222 -2.0504 1.24183 -0.5368222 -2.036216 1.251051 -0.5218232 -1.857349 1.048165 -0.5368222 -1.847886 1.062722 -0.5218232 1.857351 1.048166 -0.5368222 1.847888 1.062723 -0.5218232 -1.903084 0.977811 -0.5368222 -1.912512 0.96331 -0.5218232 1.903086 0.977811 -0.5368222 1.912513 0.96331 -0.5218232 -1.857348 3.237384 -0.5368222 -1.847885 3.222827 -0.5218232 1.857351 3.237386 -0.5368222 1.847888 3.222829 -0.5218232 2.050404 1.24183 -0.5368222 2.036218 1.251052 -0.5218232 2.050404 3.043721 -0.5368222 2.036218 3.034499 -0.5218232 -1.903084 3.307738 -0.5368222 -1.912512 3.322241 -0.5218232 1.903086 3.307738 -0.5368222 1.912513 3.322241 -0.5218232 2.121509 1.195607 -0.5368222 2.13563 1.186427 -0.5218232 2.121509 3.089944 -0.5368222 2.13563 3.099122 -0.5218232 1.860415 1.032477 -0.25 -1.860415 1.032477 -0.25 -2.066462 1.238524 -0.25 -2.066462 3.047027 -0.25 -1.860415 3.253074 -0.25 1.860415 3.253074 -0.25 2.066462 3.047027 -0.25 2.066462 1.238524 -0.25 1.847888 1.062723 -0.306154 -1.847886 1.062722 -0.306154 -2.036216 1.251051 -0.306154 -2.036214 3.034498 -0.306154 -1.847885 3.222827 -0.306154 1.847888 3.222829 -0.306154 2.036218 3.034499 -0.306154 2.036218 1.251052 -0.306154 -1.912512 0.96331 -0.4942041 1.912513 0.96331 -0.4942041 2.13563 1.186427 -0.4942041 2.13563 3.099122 -0.4942041 1.912513 3.322241 -0.4942041 -1.912512 3.322241 -0.4942041 -2.13563 3.099122 -0.4942041 -2.13563 1.186427 -0.4942041 -2.13563 3.099122 -0.2346524 2.13563 3.099122 -0.2346524 1.912513 3.322241 -0.3829516 -1.912512 3.322241 -0.3829516 2.13563 2.433576 -0.4942041 2.13563 3.01 -0.25 -2.13563 2.4403 -0.4942041 -2.13563 3.01 -0.2489326 2.121508 3.089944 0.039171 2.13563 3.099122 0.024172 2.121508 1.195607 0.039171 2.13563 1.186427 0.024172 2.036214 3.034498 0.024172 2.0504 3.04372 0.039171 2.0504 1.24183 0.039171 2.036216 1.251051 0.024172 1.857349 1.048165 0.039171 1.847886 1.062722 0.024172 -1.857351 1.048166 0.039171 -1.847888 1.062723 0.024172 1.903084 0.977811 0.039171 1.912512 0.96331 0.024172 -1.903086 0.977811 0.039171 -1.912513 0.96331 0.024172 1.857348 3.237384 0.039171 1.847885 3.222827 0.024172 -1.857351 3.237386 0.039171 -1.847888 3.222829 0.024172 -2.050404 1.24183 0.039171 -2.036218 1.251052 0.024172 -2.050404 3.043721 0.039171 -2.036218 3.034499 0.024172 1.903084 3.307738 0.039171 1.912512 3.322241 0.024172 -1.903086 3.307738 0.039171 -1.912513 3.322241 0.024172 -2.121509 1.195607 0.039171 -2.13563 1.186427 0.024172 -2.121509 3.089944 0.039171 -2.13563 3.099122 0.024172 -1.847888 1.062723 -0.193846 1.847886 1.062722 -0.193846 2.036216 1.251051 -0.193846 2.036214 3.034498 -0.193846 1.847885 3.222827 -0.193846 -1.847888 3.222829 -0.193846 -2.036218 3.034499 -0.193846 -2.036218 1.251052 -0.193846 1.912512 0.96331 -0.003447165 -1.912513 0.96331 -0.003447165 -2.13563 1.186427 -0.003447165 -2.13563 3.099122 -0.003447165 -1.912513 3.322241 -0.003447165 1.912512 3.322241 -0.003447165 2.13563 3.099122 -0.003447165 2.13563 1.186427 -0.003447165 2.13563 3.099122 -0.2629988 -2.13563 3.099122 -0.2629988 -1.912513 3.322241 -0.1146996 1.912512 3.322241 -0.1146996 -2.13563 2.433576 -0.003447165 -2.13563 3.01 -0.2509273 2.13563 2.4403 -0.003447165 2.13563 3.01 -0.2529432</float_array>
+          <technique_common>
+            <accessor source="#theta_ground_window_frameShape-positions-array" count="120" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="theta_ground_window_frameShape-normals" name="theta_ground_window_frameShape-normals">
+          <float_array id="theta_ground_window_frameShape-normals-array" count="360">-0.3275762 0.1290508 -0.9359699 -0.843215 0.3422187 -0.4145776 -0.3275747 -0.1290503 -0.9359705 -0.9034972 -0.2728406 -0.3305309 0.8429015 -0.3417937 -0.4155646 0.3268829 -0.1284908 -0.9362893 0.3268859 0.1284931 -0.936288 0.8429026 0.3417957 -0.4155609 0.1284999 0.3237348 -0.9373811 0.3424132 0.8410669 -0.4187598 -0.1284968 0.3237316 -0.9373827 -0.342411 0.8410655 -0.4187642 -0.128651 -0.324723 -0.9370186 -0.3423581 -0.8415838 -0.4177653 0.1286538 -0.3247252 -0.9370174 0.3423609 -0.8415841 -0.417762 0.1284976 -0.3237353 -0.9373813 0.3424119 -0.8410671 -0.4187603 -0.1284962 -0.323734 -0.937382 -0.3424103 -0.841067 -0.4187621 -0.3268745 0.1284898 -0.9362924 -0.8428966 0.341795 -0.4155737 -0.3268737 -0.128489 -0.9362928 -0.8428966 -0.3417936 -0.4155748 -0.1286514 0.3247091 -0.9370235 -0.3423621 0.8415749 -0.4177795 0.1286527 0.3247102 -0.9370228 0.3423637 0.841575 -0.417778 0.3275828 -0.1290525 -0.9359674 0.9034998 -0.2728406 -0.3305237 0.3275826 0.1290521 -0.9359676 0.8432189 0.3422181 -0.4145706 -0.3826832 0.9238797 0 0.3826829 0.9238797 0 0.9238795 0.3826837 0 0.9238799 -0.3826825 0 0.3826834 -0.9238796 0 -0.3826836 -0.9238794 0 -0.9238799 -0.3826826 0 -0.9238793 0.382684 0 -0.369177 0.8912733 0.2633255 0.3691756 0.8912725 0.2633301 0.8912703 0.3691777 0.2633347 0.8912696 -0.3691755 0.2633401 0.3691756 -0.8912709 0.2633356 -0.3691787 -0.8912735 0.2633227 -0.8912758 -0.3691782 0.2633153 -0.8912748 0.3691785 0.2633182 -0.3826829 -0.9238797 0 0.3826841 -0.9238792 0 0.9238798 -0.3826828 0 0.9523203 0.3050996 0 0.5054526 0.8628544 0 -0.5054512 0.8628552 0 -0.9523202 0.3051005 0 -0.9238794 -0.3826839 0 -0.9238801 0.3826821 0 0.9238806 0.382681 0 0.7071105 0.7071031 0 -0.7071088 0.7071047 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0.3275756 0.1290507 0.9359702 0.8432148 0.3422189 0.4145781 0.3275748 -0.12905 0.9359705 0.9034973 -0.2728406 0.3305309 -0.8429013 -0.3417937 0.4155651 -0.3268825 -0.1284907 0.9362895 -0.3268857 0.1284929 0.9362881 -0.8429024 0.3417955 0.4155615 -0.1285001 0.3237346 0.9373812 -0.3424135 0.8410666 0.4187599 0.1284955 0.3237307 0.9373832 0.3424098 0.8410652 0.4187656 0.1286514 -0.3247227 0.9370187 0.3423583 -0.8415836 0.4177653 -0.1286551 -0.3247264 0.9370168 -0.3423617 -0.8415847 0.4177601 -0.1284976 -0.3237335 0.9373819 -0.3424123 -0.8410661 0.4187621 0.1284952 -0.3237313 0.9373831 0.3424098 -0.8410655 0.4187652 0.3268707 0.1284889 0.9362939 0.8428946 0.3417949 0.4155781 0.3268703 -0.1284879 0.9362941 0.8428946 -0.3417933 0.4155789 0.128651 0.3247073 0.9370241 0.3423619 0.8415741 0.4177815 -0.128654 0.3247102 0.9370226 -0.3423648 0.841575 0.4177775 -0.3275864 -0.1290538 0.935966 -0.903501 -0.2728413 0.3305203 -0.3275864 0.1290538 0.935966 -0.8432207 0.3422193 0.4145659 0.3691767 0.8912729 -0.263327 -0.3691759 0.8912725 -0.2633295 -0.8912704 0.3691777 -0.263334 -0.8912696 -0.3691754 -0.2633401 -0.3691758 -0.8912706 -0.2633363 0.3691784 -0.8912729 -0.2633249 0.8912752 -0.3691777 -0.2633178 0.8912743 0.3691781 -0.2633207 0.3826825 -0.9238799 0 -0.3826834 -0.9238795 0 -0.9238796 -0.3826834 0 -0.9523204 0.3050998 0 -0.5054523 0.8628545 0 0.505451 0.8628553 0 0.9523202 0.3051006 0 0.9238792 -0.3826844 0 0.92388 0.3826821 0 -0.9238806 0.382681 0 -0.7071105 0.7071031 0 0.7071089 0.7071047 0 -1 0 0 -1 0 0 1 0 0 1 0 0</float_array>
+          <technique_common>
+            <accessor source="#theta_ground_window_frameShape-normals-array" count="120" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="theta_ground_window_frameShape-map1" name="theta_ground_window_frameShape-map1">
+          <float_array id="theta_ground_window_frameShape-map1-array" count="488">0.07671398 0.9381557 0.07681689 0.8857012 0.8003167 0.8870779 0.8002143 0.9395532 0.8026428 0.9520304 0.07423767 0.9506504 0.8021759 0.8829527 0.07497075 0.8816527 0.06604066 0.8679013 0.8111531 0.869172 0.8130049 0.865106 0.06420162 0.8638149 0.2891337 0.8857012 0.2900846 0.9381557 0.2386659 0.9381557 0.2377067 0.8857012 0.289793 0.8816527 0.2369886 0.8816527 0.2928283 0.9506504 0.2365766 0.9506504 0.2335577 0.8679013 0.2931224 0.8679013 0.2938481 0.8638149 0.2329162 0.8638149 0.2973039 0.8648347 0.6746337 0.8633823 0.6728279 0.8674646 0.2991199 0.8688748 0.308258 0.8828707 0.6637287 0.881519 0.6619142 0.8856131 0.3100828 0.8869184 0.3101388 0.9397674 0.6619706 0.9385076 0.6644533 0.9510967 0.3076789 0.9523447 0.3110318 0.8827415 0.3078733 0.8692673 0.366074 0.8691063 0.3626287 0.8831085 0.3116843 0.8871067 0.3619389 0.8872295 0.3072548 0.8653031 0.3667892 0.8651834 0.361901 0.9394397 0.3116452 0.9395081 0.3643038 0.9525136 0.3093206 0.9525136 0.8130049 0.8651061 0.06420159 0.8638149 0.06604064 0.8679013 0.8111531 0.8691721 0.07497072 0.8816527 0.8021759 0.8829527 0.07681692 0.8857012 0.8003167 0.8870779 0.8002143 0.9395532 0.07671404 0.9381557 0.8026428 0.9520304 0.0742377 0.9506504 0.3067141 0.8639544 0.3662488 0.8637923 0.3073156 0.8678642 0.3655151 0.8677715 0.3621326 0.8816061 0.3105353 0.8815092 0.3111815 0.8858232 0.3614368 0.8857797 0.3615749 0.9379795 0.3113212 0.9382377 0.3640261 0.9507793 0.3090438 0.9507793 0.6417918 0.863648 0.2644647 0.864605 0.6399958 0.8677028 0.266292 0.8686752 0.630935 0.8817629 0.2754674 0.8826654 0.6291317 0.8858361 0.2773034 0.886735 0.6293606 0.9387081 0.2775323 0.9396075 0.6318848 0.9512886 0.2751135 0.9521891 0.2904974 0.88696 0.2902106 0.9394145 0.2387779 0.9394145 0.2390662 0.88696 0.2911993 0.8829116 0.2383934 0.8829116 0.2925514 0.9519092 0.2362813 0.9519092 0.2350627 0.8691602 0.2946291 0.8691602 0.2953019 0.8650738 0.234368 0.8650738 0.8130144 0.8586974 0.2343577 0.858662 0.06421122 0.8574032 0.2939025 0.8574032 0.6746255 0.8579338 0.2329708 0.8574032 0.2972957 0.8593861 0.3668533 0.8588171 0.8130143 0.8586973 0.3073189 0.8585496 0.06421125 0.8574032 0.3663107 0.8574259 0.6417695 0.8582002 0.3067759 0.8572008 0.2644424 0.8591556 0.2952916 0.858662 0.6415598 0.807004 0.3073559 0.8078367 0.2972193 0.8081837 0.3674567 0.8098559 0.3075776 0.8371698 0.3665594 0.8364378 0.428592 0.859196 0.314809 0.8081582 0.5118004 0.8587397 0.6238948 0.8070766 0.6399958 0.8677028 0.630935 0.8817629 0.2754674 0.8826654 0.266292 0.8686752 0.3073156 0.8678642 0.3655151 0.8677715 0.3621326 0.8816061 0.3105353 0.8815092 0.8021759 0.8829527 0.07497072 0.8816527 0.06604064 0.8679013 0.8111531 0.8691721 0.2911993 0.8829116 0.2383934 0.8829116 0.2350627 0.8691602 0.2946291 0.8691602 0.8021759 0.8829527 0.07497075 0.8816527 0.06604066 0.8679013 0.8111531 0.869172 0.289793 0.8816527 0.2369886 0.8816527 0.2335577 0.8679013 0.2931224 0.8679013 0.6728279 0.8674646 0.6637287 0.881519 0.308258 0.8828707 0.2991199 0.8688748 0.3626287 0.8831085 0.3110318 0.8827415 0.3078733 0.8692673 0.366074 0.8691063 0.3067141 0.8639544 0.3662488 0.8637923 0.6417918 0.863648 0.2644647 0.864605 0.2953019 0.8650738 0.234368 0.8650738 0.3111815 0.8858232 0.3614368 0.8857797 0.6291317 0.8858361 0.2773034 0.886735 0.2904974 0.88696 0.2390662 0.88696 0.8003167 0.8870779 0.07681689 0.8857012 0.2891337 0.8857012 0.2377067 0.8857012 0.8130049 0.865106 0.06420162 0.8638149 0.2938481 0.8638149 0.2329162 0.8638149 0.07681692 0.8857012 0.8003167 0.8870779 0.3116843 0.8871067 0.3619389 0.8872295 0.6619142 0.8856131 0.3100828 0.8869184 0.06420159 0.8638149 0.8130049 0.8651061 0.3072548 0.8653031 0.3667892 0.8651834 0.6746337 0.8633823 0.2973039 0.8648347 0.8026428 0.9520304 0.07423767 0.9506504 0.07671398 0.9381557 0.8002143 0.9395532 0.2387779 0.9394145 0.2902106 0.9394145 0.2925514 0.9519092 0.2362813 0.9519092 0.6293606 0.9387081 0.6318848 0.9512886 0.2751135 0.9521891 0.2775323 0.9396075 0.3113212 0.9382377 0.3615749 0.9379795 0.3640261 0.9507793 0.3090438 0.9507793 0.07671404 0.9381557 0.8002143 0.9395532 0.8026428 0.9520304 0.0742377 0.9506504 0.3116452 0.9395081 0.361901 0.9394397 0.3643038 0.9525136 0.3093206 0.9525136 0.6619706 0.9385076 0.6644533 0.9510967 0.3076789 0.9523447 0.3101388 0.9397674 0.2386659 0.9381557 0.2900846 0.9381557 0.2928283 0.9506504 0.2365766 0.9506504 0.06421122 0.8574032 0.8130144 0.8586974 0.2329708 0.8574032 0.2939025 0.8574032 0.428592 0.859196 0.2972957 0.8593861 0.3073189 0.8585496 0.3668533 0.8588171 0.06421125 0.8574032 0.8130143 0.8586973 0.3067759 0.8572008 0.3663107 0.8574259 0.6417695 0.8582002 0.5118004 0.8587397 0.2343577 0.858662 0.2952916 0.858662 0.6238948 0.8070766 0.6415598 0.807004 0.3073559 0.8078367 0.3665594 0.8364378 0.3075776 0.8371698 0.3674567 0.8098559 0.314809 0.8081582 0.2972193 0.8081837 0.2644424 0.8591556 0.6746255 0.8579338</float_array>
+          <technique_common>
+            <accessor source="#theta_ground_window_frameShape-map1-array" count="244" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="theta_ground_window_frameShape-vertices" name="theta_ground_window_frameShape-vertices">
+          <input semantic="POSITION" source="#theta_ground_window_frameShape-positions"/>
+          <input semantic="NORMAL" source="#theta_ground_window_frameShape-normals"/>
+        </vertices>
+        <triangles material="lambert2SG" count="212">
+          <input semantic="VERTEX" source="#theta_ground_window_frameShape-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#theta_ground_window_frameShape-map1" offset="1" set="0"/>
+          <p>0 74 5 76 2 75 2 75 5 76 6 77 0 62 24 63 5 65 5 65 24 63 16 64 18 53 16 52 26 51 26 51 16 52 24 50 8 89 12 92 6 88 6 88 12 92 2 93 8 6 10 7 12 9 12 9 10 7 14 8 10 16 20 17 14 21 14 21 20 17 28 20 28 26 20 29 30 27 30 27 20 29 22 28 18 36 26 37 22 39 22 39 26 37 30 38 0 62 1 60 24 63 24 63 1 60 25 61 1 72 0 74 3 73 3 73 0 74 2 75 3 94 2 93 13 95 13 95 2 93 12 92 4 66 5 65 17 67 17 67 5 65 16 64 5 76 4 78 6 77 6 77 4 78 7 79 6 88 7 84 8 89 8 89 7 84 9 87 8 6 9 2 10 7 10 7 9 2 11 1 10 16 11 12 20 17 20 17 11 12 21 15 13 10 12 9 15 11 15 11 12 9 14 8 15 22 14 21 29 23 29 23 14 21 28 20 17 54 16 52 19 55 19 55 16 52 18 53 19 40 18 36 23 41 23 41 18 36 22 39 20 29 21 30 22 28 22 28 21 30 23 31 24 50 25 49 26 51 26 51 25 49 27 48 26 37 27 42 30 38 30 38 27 42 31 43 29 25 28 26 31 24 31 24 28 26 30 27 33 4 32 5 41 3 41 3 32 5 40 0 41 86 42 85 33 91 33 91 42 85 34 90 43 80 35 82 42 81 42 81 35 82 34 83 43 69 44 68 35 71 35 71 44 68 36 70 44 57 45 56 36 59 36 59 45 56 37 58 45 45 46 44 37 47 37 47 46 44 38 46 47 33 39 34 46 32 46 32 39 34 38 35 47 14 40 13 39 19 39 19 40 13 32 18 41 3 40 0 9 2 9 2 40 0 11 1 9 87 7 84 41 86 41 86 7 84 42 85 4 78 43 80 7 79 7 79 43 80 42 81 4 66 17 67 43 69 43 69 17 67 44 68 17 54 19 55 44 57 44 57 19 55 45 56 19 40 23 41 45 45 45 45 23 41 46 44 21 30 47 33 23 31 23 31 47 33 46 32 21 15 11 12 47 14 47 14 11 12 40 13 13 10 15 11 48 96 48 96 15 11 49 98 15 22 29 23 49 99 49 99 29 23 50 101 29 25 31 24 60 118 60 118 31 24 51 102 31 43 27 42 51 103 51 103 27 42 52 105 53 106 52 104 25 49 25 49 52 104 27 48 25 61 1 60 53 107 53 107 1 60 54 109 54 108 1 72 62 120 62 120 1 72 3 73 3 94 13 95 55 111 55 111 13 95 48 97 54 108 63 121 56 112 56 113 59 117 54 109 54 109 59 117 53 107 57 115 51 103 58 116 58 116 51 103 52 105 61 119 60 118 51 102 51 102 57 114 61 119 62 120 3 73 55 110 60 118 50 100 29 25 63 121 54 108 62 120 64 122 69 123 66 125 66 125 69 123 70 124 64 126 88 127 69 129 69 129 88 127 80 128 82 130 80 131 90 133 90 133 80 131 88 132 72 135 76 136 70 134 70 134 76 136 66 137 72 138 74 139 76 141 76 141 74 139 78 140 74 142 84 143 78 145 78 145 84 143 92 144 92 146 84 147 94 149 94 149 84 147 86 148 82 151 90 152 86 150 86 150 90 152 94 153 64 126 65 154 88 127 88 127 65 154 89 155 65 156 64 122 67 157 67 157 64 122 66 125 67 158 66 137 77 159 77 159 66 137 76 136 68 160 69 129 81 161 81 161 69 129 80 128 69 123 68 162 70 124 70 124 68 162 71 163 70 134 71 164 72 135 72 135 71 164 73 165 72 138 73 166 74 139 74 139 73 166 75 167 74 142 75 168 84 143 84 143 75 168 85 169 77 170 76 141 79 171 79 171 76 141 78 140 79 172 78 145 93 173 93 173 78 145 92 144 81 174 80 131 83 175 83 175 80 131 82 130 83 176 82 151 87 177 87 177 82 151 86 150 84 147 85 178 86 148 86 148 85 178 87 179 88 132 89 180 90 133 90 133 89 180 91 181 90 152 91 182 94 153 94 153 91 182 95 183 93 184 92 146 95 185 95 185 92 146 94 149 32 186 33 187 97 189 97 189 33 187 96 188 97 190 98 191 32 193 32 193 98 191 39 192 99 194 38 195 98 197 98 197 38 195 39 196 99 198 100 199 38 201 38 201 100 199 37 200 100 202 101 203 37 205 37 205 101 203 36 204 101 206 102 207 36 209 36 209 102 207 35 208 103 210 34 211 102 213 102 213 34 211 35 212 103 214 96 215 34 217 34 217 96 215 33 216 97 189 96 188 73 166 73 166 96 188 75 167 73 165 71 164 97 190 97 190 71 164 98 191 68 162 99 194 71 163 71 163 99 194 98 197 68 160 81 161 99 198 99 198 81 161 100 199 81 174 83 175 100 202 100 202 83 175 101 203 83 176 87 177 101 206 101 206 87 177 102 207 85 178 103 210 87 179 87 179 103 210 102 213 85 169 75 168 103 214 103 214 75 168 96 215 77 170 79 171 104 219 104 219 79 171 105 218 79 172 93 173 105 221 105 221 93 173 106 220 93 184 95 185 116 222 116 222 95 185 107 223 95 183 91 182 107 225 107 225 91 182 108 224 109 226 108 227 89 180 89 180 108 227 91 181 89 155 65 154 109 229 109 229 65 154 110 228 110 230 65 156 118 231 118 231 65 156 67 157 67 158 77 159 111 233 111 233 77 159 104 232 110 230 119 234 112 235 112 236 115 237 110 228 110 228 115 237 109 229 113 239 107 225 114 238 114 238 107 225 108 224 117 240 116 222 107 223 107 223 113 241 117 240 118 231 67 157 111 242 116 222 106 243 93 184 119 234 110 230 118 231</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>theta_ground_window_frameShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="theta_window">
+      <node id="glass" name="glass" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <translate sid="rotatePivot">0 2.142776 -0.25</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <translate sid="rotatePivotInverse">0 -2.142776 0.25</translate>
+        <translate sid="scalePivot">0 2.142776 -0.25</translate>
+        <scale sid="scale">1 1 1</scale>
+        <translate sid="scalePivotInverse">0 -2.142776 0.25</translate>
+        <instance_geometry url="#glassShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="blinn2SG" target="#window">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="TEX1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>glass</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+      <node id="theta_ground_window_frame" name="theta_ground_window_frame" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#theta_ground_window_frameShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>theta_ground_window_frame</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=1;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=0;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=0;exportVertexColors=0;exportVertexColorsPerVertex=0;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=0;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/entities/station/ornaments_wall/sign_hex/sign_hex_wallwater/sign_hex_wallwater.DAE</source_data>
+    </contributor>
+    <created>2015-01-21T16:31:38</created>
+    <modified>2015-01-21T16:31:38</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="_01___Default" name="_01___Default">
+      <instance_effect url="#_01___Default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_01___Default-fx">
+      <profile_COMMON>
+        <newparam sid="Map__1_image-surface">
+          <surface type="2D">
+            <init_from>Map__1_image</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Map__1_image-sampler">
+          <sampler2D>
+            <source>Map__1_image-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.588235 0.588235 0.588235 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map__1_image-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0 0 0 1</color>
+            </specular>
+            <shininess>
+              <float>2</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color>0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Map__1_image" name="Map__1_image">
+      <init_from>../../../../../../../../C:/Users/Alex/Desktop/signs_2/sign_hex/sign_hex_wallwater/sign_hex_wallwater/originals/sign_hex_wallwater.psd</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Map__1_image</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="sign_hex_wallwaterShape" name="sign_hex_wallwaterShape">
+      <mesh>
+        <source id="sign_hex_wallwaterShape-positions" name="sign_hex_wallwaterShape-positions">
+          <float_array id="sign_hex_wallwaterShape-positions-array" count="36">0.1944872 0.3368344 0 1.5705e-5 0.4491126 0 -0.1944558 0.3368345 0 -0.1944558 0.1122782 0 1.569e-5 0 0 0.1944872 0.1122781 0 0.1944872 0.3368344 0.006725636 1.5705e-5 0.4491126 0.006725693 -0.1944558 0.3368345 0.006725698 -0.1944558 0.1122782 0.00672565 1.569e-5 0 0.006725588 0.1944872 0.1122781 0.006725578</float_array>
+          <technique_common>
+            <accessor source="#sign_hex_wallwaterShape-positions-array" count="12" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="sign_hex_wallwaterShape-normals" name="sign_hex_wallwaterShape-normals">
+          <float_array id="sign_hex_wallwaterShape-normals-array" count="72">0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0.755929 0.6546536 0 -0.1889821 0.9819805 0 0.1889823 0.9819804 0 0.9449112 0.3273267 0 -0.9449112 0.3273269 0 -0.7559289 0.6546537 0 -0.755929 -0.6546537 0 -0.9449112 -0.3273268 0 0.1889821 -0.9819806 0 -0.1889823 -0.9819806 0 0.9449111 -0.327327 0 0.7559288 -0.6546538 0 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999</float_array>
+          <technique_common>
+            <accessor source="#sign_hex_wallwaterShape-normals-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="sign_hex_wallwaterShape-UVSet0" name="sign_hex_wallwaterShape-UVSet0">
+          <float_array id="sign_hex_wallwaterShape-UVSet0-array" count="48">0.725819 0.628487 0.366688 0.83546 0.36669 0.824343 0.716189 0.622928 0.008199 0.628487 0.017828 0.622928 0.008199 0.21454 0.017828 0.220098 0.366688 0.007566 0.366689 0.018683 0.725819 0.214539 0.716189 0.220098 0.366688 0.826086 0.7177 0.623799 0.642383 0.688896 0.816168 0.588562 0.989952 0.688896 0.989952 0.889565 0.016318 0.623799 0.016318 0.219226 0.366688 0.01694 0.7177 0.219226 0.816168 0.989899 0.642383 0.889565</float_array>
+          <technique_common>
+            <accessor source="#sign_hex_wallwaterShape-UVSet0-array" count="24" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="sign_hex_wallwaterShape-vertices" name="sign_hex_wallwaterShape-vertices">
+          <input semantic="POSITION" source="#sign_hex_wallwaterShape-positions"/>
+        </vertices>
+        <triangles material="sign_hex_wallwaterSG" count="20">
+          <input semantic="VERTEX" source="#sign_hex_wallwaterShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#sign_hex_wallwaterShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#sign_hex_wallwaterShape-UVSet0" offset="2" set="0"/>
+          <p>4 0 15 3 1 16 2 2 17 2 2 17 1 3 22 0 4 23 4 0 15 2 2 17 0 4 23 5 5 14 4 0 15 0 4 23 0 6 0 1 7 1 7 8 12 7 8 12 6 9 13 0 6 0 1 7 1 2 10 4 8 11 18 8 11 18 7 8 12 1 7 1 2 10 4 3 12 6 9 13 19 9 13 19 8 11 18 2 10 4 3 12 6 4 14 8 10 15 20 10 15 20 9 13 19 3 12 6 4 14 8 5 16 10 11 17 21 11 17 21 10 15 20 4 14 8 5 16 10 0 6 0 6 9 13 6 9 13 11 17 21 5 16 10 6 18 3 7 19 2 8 20 5 8 20 5 9 21 7 10 22 9 6 18 3 8 20 5 10 22 9 11 23 11 6 18 3 10 22 9</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>sign_hex_wallwaterShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="sign_hex_wallwater">
+      <node id="sign_hex_wallwater" name="sign_hex_wallwater" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#sign_hex_wallwaterShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="sign_hex_wallwaterSG" target="#_01___Default">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>sign_hex_wallwater</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

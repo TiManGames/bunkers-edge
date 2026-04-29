@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 66614], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 66614]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 276; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/lab_linoleum_details.lxo</source_data>
+        </contributor>
+        <created>2014-02-28T15:56:00Z</created>
+        <modified>2014-02-28T15:56:00Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/lab_linoleum.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/lab_linoleum_details.psd</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/lab_linoleum_tiles.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-lab_linoleum" name="lab_linoleum">
+            <instance_effect url="#Effect-lab_linoleum" />
+        </material>
+        <material id="Material-lab_linoleum_details" name="lab_linoleum_details">
+            <instance_effect url="#Effect-lab_linoleum_details" />
+        </material>
+        <material id="Material-lab_linoleum_tiles" name="lab_linoleum_tiles">
+            <instance_effect url="#Effect-lab_linoleum_tiles" />
+        </material>
+        <material id="Material-lab_set" name="lab_set">
+            <instance_effect url="#Effect-lab_set" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-lab_linoleum" name="lab_linoleum">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-lab_linoleum_details" name="lab_linoleum_details">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-lab_linoleum_tiles" name="lab_linoleum_tiles">
+            <profile_COMMON>
+                <newparam sid="Image0003-surface">
+                    <surface type="2D">
+                        <init_from>Image0003</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0003-sampler">
+                    <sampler2D>
+                        <source>Image0003-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0003-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-lab_set" name="lab_set">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh024" name="probe_design_floor_special">
+            <mesh>
+                <source id="Geometry-mesh024-positions" name="positions">
+                    <float_array id="Geometry-mesh024-positions-array" count="117">1.09961 0 0 -1.09961 0 0 6.84961 0 -6.24543 6.24261 0 -6.85243 6.83737 0 -6.36965 6.80329 0 -6.482 6.74795 0 -6.58554 6.67347 0 -6.67629 6.58272 0 -6.75077 6.47918 0 -6.80611 6.36684 0 -6.84019 6.24261 0 -1.65039 6.84961 0 -2.25739 6.36684 0 -1.66263 6.47918 0 -1.69671 6.58272 0 -1.75205 6.67347 0 -1.82653 6.74795 0 -1.91728 6.80329 0 -2.02082 6.83737 0 -2.13316 3.20161 0 -6.85243 2.54181 0 -6.57913 3.01581 0 -6.83412 2.84425 0 -6.78208 2.68614 0 -6.69757 -0.944755 0 -3.06668 -1.02927 0 -2.90857 -1.08131 0 -2.73701 1.09961 0 -0.687076 2.06292 0 -1.65039 1.11755 0 -0.869204 1.17283 0 -1.05144 1.2626 0 -1.21939 1.38341 0 -1.36659 1.53061 0 -1.4874 1.69856 0 -1.57717 1.8808 0 -1.63245 -1.09961 0 -2.55121 -0.826312 0 -3.211</float_array>
+                    <technique_common>
+                        <accessor count="39" source="#Geometry-mesh024-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh024-normals" name="normals">
+                    <float_array id="Geometry-mesh024-normals-array" count="3">0 1 0</float_array>
+                    <technique_common>
+                        <accessor count="1" source="#Geometry-mesh024-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh024-Texture" name="Texture">
+                    <float_array id="Geometry-mesh024-Texture-array" count="78">-0.517998 1.02406 0.749946 1.0242 0.40847 -0.0688141 0.749946 -0.0688151 0.317952 -0.0777326 0.227382 -0.105206 0.143912 -0.149818 0.0707509 -0.209854 -0.610333 1.01495 -0.695586 0.989074 -0.774153 0.947065 -0.845868 0.888191 -2.51941 -0.785655 -2.41513 -2.92017 -2.47096 -2.90324 -2.52241 -2.87574 -2.3534 -2.92624 -2.56751 -2.83873 -2.60453 -2.79364 -2.63203 -2.74219 -2.64897 -2.68637 -2.65506 -2.62464 -2.65518 -1.11353 -0.371701 -2.9261 -0.2027 -2.87558 -0.254148 -2.90308 -0.309973 -2.92002 -0.157607 -2.83856 -0.120601 -2.79346 -0.0931036 -2.74201 -2.6461 -1.0212 -2.62024 -0.935947 -2.57826 -0.857378 -0.0700986 -2.62446 -0.0761734 -2.68619 -0.0702469 -0.547523 -0.0613407 -0.457021 -0.0338792 -0.366465 0.0107239 -0.283008</float_array>
+                    <technique_common>
+                        <accessor count="39" source="#Geometry-mesh024-Texture-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh024-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh024-positions" />
+                </vertices>
+                <triangles count="37" material="Material-lab_linoleum_tiles">
+                    <input semantic="VERTEX" source="#Geometry-mesh024-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh024-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh024-Texture" offset="2" set="0" />
+                    <p>37 0 0 1 0 1 28 0 2 0 0 3 28 0 2 1 0 1 37 0 0 28 0 2 30 0 4 37 0 0 30 0 4 31 0 5 37 0 0 31 0 5 32 0 6 37 0 0 32 0 6 33 0 7 27 0 8 37 0 0 33 0 7 26 0 9 27 0 8 33 0 7 25 0 10 26 0 9 33 0 7 38 0 11 25 0 10 33 0 7 21 0 12 38 0 11 33 0 7 4 0 13 5 0 14 6 0 15 2 0 16 4 0 13 6 0 15 2 0 16 6 0 15 7 0 17 2 0 16 7 0 17 8 0 18 2 0 16 8 0 18 9 0 19 2 0 16 9 0 19 10 0 20 2 0 16 10 0 20 3 0 21 2 0 16 3 0 21 20 0 22 12 0 23 2 0 16 20 0 22 17 0 24 18 0 25 19 0 26 17 0 24 19 0 26 12 0 23 16 0 27 17 0 24 12 0 23 15 0 28 16 0 27 12 0 23 14 0 29 15 0 28 12 0 23 14 0 29 12 0 23 20 0 22 22 0 30 23 0 31 24 0 32 22 0 30 24 0 32 21 0 12 20 0 22 22 0 30 21 0 12 14 0 29 20 0 22 21 0 12 11 0 33 13 0 34 14 0 29 11 0 33 14 0 29 21 0 12 29 0 35 11 0 33 21 0 12 36 0 36 29 0 35 21 0 12 35 0 37 36 0 36 21 0 12 34 0 38 35 0 37 21 0 12 33 0 7 34 0 38 21 0 12</p>
+                </triangles>
+            </mesh>
+        </geometry>
+        <geometry id="Geometry-mesh043" name="trim">
+            <mesh>
+                <source id="Geometry-mesh043-positions" name="positions">
+                    <float_array id="Geometry-mesh043-positions-array" count="234">1.25 0 0 -1.25 0 0 7 0 -6.25282 6.25 0 -7.00282 6.98559 0 -6.39913 6.94291 0 -6.53983 6.8736 0 -6.66949 6.78033 0 -6.78315 6.66668 0 -6.87642 6.53701 0 -6.94573 6.39632 0 -6.9884 6.25 0 -1.5 7 0 -2.25 6.39632 0 -1.51441 6.53701 0 -1.55709 6.66668 0 -1.6264 6.78033 0 -1.71967 6.8736 0 -1.83332 6.94291 0 -1.96299 6.98559 0 -2.10368 3.19422 0 -7.00282 2.44069 0 -6.69069 2.98632 0 -6.98234 2.78642 0 -6.9217 2.60218 0 -6.82322 -1.07041 0 -3.15064 -1.16888 0 -2.9664 -1.22952 0 -2.76649 1.25 0 -0.679688 2.07031 0 -1.5 1.26576 0 -0.839723 1.31244 0 -0.993608 1.38825 0 -1.13543 1.49026 0 -1.25974 1.61457 0 -1.36175 1.75639 0 -1.43756 1.91028 0 -1.48424 -1.25 0 -2.55859 -0.937879 0 -3.31212 1.09961 0 0 -1.09961 0 0 6.84961 0 -6.24543 6.24261 0 -6.85243 6.83737 0 -6.36965 6.80329 0 -6.482 6.74795 0 -6.58554 6.67347 0 -6.67629 6.58272 0 -6.75077 6.47918 0 -6.80611 6.36684 0 -6.84019 6.24261 0 -1.65039 6.84961 0 -2.25739 6.36684 0 -1.66263 6.47918 0 -1.69671 6.58272 0 -1.75205 6.67347 0 -1.82653 6.74795 0 -1.91728 6.80329 0 -2.02082 6.83737 0 -2.13316 3.20161 0 -6.85243 2.54181 0 -6.57913 3.01581 0 -6.83412 2.84425 0 -6.78208 2.68614 0 -6.69757 -0.944755 0 -3.06668 -1.02927 0 -2.90857 -1.08131 0 -2.73701 1.09961 0 -0.687076 2.06292 0 -1.65039 1.11755 0 -0.869204 1.17283 0 -1.05144 1.2626 0 -1.21939 1.38341 0 -1.36659 1.53061 0 -1.4874 1.69856 0 -1.57717 1.8808 0 -1.63245 -1.09961 0 -2.55121 -0.826312 0 -3.211</float_array>
+                    <technique_common>
+                        <accessor count="78" source="#Geometry-mesh043-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh043-normals" name="normals">
+                    <float_array id="Geometry-mesh043-normals-array" count="3">0 1 0</float_array>
+                    <technique_common>
+                        <accessor count="1" source="#Geometry-mesh043-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh043-Texture" name="Texture">
+                    <float_array id="Geometry-mesh043-Texture-array" count="172">0.0842551 4.5227 0.122566 4.5227 0.0842552 4.46432 0.122566 4.46432 0.0843936 3.63251 0.122566 3.63251 0.0842551 3.59142 0.122566 3.59142 0.0842551 3.46815 0.122566 3.46815 0.0842551 3.42706 0.122566 3.42706 0.0843936 3.17489 0.122566 3.17489 0.0843936 2.17508 0.122566 2.17508 0.0842551 1.92291 0.122566 1.92291 0.0842551 1.88182 0.122566 1.88182 0.0842551 1.75855 0.122566 1.75855 0.0843936 1.71746 0.122566 1.71746 0.122566 0.459484 0.122566 0.414542 0.0842552 0.459484 0.0842551 0.414542 0.122566 0.279718 0.122566 0.234776 0.0842552 0.279718 0.0842552 0.234776 0.0842552 6.28805 0.0843936 6.34643 0.122566 6.28805 0.122566 6.34643 0.0843936 4.58109 0.122566 4.58109 0.0843936 4.34756 0.122566 4.34756 0.0842551 3.50924 0.122566 3.50924 0.0842551 3.34488 0.122566 3.34488 0.0843936 3.30379 0.122566 3.30379 0.0842552 1.964 0.122566 1.964 0.0842552 1.79964 0.122566 1.79964 0.122566 0.504425 0.0842552 0.504425 0.122566 0.324659 0.0842551 0.324659 0.0844396 7.06148 0.122566 7.06148 0.0843936 4.76108 0.0843936 5.93292 0.122566 4.76108 0.122566 5.93292 0.0842551 4.40594 0.122566 4.40594 0.0842552 3.55033 0.122566 3.55033 0.0842552 3.38597 0.122566 3.38597 0.0842551 2.00509 0.122566 2.00509 0.0842552 1.84073 0.122566 1.84073 0.122566 0.549366 0.0843936 0.549366 0.122566 0.369601 0.0842551 0.369601 0.122566 0.189835 0.122566 -0.000117187 0.0843936 0.189835 0.0844396 -0.000117187 0.0842551 6.22967 0.122566 6.22967 0.0842552 6.17129 0.122566 6.17129 0.0843936 6.1129 0.122566 6.1129 0.0843936 2.04618 0.122566 2.04618</float_array>
+                    <technique_common>
+                        <accessor count="86" source="#Geometry-mesh043-Texture-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh043-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh043-positions" />
+                </vertices>
+                <triangles count="76" material="Material-lab_linoleum">
+                    <input semantic="VERTEX" source="#Geometry-mesh043-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh043-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh043-Texture" offset="2" set="0" />
+                    <p>24 0 0 63 0 1 23 0 2 62 0 3 23 0 2 63 0 1 3 0 4 42 0 5 10 0 6 49 0 7 10 0 6 42 0 5 7 0 8 46 0 9 6 0 10 45 0 11 6 0 10 46 0 9 2 0 12 41 0 13 12 0 14 51 0 15 12 0 14 41 0 13 17 0 16 56 0 17 16 0 18 55 0 19 16 0 18 56 0 17 13 0 20 52 0 21 11 0 22 50 0 23 11 0 22 52 0 21 74 0 24 73 0 25 35 0 26 34 0 27 35 0 26 73 0 25 70 0 28 69 0 29 31 0 30 30 0 31 31 0 30 69 0 29 27 0 32 37 0 33 66 0 34 76 0 35 66 0 34 37 0 33 24 0 0 21 0 36 63 0 1 60 0 37 63 0 1 21 0 36 20 0 38 59 0 39 3 0 4 42 0 5 3 0 4 59 0 39 8 0 40 47 0 41 7 0 8 46 0 9 7 0 8 47 0 41 4 0 42 43 0 43 2 0 44 41 0 45 2 0 44 43 0 43 18 0 46 57 0 47 17 0 16 56 0 17 17 0 16 57 0 47 14 0 48 53 0 49 13 0 20 52 0 21 13 0 20 53 0 49 75 0 50 74 0 24 36 0 51 35 0 26 36 0 51 74 0 24 71 0 52 70 0 28 32 0 53 31 0 30 32 0 53 70 0 28 37 0 33 1 0 54 76 0 35 40 0 55 76 0 35 1 0 54 21 0 56 38 0 57 60 0 58 77 0 59 60 0 58 38 0 57 22 0 60 61 0 61 20 0 38 59 0 39 20 0 38 61 0 61 9 0 62 48 0 63 8 0 40 47 0 41 8 0 40 48 0 63 5 0 64 44 0 65 4 0 42 43 0 43 4 0 42 44 0 65 19 0 66 58 0 67 18 0 46 57 0 47 18 0 46 58 0 67 15 0 68 54 0 69 14 0 48 53 0 49 14 0 48 54 0 69 68 0 70 75 0 50 29 0 71 36 0 51 29 0 71 75 0 50 72 0 72 71 0 52 33 0 73 32 0 53 33 0 73 71 0 52 67 0 74 39 0 75 28 0 76 0 0 77 28 0 76 39 0 75 26 0 78 65 0 79 25 0 80 64 0 81 25 0 80 65 0 79 25 0 80 64 0 81 38 0 82 77 0 83 38 0 82 64 0 81 23 0 2 62 0 3 22 0 60 61 0 61 22 0 60 62 0 3 10 0 6 49 0 7 9 0 62 48 0 63 9 0 62 49 0 7 6 0 10 45 0 11 5 0 64 44 0 65 5 0 64 45 0 11 12 0 84 51 0 85 19 0 66 58 0 67 19 0 66 51 0 85 16 0 18 55 0 19 15 0 68 54 0 69 15 0 68 55 0 19 11 0 22 50 0 23 29 0 71 68 0 70 29 0 71 50 0 23 73 0 25 72 0 72 34 0 27 33 0 73 34 0 27 72 0 72 69 0 29 67 0 74 30 0 31 28 0 76 30 0 31 67 0 74 27 0 32 66 0 34 26 0 78 65 0 79 26 0 78 66 0 34</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Camera-camera002Node" name="Camera" type="NODE">
+                <translate sid="translation003">0 0.75 4</translate>
+                <rotate sid="rotation004Y">0 1 0 0</rotate>
+                <rotate sid="rotation004X">1 0 0 -5</rotate>
+                <rotate sid="rotation004Z">0 0 1 0</rotate>
+                <instance_camera url="#Camera-camera002" />
+            </node>
+            <node id="groupLocator027Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator050Node" name="lab_linoleum_tiles__Image___Texture_" type="NODE">
+                    <translate sid="translation053">0 0 0</translate>
+                    <rotate sid="rotation052Y">0 1 0 0</rotate>
+                    <rotate sid="rotation052X">1 0 0 0</rotate>
+                    <rotate sid="rotation052Z">0 0 1 0</rotate>
+                    <scale sid="scale051">1 1 1</scale>
+                </node>
+                <node id="txtrLocator032Node" name="lab_linoleum__Image___Texture_" type="NODE">
+                    <translate sid="translation035">0 0 0</translate>
+                    <rotate sid="rotation034Y">0 1 0 0</rotate>
+                    <rotate sid="rotation034X">1 0 0 0</rotate>
+                    <rotate sid="rotation034Z">0 0 1 0</rotate>
+                    <scale sid="scale033">1 1 1</scale>
+                </node>
+                <node id="txtrLocator023Node" name="lab_linoleum_details__Image___Texture_" type="NODE">
+                    <translate sid="translation026">0 0 0</translate>
+                    <rotate sid="rotation025Y">0 1 0 0</rotate>
+                    <rotate sid="rotation025X">1 0 0 0</rotate>
+                    <rotate sid="rotation025Z">0 0 1 0</rotate>
+                    <scale sid="scale024">1 1 1</scale>
+                </node>
+            </node>
+            <node id="groupLocator002Node" name="special" type="NODE">
+                <node id="Geometry-mesh024Node" name="probe_design_floor_special" type="NODE">
+                    <translate sid="translation027">0 0 0</translate>
+                    <rotate sid="rotation026Y">0 1 0 0</rotate>
+                    <rotate sid="rotation026X">1 0 0 0</rotate>
+                    <rotate sid="rotation026Z">0 0 1 0</rotate>
+                    <scale sid="scale028">1 1 1</scale>
+                    <instance_geometry url="#Geometry-mesh024">
+                        <bind_material>
+                            <technique_common>
+                                <instance_material symbol="Material-lab_linoleum_tiles" target="#Material-lab_linoleum_tiles">
+                                    <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
+                            </technique_common>
+                        </bind_material>
+                    </instance_geometry>
+                    <node id="Geometry-mesh043Node" name="trim" type="NODE">
+                        <translate sid="translation045">0 0 0</translate>
+                        <rotate sid="rotation044Y">0 1 0 0</rotate>
+                        <rotate sid="rotation044X">1 0 0 0</rotate>
+                        <rotate sid="rotation044Z">0 0 1 0</rotate>
+                        <scale sid="scale046">1 1 1</scale>
+                        <instance_geometry url="#Geometry-mesh043">
+                            <bind_material>
+                                <technique_common>
+                                    <instance_material symbol="Material-lab_linoleum" target="#Material-lab_linoleum">
+                                        <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
+                                    </instance_material>
+                                </technique_common>
+                            </bind_material>
+                        </instance_geometry>
+                    </node>
+                </node>
+            </node>
+            <node id="Light-sunLight011Node" name="Directional_Light" type="NODE">
+                <translate sid="translation012">-2 2 2</translate>
+                <rotate sid="rotation013Y">0 1 0 -45</rotate>
+                <rotate sid="rotation013X">1 0 0 -30</rotate>
+                <rotate sid="rotation013Z">0 0 1 0</rotate>
+                <instance_light url="#Light-sunLight011" />
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=1;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=0;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=0;exportVertexColors=0;exportVertexColorsPerVertex=0;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=0;dereferenceXRefs=0;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///H:/Dropbox%20(Frictional%20Games)/Team/depth_marc/models/station/statics/lab_set_girders/lab_set_girders.mb</source_data>
+    </contributor>
+    <created>2015-02-02T14:22:11</created>
+    <modified>2015-02-02T14:22:11</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="girder_lab_straight_lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="girder_lab_straight_file1">
+      <init_from>./girder_lab_metal.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>girder_lab_straight_file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="pCubeShape13" name="girder_lab_straight_pCubeShape13">
+      <mesh>
+        <source id="pCubeShape13-positions" name="pCubeShape13-positions">
+          <float_array id="pCubeShape13-positions-array" count="90">0.100529 -0.106944 0 0.106945 -0.100528 0 0.100529 -0.106944 -1 0.106945 -0.100528 -1 0.100529 0.106944 0 0.106945 0.100528 0 0.100529 0.106944 -1 0.106945 0.100528 -1 -0.106945 0.100528 0 -0.100529 0.106944 0 -0.106945 0.100528 -1 -0.100529 0.106944 -1 -0.100529 -0.106944 0 -0.106945 -0.100528 0 -0.100529 -0.106944 -1 -0.106945 -0.100528 -1 0.106945 -2.4066e-4 -1 0.106945 -2.4066e-4 0 -0.106945 -2.4066e-4 0 -0.106945 -2.4066e-4 -1 -6.96278e-4 0.100528 0 -6.96278e-4 -2.4066e-4 0 -6.96278e-4 -0.100528 0 -6.54507e-4 -0.106944 0 -6.54507e-4 -0.106944 -1 -6.96278e-4 -0.100528 -1 -6.96278e-4 -2.4066e-4 -1 -6.96278e-4 0.100528 -1 -6.54507e-4 0.106944 -1 -6.54507e-4 0.106944 0</float_array>
+          <technique_common>
+            <accessor source="#pCubeShape13-positions-array" count="30" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pCubeShape13-normals" name="pCubeShape13-normals">
+          <float_array id="pCubeShape13-normals-array" count="264">0.9999999 0 0 0.9238795 -0.3826832 0 0.8628563 -0.5054492 0 0.9999999 0 0 0 0.9999999 0 0.3826837 0.9238796 0 0.5054497 0.862856 0 0 0.9999999 0 -0.8628563 -0.5054492 0 -0.9999999 0 0 -0.9999999 0 0 -0.9238795 -0.3826832 0 0 -0.9999999 0 0.3826837 -0.9238796 0 0.5054497 -0.862856 0 0 -0.9999999 0 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0.8628563 0.5054492 0 0.9238795 0.3826832 0 -0.9238795 0.3826832 0 -0.5054497 0.862856 0 -0.8628563 0.5054492 0 -0.3826837 0.9238796 0 -0.3826837 -0.9238796 0 -0.5054497 -0.862856 0 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 -0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999 0 0 0.9999999</float_array>
+          <technique_common>
+            <accessor source="#pCubeShape13-normals-array" count="88" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="pCubeShape13-pCubeShape13-map1" name="pCubeShape13-pCubeShape13-map1">
+          <float_array id="pCubeShape13-pCubeShape13-map1-array" count="100">0.881057 0.852507 0.881057 0.303631 0.99183 0.303631 0.99183 0.852507 0.99637 0.852507 0.533521 0.303631 0.6443 0.303631 0.6443 0.852507 0.649265 0.852507 0.649265 0.30363 0.759969 0.303631 0.759968 0.852507 0.764901 0.852507 0.764902 0.303631 0.875619 0.303631 0.875619 0.852507 0.99183 0.184228 0.995352 0.187747 0.995352 0.299004 0.991829 0.970851 0.995352 0.856531 0.995352 0.967301 0.99637 0.303631 0.533521 0.852507 0.881057 0.184685 0.877508 0.299004 0.877508 0.188234 0.881057 0.970851 0.877507 0.967301 0.877507 0.856531 0.9363109 0.303631 0.9363109 0.852507 0.9363104 0.970851 0.704749 0.852507 0.7047495 0.3036305 0.9363109 0.1844571 0.9918295 0.9120643 0.9363106 0.9120643 0.881057 0.9120643 0.8198996 0.852507 0.877507 0.9122766 0.877508 0.2432584 0.8199 0.303631 0.881057 0.2437708 0.9363109 0.2436561 0.99183 0.2435408 0.5892711 0.303631 0.995352 0.2430133 0.995352 0.9122766 0.5892711 0.852507</float_array>
+          <technique_common>
+            <accessor source="#pCubeShape13-pCubeShape13-map1-array" count="50" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="pCubeShape13-vertices" name="pCubeShape13-vertices">
+          <input semantic="POSITION" source="#pCubeShape13-positions"/>
+        </vertices>
+        <triangles material="girder_lab_straight_lambert2SG" count="56">
+          <input semantic="VERTEX" source="#pCubeShape13-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#pCubeShape13-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#pCubeShape13-pCubeShape13-map1" offset="2" set="0"/>
+          <p>17 0 31 1 1 0 16 3 30 16 3 30 1 1 0 3 2 1 29 4 49 4 5 23 28 7 46 28 7 46 4 5 23 6 6 5 13 8 11 18 9 33 15 11 10 15 11 10 18 9 33 19 10 34 24 12 42 2 13 14 23 15 39 23 15 39 2 13 14 0 14 15 28 17 47 6 18 18 27 16 45 27 16 45 6 18 18 7 19 2 29 20 48 20 21 36 4 23 20 4 23 20 20 21 36 5 22 3 1 1 0 0 14 15 3 2 1 3 2 1 0 14 15 2 13 14 4 5 4 5 24 3 6 6 22 6 6 22 5 24 3 7 25 2 8 26 8 9 27 7 10 28 9 10 28 9 9 27 7 11 29 6 12 30 12 13 8 11 14 31 13 14 31 13 13 8 11 15 11 10 26 32 44 16 33 30 25 35 43 25 35 43 16 33 30 3 34 1 3 37 1 2 38 25 25 36 43 25 36 43 2 38 25 24 39 41 22 40 38 1 41 0 21 43 37 21 43 37 1 41 0 17 42 31 23 44 40 0 45 29 22 47 38 22 47 38 0 45 29 1 46 0 5 24 3 17 0 31 7 25 2 7 25 2 17 0 31 16 3 30 21 48 37 17 49 31 20 51 36 20 51 36 17 49 31 5 50 3 19 10 34 18 9 33 10 28 9 10 28 9 18 9 33 8 26 8 27 52 45 7 53 2 26 55 44 26 55 44 7 53 2 16 54 30 18 56 32 21 57 37 8 59 19 8 59 19 21 57 37 20 58 36 13 60 27 22 61 38 18 63 32 18 63 32 22 61 38 21 62 37 23 65 40 22 66 38 12 64 28 12 64 28 22 66 38 13 67 27 14 31 13 24 12 42 12 30 12 12 30 12 24 12 42 23 15 39 15 68 24 25 69 43 14 71 26 14 71 26 25 69 43 24 70 41 19 72 35 26 73 44 15 75 24 15 75 24 26 73 44 25 74 43 10 76 16 27 77 45 19 79 35 19 79 35 27 77 45 26 78 44 10 80 16 11 81 17 27 83 45 27 83 45 11 81 17 28 82 47 9 27 7 29 4 49 11 29 6 11 29 6 29 4 49 28 7 46 8 85 19 20 86 36 9 84 21 9 84 21 20 86 36 29 87 48</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>girder_lab_straight_pCubeShape13</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="lab_set_girders">
+      <node id="pCube13" name="girder_lab_straight_pCube13" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#pCubeShape13">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="girder_lab_straight_lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>girder_lab_straight_pCube13</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

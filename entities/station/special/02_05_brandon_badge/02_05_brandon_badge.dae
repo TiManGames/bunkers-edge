@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///D:/work/DropBox/Team/Depth_marcus/models/Levels/02_05/special/02_05_badge_brandon.ma</source_data>
+    </contributor>
+    <created>2014-01-24T14:48:22</created>
+    <modified>2014-01-24T14:48:22</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="DDS" name="DDS">
+      <instance_effect url="#DDS-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="DDS-fx">
+      <profile_COMMON>
+        <newparam sid="file2-surface">
+          <surface type="2D">
+            <init_from>file2</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file2-sampler">
+          <sampler2D>
+            <source>file2-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file2-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float>0.3</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file2" name="file2">
+      <init_from>file:///D:/work/depth/redist/entities/station/special/02_05_brandon_badge/02_05_brandon_badge.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file2</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="badgeShape" name="badgeShape">
+      <mesh>
+        <source id="badgeShape-positions" name="badgeShape-positions">
+          <float_array id="badgeShape-positions-array" count="144">-0.07687964 0.002176763 0.05271044 -0.0780008 0 0.05399998 0.0780008 0 0.05399998 0.07687964 0.002176763 0.05271044 -0.0780008 0 -0.05399998 -0.07687964 0.002176763 -0.05271044 0.07687964 0.002176763 -0.05271044 0.0780008 0 -0.05399998 0.08476385 0.002176763 0.04490226 0.08599998 0 0.04600078 0.08599998 0 -0.04600078 0.08476385 0.002176763 -0.04490226 -0.08476385 0.002176763 -0.04490226 -0.08599998 0 -0.04600078 -0.08599998 0 0.04600078 -0.08476385 0.002176763 0.04490226 -0.08492831 0 0.05000039 -0.08370759 0.002176763 0.04880636 -0.08200041 0 0.0529283 -0.08082177 0.002176763 0.05166435 0.08200041 0 0.0529283 0.08082177 0.002 0.05166435 0.08492831 0 0.05000039 0.08370759 0.002 0.04880636 -0.08370759 0.002176763 -0.04880636 -0.08492831 0 -0.05000039 -0.08082177 0.002176763 -0.05166435 -0.08200041 0 -0.0529283 0.08082177 0.002176763 -0.05166435 0.08200041 0 -0.0529283 0.08370759 0.002176763 -0.04880636 0.08492831 0 -0.05000039 -0.08492831 0.001204571 0.05000039 -0.08599998 0.001204571 0.04600078 -0.08599998 0.001204571 -0.04600078 -0.08492831 0.001204571 -0.05000039 -0.08200041 0.001204571 -0.0529283 -0.0780008 0.001204571 -0.05399998 0.0780008 0.001204571 -0.05399998 0.08200041 0.001204571 -0.0529283 0.08492831 0.001204571 -0.05000039 0.08599998 0.001204571 -0.04600078 0.08599998 0.001204571 0.04600078 0.08492831 0.001204571 0.05000039 0.08200041 0.001204571 0.0529283 0.0780008 0.001204571 0.05399998 -0.0780008 0.001204571 0.05399998 -0.08200041 0.001204571 0.0529283</float_array>
+          <technique_common>
+            <accessor source="#badgeShape-positions-array" count="48" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="badgeShape-normals" name="badgeShape-normals">
+          <float_array id="badgeShape-normals-array" count="336">-0.1305251 0 0.9914451 -0.1305251 0 0.9914451 0.1305251 0 0.9914451 0.1305251 0 0.9914451 -0.1305251 0 -0.9914451 -0.1305251 0 -0.9914451 0.1305251 0 -0.9914451 0.1305251 0 -0.9914451 0.9914452 0 0.1305239 0.9914452 0 0.1305239 0.9914452 0 -0.1305239 0.9914452 0 -0.1305239 -0.9914452 0 -0.1305239 -0.9914452 0 -0.1305239 -0.9914452 0 0.1305239 -0.9914452 0 0.1305239 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 -0.8660267 0 0.4999977 -0.8660267 0 0.4999977 -0.4999993 0 0.8660258 -0.4999993 0 0.8660258 0.4999993 0 0.8660258 0.4999993 0 0.8660258 0.8660267 0 0.4999977 0.8660267 0 0.4999977 -0.8660267 0 -0.4999977 -0.8660267 0 -0.4999977 -0.4999993 0 -0.8660258 -0.4999993 0 -0.8660258 0.4999993 0 -0.8660258 0.4999993 0 -0.8660258 0.8660267 0 -0.4999977 0.8660267 0 -0.4999977 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0.06102068 0.996233 0.06161474 0.06102068 0.996233 0.06161474 0.06102068 0.996233 0.06161474 0.06102068 0.996233 0.06161474 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 -0.5758684 0.8144098 0.07150146 -0.4425784 0.8616933 0.2482119 -0.4425784 0.8616933 0.2482119 -0.5758684 0.8144098 0.07150146 -0.5758684 0.8144098 -0.07150145 -0.5758684 0.8144098 -0.07150145 -0.4425784 0.8616933 -0.2482119 -0.4425784 0.8616933 -0.2482119 -0.2450987 0.8650611 -0.4377165 -0.2450987 0.8650611 -0.4377165 -0.06933961 0.8241642 -0.5620901 -0.06933961 0.8241642 -0.5620901 0.06933957 0.8241643 -0.5620899 0.06933957 0.8241643 -0.5620899 0.2450987 0.8650612 -0.4377164 0.2450987 0.8650612 -0.4377164 0.4425783 0.8616932 -0.2482119 0.4425783 0.8616932 -0.2482119 0.5758684 0.8144098 -0.07150146 0.5758684 0.8144098 -0.07150146 0.5533625 0.8295585 0.074985 0.5533625 0.8295585 0.074985 0.3921349 0.8919305 0.2251446 0.3921349 0.8919305 0.2251446 0.2222947 0.8947404 0.3873304 0.2222947 0.8947404 0.3873304 0.07293767 0.8387203 0.5396557 0.07293767 0.8387203 0.5396557 -0.06933957 0.8241643 0.5620899 -0.06933957 0.8241643 0.5620899 -0.2450987 0.8650612 0.4377164 -0.2450987 0.8650612 0.4377164</float_array>
+          <technique_common>
+            <accessor source="#badgeShape-normals-array" count="112" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="badgeShape-map1" name="badgeShape-map1">
+          <float_array id="badgeShape-map1-array" count="192">0.07284751 0.03160911 0.07284965 0.009733823 0.9260505 0.009717581 0.9260527 0.03159612 0.0728605 0.6441632 0.07285833 0.6222857 0.9260635 0.6222716 0.9260613 0.644148 0.9698 0.07534783 0.9916775 0.07534675 0.991684 0.5785199 0.9698076 0.5785189 0.02911096 0.578534 0.007233488 0.5785351 0.007226991 0.07536189 0.02910446 0.07536298 0.4814771 0.6880314 0.5051059 0.6643997 0.9659491 0.664399 0.9895773 0.688032 0.9895773 0.9598097 0.9659491 0.9834419 0.5051053 0.9834419 0.4814777 0.9598097 0.00797205 0.0697068 0.01382856 0.0478315 0.03496207 0.05348876 0.01948692 0.03802767 0.03549267 0.02200782 0.05097111 0.03747105 0.0453106 0.01633972 0.06718483 0.01047885 0.9317154 0.01046478 0.9535896 0.01632455 0.9479301 0.03745696 0.9634075 0.02199265 0.9794143 0.03801253 0.9639403 0.05347359 0.9850738 0.04781526 0.9909314 0.06969057 0.03497072 0.6004082 0.01383616 0.6060666 0.007979649 0.5841912 0.05098195 0.6164248 0.0355068 0.6318903 0.01949881 0.6158726 0.06719675 0.643417 0.04532142 0.6375573 0.9479409 0.6164097 0.9536036 0.6375399 0.9317294 0.6434029 0.96395 0.600392 0.9794252 0.615852 0.9634194 0.6318729 0.9909389 0.5841728 0.9850847 0.6060493 0.4932897 0.9802752 0.4846421 0.971624 0.9864128 0.971624 0.9777651 0.9802752 0.4846421 0.676217 0.4932903 0.6675665 0.9777651 0.6675665 0.9864128 0.6762176 0.02655697 0.05123878 0.02880738 0.04733966 0.02040347 0.07536255 0.02069979 0.07311343 0.02040997 0.5785344 0.02070673 0.580784 0.02656519 0.6026586 0.02881731 0.6065586 0.04482726 0.6225756 0.04873068 0.6248295 0.07285919 0.6309867 0.07060663 0.6306899 0.9260626 0.6309721 0.928317 0.6306759 0.950193 0.6248135 0.9540969 0.6225597 0.9701047 0.6065407 0.9723555 0.602642 0.9785081 0.5785193 0.9782118 0.5807675 0.978501 0.0753474 0.9782043 0.07309785 0.9700946 0.0473245 0.9723454 0.05122319 0.9501809 0.02905229 0.9540857 0.03130658 0.9260519 0.0228947 0.9283048 0.02319188 0.07284836 0.02290899 0.07059538 0.0232053 0.04481511 0.0313211 0.04871984 0.02906681</float_array>
+          <technique_common>
+            <accessor source="#badgeShape-map1-array" count="96" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="badgeShape-vertices" name="badgeShape-vertices">
+          <input semantic="POSITION" source="#badgeShape-positions"/>
+        </vertices>
+        <triangles material="blinn2SG" count="92">
+          <input semantic="VERTEX" source="#badgeShape-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#badgeShape-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#badgeShape-map1" offset="2" set="0"/>
+          <p>46 0 92 1 1 1 45 3 90 45 3 90 1 1 1 2 2 2 4 4 4 37 5 74 7 7 7 7 7 7 37 5 74 38 6 76 42 8 84 9 9 9 41 11 82 41 11 82 9 9 9 10 10 10 34 12 68 13 13 13 33 15 66 33 15 66 13 13 13 14 14 14 15 16 15 0 17 0 12 23 12 0 17 0 3 18 3 12 23 12 12 23 12 3 18 3 5 22 5 3 18 3 8 19 8 5 22 5 11 20 11 6 21 6 8 19 8 8 19 8 6 21 6 5 22 5 13 24 16 4 25 17 14 31 23 4 25 17 7 26 18 14 31 23 14 31 23 7 26 18 1 30 22 7 26 18 10 27 19 1 30 22 9 28 20 2 29 21 10 27 19 10 27 19 2 29 21 1 30 22 14 14 24 16 32 25 33 15 67 33 15 67 16 32 25 32 33 64 16 32 27 18 34 28 32 33 65 32 33 65 18 34 28 47 35 94 18 34 30 1 1 31 47 35 95 47 35 95 1 1 31 46 0 93 2 2 32 20 36 33 45 3 91 45 3 91 20 36 33 44 37 88 20 36 35 22 38 36 44 37 89 44 37 89 22 38 36 43 39 86 22 38 38 9 9 39 43 39 87 43 39 87 9 9 39 42 8 85 34 12 69 35 40 70 13 13 42 13 13 42 35 40 70 25 41 41 35 40 71 36 42 72 25 41 45 25 41 45 36 42 72 27 43 44 36 42 73 37 5 75 27 43 47 27 43 47 37 5 75 4 4 46 38 6 77 39 44 78 7 7 50 7 7 50 39 44 78 29 45 49 39 44 79 40 46 80 29 45 53 29 45 53 40 46 80 31 47 52 40 46 81 41 11 83 31 47 55 31 47 55 41 11 83 10 10 54 14 48 23 1 49 22 16 51 57 16 51 57 1 49 22 18 50 56 17 53 26 19 54 29 15 52 15 15 52 15 19 54 29 0 55 0 9 56 20 22 57 58 2 59 21 2 59 21 22 57 58 20 58 59 3 61 3 21 62 34 8 60 8 8 60 8 21 62 34 23 63 37 24 65 40 12 66 12 26 64 43 26 64 43 12 66 12 5 67 5 13 68 16 25 69 60 4 71 17 4 71 17 25 69 60 27 70 61 30 72 51 28 73 48 11 75 11 11 75 11 28 73 48 6 74 6 10 76 19 7 77 18 31 79 63 31 79 63 7 77 18 29 78 62 32 81 64 17 82 26 33 80 67 33 80 67 17 82 26 15 83 15 12 84 12 34 85 68 15 83 15 15 83 15 34 85 68 33 80 66 12 84 12 24 86 40 34 85 69 34 85 69 24 86 40 35 87 70 24 86 40 26 88 43 35 87 71 35 87 71 26 88 43 36 89 72 5 90 5 37 91 75 26 88 43 26 88 43 37 91 75 36 89 73 38 92 76 37 91 74 6 93 6 6 93 6 37 91 74 5 90 5 6 93 6 28 94 48 38 92 77 38 92 77 28 94 48 39 95 78 30 96 51 40 97 80 28 94 48 28 94 48 40 97 80 39 95 79 11 98 11 41 99 83 30 96 51 30 96 51 41 99 83 40 97 81 8 100 8 42 101 84 11 98 11 11 98 11 42 101 84 41 99 82 43 102 87 42 101 85 23 103 37 23 103 37 42 101 85 8 100 8 44 104 89 43 102 86 21 105 34 21 105 34 43 102 86 23 103 37 44 104 88 21 105 34 45 106 91 45 106 91 21 105 34 3 107 3 0 108 0 46 109 92 3 107 3 3 107 3 46 109 92 45 106 90 47 110 95 46 109 93 19 111 29 19 111 29 46 109 93 0 108 0 47 110 94 19 111 29 32 81 65 32 81 65 19 111 29 17 82 26</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>badgeShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="_2_05_badge_brandon">
+      <node id="badge" name="badge" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#badgeShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="blinn2SG" target="#DDS">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>badge</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

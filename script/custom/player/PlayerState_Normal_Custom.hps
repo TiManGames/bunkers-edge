@@ -1,0 +1,584 @@
+#include "player/PlayerState_Normal.hps"
+
+#include "custom/helpers/helper_items.hps"
+#include "custom/helpers/helper_modules_custom.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+#include "utilities/Utility_Throw.hps"
+#include "helpers/helper_imgui.hps"
+#include "custom/helpers/helper_player_custom.hps"
+#include "custom/helpers/helper_gun.hps"
+#include "helpers/helper_modules.hps"
+
+//------------------------------------------------------------
+
+class cScrPlayerState_Normal_Custom : cScrPlayerState_Normal
+{	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// INIT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Init() override
+	{
+		cScrPlayerState_Normal::Init();
+		LoadUserConfig();
+	}
+	
+	//------------------------------------------------------------
+	
+	void Reset() override
+	{
+		cScrPlayerState_Normal::Reset();
+		mThrow.Reset();
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// USER SETTINGS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void LoadUserConfig() override
+	{
+		cScrPlayerState_Normal::LoadUserConfig();	
+		
+		cConfigFile@ pConfig = cLux_GetUserConfig();
+		mlUseItemMode = pConfig.GetInt("Accessibility", "UseItemMode", 0);
+		mlReloadWeaponMode = pConfig.GetInt("Accessibility", "ReloadWeaponMode", 0);
+		mlChargeFlashlightMode = pConfig.GetInt("Accessibility", "ChargeFlashlightMode", 0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SaveUserConfig() override
+	{
+		cScrPlayerState_Normal::SaveUserConfig();
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GLOBAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetQueuedState()
+	{
+		mlQueuedState = cScript_GetGlobalArgInt(0);
+		mlQueuedStateItemHand = cScript_GetGlobalArgInt(1);
+		msQueuedStateItemType = cScript_GetGlobalArgString(2);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId) override
+	{		
+		cScrPlayerState_Normal::OnEnterState(alPrevStateId);
+		
+		mbAllowCheckAmmoAction = mlReloadWeaponMode != eUseItemMode_Toggle ||
+								  (alPrevStateId != ePlayerState_Custom_UsingGun_Reload &&
+								   alPrevStateId != ePlayerState_Custom_UsingShotgun_Reload &&
+								   alPrevStateId != ePlayerState_Custom_UsingVolleyGun_Reload);
+		mbAllowFlashlightAction = mlChargeFlashlightMode != eUseItemMode_Toggle ||
+								  alPrevStateId != ePlayerState_Custom_UsingLantern;
+								  
+		tString sDisableUseItemActionVar = "DisableUseItemAction";
+		mbAllowUseItemAction = mlUseItemMode != eUseItemMode_Toggle || cScript_GetGlobalVarBool(sDisableUseItemActionVar) == false;
+		cScript_SetGlobalVarBool(sDisableUseItemActionVar, false);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId) override
+	{
+		cScrPlayerState_Normal::OnLeaveState(alNextStateId);
+		ResetQueuedState();
+	}
+
+	//------------------------------------------------------------
+	
+	void OnMapEnter(cLuxMap @apMap) override
+	{
+	
+	}
+
+	//------------------------------------------------------------
+	
+	void OnMapLeave(cLuxMap @apMap) override
+	{
+		mbHeldLanternInPrevMap = Item_GetHeldType(eItemHandlerHand_Left) == "DynamoLantern";
+	}
+
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep) override
+	{		
+		////////////////////
+		// Certain actions now allowed? Allow again if the key isn't pressed
+		if (mbAllowCheckAmmoAction == false)
+		{
+			mbAllowCheckAmmoAction = cInput_IsTriggered(eAction_CheckAmmo) == false;
+		}
+		
+		if (mbAllowFlashlightAction == false)
+		{
+			mbAllowFlashlightAction = cInput_IsTriggered(eAction_Flashlight) == false;
+		}
+		
+		if (mbAllowUseItemAction == false)
+		{
+			mbAllowUseItemAction = cInput_IsTriggered(eAction_UseItem) == false;
+		}
+		
+		///////////////////
+		// Allow queued state change?
+		bool bQueuedVolleyState = mlQueuedState == ePlayerState_Custom_UsingVolleyGun_Aim ||
+								  mlQueuedState == ePlayerState_Custom_UsingVolleyGun_Reload;
+		bool bAllowQueuedStateChange = (mlUseItemMode == eUseItemMode_Toggle || bQueuedVolleyState) &&
+									   mlQueuedState != ePlayerState_Normal &&
+									   Item_GetFocusOutroAnimation() == "";
+		
+		///////////////////
+		// Generic use item count
+		tString sHeldItemType = Item_GetHeldType(eItemHandlerHand_Right);
+		bool bHoldingItem = sHeldItemType != "";
+		bool bCanUseItems = Player_GetUnderwater() == false && Player_GetCanEquipItems();
+		
+		if (mlUseItemMode == eUseItemMode_Hold &&
+			mbAllowUseItemAction &&
+			bHoldingItem && 
+			bCanUseItems && 
+			cInput_IsTriggered(eAction_UseItem))
+		{
+			mfUseItemCount += afTimeStep;
+		}
+		else
+		{
+			mfUseItemCount = 0.f;
+		}
+		
+		///////////////////
+		// Use generic item?
+		if (mfUseItemCount >= 0.1f)
+		{
+			mfUseItemCount = 0.f;
+			
+			int lUsingItemState = Item_GetUsingState(sHeldItemType);
+			if (lUsingItemState != -1)
+				mBaseObj.mpPlayer.ChangeState(lUsingItemState);
+		}
+		
+		///////////////////
+		// Gun
+		if (Gun_IsWeaponType(sHeldItemType))
+		{
+			///////////////////
+			// Enter aim state?
+			bool bAllowGun = mbAllowUseItemAction &&
+							 bCanUseItems &&
+							 Player_CanUseGun(sHeldItemType) && 
+							 Player_GetTimeSinceLastThrowInteraction() > 0.7f;
+			
+			bool bEnterAim = false;
+			
+			if (bAllowQueuedStateChange &&
+				mlQueuedState == Gun_GetAimStateId(sHeldItemType))
+			{
+				bEnterAim = true;
+			}
+			else if (mlUseItemMode == eUseItemMode_Hold)
+			{
+				bEnterAim = cInput_IsTriggered(eAction_AimGun);
+			}
+			else if (mlUseItemMode == eUseItemMode_Toggle)
+			{
+				bEnterAim = bAllowQueuedStateChange &&
+							mlQueuedState == Gun_GetAimStateId(sHeldItemType);
+			}
+			
+			if (bEnterAim && bAllowGun)
+			{
+				mfEnterUsingGunCount += afTimeStep;				
+				float fEnterUsingGunTime = mlUseItemMode == eUseItemMode_Hold ? 0.1f : 0.f;
+				
+				if (mfEnterUsingGunCount >= fEnterUsingGunTime)
+				{
+					mfEnterUsingGunCount = 0.f;
+					mBaseObj.mpPlayer.ChangeState(Gun_GetAimStateId(sHeldItemType));
+				}
+			}
+			else
+			{
+				mfEnterUsingGunCount = 0.f;
+			}
+			
+			///////////////////
+			// Enter check ammo state?
+			bool bEnterCheckAmmo = false;
+			
+			if (bAllowQueuedStateChange)
+			{
+				bEnterCheckAmmo = mlQueuedState == Gun_GetReloadStateId(sHeldItemType);
+			}
+			else
+			{
+				bEnterCheckAmmo = mbAllowCheckAmmoAction && cInput_IsTriggered(eAction_CheckAmmo);
+			}
+			
+			if (bEnterCheckAmmo && bCanUseItems)
+			{
+				mfEnterCheckAmmoCount += afTimeStep;
+				float fEnterCheckAmmoTime = bAllowQueuedStateChange == false ? 0.4f : 0.f;
+				
+				if (mfEnterCheckAmmoCount >= fEnterCheckAmmoTime && Item_GetHeldState(eItemHandlerHand_Right) == 3 && Player_CanCheckGunAmmo(sHeldItemType))
+				{
+					mfEnterCheckAmmoCount = 0.f;
+					mBaseObj.mpPlayer.ChangeState(Gun_GetReloadStateId(sHeldItemType));
+				}
+			}
+			else
+			{
+				mfEnterCheckAmmoCount = 0.f;
+			}
+		}
+		else
+		{
+			mfEnterUsingGunCount = 0.f;
+			mfEnterCheckAmmoCount = 0.f;
+		}
+		
+		/////////////////
+		// Dynamo Lantern
+		bool bHoldsLantern = Item_GetHeldType(eItemHandlerHand_Left) == "DynamoLantern" || mbHeldLanternInPrevMap;
+		
+		if (bCanUseItems && 
+			mbAllowFlashlightAction &&
+			cInput_IsTriggered(eAction_Flashlight))
+		{
+			mfLanternBtnHoldTime += afTimeStep;
+			if (bHoldsLantern)
+			{
+				if (mfLanternBtnHoldTime > 0.5f && 
+					Item_GetHandHeldState(eItemHandlerHand_Right) != 2)
+				{	
+					// Hacky fix for buggy anim transition
+					cAnimationState@ pAnim = PlayerBody_GetAnimationState("player_magnetlampe_chargeup_end_larm");
+					bool bChargeEndAnimFadingOut = pAnim !is null && 
+												   pAnim.GetWeight() > 0.f && 
+												   pAnim.IsFading() &&
+												   pAnim.IsOver();
+					
+					if (bChargeEndAnimFadingOut == false)
+					{
+						mfLanternBtnHoldTime = 0;
+						mBaseObj.mpPlayer.ChangeState(ePlayerState_Custom_UsingLantern);
+					}
+				}
+			}
+			else
+			{
+				Player_ToggleLightSource();
+				mfLanternBtnHoldTime = 0.f;
+			}
+		}
+		else
+		{
+			mfLanternBtnHoldTime = 0.f;
+		}
+		
+		mbHeldLanternInPrevMap = false;
+		
+		///////////////////
+		// Reset queued state
+		if (mlQueuedState != ePlayerState_Normal && 
+			(bAllowQueuedStateChange ||
+			 Item_GetHeldType(eItemHandlerHand(mlQueuedStateItemHand)) != msQueuedStateItemType))
+		{						
+			ResetQueuedState();	
+		}
+		
+		///////////////////
+		// Update base		
+		cScrPlayerState_Normal::Update(afTimeStep);
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed) override
+	{
+		////////////////
+		// Setup vars
+		tString sHeldItemType = Item_GetHeldType(eItemHandlerHand_Right);
+		bool bHoldingGun = Gun_IsWeaponType(sHeldItemType);
+		
+		if (mvInteractionBlockers.length() > 0)
+			return true;
+
+		if (Sketchbook_IsOpen())
+			return true;
+			
+		if (Player_GetUnderwater() == false &&
+			Player_GetCanEquipItems())
+		{			
+			////////////////
+			// Dynamo lantern
+			if (alAction == eAction_Flashlight)
+			{
+				if (mbAllowFlashlightAction == false)
+					return true;
+				
+				if (IsSpecialStateActive() || Player_GetCanUseLightSource()==false)
+					return true;
+				
+				if (abPressed==false)
+					Player_ToggleLightSource();
+					
+				return false;
+			}
+
+			////////////////
+			// Gun/Shotgun
+			{
+				////////////////
+				// Check ammo
+				if (alAction == eAction_CheckAmmo)
+				{	
+					if (mbAllowCheckAmmoAction == false)
+						return true;
+					
+					////////////////////
+					// Take out 
+					if (abPressed && bHoldingGun==false)
+					{
+						///////////////////
+						// Never equipped a gun before
+						if (Item_GetLastWeaponUsed()=="")
+						{
+							tString sWeapon = ItemType_GetFirstInInventory("Gun") == "" ? "" : "Gun";
+							if (sWeapon == "") sWeapon = ItemType_GetFirstInInventory("VolleyGun") == "" ? "" : "VolleyGun";
+							if (sWeapon == "") sWeapon = ItemType_GetFirstInInventory("Shotgun") == "" ? "" : "Shotgun";
+							
+							if (sWeapon == "") return false;
+							
+							Item_ToggleHeldItem(sWeapon);
+							Item_SetLastWeaponUsed(sWeapon);
+							return false;
+						}
+						
+						/////////////
+						// Equip the last gun used
+						Item_ToggleHeldItem(Item_GetLastWeaponUsed());
+						return false;
+					}
+					////////////////////
+					// Put away 
+					else if (abPressed == false && 
+							 bHoldingGun && 
+							 mfEnterCheckAmmoCount < 0.4f && 
+							 mlQueuedState == ePlayerState_Normal)
+					{
+						Item_ToggleHeldItem(Item_GetLastWeaponUsed());
+						return false;
+					}
+					
+					return false;
+				}
+				
+				////////////////
+				// Aim
+				if (bHoldingGun)
+				{
+					if (alAction == eAction_AimGun && 
+						mlUseItemMode == eUseItemMode_Toggle &&
+						mbAllowUseItemAction &&
+						abPressed &&
+						Player_CanUseGun(sHeldItemType) &&
+						Player_GetTimeSinceLastThrowInteraction() > 0.7f)
+					{
+						mBaseObj.mpPlayer.ChangeState(Gun_GetAimStateId(sHeldItemType));	
+						return false;
+					}
+				}
+			}
+			
+			///////////////////////
+			// Toggle Gas Mask
+			if (alAction == eAction_GasMask && abPressed)
+			{
+				tString sItemID = ItemType_GetFirstInInventory("GasMask");
+				if (sItemID == "") return true;
+				
+				Item_Equip(sItemID);
+				return false;
+			}
+			
+			///////////////////////
+			// Toggle last item
+			if (alAction == eAction_HolsterEquip && abPressed)
+			{
+				if (!bHoldingGun && Item_IsHeld())
+				{
+					Item_PutAway();
+				}
+				else
+				{
+					bool bEquipped = Item_TakeOutLast(eItemHandlerHand_Right);
+					if (!bEquipped && bHoldingGun)
+						Item_PutAway();
+				}
+				
+				return false;
+			}
+			
+			
+			////////////////
+			// Generic items
+			if (bHoldingGun == false)
+			{
+				if (alAction == eAction_UseItem &&
+					mbAllowUseItemAction &&
+					mlUseItemMode == eUseItemMode_Toggle && 
+					abPressed)
+				{	
+					int lUsingItemState = Item_GetUsingState(sHeldItemType);
+					if (lUsingItemState == -1) return true;
+					
+					mBaseObj.mpPlayer.ChangeState(lUsingItemState);
+					return false;
+				}
+				
+				if (Item_IsHeld())
+				{			
+					if (alAction == eAction_Interact && abPressed)
+					{
+						if (Item_GetUsesArmAnimation()==false)
+						{
+							Item_PutAway();
+							return false;
+						}
+					}
+					else if (alAction == eAction_InteractCancel && 
+							 abPressed == false && 
+							 Item_GetUsesArmAnimation()==false && 
+							 cLux_GetInputHandler().GetGamepadWasLastDeviceUsed()==false)
+					{
+						Item_PutAway();
+						return false;
+					}
+				}
+			}
+			
+			///////////////
+			// Hotkeys
+			if (abPressed)
+			{
+				if (alAction==eAction_Item1)
+				{
+					Item_TriggerHotkey(1);
+					return false;
+				}
+				else if (alAction==eAction_Item2)
+				{
+					Item_TriggerHotkey(2);
+					return false;
+				}
+				else if (alAction==eAction_Item3)
+				{
+					Item_TriggerHotkey(3);
+					return false;
+				}
+				else if (alAction==eAction_Item4)
+				{
+					Item_TriggerHotkey(4);
+					return false;
+				}
+			}
+		}
+		
+		///////////////
+		// Open menu
+		if (alAction == eAction_OpenMenu && abPressed)
+		{
+			ResetQueuedState();
+		}
+		
+		// Default behaviour
+		return cScrPlayerState_Normal::OnAction(alAction,abPressed);
+	}
+    
+	//------------------------------------------------------------
+    
+    bool IsSpecialStateActive()
+    {
+        return cLux_GetPlayer().GetCurrentMoveState().GetId()==eMoveState_Swim || 
+			   cLux_GetPlayer().GetCurrentMoveState().GetId()==eMoveState_Animated;
+    }
+    
+	//------------------------------------------------------------
+	
+	void CancelPuttingAway()
+	{
+		iScrItemHandler_Interface @pHandler = cast<iScrItemHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_ItemHandler) );
+		pHandler.CancelPuttingAway(eItemHandlerHand_Right);
+	}
+	
+	//------------------------------------------------------------
+	
+	void ResetQueuedState()
+	{
+		mlQueuedState = ePlayerState_Normal;
+		mlQueuedStateItemHand = eItemHandlerHand_Right;
+		msQueuedStateItemType = "";
+	}
+	
+	//------------------------------------------------------------
+
+	void OnGui(float afTimeStep)
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	bool mbJustEquippedLantern = false;
+	float mfLanternBtnHoldTime = 0.f;
+	bool mbHeldLanternInPrevMap = false;
+	
+	float mfEnterUsingGunCount = 0.f;
+	float mfEnterCheckAmmoCount = 0.f;
+	float mfUseItemCount = 0.f;
+	
+	[nosave] bool mbAllowCheckAmmoAction = true;
+	[nosave] bool mbAllowFlashlightAction = true;
+	[nosave] bool mbAllowUseItemAction = true;
+	
+	[nosave] int mlUseItemMode = eUseItemMode_Hold;
+	[nosave] int mlReloadWeaponMode = eUseItemMode_Hold;
+	[nosave] int mlChargeFlashlightMode = eUseItemMode_Hold;
+	
+	int mlQueuedState = ePlayerState_Normal;
+	int mlQueuedStateItemHand = eItemHandlerHand_Right;
+	tString msQueuedStateItemType = "";
+	
+	cUtility_Throw mThrow;
+	
+	//------------------------------------------------------------
+}

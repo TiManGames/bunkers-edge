@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>illerulf</author>
+      <authoring_tool>OpenCOLLADA2011 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=1;curveConstrainSampling=1;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/Maya_old/deeper/untitled</source_data>
+    </contributor>
+    <created>2013-02-05T15:26:36</created>
+    <modified>2013-02-05T15:26:36</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="cables_MAT" name="cable_thick_bend_med_cable">
+      <instance_effect url="#cables_MAT-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="cables_MAT-fx">
+      <profile_COMMON>
+        <newparam sid="file15-surface">
+          <surface type="2D">
+            <init_from>file15</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file15-sampler">
+          <sampler2D>
+            <source>file15-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file15-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU sid="coverageU">1</coverageU>
+                    <coverageV sid="coverageV">1</coverageV>
+                    <fast sid="fast">0</fast>
+                    <mirrorU sid="mirrorU">0</mirrorU>
+                    <mirrorV sid="mirrorV">0</mirrorV>
+                    <noiseU sid="noiseU">0</noiseU>
+                    <noiseV sid="noiseV">0</noiseV>
+                    <offsetU sid="offsetU">0</offsetU>
+                    <offsetV sid="offsetV">0</offsetV>
+                    <repeatU sid="repeatU">1</repeatU>
+                    <repeatV sid="repeatV">1</repeatV>
+                    <rotateFrame sid="rotateFrame">0</rotateFrame>
+                    <rotateUV sid="rotateUV">0</rotateUV>
+                    <stagger sid="stagger">0</stagger>
+                    <translateFrameU sid="translateFrameU">0</translateFrameU>
+                    <translateFrameV sid="translateFrameV">0</translateFrameV>
+                    <wrapU sid="wrapU">1</wrapU>
+                    <wrapV sid="wrapV">1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">0.3</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file15" name="cable_thick_bend_med_cable_thick_med_file15">
+      <init_from>file:///E:/depth/redist/static_objects/urban/cables/urban_thick_cable.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>cable_thick_bend_med_cable_thick_med_file15</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="cable_thick_bend_medShape" name="cable_thick_bend_medShape">
+      <mesh>
+        <source id="cable_thick_bend_medShape-positions" name="cable_thick_bend_medShape-positions">
+          <float_array id="cable_thick_bend_medShape-positions-array" count="108">-50 4.1338 42.84 -50 -4.1338 42.84 -50 -8.2677 50 -50 -4.1338 57.16 -50 4.1338 57.16 -50 8.2677 50 0 8.2677 0 7.16 4.1338 0 7.16 -4.1338 0 0 -8.2677 0 -7.16 -4.1338 0 -7.16 4.1338 0 0 8.2677 12.5 7.16 4.1338 12.5 7.16 -4.1338 12.5 0 -8.2677 12.5 -7.16 -4.1338 12.5 -7.16 4.1338 12.5 -37.5 8.2677 50 -37.5 4.1338 57.16 -37.5 -4.1338 57.16 -37.5 -8.2677 50 -37.5 -4.1338 42.84 -37.5 4.1338 42.84 -6.2008 9.0379 28.58 0 4.904 32.16 0 -3.3636 32.16 -6.2008 -7.4975 28.58 -12.4016 -3.3636 25 -12.4016 4.904 25 -21.42 7.3574 43.7992 -17.84 3.2236 50 -17.84 -5.0441 50 -21.42 -9.177899 43.7992 -25 -5.0441 37.5985 -25 3.2236 37.5985</float_array>
+          <technique_common>
+            <accessor source="#cable_thick_bend_medShape-positions-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="cable_thick_bend_medShape-normals" name="cable_thick_bend_medShape-normals">
+          <float_array id="cable_thick_bend_medShape-normals-array" count="108">0 0.4999998 -0.8660256 0 -0.500001 -0.8660249 0 -1 0 0 -0.500001 0.8660249 0 0.4999998 0.8660256 0 1 0 0 1 0 0.8660256 0.4999998 0 0.8660249 -0.500001 0 0 -1 0 -0.8660249 -0.500001 0 -0.8660256 0.4999998 0 0.007486995 0.9996624 -0.02488199 0.853165 0.501847 0.142335 0.8494434 -0.5021732 0.1620741 -0.005424997 -0.9998176 0.01831299 -0.8499226 -0.5030788 -0.1566629 -0.8449972 0.5031441 -0.181179 0.022247 0.9997309 -0.006579999 0.163858 0.5021631 0.8491071 0.140534 -0.5017792 0.8535033 -0.02879 -0.9995479 0.008674999 -0.183388 -0.503091 -0.8445521 -0.154422 0.5030109 -0.8503729 -0.020198 0.999792 0.002868 0.7231582 0.5047601 0.4714441 0.7347688 -0.4983069 0.4602229 0.02242301 -0.9997054 -0.009298003 -0.7137746 -0.5034968 -0.4868438 -0.727406 0.49573 -0.474481 -0.005344998 0.9997596 0.02126399 0.4618089 0.4980049 0.7339779 0.4698728 -0.5050218 0.7239977 -0.001061 -0.9998187 -0.019008 -0.4764221 -0.4953241 -0.7264132 -0.4849221 0.503841 -0.714839</float_array>
+          <technique_common>
+            <accessor source="#cable_thick_bend_medShape-normals-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="cable_thick_bend_medShape-cable_thick_bend_medShape-cable_thick_bend_medShape-map1" name="cable_thick_bend_medShape-cable_thick_bend_medShape-cable_thick_bend_medShape-map1">
+          <float_array id="cable_thick_bend_medShape-cable_thick_bend_medShape-cable_thick_bend_medShape-map1-array" count="84">0.164936 0 0.332259 0 0 0 0.834908 0 1 0 0.667299 0 0.499718 0 0.499877 0.512937 0.667354 0.512937 0.834831 0.512937 0 0.512937 1 0.512937 0.16493 0.512937 0.332403 0.512937 0.499857 0.412911 0.667346 0.412911 0.834839 0.412911 0 0.412911 1 0.412911 0.16493 0.412911 0.332384 0.412911 0.499736 0.098232 0.667305 0.098232 0.834898 0.098232 0 0.098232 1 0.098232 0.164934 0.098232 0.332276 0.098232 0.499826 0.308873 0.667335 0.308873 0.834855 0.308873 0 0.308873 1 0.308873 0.164932 0.308873 0.332358 0.308873 0.499767 0.20227 0.667315 0.20227 0.834884 0.20227 0 0.20227 1 0.20227 0.164934 0.20227 0.332304 0.20227</float_array>
+          <technique_common>
+            <accessor source="#cable_thick_bend_medShape-cable_thick_bend_medShape-cable_thick_bend_medShape-map1-array" count="42" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="cable_thick_bend_medShape-vertices" name="cable_thick_bend_medShape-vertices">
+          <input semantic="POSITION" source="#cable_thick_bend_medShape-positions"/>
+          <input semantic="NORMAL" source="#cable_thick_bend_medShape-normals"/>
+        </vertices>
+        <triangles material="cable_thick_bend_med_cableSG" count="60">
+          <input semantic="VERTEX" source="#cable_thick_bend_medShape-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#cable_thick_bend_medShape-cable_thick_bend_medShape-cable_thick_bend_medShape-map1" offset="1" set="0"/>
+          <p>6 7 12 14 7 8 7 8 12 14 13 15 7 8 13 15 8 9 8 9 13 15 14 16 8 9 14 16 9 11 9 11 14 16 15 18 9 10 15 17 10 12 10 12 15 17 16 19 10 12 16 19 11 13 11 13 16 19 17 20 12 14 6 7 17 20 17 20 6 7 11 13 13 15 12 14 25 29 25 29 12 14 24 28 14 16 13 15 26 30 26 30 13 15 25 29 27 32 15 18 26 30 26 30 15 18 14 16 28 33 16 19 27 31 27 31 16 19 15 17 16 19 28 33 17 20 17 20 28 33 29 34 29 34 24 28 17 20 17 20 24 28 12 14 18 21 5 6 19 22 19 22 5 6 4 5 19 22 4 5 20 23 20 23 4 5 3 3 20 23 3 3 21 25 21 25 3 3 2 4 21 24 2 2 22 26 22 26 2 2 1 0 22 26 1 0 23 27 23 27 1 0 0 1 5 6 18 21 0 1 0 1 18 21 23 27 31 36 25 29 30 35 30 35 25 29 24 28 32 37 26 30 31 36 31 36 26 30 25 29 33 39 27 32 32 37 32 37 27 32 26 30 28 33 27 31 34 40 34 40 27 31 33 38 29 34 28 33 35 41 35 41 28 33 34 40 24 28 29 34 30 35 30 35 29 34 35 41 30 35 18 21 31 36 31 36 18 21 19 22 32 37 31 36 20 23 20 23 31 36 19 22 33 39 32 37 21 25 21 25 32 37 20 23 34 40 33 38 22 26 22 26 33 38 21 24 34 40 22 26 35 41 35 41 22 26 23 27 18 21 30 35 23 27 23 27 30 35 35 41</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>cable_thick_bend_medShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="untitled">
+      <node id="cable_thick_bend_med" name="cable_thick_bend_med" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#cable_thick_bend_medShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="cable_thick_bend_med_cableSG" target="#cables_MAT">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>cable_thick_bend_med</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

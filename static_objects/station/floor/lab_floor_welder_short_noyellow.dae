@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>illerulf</author>
+            <authoring_tool>modo 601 [Build 48460], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 48460]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: No; Bake Matrices: Yes; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 235; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///C:/Users/Aaron/AppData/Local/Temp/lab_walls.lxo</source_data>
+        </contributor>
+        <created>2013-11-06T14:32:33Z</created>
+        <modified>2013-11-06T14:32:33Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/lab_set.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/lab_set_nrm.tga</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default" name="Default">
+            <instance_effect url="#Effect-Default" />
+        </material>
+        <material id="Material-lab_set" name="lab_set">
+            <instance_effect url="#Effect-lab_set" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default" name="Default">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">0.4</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-lab_set" name="lab_set">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.635 0.635 0.635 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">64</float>
+                        </shininess>
+                        <reflective>
+                            <color sid="reflective_effect_rgb">0 0 0 1</color>
+                        </reflective>
+                        <reflectivity>
+                            <float sid="reflectivity_effect_float">0.5</float>
+                        </reflectivity>
+                        <transparent opaque="RGB_ZERO">
+                            <color sid="transparent_effect_rgb">0 0 0 1</color>
+                        </transparent>
+                        <transparency>
+                            <float sid="transparency_effect_float">1</float>
+                        </transparency>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh021" name="floor_welder_short_noyellow">
+            <mesh>
+                <source id="Geometry-mesh021-positions" name="positions">
+                    <float_array id="Geometry-mesh021-positions-array" count="54">-0.375 0 -2 0 0.0253906 -2 -0.2475 0.00390625 -2 -0.191813 0.00390625 -2 -0.264075 0.0253906 -2 -0.35947 0.0253906 -2 -0.167836 0.0253906 -2 -0.083918 0.0253906 -2 -0.375 0 0 0 0.0253906 0 -0.2475 0.00390625 0 -0.191813 0.00390625 0 -0.264075 0.0253906 0 -0.35947 0.0253906 0 -0.167836 0.0253906 0 -0.083918 0.0253906 0 -0.0662952 0.0253906 0 -0.0662952 0.0253906 -2</float_array>
+                    <technique_common>
+                        <accessor count="18" source="#Geometry-mesh021-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh021-normals" name="normals">
+                    <float_array id="Geometry-mesh021-normals-array" count="12">-0.667334 0.744758 0 0 1 0 -0.85308 0.52178 0 0.791759 0.610834 0</float_array>
+                    <technique_common>
+                        <accessor count="4" source="#Geometry-mesh021-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh021-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh021-uvSet1-array" count="44">0.944863 0.959911 0.944863 0.963066 0.738281 0.959911 0.738281 0.963066 0.738281 0.937459 0.944863 0.937459 0.944863 0.940782 0.738281 0.940782 0.944863 0.940614 0.944863 0.959743 0.738281 0.940614 0.738281 0.959743 0.944863 0.999402 0.944863 1.0127 0.738281 0.999402 0.738281 1.0127 0.944863 0.963066 0.944863 0.974233 0.738281 0.963066 0.738281 0.974233 0.944863 0.9375 0.738281 0.9375</float_array>
+                    <technique_common>
+                        <accessor count="22" source="#Geometry-mesh021-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh021-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh021-positions" />
+                </vertices>
+                <polylist count="16" material="Material-lab_set">
+                    <input semantic="VERTEX" source="#Geometry-mesh021-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh021-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh021-uvSet1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>6 0 0 3 0 1 14 0 2 11 0 3 14 0 2 3 0 1 16 1 4 17 1 5 7 1 6 7 1 6 15 1 7 16 1 4 13 1 8 12 1 9 5 1 10 4 1 11 5 1 10 12 1 9 7 1 6 6 1 0 15 1 7 14 1 2 15 1 7 6 1 0 16 1 12 9 1 13 17 1 14 1 1 15 17 1 14 9 1 13 10 1 16 11 1 17 2 1 18 3 1 19 2 1 18 11 1 17 8 2 20 13 2 8 0 2 21 5 2 10 0 2 21 13 2 8 2 3 18 4 3 11 10 3 16 12 3 9 10 3 16 4 3 11</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="groupLocator025Node" name="Texture_Group" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                <node id="txtrLocator028Node" name="lab_set_nrm__Image___Texture_" type="NODE">
+                    <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                </node>
+                <node id="txtrLocator021Node" name="lab_set__Image___Texture_" type="NODE">
+                    <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                </node>
+                <node id="txtrLocator001Node" name="_none___Texture_" type="NODE">
+                    <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                </node>
+            </node>
+            <node id="groupLocator002Node" name="floor_welder" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                <node id="Geometry-mesh021Node" name="floor_welder_short_noyellow" type="NODE">
+                    <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                    <instance_geometry url="#Geometry-mesh021">
+                        <bind_material>
+                            <technique_common>
+                                <instance_material symbol="Material-lab_set" target="#Material-lab_set">
+                                    <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
+                            </technique_common>
+                        </bind_material>
+                    </instance_geometry>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

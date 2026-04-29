@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>Marc</author>
+            <authoring_tool>modo 701 [Build 64278], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 64278]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: No; Order Vertex Maps Alphabetically: Yes; Bake Matrices: Yes; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 1; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/studio/Frictional%20Games/Depth/redist/static_objects/station/floor/catwalk_wall_support.dae</source_data>
+        </contributor>
+        <created>2013-12-20T08:33:57Z</created>
+        <modified>2013-12-20T08:33:57Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/catwalk_white.tga</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-lambert2" name="lambert2">
+            <instance_effect url="#Effect-lambert2" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-lambert2" name="lambert2">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="pCubeShape10-map1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                        <transparent opaque="RGB_ZERO">
+                            <color sid="transparent_effect_rgb">0 0 0 1</color>
+                        </transparent>
+                        <transparency>
+                            <float sid="transparency_effect_float">1</float>
+                        </transparency>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-pCube10" name="pCube10">
+            <mesh>
+                <source id="Geometry-pCube10-positions" name="positions">
+                    <float_array id="Geometry-pCube10-positions-array" count="150">-0.101469 -0.0625 1 0.0871899 -0.0625 1 -0.101469 -0.0625 -0.532492 0.0871899 -0.0625 -0.532492 0.0871899 -0.142756 -0.532492 -0.101469 -0.142756 -0.532492 0.0871899 -0.0625 0.552347 -0.101469 -0.0625 0.552347 0.0871899 -0.653553 0.117882 -0.101469 -0.653553 0.117882 0.0871899 -0.198836 1 -0.101469 -0.198836 1 0.0871899 -0.296282 0.910529 -0.101469 -0.296282 0.910529 0.0871899 -0.653553 0.910529 -0.101469 -0.653553 0.910529 0.0871899 -0.755045 1 -0.101469 -0.755045 1 0.0871899 -0.296282 0.65152 -0.101469 -0.296282 0.65152 -0.101469 -0.198836 0.552347 0.0871899 -0.198836 0.552347 0.0534814 -0.653553 0.876821 -0.0677612 -0.653553 0.876821 0.0534814 -0.296282 0.876821 -0.0677612 -0.296282 0.876821 0.0534814 -0.296282 0.685229 -0.06776 -0.296282 0.685228 0.0534814 -0.653553 0.685229 -0.06776 -0.653553 0.685228 -0.101469 -0.0625 -0.867443 -0.0543091 -0.0625 -0.914603 -0.101469 -0.142756 -0.866126 -0.0543091 -0.142756 -0.914603 0.0871899 -0.0625 -0.867443 0.0400305 -0.0625 -0.914603 0.0871899 -0.142756 -0.866126 0.0400305 -0.142756 -0.914603 -0.0543091 -1 1 -0.101469 -0.95284 1 -0.101469 -0.955317 0.0152039 -0.0543091 -1 0 0.0871899 -0.95284 1 0.0400305 -1 1 0.0871899 -0.955317 0.0152039 0.0400305 -1 0 -0.101469 -0.261002 -0.814943 -0.0543091 -0.280958 -0.862613 0.0400305 -0.280958 -0.862613 0.0871899 -0.261002 -0.814943</float_array>
+                    <technique_common>
+                        <accessor count="50" source="#Geometry-pCube10-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-pCube10-normals" name="normals">
+                    <float_array id="Geometry-pCube10-normals-array" count="123">0 1 0 0 -0.648508 -0.761208 0 -0.238147 -0.971229 0 -0.505632 -0.862749 0 -0.119074 -0.992885 0 -1 0 0 -0.974276 -0.225357 0 -0.892669 -0.450713 1 0 0 -1 0 0 0 0 -1 0 0 1 0 -0.713286 -0.700873 0 0.986955 0.160997 0 0.945104 0.32677 0 0.786443 0.617663 0 -0.676319 0.736609 -4.91614e-006 0 1 0 0.661283 0.750137 5.89943e-006 0 -1 -1 0 -6.33869e-006 -0.707111 0 -0.707103 -0.710705 -0.089016 -0.697836 -0.711951 -0.00572205 -0.702205 -0.721768 -0.179024 -0.668581 -0.71415 -0.414607 -0.563995 -0.72777 -0.41431 -0.546533 0.707111 0 -0.707103 0.711951 -0.00572205 -0.702205 0.710705 -0.089016 -0.697836 0.721768 -0.179024 -0.668581 0.71415 -0.414607 -0.563995 0.727769 -0.41431 -0.546534 -0.707109 -0.707102 0.00177874 -0.715778 -0.656219 -0.238827 -0.697512 -0.716573 0.000889451 -0.707324 -0.664363 -0.241484 0.707109 -0.707102 0.00177874 0.697512 -0.716573 0.000889451 0.715778 -0.656219 -0.238827 0.707324 -0.664363 -0.241484</float_array>
+                    <technique_common>
+                        <accessor count="41" source="#Geometry-pCube10-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-pCube10-pCubeShape10-map1" name="pCubeShape10-map1">
+                    <float_array id="Geometry-pCube10-pCubeShape10-map1-array" count="206">0.692631 0.816356 0.748963 0.816331 0.692691 0.915826 0.749023 0.915779 0.973328 0.531503 0.973328 0.491728 0.943146 0.531503 0.943146 0.491728 0.883648 0.847982 0.883648 0.566145 0.851617 0.847982 0.853466 0.566145 0.832529 0.547226 0.83307 0.452113 0.855409 0.547356 0.85595 0.451867 0.776709 0.837881 0.776709 0.707084 0.816539 0.837881 0.816539 0.707084 0.973328 0.468028 0.943146 0.468028 0.563112 0.929756 0.507119 0.929756 0.563112 0.798959 0.507119 0.798959 0.753758 0.935772 0.753758 0.992674 0.73164 0.935772 0.73164 0.992674 0.547011 0.93898 0.547011 0.993472 0.506392 0.93898 0.506391 0.993472 0.990448 0.935772 0.99078 0.992673 0.547011 0.993473 0.586842 0.993473 0.586842 0.93898 0.506391 0.993473 0.506391 0.93898 0.603038 0.452348 0.638116 0.452348 0.603038 0.555718 0.638116 0.555718 0.748981 0.856726 0.692649 0.856759 0.748964 0.816331 0.692631 0.816356 0.586842 0.938979 0.586842 0.993472 0.69355 0.452348 0.69355 0.555717 0.749563 0.807508 0.749563 0.731829 0.776709 0.837881 0.776709 0.707082 0.655074 0.98309 0.685816 0.731812 0.598695 0.982699 0.599973 0.701979 0.993284 0.854986 0.993284 0.911887 0.983409 0.865794 0.983613 0.902297 0.694442 0.73183 0.749564 0.73183 0.704453 0.741841 0.739877 0.741841 0.749564 0.807508 0.694442 0.807508 0.739877 0.797821 0.704453 0.797821 0.76719 0.911887 0.766858 0.854986 0.92896 0.902298 0.928759 0.865794 0.799283 0.46651 0.684184 0.957786 0.655074 0.98309 0.973328 0.839587 0.943146 0.839587 0.599973 0.701979 0.749023 0.915779 0.692691 0.915826 0.998249 0.468028 0.998249 0.491728 0.998249 0.531535 0.916379 0.468028 0.916379 0.491728 0.916379 0.531535 0.908569 0.847982 0.908569 0.566145 0.998249 0.83195 0.826699 0.847982 0.826699 0.566145 0.916379 0.83195 0.734955 0.929871 0.706786 0.929898 0.706785 0.929897 0.734955 0.929871 0.81654 0.837881 0.81654 0.707082</float_array>
+                    <technique_common>
+                        <accessor count="103" source="#Geometry-pCube10-pCubeShape10-map1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-pCube10-vertices">
+                    <input semantic="POSITION" source="#Geometry-pCube10-positions" />
+                </vertices>
+                <polylist count="96" material="Material-lambert2">
+                    <input semantic="VERTEX" source="#Geometry-pCube10-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-pCube10-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-pCube10-pCubeShape10-map1" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>2 0 0 3 0 1 30 0 2 30 0 2 3 0 1 34 0 3 47 1 4 33 2 5 48 3 6 48 3 6 33 2 5 37 4 7 38 5 8 41 6 9 43 5 10 43 5 10 41 6 9 45 7 11 4 8 12 36 8 13 3 8 14 3 8 14 36 8 13 34 8 15 20 9 16 11 9 17 7 9 18 7 9 18 11 9 17 0 9 19 33 2 5 31 10 20 37 4 7 37 4 7 31 10 20 35 10 21 0 0 22 1 0 23 7 0 24 7 0 24 1 0 23 6 0 25 5 11 26 4 11 27 2 11 28 2 11 28 4 11 27 3 11 29 20 12 30 21 12 31 19 12 32 19 12 32 21 12 31 18 12 33 9 13 34 8 14 35 5 15 26 5 15 26 8 14 35 4 15 27 11 11 36 10 11 30 0 11 37 0 11 37 10 11 30 1 11 38 13 16 39 12 16 40 11 16 36 11 16 36 12 16 40 10 16 30 23 17 41 22 17 42 25 17 43 25 17 43 22 17 42 24 17 44 17 18 45 16 18 46 15 18 47 15 18 47 16 18 46 14 18 48 27 19 44 26 19 43 29 19 42 29 19 42 26 19 43 28 19 41 7 10 49 6 10 50 20 10 30 20 10 30 6 10 50 21 10 31 23 20 51 25 20 52 29 20 42 29 20 42 25 20 52 27 20 44 12 8 53 18 8 54 10 8 55 10 8 55 18 8 54 21 8 56 22 8 42 28 8 51 24 8 44 24 8 44 28 8 51 26 8 52 17 9 57 9 9 58 39 9 59 39 9 59 9 9 58 40 9 60 15 0 61 14 0 62 23 0 63 23 0 63 14 0 62 22 0 64 12 5 65 13 5 66 24 5 67 24 5 67 13 5 66 25 5 68 19 5 69 18 5 70 27 5 71 27 5 71 18 5 70 26 5 72 8 14 73 9 13 74 28 0 75 28 0 75 9 13 74 29 0 76 13 5 66 19 5 69 25 5 68 25 5 68 19 5 69 27 5 71 9 13 74 15 0 61 29 0 76 29 0 76 15 0 61 23 0 63 8 14 73 28 0 75 14 0 62 14 0 62 28 0 75 22 0 64 18 5 70 12 5 65 26 5 72 26 5 72 12 5 65 24 5 67 30 9 15 32 9 13 2 9 14 2 9 14 32 9 13 5 9 12 4 8 12 49 8 77 36 8 13 32 9 13 46 9 77 5 9 12 8 8 58 14 8 78 16 8 79 41 6 80 47 1 4 45 7 81 45 7 81 47 1 4 48 3 6 8 8 58 44 8 82 4 8 12 4 8 12 44 8 82 49 8 77 46 9 77 40 9 60 5 9 12 5 9 12 40 9 60 9 9 58 39 11 83 42 11 84 17 11 45 17 11 45 42 11 84 16 11 46 31 21 20 33 22 5 30 23 85 30 23 85 33 22 5 32 24 86 33 22 5 47 25 4 32 24 86 32 24 86 47 25 4 46 26 87 35 27 21 34 28 88 37 29 7 37 29 7 34 28 88 36 30 89 37 29 7 36 30 89 48 31 6 48 31 6 36 30 89 49 32 90 39 33 91 40 34 92 38 35 8 38 35 8 40 34 92 41 36 9 41 36 80 40 34 93 47 25 4 42 37 94 43 38 10 44 39 95 44 39 95 43 38 10 45 40 11 44 39 96 48 31 6 49 32 90 39 11 83 38 11 97 42 11 84 42 11 84 38 11 97 43 11 98 30 0 2 34 0 3 31 0 99 31 0 99 34 0 3 35 0 100 16 8 79 42 8 59 8 8 58 8 8 58 42 8 59 44 8 82 15 9 78 9 9 58 17 9 57 13 9 66 11 9 17 19 9 69 19 9 69 11 9 17 20 9 16 10 8 55 21 8 56 1 8 101 1 8 101 21 8 56 6 8 102 47 25 4 40 34 93 46 26 87 44 39 96 45 40 81 48 31 6</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-pCube10Node" name="pCube10" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                <instance_geometry url="#Geometry-pCube10">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-lambert2" target="#Material-lambert2">
+                                <bind_vertex_input semantic="pCubeShape10-map1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator028Node" name="Texture_Group" type="NODE">
+                <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                <node id="txtrLocator024Node" name="catwalk_white__Image___Texture_" type="NODE">
+                    <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>
+                Plug-in: [Build 68192];
+                Use Absolute Path: No;
+                Merge Reference Items: No;
+                Save Hidden Items: No;
+                Save Cameras: No;
+                Save Lights: No;
+                Save Locators: Yes;
+                Save Triangles as Triangles: No;
+                Order Vertex Maps Alphabetically: No;
+                Bake Matrices: Yes;
+                Save Vertex Normals: Yes;
+                Save UV Texture Coordinates: Yes;
+                Save Vertex Colors: Yes;
+                Save Vertex Weights: Yes;
+                Save Animation: No;
+                Sample Animation: No;
+                Sample Animation Start: 0;
+                Sample Animation End: 1;
+                Save modo Profile: No;
+                Save Maya Profile: No;
+                Save 3ds Max Profile: No;
+                Formatted Arrays: Yes;
+            </comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/walls/datasite.lxo</source_data>
+        </contributor>
+        <created>2015-02-03T16:39:08Z</created>
+        <modified>2015-02-03T16:39:08Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/oceanbottom/building/omicron/omicron_modules.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/oceanbottom/building/omicron/omicron_modules_nrm.tga</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/datasite.tga</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/floor/lab_linoleum_plain.psd</init_from>
+        </image>
+        <image id="Image0005" name="Image0005">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/pplant_glass_dirty.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default" name="Default">
+            <instance_effect url="#Effect-Default" />
+        </material>
+        <material id="Material-datasite" name="datasite">
+            <instance_effect url="#Effect-datasite" />
+        </material>
+        <material id="Material-glass" name="glass">
+            <instance_effect url="#Effect-glass" />
+        </material>
+        <material id="Material-omicron" name="omicron">
+            <instance_effect url="#Effect-omicron" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default" name="Default">
+            <profile_COMMON>
+                <newparam sid="Image0004-surface">
+                    <surface type="2D">
+                        <init_from>Image0004</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0004-sampler">
+                    <sampler2D>
+                        <source>Image0004-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0004-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-datasite" name="datasite">
+            <profile_COMMON>
+                <newparam sid="Image0003-surface">
+                    <surface type="2D">
+                        <init_from>Image0003</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0003-sampler">
+                    <sampler2D>
+                        <source>Image0003-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0003-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.595 0.595 0.595 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">32</float>
+                        </shininess>
+                        <transparent opaque="RGB_ZERO">
+                            <color sid="transparent_effect_rgb">0 0 0 1</color>
+                        </transparent>
+                        <transparency>
+                            <float sid="transparency_effect_float">1</float>
+                        </transparency>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-glass" name="glass">
+            <profile_COMMON>
+                <newparam sid="Image0005-surface">
+                    <surface type="2D">
+                        <init_from>Image0005</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0005-sampler">
+                    <sampler2D>
+                        <source>Image0005-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0005-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.595 0.595 0.595 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-omicron" name="omicron">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.23 0.23 0.23 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">9.84915</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh020" name="convex_curved">
+            <mesh>
+                <source id="Geometry-mesh020-positions" name="positions">
+                    <float_array id="Geometry-mesh020-positions-array" count="120">
+                        0 0 0
+                        0 3.99782 0
+                        0 0.379349 0
+                        0 0.307759 0
+                        0 0.343554 -0.0315916
+                        -1 3.99891 -1
+                        -1 0.379349 -1
+                        -0.968408 0.343554 -1
+                        -1 0.307759 -1
+                        -1 0 -1
+                        -0.222042 3.99798 -0.0250182
+                        -0.222042 0.379349 -0.0250182
+                        -0.43295 3.99813 -0.0988181
+                        -0.43295 0.379349 -0.0988181
+                        -0.622149 3.99829 -0.217699
+                        -0.622149 0.379349 -0.217699
+                        -0.78015 3.99844 -0.3757
+                        -0.78015 0.379349 -0.3757
+                        -0.899031 3.9986 -0.564898
+                        -0.899031 0.379349 -0.564898
+                        -0.972831 3.99875 -0.775807
+                        -0.972831 0.379349 -0.775807
+                        -0.215012 0.343554 -0.0558177
+                        -0.419243 0.343554 -0.127281
+                        -0.602452 0.343554 -0.242399
+                        -0.75545 0.343554 -0.395397
+                        -0.870568 0.343554 -0.578606
+                        -0.942031 0.343554 -0.782836
+                        -0.222042 0.307759 -0.0250182
+                        -0.43295 0.307759 -0.0988181
+                        -0.622149 0.307759 -0.217699
+                        -0.78015 0.307759 -0.3757
+                        -0.899031 0.307759 -0.564898
+                        -0.972831 0.307759 -0.775807
+                        -0.222042 0 -0.0250182
+                        -0.43295 0 -0.0988181
+                        -0.622149 0 -0.217699
+                        -0.78015 0 -0.3757
+                        -0.899031 0 -0.564898
+                        -0.972831 0 -0.775807
+                    </float_array>
+                    <technique_common>
+                        <accessor count="40" source="#Geometry-mesh020-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh020-normals" name="normals">
+                    <float_array id="Geometry-mesh020-normals-array" count="159">
+                        -0.804681 0 0.593707
+                        -0.75788 0 0.652394
+                        -0.652394 0 0.75788
+                        -0.593707 0 0.804681
+                        -0.0841774 -0.659366 0.747095
+                        -0.139328 -0.661452 0.736932
+                        -0.0841774 -0.659366 0.747095
+                        -0.194212 -0.661452 0.724405
+                        -0.586183 -0.661715 0.467465
+                        -0.675507 -0.661714 0.325307
+                        -0.586183 -0.661714 0.467465
+                        -0.675507 -0.661714 0.325307
+                        -0.166837 0.661713 0.730959
+                        -0.325307 0.661713 0.675508
+                        -0.325307 0.661713 0.675508
+                        -0.736266 0.66129 0.143557
+                        -0.675508 0.661713 0.325308
+                        -0.723877 0.661409 0.196318
+                        -0.675508 0.661713 0.325308
+                        -0.399764 0 0.916618
+                        -0.593707 0 0.804681
+                        -0.467392 0 0.88405
+                        -0.965165 0 0.261643
+                        -0.992737 0 0.120306
+                        -0.981534 0 0.191288
+                        -0.467392 0 0.88405
+                        -0.399763 0 0.916618
+                        -0.992737 0 0.120306
+                        -0.981534 0 0.191288
+                        -0.489287 -0.661452 0.568401
+                        -0.445273 -0.661452 0.603501
+                        -0.0841775 0.659365 0.747096
+                        -0.0841775 0.659365 0.747096
+                        -0.586184 0.661713 0.467466
+                        -0.586184 0.661713 0.467466
+                        -0.185774 0 0.982593
+                        -0.258954 0 0.96589
+                        -0.88405 0 0.467393
+                        -0.916618 0 0.399764
+                        -0.258954 0 0.96589
+                        -0.88405 0 0.467393
+                        -0.325307 -0.661714 0.675507
+                        -0.325307 -0.661714 0.675507
+                        -0.746681 -0.658999 0.0904877
+                        -0.746357 -0.659357 0.0905513
+                        -0.736265 -0.661291 0.143557
+                        -0.723876 -0.66141 0.196318
+                        -0.489288 0.661451 0.568401
+                        -0.445274 0.661451 0.603501
+                        -0.111964 0 0.993712
+                        -0.75788 0 0.652394
+                        -0.746682 0.658998 0.0904878
+                        -0.746358 0.659356 0.0905514
+                    </float_array>
+                    <technique_common>
+                        <accessor count="53" source="#Geometry-mesh020-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh020-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh020-uvSet1-array" count="80">
+                        0.78723 0.572929
+                        0.78723 0.152905
+                        0.814333 0.572929
+                        0.814333 0.152909
+                        0.895642 0.152918
+                        0.868539 0.152915
+                        0.895642 0.148763
+                        0.868539 0.148756
+                        0.760127 0.152902
+                        0.78723 0.148735
+                        0.760127 0.148728
+                        0.868539 0.144597
+                        0.841436 0.144586
+                        0.841436 0.148749
+                        0.733024 0.144542
+                        0.760127 0.144553
+                        0.733024 0.148721
+                        0.814333 0.144575
+                        0.841436 0.108885
+                        0.814333 0.108885
+                        0.70592 0.144531
+                        0.733024 0.108885
+                        0.70592 0.108885
+                        0.841436 0.572929
+                        0.841436 0.152912
+                        0.70592 0.572929
+                        0.70592 0.152896
+                        0.733024 0.572929
+                        0.733024 0.152899
+                        0.814333 0.148742
+                        0.895642 0.144608
+                        0.78723 0.144564
+                        0.868539 0.108885
+                        0.760127 0.108885
+                        0.868539 0.572929
+                        0.760127 0.572929
+                        0.70592 0.148713
+                        0.895642 0.108885
+                        0.78723 0.108885
+                        0.895642 0.572929
+                    </float_array>
+                    <technique_common>
+                        <accessor count="40" source="#Geometry-mesh020-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh020-UV_Distortion" name="UV_Distortion">
+                    <float_array id="Geometry-mesh020-UV_Distortion-array" count="159">
+                        0.500198 0.547091 0.50371
+                        0.500189 0.547082 0.503719
+                        0.576256 0.467119 0.42708
+                        0.566856 0.477482 0.436555
+                        0.575171 0.468316 0.428175
+                        0.565789 0.478658 0.43763
+                        0.575977 0.467427 0.427362
+                        0.566583 0.477783 0.43683
+                        0.574627 0.468915 0.428722
+                        0.565785 0.478663 0.437634
+                        0.500317 0.547222 0.503592
+                        0.500395 0.547307 0.503515
+                        0.503283 0.547562 0.500628
+                        0.503361 0.547477 0.50055
+                        0.50018 0.547072 0.503728
+                        0.502881 0.548005 0.501033
+                        0.502872 0.548015 0.501042
+                        0.575171 0.468316 0.428175
+                        0.566322 0.47807 0.437092
+                        0.575978 0.467426 0.427361
+                        0.567117 0.477194 0.436292
+                        0.575167 0.46832 0.428178
+                        0.565785 0.478662 0.437634
+                        0.500239 0.547137 0.503669
+                        0.500317 0.547221 0.503592
+                        0.500549 0.547476 0.503361
+                        0.500627 0.547561 0.503284
+                        0.500179 0.547071 0.503728
+                        0.500171 0.547062 0.503737
+                        0.500215 0.54711 0.503693
+                        0.500206 0.5471 0.503702
+                        0.575442 0.468017 0.427901
+                        0.566589 0.477776 0.436824
+                        0.577276 0.465995 0.426052
+                        0.568727 0.475419 0.434668
+                        0.566317 0.478076 0.437098
+                        0.500162 0.547052 0.503745
+                        0.50024 0.547137 0.503669
+                        0.500472 0.547391 0.503438
+                        0.50055 0.547476 0.503361
+                        0.500171 0.547062 0.503737
+                        0.500162 0.547052 0.503745
+                        0.500207 0.547101 0.503701
+                        0.500198 0.547091 0.50371
+                        0.575984 0.467419 0.427355
+                        0.566588 0.477777 0.436824
+                        0.57463 0.468912 0.42872
+                        0.565788 0.478659 0.437631
+                        0.575437 0.468023 0.427906
+                        0.566583 0.477782 0.43683
+                        0.577274 0.465997 0.426055
+                        0.568725 0.475421 0.434671
+                        0.500395 0.547307 0.503515
+                    </float_array>
+                    <technique_common>
+                        <accessor count="53" source="#Geometry-mesh020-UV_Distortion-array" stride="3">
+                            <param name="R" type="float" />
+                            <param name="G" type="float" />
+                            <param name="B" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh020-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh020-positions" />
+                </vertices>
+                <polylist count="56" material="Material-datasite">
+                    <input semantic="VERTEX" source="#Geometry-mesh020-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh020-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh020-uvSet1" offset="2" set="0" />
+                    <input semantic="COLOR" source="#Geometry-mesh020-UV_Distortion" offset="3" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>16 0 0 0 17 1 1 0 14 2 2 0 15 3 3 1 14 2 2 1 17 1 1 1 2 4 4 2 11 5 5 2 4 6 6 2 22 7 7 3 4 6 6 3 11 5 5 3 17 8 1 4 19 9 8 4 25 10 9 4 26 11 10 5 25 10 9 5 19 9 8 5 28 12 11 6 22 12 7 6 29 13 12 6 23 14 13 7 29 13 12 7 22 12 7 7 33 15 14 8 32 16 15 8 27 17 16 8 26 18 10 9 27 17 16 9 32 16 15 9 29 19 12 10 30 20 17 10 35 21 18 10 36 2 19 11 35 21 18 11 30 20 17 11 33 22 14 12 8 23 20 12 39 24 21 12 9 23 22 13 39 24 21 13 8 23 20 13 14 2 2 1 15 3 3 1 12 25 23 1 13 26 24 14 12 25 23 14 15 3 3 14 5 27 25 15 6 23 26 15 20 28 27 15 21 22 28 16 20 28 27 16 6 23 26 16 17 8 1 17 25 10 9 4 15 29 3 17 24 30 29 18 15 29 3 18 25 10 9 18 28 12 11 19 3 31 30 19 22 12 7 19 4 32 6 20 22 12 7 20 3 31 30 20 31 33 31 21 25 34 9 21 32 16 15 21 26 18 10 22 32 16 15 22 25 34 9 22 28 35 11 23 29 19 12 23 34 36 32 23 35 21 18 24 34 36 32 24 29 19 12 24 32 37 15 25 33 22 14 25 38 38 33 25 39 24 21 26 38 38 33 26 33 22 14 26 12 25 23 27 13 26 24 27 10 39 34 27 11 35 5 28 10 39 34 28 13 26 24 28 20 28 27 29 21 22 28 29 18 38 35 29 19 40 8 30 18 38 35 30 21 22 28 30 15 29 3 31 24 30 29 31 13 41 24 31 23 42 13 32 13 41 24 32 24 30 29 32 6 43 26 33 7 44 36 33 21 45 28 33 27 46 16 34 21 45 28 34 7 44 36 34 31 33 31 21 30 47 17 21 25 34 9 21 24 48 29 35 25 34 9 35 30 47 17 35 3 49 30 36 28 35 11 36 0 49 37 36 34 36 32 37 0 49 37 37 28 35 11 37 31 50 31 38 32 37 15 38 37 0 38 38 38 38 33 39 37 0 38 39 32 37 15 39 10 39 34 40 11 35 5 40 1 49 39 40 2 49 4 41 1 49 39 41 11 35 5 41 18 38 35 42 19 40 8 42 16 0 0 42 17 1 1 0 16 0 0 0 19 40 8 43 11 5 5 44 13 41 24 44 22 7 7 44 23 42 13 45 22 7 7 45 13 41 24 45 21 45 28 46 27 46 16 46 19 9 8 46 26 11 10 47 19 9 8 47 27 46 16 47 30 47 17 48 29 13 12 48 24 48 29 48 23 14 13 49 24 48 29 49 29 13 12 49 8 51 20 50 33 15 14 50 7 52 36 50 27 17 16 51 7 52 36 51 33 15 14 51 30 20 17 52 31 50 31 52 36 2 19 11 37 0 38 38 36 2 19 38 31 50 31 38</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh020Node" name="convex_curved" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <instance_geometry url="#Geometry-mesh020">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-datasite" target="#Material-datasite">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator029Node" name="Texture_Group" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <node id="txtrLocator006Node" name="pplant_glass_dirty__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator020Node" name="omicron_modules_nrm__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator024Node" name="omicron_modules__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator042Node" name="datasite__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+                <node id="txtrLocator025Node" name="lab_linoleum_plain__Image___Texture_" type="NODE">
+                    <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

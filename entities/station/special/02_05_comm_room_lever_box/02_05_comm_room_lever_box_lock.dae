@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///D:/work/DropBox/Team/Depth_marcus/models/Levels/02_05/special/lever_box.ma</source_data>
+    </contributor>
+    <created>2013-11-21T19:27:40</created>
+    <modified>2013-11-21T19:27:40</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="Material-lever_pplant" name="lever_pplant">
+      <instance_effect url="#Effect-lever_pplant"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="Effect-lever_pplant">
+      <profile_COMMON>
+        <newparam sid="Image0001-surface">
+          <surface type="2D">
+            <init_from>Image0001</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0001-sampler">
+          <sampler2D>
+            <source>Image0001-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="Image0004-surface">
+          <surface type="2D">
+            <init_from>Image0004</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0004-sampler">
+          <sampler2D>
+            <source>Image0004-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Image0001-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <texture texture="Image0004-sampler" texcoord="TEX1">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </specular>
+            <shininess>
+              <float>16</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Image0004" name="lever_Image0004">
+      <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/gameplay/lever_pplant/lever_spec.tga</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>lever_Image0004</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+    <image id="Image0001" name="Image0001">
+      <init_from>file:///D:/work/depth/redist/entities/station/gameplay/lever/lever.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Image0001</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="polySurfaceShape13" name="polySurfaceShape14">
+      <mesh>
+        <source id="polySurfaceShape13-positions" name="polySurfaceShape13-positions">
+          <float_array id="polySurfaceShape13-positions-array" count="87">0.07076538 0.5674697 0.3784748 0.07076538 0.567235 0.3834812 0.07076538 0.5648487 0.3878905 0.07076538 0.5607877 0.3908269 0.07076538 0.5558532 0.3917109 0.07076538 0.5510244 0.3903662 0.07076538 0.5472568 0.3870594 0.07076538 0.5452956 0.3824464 0.07076538 0.5455328 0.3774386 0.07076538 0.5479189 0.3730295 0.07076538 0.5519799 0.3700928 0.07076538 0.5569145 0.369209 0.07076538 0.5617433 0.3705539 0.07076538 0.5655109 0.3738606 0.1799103 0.5674774 0.3784734 0.1799103 0.5672425 0.3834833 0.1799103 0.5648546 0.3878956 0.1799103 0.5607907 0.390834 0.1799103 0.5558529 0.3917187 0.1799103 0.5510207 0.390373 0.1799103 0.5472506 0.387064 0.1799103 0.545288 0.3824478 0.1799103 0.5455254 0.3774363 0.1799103 0.5479132 0.3730243 0.1799103 0.5519769 0.3700856 0.1799103 0.5569149 0.3692012 0.1799103 0.5617471 0.370547 0.1799103 0.5655173 0.3738559 0.07076538 0.5563838 0.3804601</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape13-positions-array" count="29" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape13-normals" name="polySurfaceShape13-normals">
+          <float_array id="polySurfaceShape13-normals-array" count="258">0 -0.1227912 0.9924325 0 0.02877081 0.9995861 0 -0.4077861 0.9130775 0 -0.541222 0.8408798 0 0.3199793 0.9474245 0 0.4596277 0.8881117 0 0.02877081 0.9995861 0 -0.1227912 0.9924325 0 -0.4596246 -0.8881134 0 -0.3199729 -0.9474267 0 -0.6993616 -0.7147681 0 -0.7994481 -0.6007352 0 0.6993544 0.714775 0 0.7994344 0.6007535 0 0.4596277 0.8881117 0 0.3199793 0.9474245 0 -0.7994481 -0.6007352 0 -0.6993616 -0.7147681 0 -0.9402264 -0.3405502 0 -0.9809226 -0.1943991 0 0.5412223 -0.8408795 0 0.407787 -0.9130771 0 0.7635725 -0.6457222 0 0.8524812 -0.5227577 0 -0.9681259 0.2504638 0 -0.9948756 0.1011069 0 -0.8524706 0.5227752 0 -0.7635657 0.6457303 0 0.7994344 0.6007535 0 0.6993544 0.714775 0 0.9402253 0.3405532 0 0.980928 0.1943716 0 -0.9809226 -0.1943991 0 -0.9402264 -0.3405502 0 -0.9948756 0.1011069 0 -0.9681259 0.2504638 0 -0.02876472 -0.9995863 0 0.1227931 -0.9924322 0 -0.3199729 -0.9474267 0 -0.4596246 -0.8881134 0 0.9681259 -0.2504638 0 0.9948725 -0.1011376 0 0.8524812 -0.5227577 0 0.7635725 -0.6457222 0 0.407787 -0.9130771 0 0.5412223 -0.8408795 0 0.1227931 -0.9924322 0 -0.02876472 -0.9995863 0 0.9948725 -0.1011376 0 0.9681259 -0.2504638 0 0.980928 0.1943716 0 0.9402253 0.3405532 0 -0.541222 0.8408798 0 -0.4077861 0.9130775 0 -0.7635657 0.6457303 0 -0.8524706 0.5227752 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape13-normals-array" count="86" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape13-polySurfaceShape13-map1" name="polySurfaceShape13-polySurfaceShape13-map1">
+          <float_array id="polySurfaceShape13-polySurfaceShape13-map1-array" count="90">0.6740051 0.1175765 0.6740051 0.122289 0.5760978 0.1175143 0.5760931 0.1222264 0.6740051 0.1128641 0.5761027 0.1128015 0.5761357 0.07981512 0.5761408 0.07510266 0.674005 0.07987764 0.6740051 0.07516518 0.6740051 0.108152 0.576107 0.1080894 0.5761448 0.07039023 0.6740051 0.07045274 0.674005 0.08930223 0.6740051 0.09401463 0.5761262 0.08924002 0.5761211 0.0939525 0.5761496 0.06567778 0.5761545 0.0609658 0.6740051 0.06574035 0.674005 0.06102831 0.5761116 0.103377 0.674005 0.1034395 0.5761311 0.08452749 0.674005 0.08459014 0.5761165 0.09866454 0.6740051 0.09872706 0.674005 0.1270013 0.5760882 0.1269389 0.740874 0.112631 0.75007 0.114367 0.749274 0.093358 0.733342 0.10708 0.728965 0.098807 0.728611 0.089459 0.732349 0.080881 0.739439 0.074775 0.748476 0.072349 0.757672 0.074081 0.765206 0.079634 0.769582 0.087907 0.769936 0.097256 0.766198 0.105835 0.759109 0.111942</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape13-polySurfaceShape13-map1-array" count="45" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurfaceShape13-vertices" name="polySurfaceShape13-vertices">
+          <input semantic="POSITION" source="#polySurfaceShape13-positions"/>
+        </vertices>
+        <triangles material="lever_pplantSG" count="42">
+          <input semantic="VERTEX" source="#polySurfaceShape13-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#polySurfaceShape13-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#polySurfaceShape13-polySurfaceShape13-map1" offset="2" set="0"/>
+          <p>18 0 2 4 1 0 19 3 3 19 3 3 4 1 0 5 2 1 17 4 5 3 5 4 18 7 2 18 7 2 3 5 4 4 6 0 10 8 8 24 9 6 9 11 9 9 11 9 24 9 6 23 10 7 16 12 11 2 13 10 17 15 5 17 15 5 2 13 10 3 14 4 9 16 9 23 17 7 8 19 13 8 19 13 23 17 7 22 18 12 26 20 16 12 21 14 27 23 17 27 23 17 12 21 14 13 22 15 7 24 20 21 25 18 6 27 21 6 27 21 21 25 18 20 26 19 2 28 10 16 29 11 1 31 23 1 31 23 16 29 11 15 30 22 8 32 13 22 33 12 7 35 20 7 35 20 22 33 12 21 34 18 11 36 25 25 37 24 10 39 8 10 39 8 25 37 24 24 38 6 0 40 27 14 41 26 13 43 15 13 43 15 14 41 26 27 42 17 12 44 14 26 45 16 11 47 25 11 47 25 26 45 16 25 46 24 14 48 26 0 49 27 15 51 22 15 51 22 0 49 27 1 50 23 19 52 3 5 53 1 20 55 29 20 55 29 5 53 1 6 54 28 0 57 30 13 58 31 28 56 32 28 56 32 13 58 31 12 59 44 0 61 30 28 62 32 1 60 33 1 60 33 28 62 32 2 63 34 3 64 35 2 65 34 28 66 32 3 68 35 28 69 32 4 67 36 4 67 36 28 69 32 5 70 37 6 71 38 5 72 37 28 73 32 6 75 38 28 76 32 7 74 39 7 74 39 28 76 32 8 77 40 8 79 40 28 80 32 9 78 41 9 78 41 28 80 32 10 81 42 10 83 42 28 84 32 11 82 43 11 82 43 28 84 32 12 85 44</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>polySurfaceShape14</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="lever_box">
+      <node id="polySurface13" name="polySurface14" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <translate sid="rotatePivot">0.1764704 0.5563838 0.3804599</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <translate sid="rotatePivotInverse">-0.1764704 -0.5563838 -0.3804599</translate>
+        <translate sid="scalePivot">0.1764704 0.5563838 0.3804599</translate>
+        <scale sid="scale">1 1 1</scale>
+        <translate sid="scalePivotInverse">-0.1764704 -0.5563838 -0.3804599</translate>
+        <instance_geometry url="#polySurfaceShape13">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lever_pplantSG" target="#Material-lever_pplant">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="TEX1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>polySurface14</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

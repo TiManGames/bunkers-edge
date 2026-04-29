@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 68192], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 68192]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 340; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox%20(Frictional%20Games)/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/tunnel/maintenance_tunnels/maintenance_tunnels.lxo</source_data>
+        </contributor>
+        <created>2014-08-28T14:34:33Z</created>
+        <modified>2014-08-28T14:34:33Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/details/floor_grate_metal/floor_grate_metal.tga</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/tunnel/maintenance_tunnels/maintenance_tunnels.TGA</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/tunnel/maintenance_tunnels/maintenance_tunnels_nrm.psd</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/other/texture%20bases%20and%20stuff/checker_512.gif</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default" name="Default">
+            <instance_effect url="#Effect-Default" />
+        </material>
+        <material id="Material-brushed_aluminium" name="brushed_aluminium">
+            <instance_effect url="#Effect-brushed_aluminium" />
+        </material>
+        <material id="Material-grate" name="grate">
+            <instance_effect url="#Effect-grate" />
+        </material>
+        <material id="Material-maintenance_tunnels" name="maintenance_tunnels">
+            <instance_effect url="#Effect-maintenance_tunnels" />
+        </material>
+        <material id="Material-painted_metal" name="painted_metal">
+            <instance_effect url="#Effect-painted_metal" />
+        </material>
+        <material id="Material-robust_metal" name="robust_metal">
+            <instance_effect url="#Effect-robust_metal" />
+        </material>
+        <material id="Material-shiny_black_metal" name="shiny_black_metal">
+            <instance_effect url="#Effect-shiny_black_metal" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default" name="Default">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.8 0.8 0.8 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-brushed_aluminium" name="brushed_aluminium">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.0263007 0.516444 0.589764 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-grate" name="grate">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="polySurfaceShape49-polySurfaceShape49-map1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-maintenance_tunnels" name="maintenance_tunnels">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-painted_metal" name="painted_metal">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.0242052 0.601516 0.0510519 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-robust_metal" name="robust_metal">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.438395 0.0036478 0.0036478 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-shiny_black_metal" name="shiny_black_metal">
+            <profile_COMMON>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <color sid="diffuse_effect_rgb">0.0222042 0.0369191 0.613395 1</color>
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh003" name="wall_flat__2_">
+            <mesh>
+                <source id="Geometry-mesh003-positions" name="positions">
+                    <float_array id="Geometry-mesh003-positions-array" count="96">0.0145264 1.48633 0.798828 0.0145264 1.38867 0.798828 0.0141602 0.0126953 0.950195 0.0141602 1.4873 0.825195 0.0141602 1.38026 0.825195 0.0141602 1.25526 0.950195 -8.21148e-016 1.5 0.8125 -0.0625 1.5 0.8125 0.0145264 1.48633 -0.798828 0.0145264 1.38867 -0.798828 0.0141602 0.0126953 -0.950195 0.0141602 1.4873 -0.825195 0.0141602 1.38026 -0.825195 0.0141602 1.25526 -0.950195 8.21148e-016 1.5 -0.8125 -0.0625 1.5 -0.8125 -9.47478e-016 0 0.9375 -9.47478e-016 1.25 0.9375 -8.21148e-016 1.375 0.8125 8.21148e-016 1.375 -0.8125 9.47478e-016 0 -0.9375 9.47478e-016 1.25 -0.9375 0.0141602 0.0126953 0.999811 -1.01048e-015 0 0.999839 -1.01064e-015 1.5 1 -0.0625 1.5 1 0.0141602 0.0126953 -0.99981 1.01048e-015 0 -0.99984 1.01064e-015 1.5 -1 -0.0625 1.5 -1 0.0141602 1.4873 -1 0.0141602 1.4873 1</float_array>
+                    <technique_common>
+                        <accessor count="32" source="#Geometry-mesh003-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh003-normals" name="normals">
+                    <float_array id="Geometry-mesh003-normals-array" count="78">0.867355 0.35192 0.35192 0.887046 -0.233357 0.398365 0.980008 0.198957 0 0.953152 -0.115759 0.279467 0.953152 -0.115759 -0.279467 0.887046 -0.233357 -0.398365 0.867355 0.35192 -0.35192 0.963183 -0.268845 0 0.667545 -0.744569 3.37325e-016 0.867355 -0.35192 -0.35192 0.9536 -0.212894 -0.212894 0.924433 -0.145935 0.352317 0.867355 -0.35192 0.35192 0.911601 -0.290674 0.290674 0.357373 0.933962 1.80588e-016 0.691307 0.712406 -0.120713 0.599365 0.790527 0.12581 0 1 0 0.905947 -0.355108 0.23056 0.948334 -0.221438 -0.227216 0.9172 -0.28173 0.28173 0.882546 0.420583 0.210291 0.861579 -0.194259 -0.468983 0.956361 0.206609 -0.206609 0.882546 -0.210291 -0.420583 0.667545 -0.744569 3.37325e-016</float_array>
+                    <technique_common>
+                        <accessor count="26" source="#Geometry-mesh003-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh003-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh003-uvSet1-array" count="64">0.529911 0.724726 0.530106 0.710095 0.553646 0.724317 0.547004 0.693114 0.283406 0.724279 0.29014 0.693079 0.307003 0.71007 0.307168 0.724707 0.283528 0.526353 0.283752 0.523481 0.290197 0.526402 0.292732 0.524677 0.54448 0.692313 0.547399 0.526437 0.544866 0.524711 0.553667 0.726959 0.527757 0.72709 0.283363 0.72693 0.309319 0.727073 0.527754 0.735488 0.309306 0.735475 0.527685 0.708979 0.309427 0.708955 0.311312 0.711551 0.311236 0.724477 0.292668 0.69228 0.525846 0.724495 0.283335 0.735577 0.553636 0.735557 0.525796 0.711574 0.554075 0.526394 0.553905 0.523481</float_array>
+                    <technique_common>
+                        <accessor count="32" source="#Geometry-mesh003-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh003-UV_Distortion" name="UV_Distortion">
+                    <float_array id="Geometry-mesh003-UV_Distortion-array" count="78">0.49427 0.540608 0.509592 0.499513 0.546342 0.504389 0.499329 0.546141 0.504573 0.493904 0.540207 0.509955 0.506022 0.544543 0.497867 0.503904 0.546877 0.500002 0.502503 0.548422 0.501414 0.501579 0.548602 0.50234 0.500914 0.547875 0.502999 0.51366 0.536122 0.490169 0.583562 0.459065 0.419717 0.503969 0.546806 0.499937 0.509091 0.54116 0.494774 0.513503 0.536296 0.490328 0.516948 0.532498 0.486855 0.48991 0.535839 0.513918 0.491313 0.537374 0.512525 0.500817 0.547768 0.503096 0.509269 0.540963 0.494595 0.501566 0.548588 0.502353 0.516619 0.532861 0.487187 0.583659 0.458958 0.419619 0.502815 0.548078 0.5011 0.500799 0.547749 0.503114 0.505018 0.545649 0.498879 0.503059 0.547809 0.500854</float_array>
+                    <technique_common>
+                        <accessor count="26" source="#Geometry-mesh003-UV_Distortion-array" stride="3">
+                            <param name="R" type="float" />
+                            <param name="G" type="float" />
+                            <param name="B" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh003-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh003-positions" />
+                </vertices>
+                <triangles count="48" material="Material-maintenance_tunnels">
+                    <input semantic="VERTEX" source="#Geometry-mesh003-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh003-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh003-uvSet1" offset="2" set="0" />
+                    <input semantic="COLOR" source="#Geometry-mesh003-UV_Distortion" offset="3" set="0" />
+                    <p>11 0 0 0 12 1 1 0 30 2 2 0 12 1 1 1 13 3 3 1 30 2 2 1 31 2 4 2 5 4 5 2 4 5 6 2 31 2 4 3 4 5 6 3 3 6 7 3 22 7 8 4 23 8 9 4 2 9 10 4 16 10 11 4 2 9 10 4 23 8 9 4 13 3 3 5 21 11 12 5 10 12 13 5 20 13 14 5 10 12 13 5 21 11 12 5 30 2 2 6 28 14 15 6 11 0 0 6 14 15 16 6 11 0 0 6 28 14 15 6 31 2 4 7 3 6 7 7 24 14 17 7 6 16 18 7 24 14 17 7 3 6 7 7 14 15 16 8 15 17 19 8 6 16 18 8 7 17 20 8 6 16 18 8 15 17 19 8 19 18 21 9 21 11 12 9 12 1 1 9 13 3 3 9 12 1 1 9 21 11 12 9 18 19 22 10 1 20 23 10 6 16 18 10 0 21 24 10 6 16 18 10 1 20 23 10 5 4 5 11 2 9 10 11 17 22 25 11 16 10 11 11 17 22 25 11 2 9 10 11 6 16 18 12 0 21 24 12 14 15 16 12 8 23 26 12 14 15 16 12 0 21 24 12 5 4 5 13 17 22 25 13 4 5 6 13 18 19 22 13 4 5 6 13 17 22 25 13 12 1 1 14 11 0 0 14 19 18 21 14 14 15 16 14 19 18 21 14 11 0 0 14 25 17 27 15 24 14 17 15 7 17 20 15 6 16 18 15 7 17 20 15 24 14 17 15 29 17 28 16 15 17 19 16 28 14 15 16 14 15 16 16 28 14 15 16 15 17 19 16 2 9 10 17 5 4 5 17 22 7 8 17 31 2 4 17 22 7 8 17 5 4 5 17 18 19 22 18 19 18 21 18 1 20 23 18 9 24 29 18 1 20 23 18 19 18 21 18 20 13 14 19 21 11 12 19 16 10 11 19 17 22 25 19 16 10 11 19 21 11 12 19 4 5 6 20 18 19 22 20 3 6 7 20 6 16 18 20 3 6 7 20 18 19 22 20 19 18 21 21 14 15 16 21 9 24 29 21 8 23 26 21 9 24 29 21 14 15 16 21 26 7 30 22 10 12 13 22 27 25 31 22 20 13 14 22 27 25 31 22 10 12 13 22 10 12 13 23 26 7 30 23 13 3 3 23 30 2 2 23 13 3 3 23 26 7 30 23 0 21 24 24 1 20 23 24 8 23 26 24 9 24 29 24 8 23 26 24 1 20 23 24 17 22 25 25 21 11 12 25 18 19 22 25 19 18 21 25 18 19 22 25 21 11 12 25</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh003Node" name="wall_flat__2_" type="NODE">
+                <instance_geometry url="#Geometry-mesh003">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-maintenance_tunnels" target="#Material-maintenance_tunnels">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator026Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator003Node" name="maintenance_tunnels__Image___Texture_" type="NODE">
+                    <translate sid="translation008">0 0 0</translate>
+                    <rotate sid="rotation007Y">0 1 0 0</rotate>
+                    <rotate sid="rotation007X">1 0 0 0</rotate>
+                    <rotate sid="rotation007Z">0 0 1 0</rotate>
+                    <scale sid="scale004">1 1 1</scale>
+                </node>
+                <node id="txtrLocator002Node" name="maintenance_tunnels_nrm__Image___Texture_" type="NODE">
+                    <translate sid="translation007">0 0 0</translate>
+                    <rotate sid="rotation006Y">0 1 0 0</rotate>
+                    <rotate sid="rotation006X">1 0 0 0</rotate>
+                    <rotate sid="rotation006Z">0 0 1 0</rotate>
+                    <scale sid="scale003">1 1 1</scale>
+                </node>
+                <node id="txtrLocator020Node" name="floor_grate_metal__Image___Texture_" type="NODE">
+                    <translate sid="translation023">0 0 0</translate>
+                    <rotate sid="rotation022Y">0 1 0 0</rotate>
+                    <rotate sid="rotation022X">1 0 0 0</rotate>
+                    <rotate sid="rotation022Z">0 0 1 0</rotate>
+                    <scale sid="scale021">1 1 1</scale>
+                </node>
+                <node id="txtrLocator012Node" name="checker_512__Image___Texture_" type="NODE">
+                    <translate sid="translation016">0 0 0</translate>
+                    <rotate sid="rotation015Y">0 1 0 0</rotate>
+                    <rotate sid="rotation015X">1 0 0 0</rotate>
+                    <rotate sid="rotation015Z">0 0 1 0</rotate>
+                    <scale sid="scale013">1 1 1</scale>
+                </node>
+            </node>
+            <node id="morphDeform001Node" name="Morph_Influence" type="NODE" />
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

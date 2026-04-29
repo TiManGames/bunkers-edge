@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Harry</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.3.1;  Revision: 847M;  Platform: x64;  Configuration: Release_Max2010_static</authoring_tool>
+      <source_data>file:///S:/work/frictional/batch5/computer_case_Asset_Files/computer_case_WIP_Files/computer_case_baked.max</source_data>
+    </contributor>
+    <created>2013-01-11T15:47:49</created>
+    <modified>2013-01-11T15:47:49</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="_2_-_Default">
+      <profile_COMMON>
+        <newparam sid="computer_case_tga-surface">
+          <surface type="2D">
+            <init_from>computer_case_tga</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="computer_case_tga-sampler">
+          <sampler2D>
+            <source>computer_case_tga-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.588 0.588 0.588 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="computer_case_tga-sampler" texcoord="CHANNEL1"/>
+            </diffuse>
+            <specular>
+              <color>0.9 0.9 0.9 1</color>
+            </specular>
+            <shininess>
+              <float>10</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+        </technique>
+      </profile_COMMON>
+      <extra>
+        <technique profile="OpenCOLLADA3dsMax">
+          <extended_shader>
+            <apply_reflection_dimming>0</apply_reflection_dimming>
+            <dim_level>0</dim_level>
+            <falloff_type>0</falloff_type>
+            <index_of_refraction>1.5</index_of_refraction>
+            <opacity_type>0</opacity_type>
+            <reflection_level>3</reflection_level>
+            <wire_size>1</wire_size>
+            <wire_units>0</wire_units>
+          </extended_shader>
+          <shader>
+            <ambient_diffuse_lock>1</ambient_diffuse_lock>
+            <ambient_diffuse_texture_lock>1</ambient_diffuse_texture_lock>
+            <diffuse_specular_lock>0</diffuse_specular_lock>
+            <soften>0.1</soften>
+            <use_self_illum_color>0</use_self_illum_color>
+          </shader>
+        </technique>
+      </extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="_2_-_Default-material" name="_2_-_Default">
+      <instance_effect url="#_2_-_Default"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-computer_case_hatch" name="computer_case_hatch">
+      <mesh>
+        <source id="geom-computer_case_hatch-positions">
+          <float_array id="geom-computer_case_hatch-positions-array" count="48">-0.2251018 -0.1717058 -0.3582885 0.2576467 -0.1717058 -0.3582885 -0.2251018 -0.1717058 0.2995907 0.2576467 -0.1717056 0.2995907 -0.2288553 -0.2001397 -0.3582885 0.2576467 -0.2001397 -0.3582885 -0.2288553 -0.2001394 0.2995906 0.2576467 -0.2001394 0.2995906 -0.2251018 -0.1717059 -0.31146 -0.2288553 -0.2001397 -0.3114601 -0.2251018 -0.1717058 0.2527624 -0.2288553 -0.2001394 0.2527624 -0.2441849 -0.1878795 -0.31146 -0.2391702 -0.1990424 -0.3114601 -0.2441849 -0.1878791 0.2527625 -0.2391702 -0.1990421 0.2527625</float_array>
+          <technique_common>
+            <accessor source="#geom-computer_case_hatch-positions-array" count="16" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-computer_case_hatch-normals">
+          <float_array id="geom-computer_case_hatch-normals-array" count="126">0 1 3.18208e-6 -0.2278601 0.9736938 9.16548e-7 -3.17106e-7 1 -8.8585e-9 0 -1 -6.36416e-7 9.02684e-8 -1 3.01387e-7 -0.03530682 -0.9993765 1.02822e-7 0 0 -1 0 0 -1 0 0 -1 0 0 -1 1 0 0 1 0 0 1 0 0 1 0 0 4.32868e-14 -3.14439e-6 1 1.16472e-12 -3.14441e-6 1 1.11748e-12 -3.14441e-6 1 0 -3.14439e-6 1 -0.8976306 0.1184969 0.4245206 -0.6954085 0.09180037 0.7127271 -0.9913988 0.1308753 0 -0.9913989 0.1308753 0 -0.9913989 0.1308742 1.99845e-7 -0.991399 0.1308741 8.32904e-8 -0.6954104 0.0918025 -0.7127247 -0.897633 0.1184978 -0.4245154 4.54898e-6 -1.60462e-6 1 2.43771e-6 -4.24441e-6 1 -0.2278582 0.9736943 -2.63461e-7 -0.6465549 0.7628674 -1.71408e-7 -0.6465489 0.7628726 -5.23836e-7 -0.03530687 -0.9993765 3.26119e-7 -0.5869521 -0.8096216 4.34109e-7 -0.5869491 -0.8096238 3.8488e-7 -1.27555e-6 2.83686e-6 -1 -3.27756e-6 3.86718e-6 -1 -0.912187 -0.409774 2.81376e-7 -0.9121855 -0.4097776 1.95996e-7 -3.70408e-7 1 0 -3.49789e-7 1 -2.12559e-7 1.77797e-8 -1 3.97979e-7 0 -1 0</float_array>
+          <technique_common>
+            <accessor source="#geom-computer_case_hatch-normals-array" count="42" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-computer_case_hatch-map1">
+          <float_array id="geom-computer_case_hatch-map1-array" count="126">0.2747899 0.3249987 0 0.2607558 0.3249987 0 0.2747899 0.1751428 0 0.09165554 0.3249989 0 0.7685442 0.3750238 0 0.783196 0.1224687 0 0.7787024 0.1419267 0 0.7303405 0.3811753 0 0.1847801 0.5070577 0 0.394681 0.5070577 0 0.394681 0.5156878 0 0.1831474 0.5156878 0 0.4581677 0.5197428 0 0.3971689 0.5317764 0 0.398801 0.5404059 0 0.4581677 0.5283723 0 0.07762007 0.1751428 0 0.07762134 0.3249989 0 0.7561189 0.3944829 0 0.2607558 0.3327637 0 0.7685438 0.3944829 0 0.09165554 0.3327637 0 0.7303405 0.3936006 0 0.9939545 0.1224687 0 0.783196 0.1419267 0 0.993955 0.395828 0 0.783196 0.3763708 0 0.783196 0.3958289 0 0.7497977 0.3811753 0 0.7497977 0.3936006 0 0.7787024 0.3763708 0 0.7561189 0.3750238 0 0.7734009 0.3763708 0 0.7734009 0.1419267 0 0.7258478 0.393714 0 0.723061 0.3892038 0 0.7605157 0.4017612 0 0.7560056 0.3989743 0 0.1838019 0.5197428 0 0.1838019 0.5283729 0 0.1872673 0.5317764 0 0.1872673 0.5404059 0</float_array>
+          <technique_common>
+            <accessor source="#geom-computer_case_hatch-map1-array" count="42" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-computer_case_hatch-vertices">
+          <input semantic="POSITION" source="#geom-computer_case_hatch-positions"/>
+        </vertices>
+        <triangles material="_2_-_Default_1" count="28">
+          <input semantic="VERTEX" source="#geom-computer_case_hatch-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-computer_case_hatch-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-computer_case_hatch-map1" offset="2" set="0"/>
+          <p>0 0 0 8 1 1 1 2 2 4 3 5 5 4 23 9 5 24 0 6 8 1 7 9 5 8 10 5 8 10 4 9 11 0 6 8 1 10 38 3 11 12 7 12 15 7 12 15 5 13 39 1 10 38 3 14 40 2 15 13 6 16 14 6 16 14 7 17 41 3 14 40 10 18 20 11 19 18 6 20 31 6 20 31 2 21 4 10 18 20 0 22 28 4 23 29 9 24 22 9 24 22 8 25 7 0 22 28 11 19 18 10 18 20 14 26 36 14 26 36 15 27 37 11 19 18 10 28 3 8 1 1 12 29 19 12 29 19 14 30 21 10 28 3 9 5 24 11 31 26 15 32 30 15 32 30 13 33 6 9 5 24 8 25 7 9 24 22 13 34 34 13 34 34 12 35 35 8 25 7 15 32 30 14 36 32 12 37 33 12 37 33 13 33 6 15 32 30 10 28 3 2 38 17 3 39 16 10 28 3 3 39 16 1 2 2 1 2 2 8 1 1 10 28 3 7 40 25 11 31 26 9 5 24 9 5 24 5 4 23 7 40 25 7 40 25 6 41 27 11 31 26</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_images>
+    <image id="computer_case_tga">
+      <init_from>file:///S:/work/frictional/batch5/computer_case_Asset_Files/computer_case_WIP_Files/bakes/computer_case.tga</init_from>
+    </image>
+  </library_images>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-computer_case_hatch" name="computer_case_hatch">
+        <instance_geometry url="#geom-computer_case_hatch">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="_2_-_Default_1" target="#_2_-_Default-material">
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

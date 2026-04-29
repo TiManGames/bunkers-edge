@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 501 [Build 41321], Microsoft Windows 7 (6.1.7600)</authoring_tool>
+            <comments>Plug-in: [Build 41321]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: No; Save Triangles as Triangles: No; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: No; Save Vertex Weights: No; Save Animation: Yes; Sample Animation: Yes; Sample Animation Start: 0; Sample Animation End: 39; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///C:/Users/Rasmus/Documents/more%20maya%20stuff.lxo</source_data>
+        </contributor>
+        <created>2012-05-11T09:02:05Z</created>
+        <modified>2012-05-11T09:02:05Z</modified>
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///C:/Users/Rasmus/Documents/cable_accessories.jpg</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default1" name="Default1">
+            <instance_effect url="#Effect-Default1" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default1" name="Default1">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-Mesh__2_" name="Mesh__2_">
+            <mesh>
+                <source id="Geometry-Mesh__2_-positions" name="positions">
+                    <float_array id="Geometry-Mesh__2_-positions-array" count="36">-0.0197257 -0.0127881 0 0.0197257 -0.0127881 0 0.0197257 -0.0127881 0.0218762 -0.0197257 -0.0127881 0.0218762 -0.0197257 0.0303631 0 0.0197257 0.0303631 0 0.0197257 0.0303631 0.0218762 -0.0197257 0.0303631 0.0218762 -0.0197257 -0.0303631 0 0.0197257 -0.0303631 0 0.0197257 -0.0303631 0.0126262 -0.0197257 -0.0303631 0.0126262</float_array>
+                    <technique_common>
+                        <accessor count="12" source="#Geometry-Mesh__2_-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-Mesh__2_-normals" name="normals">
+                    <float_array id="Geometry-Mesh__2_-normals-array" count="24">0 1 0 0 -1 0 -1 0 0 1 0 0 0 0 1 0 -0.159378 0.987218 0 -0.318756 0.947837 0 -0.465746 0.884918</float_array>
+                    <technique_common>
+                        <accessor count="8" source="#Geometry-Mesh__2_-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-Mesh__2_-Texture" name="Texture">
+                    <float_array id="Geometry-Mesh__2_-Texture-array" count="48">0.49449 0.934892 0.431046 0.935022 0.49496 0.992099 0.431516 0.992229 0.343671 0.574596 0.465516 0.574596 0.343671 0.594094 0.465516 0.594094 0.405898 0.831528 0.405891 0.864325 0.269037 0.831528 0.269037 0.864263 0.213552 0.845428 0.269037 0.864412 0.213552 0.864388 0.530556 0.924293 0.411292 0.924293 0.530556 0.859068 0.411292 0.859068 0.213552 0.864237 0.406546 0.864472 0.406552 0.831528 0.530556 0.829048 0.411292 0.829048</float_array>
+                    <technique_common>
+                        <accessor count="24" source="#Geometry-Mesh__2_-Texture-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-Mesh__2_-vertices">
+                    <input semantic="POSITION" source="#Geometry-Mesh__2_-positions" />
+                </vertices>
+                <polylist count="16" material="Material-Default1">
+                    <input semantic="VERTEX" source="#Geometry-Mesh__2_-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-Mesh__2_-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-Mesh__2_-Texture" offset="2" set="0" />
+                    <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3</vcount>
+                    <p>4 0 0 7 0 1 5 0 2 6 0 3 5 0 2 7 0 1 8 1 4 9 1 5 11 1 6 10 1 7 11 1 6 9 1 5 7 2 8 4 2 9 3 2 10 0 2 11 3 2 10 4 2 9 2 3 10 10 3 12 1 3 13 9 3 14 1 3 13 10 3 12 6 4 15 7 4 16 2 5 17 3 6 18 2 5 17 7 4 16 3 2 10 0 2 11 11 2 12 8 2 19 11 2 12 0 2 11 5 3 20 6 3 21 1 3 13 2 3 10 1 3 13 6 3 21 2 5 17 3 6 18 10 7 22 11 7 23 10 7 22 3 6 18</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-Mesh__2_Node" name="Mesh__2_" type="NODE">
+                <instance_geometry url="#Geometry-Mesh__2_">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-Default1" target="#Material-Default1">
+                                <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

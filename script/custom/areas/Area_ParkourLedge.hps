@@ -1,0 +1,278 @@
+#include "interfaces/Area_Interface.hps"
+#include "player/Player_Types.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourLedge_AboveFeetTolerance = 0.08f;
+
+//------------------------------------------------------------
+
+class cScrAreaParkourLedge : iScrArea, iScrArea_Interface
+{
+	//------------------------------------------------------------
+
+	void Init()
+	{
+		mbPlayerIsInside = false;
+		mbPlayerEnteredFromAbove = false;
+		mfDebugCandidateTimer = 0.f;
+		mBaseObj.SetAutoSleep(false);
+		mBaseObj.SetVariableUpdateRate(0.015f);
+	}
+
+	//------------------------------------------------------------
+
+	void SetupAfterLoad(cWorld @apWorld, cResourceVarsObject @apVars)
+	{
+		msFeetPosition = apVars.GetVarString("FeetPosition", "");
+		mbCrouchOnFinish = apVars.GetVarBool("CrouchOnFinish", false);
+		mbCanGrab = apVars.GetVarBool("CanGrab", true);
+		mfGrabRadius = apVars.GetVarFloat("GrabRadius", 1.2f);
+		mfRequiredFacingDot = apVars.GetVarFloat("RequiredFacingDot", 0.35f);
+		mfMinFallSpeed = apVars.GetVarFloat("MinFallSpeed", 0.5f);
+	}
+
+	//------------------------------------------------------------
+
+	void OnAfterWorldLoad()
+	{
+		if (msFeetPosition == "")
+		{
+			if (Parkour_GetDebug())
+				cLux_AddDebugMessage("[Parkour] Ledge area '" + mBaseObj.GetName() + "' has no FeetPosition; using area center.", true);
+			return;
+		}
+
+		iLuxEntity@ pArea = mBaseObj.GetMap().GetEntityByName(msFeetPosition, eLuxEntityType_Area);
+		if (pArea !is null)
+		{
+			m_idFeetPositionArea = pArea.GetID();
+
+			if (Parkour_GetDebug())
+				cLux_AddDebugMessage("[Parkour] Ledge area '" + mBaseObj.GetName() + "' loaded. FeetPosition='" + msFeetPosition + "'.", true);
+		}
+		else
+			Error("Cannot find feet position area '" + msFeetPosition + "' for parkour ledge area '" + mBaseObj.GetName() + "'");
+	}
+
+	//------------------------------------------------------------
+
+	void OnUpdate(float afTimeStep) {}
+	void OnPostUpdate(float afTimeStep) {}
+	void ResetProperties() {}
+	void BeforeEntityDestruction() {}
+
+	//------------------------------------------------------------
+
+	void OnVariableUpdate(float afTimeStep)
+	{
+		if (mfDebugCandidateTimer > 0.f)
+			mfDebugCandidateTimer -= afTimeStep;
+
+		if (mbCanGrab == false) return;
+		if (cLux_GetPlayer().IsActive() == false) return;
+		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null) return;
+
+		cMatrixf mtxArea = cMath_MatrixInverse(mBaseObj.GetAreaBody().GetLocalMatrix());
+		cVector3f vAreaRight = mtxArea.GetRight();
+		cVector3f vAreaForward = mtxArea.GetForward();
+		vAreaRight.y = 0.f;
+		vAreaForward.y = 0.f;
+		if (vAreaRight.SqrLength() > 0.001f) vAreaRight.Normalize();
+		if (vAreaForward.SqrLength() > 0.001f) vAreaForward.Normalize();
+
+		float fLedgeOffset = GetClosestLedgeOffset(pBody, vAreaRight);
+		cVector3f vLedgePos = mBaseObj.GetPosition() + vAreaRight * fLedgeOffset;
+		cVector3f vFeetPos = GetFinishFeetPosition() + vAreaRight * fLedgeOffset;
+
+		bool bCollide = mBaseObj.CheckCharacterCollision(pBody, mBaseObj.GetMap());
+		float fPlayerFeetY = pBody.GetFeetPosition().y;
+		float fMaxGrabFeetY = GetMaxGrabFeetY(vFeetPos);
+		bool bWasAboveLedge = mbHasLastPlayerFeetY && mfLastPlayerFeetY > fMaxGrabFeetY;
+
+		if (bCollide && mbPlayerIsInside == false)
+		{
+			mbPlayerEnteredFromAbove = IsPlayerAboveLedge(pBody, fMaxGrabFeetY) || (bWasAboveLedge && pBody.GetForceVelocity().y < -0.05f);
+
+			if (Parkour_GetDebug())
+			{
+				tString sFromAbove = "false";
+				if (mbPlayerEnteredFromAbove) sFromAbove = "true";
+				cLux_AddDebugMessage("[Parkour] Entered ledge area '" + mBaseObj.GetName() + "'. fromAbove=" + sFromAbove, true);
+			}
+		}
+		else if (bCollide == false && mbPlayerIsInside)
+		{
+			mbPlayerEnteredFromAbove = false;
+
+			if (Parkour_GetDebug())
+				cLux_AddDebugMessage("[Parkour] Left ledge area '" + mBaseObj.GetName() + "'.", true);
+		}
+		mbPlayerIsInside = bCollide;
+
+		if (bCollide == false)
+		{
+			StoreLastPlayerFeetY(fPlayerFeetY);
+			return;
+		}
+
+		if (mbPlayerEnteredFromAbove || IsPlayerAboveLedge(pBody, fMaxGrabFeetY))
+		{
+			if (Parkour_GetDebug() && mfDebugCandidateTimer <= 0.f)
+			{
+				cLux_AddDebugMessage("[Parkour] Ignored ledge area '" + mBaseObj.GetName() + "': player above ledge. feetY=" + fPlayerFeetY + " maxY=" + fMaxGrabFeetY, true);
+				mfDebugCandidateTimer = 0.35f;
+			}
+			StoreLastPlayerFeetY(fPlayerFeetY);
+			return;
+		}
+
+		Parkour_RegisterLedgeCandidate(vFeetPos,
+										mbCrouchOnFinish,
+										vAreaForward,
+										vLedgePos,
+										mfGrabRadius,
+										mfRequiredFacingDot,
+										mfMinFallSpeed,
+										fMaxGrabFeetY);
+
+		if (Parkour_GetDebug() && mfDebugCandidateTimer <= 0.f)
+		{
+			cLux_AddDebugMessage("[Parkour] Ledge candidate from '" + mBaseObj.GetName() + "'. waiting for jump. verticalVel=" + pBody.GetForceVelocity().y, true);
+			mfDebugCandidateTimer = 0.35f;
+		}
+
+		StoreLastPlayerFeetY(fPlayerFeetY);
+	}
+
+	//------------------------------------------------------------
+
+	float GetClosestLedgeOffset(iCharacterBody@ apBody, const cVector3f &in avAreaRight)
+	{
+		if (apBody is null) return 0.f;
+
+		cVector3f vAreaRight = avAreaRight;
+		vAreaRight.y = 0.f;
+		if (vAreaRight.SqrLength() <= 0.001f)
+			return 0.f;
+		vAreaRight.Normalize();
+
+		cVector3f vGrabPos = cLux_GetPlayer().GetCamera().GetPosition();
+		float fAlong = cMath_Vector3Dot(vGrabPos - mBaseObj.GetPosition(), vAreaRight);
+		return cMath_Clamp(fAlong, -GetLedgeHalfWidth(), GetLedgeHalfWidth());
+	}
+
+	//------------------------------------------------------------
+
+	float GetLedgeHalfWidth()
+	{
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null) return 0.5f;
+
+		return cMath_Max(0.1f, pAreaBody.GetShape().GetSize().x * 0.5f);
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetFinishFeetPosition()
+	{
+		if (m_idFeetPositionArea != tID_Invalid)
+			return cLux_ID_Entity(m_idFeetPositionArea).GetPosition();
+
+		return mBaseObj.GetPosition();
+	}
+
+	//------------------------------------------------------------
+
+	float GetMaxGrabFeetY(const cVector3f &in avFinishFeetPos)
+	{
+		return avFinishFeetPos.y - gfParkourLedge_AboveFeetTolerance;
+	}
+
+	//------------------------------------------------------------
+
+	bool IsPlayerAboveLedge(iCharacterBody@ apBody, float afMaxGrabFeetY)
+	{
+		if (apBody is null) return true;
+		return apBody.GetFeetPosition().y > afMaxGrabFeetY;
+	}
+
+	//------------------------------------------------------------
+
+	void StoreLastPlayerFeetY(float afFeetY)
+	{
+		mfLastPlayerFeetY = afFeetY;
+		mbHasLastPlayerFeetY = true;
+	}
+
+	//------------------------------------------------------------
+
+	bool CanInteract(int alType, iPhysicsBody@ apBody)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	int GetInteractIconId(int alType, iPhysicsBody@ apBody)
+	{
+		return -1;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void OnEndCheckCollision(float afTimteStep) {}
+	void OnSetActive(bool abX) {}
+	void OnConnectionStateChange(iLuxEntity@ apEntity,int alState) { if (alState != 0) mbCanGrab = alState == 1; }
+
+	//------------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY)
+	{
+		return afStartY;
+	}
+
+	//------------------------------------------------------------
+
+	tString msFeetPosition = "";
+	tID m_idFeetPositionArea = tID_Invalid;
+	bool mbPlayerIsInside = false;
+	bool mbPlayerEnteredFromAbove = false;
+	bool mbHasLastPlayerFeetY = false;
+	bool mbCrouchOnFinish = false;
+	bool mbCanGrab = true;
+	float mfGrabRadius = 1.2f;
+	float mfRequiredFacingDot = 0.35f;
+	float mfMinFallSpeed = 0.5f;
+	float mfDebugCandidateTimer = 0.f;
+	float mfLastPlayerFeetY = 0.f;
+
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

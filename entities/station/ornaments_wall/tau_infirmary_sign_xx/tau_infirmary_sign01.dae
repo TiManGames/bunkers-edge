@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/entities/station/ornaments_wall/theta_infirmary_sign_xx/theta_infirmary_sign_digestive.dae</source_data>
+    </contributor>
+    <created>2015-03-26T21:20:13</created>
+    <modified>2015-03-26T21:20:13</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="Material-warning" name="warning">
+      <instance_effect url="#Effect-warning"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="Effect-warning">
+      <profile_COMMON>
+        <newparam sid="Image0001-surface">
+          <surface type="2D">
+            <init_from>Image0001</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Image0001-sampler">
+          <sampler2D>
+            <source>Image0001-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Image0001-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color>0.2 0.2 0.2 1</color>
+            </specular>
+            <shininess>
+              <float>256</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float>0</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Image0001" name="Image0001">
+      <init_from>file:///E:/depth/redist/entities/station/ornaments_wall/tau_infirmary_sign_xx/tau_inf_bodycharter.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Image0001</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="Geometry-mesh019" name="digestive">
+      <mesh>
+        <source id="Geometry-mesh019-positions" name="Geometry-mesh019-positions">
+          <float_array id="Geometry-mesh019-positions-array" count="24">-0.166667 -0.25 0 -0.166667 0.25 0 0.166667 -0.25 0 0.166667 0.25 0 0.166667 0.25 0.007813 -0.166667 0.25 0.007813 -0.166667 -0.25 0.007813 0.166667 -0.25 0.007813</float_array>
+          <technique_common>
+            <accessor source="#Geometry-mesh019-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Geometry-mesh019-normals" name="Geometry-mesh019-normals">
+          <float_array id="Geometry-mesh019-normals-array" count="108">0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0</float_array>
+          <technique_common>
+            <accessor source="#Geometry-mesh019-normals-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Geometry-mesh019-Geometry-mesh019-uvSet1" name="Geometry-mesh019-Geometry-mesh019-uvSet1">
+          <float_array id="Geometry-mesh019-Geometry-mesh019-uvSet1-array" count="60">0.9551782 0.1616582 0.9551782 0.1656762 0.8102782 0.1616582 0.8102782 0.1656762 1 0.999369 0 0.999369 1 0 0 0 0.8049742 0.05580921 0.8049742 0.1648802 0.7441742 0.05580921 0.7441742 0.1648802 0.8102782 0.1656762 0.8102782 0.1616582 0.9551782 0.1656762 0.9551782 0.1616582 0.9551782 0.1656762 0.8102782 0.1616582 0.9551782 0.1616582 0.9551782 0.1656762 0.8102782 0.1616582 0.8102782 0.1656762 0.8102782 0.1616582 0.9551782 0.1656762 0.8102782 0.1656762 0.8102782 0.1616582 0.9551782 0.1656762 0.9551782 0.1616582 0.9551782 0.1656762 0.8102782 0.1616582</float_array>
+          <technique_common>
+            <accessor source="#Geometry-mesh019-Geometry-mesh019-uvSet1-array" count="30" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Geometry-mesh019-vertices" name="Geometry-mesh019-vertices">
+          <input semantic="POSITION" source="#Geometry-mesh019-positions"/>
+        </vertices>
+        <triangles material="warningSG" count="12">
+          <input semantic="VERTEX" source="#Geometry-mesh019-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Geometry-mesh019-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Geometry-mesh019-Geometry-mesh019-uvSet1" offset="2" set="0"/>
+          <p>4 0 0 3 1 1 5 2 2 1 3 3 5 4 2 3 5 1 4 6 4 5 7 5 7 8 6 6 9 7 7 10 6 5 11 5 3 12 8 2 13 9 1 14 10 0 15 11 1 16 10 2 17 9 5 18 12 1 19 13 6 20 14 0 21 15 6 22 16 1 23 17 3 24 18 4 25 19 2 26 20 7 27 21 2 28 22 4 29 23 6 30 24 0 31 25 7 32 26 2 33 27 7 34 28 0 35 29</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>digestive</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="theta_infirmary_sign_digestive">
+      <node id="Geometry-mesh019Node" name="digestive" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#Geometry-mesh019">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="warningSG" target="#Material-warning">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>digestive</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

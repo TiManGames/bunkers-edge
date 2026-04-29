@@ -1,0 +1,161 @@
+#include "custom/props/Prop_Gun.hps"
+
+//------------------------------------------------------------
+
+class cScrPropVolleyGun : cScrPropGun
+{
+	void Init()
+	{
+		cScrPropGun::Init();
+		mbQueuedVolleyFire = false;
+		ApplyVolleyTint();
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetupAfterLoad(cWorld@ apWorld, cResourceVarsObject@ apVars, cResourceVarsObject@ apInstanceVars)
+	{
+		cScrPropGun::SetupAfterLoad(apWorld, apVars, apInstanceVars);
+		ApplyVolleyTint();
+	}
+	
+	//------------------------------------------------------------
+	
+	void Save()
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	void Load()
+	{
+		ClearAllChambers();
+		mbQueuedVolleyFire = false;
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_OnItemTakenOut() override
+	{
+		cScrPropGun::_Global_OnItemTakenOut();
+		ClearAllChambers();
+		ApplyVolleyTint();
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_CopyFromItemEntity() override
+	{
+		cScrPropPickup::_Global_CopyFromItemEntity();
+		ClearAllChambers();
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_CopyValues() override
+	{
+		cScrPropWeapon_Base::_Global_CopyValues();
+		ClearAllChambers();
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetCanFire() override
+	{
+		cScript_SetGlobalReturnBool(GetFullyLoaded());
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetLoadedBulletCount()
+	{
+		cScript_SetGlobalReturnInt(GetLoadedBulletCount());
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetQueuedVolleyFire()
+	{
+		mbQueuedVolleyFire = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_GetQueuedVolleyFire()
+	{
+		cScript_SetGlobalReturnBool(mbQueuedVolleyFire);
+	}
+	
+	//------------------------------------------------------------
+	
+	void HandleEvent(eGunEvent aEvent) override
+	{
+		if (aEvent == eGunEvent_FireStart)
+		{
+			for (int i = 0; i < mvBulletChambers.size(); ++i)
+			{
+				if (mvBulletChambers[i].mState == eBulletChamberState_Unspent)
+					mvBulletChambers[i].mState = eBulletChamberState_Spent;
+			}
+			
+			mlCylinderRotationsQueued = 0;
+			UpdateBulletVisibility();
+			return;
+		}
+		
+		if (aEvent == eGunEvent_EmptyBullets)
+		{
+			ClearAllChambers();
+			return;
+		}
+		
+		cScrPropGun::HandleEvent(aEvent);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnAfterAnimationUpdate(cMeshEntity@ apFunctions, float afTimeStep) override
+	{
+		cScrPropWeapon_Base::OnAfterAnimationUpdate(apFunctions, afTimeStep);
+	}
+	
+	//------------------------------------------------------------
+	
+	void ClearAllChambers()
+	{
+		for (int i = 0; i < mvBulletChambers.size(); ++i)
+			mvBulletChambers[i].mState = eBulletChamberState_Empty;
+			
+		mlCylinderRotationsQueued = 0;
+		mlCylinderStepsToWantedChamber = 0;
+		SetReloadBulletVisible(false);
+		UpdateBulletVisibility();
+	}
+	
+	//------------------------------------------------------------
+	
+	int GetLoadedBulletCount()
+	{
+		int lCount = 0;
+		for (int i = 0; i < mvBulletChambers.size(); ++i)
+		{
+			if (mvBulletChambers[i].mState != eBulletChamberState_Empty)
+				++lCount;
+		}
+		
+		return lCount;
+	}
+	
+	//------------------------------------------------------------
+	
+	void ApplyVolleyTint()
+	{
+		cMeshEntity@ pMesh = mBaseObj.GetMeshEntity();
+		if (pMesh !is null)
+			pMesh.SetDiffuseColorMul(cColor(1.f, 0.08f, 0.08f, 1.f));
+	}
+	
+	//------------------------------------------------------------
+	
+	bool mbQueuedVolleyFire;
+}

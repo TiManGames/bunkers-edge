@@ -1,0 +1,1106 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "custom/player/PlayerState_UsingItem_Base.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+#include "custom/helpers/helper_player_custom.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/helpers/helper_gun.hps"
+#include "custom/helpers/helper_items.hps"
+#include "custom/helpers/helper_props_custom.hps"
+
+//------------------------------------------------------------
+
+const tString gsUsingGun_Aim_AimDualTransitionStartLAnim = "tool_gun_dual_aim_start_larm";
+const tString gsUsingGun_Aim_AimDualTransitionStartRAnim = "tool_gun_dual_aim_start_rarm";
+const tString gsUsingGun_Aim_AimDualTransitionEndLAnim = "tool_gun_dual_aim_end_larm";
+const tString gsUsingGun_Aim_AimDualTransitionEndRAnim = "tool_gun_dual_aim_end_rarm";
+
+const tString gsUsingGun_Aim_ShootPS = "revolver_fire.ps";
+
+const float gfUsingGun_Aim_PitchRange = cMath_ToRad(60.f);
+const float gfUsingGun_Aim_PitchFadeTime = 0.5f;
+const float gfUsingGun_Aim_MaxArmAngleOffset = cMath_ToRad(7.5f);
+const float gfUsingGun_Aim_LookForceMul = 18.f;
+const float gfUsingGun_Aim_RightArmPitchOffsetMul = 8.f;
+
+//------------------------------------------------------------
+
+enum eGunAimMode
+{
+	eGunAimMode_OneHand,
+	eGunAimMode_TwoHands
+}
+
+//------------------------------------------------------------
+
+enum eGunLanternEquipState
+{
+	eGunLanternEquipState_Equip,
+	eGunLanternEquipState_Unequip,
+	eGunLanternEquipState_None
+}
+
+//------------------------------------------------------------
+
+enum eGunAnimationLayer
+{
+	eGunAnimationLayer_LeftArm,
+	eGunAnimationLayer_RightArm,
+	eGunAnimationLayer_Head
+}
+
+//------------------------------------------------------------
+
+class iScrPlayerState_UsingWeapon_Aim_Base : iScrPlayerState_UsingItem_Base, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+			
+	/////////////////////////////////////////
+	// INIT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Init()
+	{
+		iScrPlayerState_UsingItem_Base::Init();
+		
+		LoadUserConfig();
+		mfIntroDelayTime = 0.55f; // Slightly longer than default so the gun has a chance to center and you don't miss
+	}
+	
+	//------------------------------------------------------------
+	
+	void LoadUserConfig() override
+	{
+		iScrPlayerState_UsingItem_Base::LoadUserConfig();
+		
+		cConfigFile@ pConfig = cLux_GetUserConfig();		
+		mbWeaponSwayActive = pConfig.GetBool("Accessibility", "WeaponSway", true);
+		mbReduceCameraMotion = pConfig.GetBool("Accessibility", "ReduceCameraMotion", false);
+		
+		if (cLux_GetCurrentMap() !is null)
+			PlayerBody_SetArmAnimationPitchFadeActive(false, mAimMode == eGunAimMode_TwoHands || mbWeaponSwayActive == false, mAimMode == eGunAimMode_TwoHands);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SaveUserConfig() override
+	{
+		iScrPlayerState_UsingItem_Base::SaveUserConfig();
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{	
+		////////////////
+		// Enter base
+		iScrPlayerState_UsingItem_Base::OnEnterState(alPrevStateId);
+		
+		////////////////
+		// Setup state
+		//mlDefaultCrossHairState = -1;
+		
+		mlUseAction = eAction_AimGun;
+		mfShootCooldownCount = 0.f;
+		mbCustomBonePosActiveL = false;
+		mbCustomBonePosActiveR = false;
+		mfCustomBoneWeightL = 0.f;
+		mfCustomBoneWeightR = 0.f;
+		mfRightArmYawOffset = 0.f;
+		mfRightArmYawOffsetAdd = 0.f;
+		mfRightArmVel = 0.f;
+		mfFlashlightPressedCount = 0.f;
+		mfReloadPressedCount = 0.f;
+		msActivePlayerShootAnim = "";
+		mvHandBonePosRelativeToCamR = cVector3f(0.f);
+		mfHandBoneAngleOffsetFadeSpeed = 0.f;
+		mfHandBonePosOffsetFadeSpeedL = 0.f;
+		mfHandBonePosOffsetFadeSpeedR = 0.f;
+		
+		mAimMode = eGunAimMode_TwoHands;
+		mPrevAimMode = eGunAimMode_TwoHands;
+		mLanternEquipState = eGunLanternEquipState_None;
+		
+		mvShootAnimIds.resize(0);
+
+		////////////////
+		// Setup pitch
+		SetupPitchFade(-gfUsingGun_Aim_PitchRange, gfUsingGun_Aim_PitchRange, gfUsingGun_Aim_PitchFadeTime, true);
+		
+		////////////////
+		// Setup player		
+		PlayerBody_SetOnAfterAnimUpdateCallbackState(mBaseObj.GetName());
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alPrevStateId) override
+	{
+		iScrPlayerState_UsingItem_Base::OnLeaveState(alPrevStateId);
+		PlayerBody_SetArmAnimationPitchFadeActive(true, true, true);
+	}
+	
+	//------------------------------------------------------------
+	
+	void Reset()
+	{
+		@mpCollideShape = null;
+	}
+
+	//------------------------------------------------------------
+
+	/////////////////////////////////////////
+	// ENTER MAP
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnMapEnter(cLuxMap @apMap) 
+	{
+		/////////////
+		// Preload
+		ParticleSystem_Preload("revolver_fire.ps");
+	}
+
+	void OnMapLeave(cLuxMap @apMap) {}
+	
+	void CreateWorldEntities(cLuxMap@ apMap) override 
+	{ 
+		iScrPlayerState_UsingItem_Base::CreateWorldEntities(apMap);
+
+		// Create shape for testing with, save this later!!
+		cVector3f vBoxSize = cVector3f(0.03f, 0.03f, 0.475f); 
+		@mpCollideShape = apMap.GetPhysicsWorld().CreateBoxShape(vBoxSize, cMatrixf_Identity);
+	}
+	
+	void DestroyWorldEntities(cLuxMap@ apMap) override 
+	{
+		iScrPlayerState_UsingItem_Base::DestroyWorldEntities(apMap);
+		
+		// Destroy shape
+		apMap.GetPhysicsWorld().DestroyShape(mpCollideShape);
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{	
+		////////////////
+		// Update cooldown
+		mfShootCooldownCount -= afTimeStep;
+		if (mfShootCooldownCount <= 0.f)
+			mfShootCooldownCount = 0.f;
+			
+		////////////////
+		// Pressing flashlight key?
+		if (cInput_IsTriggered(eAction_Flashlight))	
+		{
+			mfFlashlightPressedCount += afTimeStep;
+		}
+		
+		////////////////
+		// Adjust left arm?
+		bool bLanternUnequipped = !mbAllowUsingLantern || Item_GetHandHeldState(eItemHandlerHand_Left) == 0;
+		bool bAdjustLeftArm = mAimMode == eGunAimMode_TwoHands && bLanternUnequipped;
+	
+		////////////////
+		// Updates
+		UpdateHandPlacement(afTimeStep);
+		UpdateRightArmInstability(afTimeStep);
+		UpdateLanternAnims(afTimeStep, bLanternUnequipped);
+		
+		////////////////
+		// Intro
+		if (mlAnimState == eUsingItemAnimState_Intro)
+		{
+			GetStateAnims(eUsingItemAnimState_Intro, msFocusIntroAnim_R, msFocusIntroAnim_L);
+			
+			mbCustomBonePosActiveR = true;
+			mbCustomBonePosActiveL = bAdjustLeftArm;
+		}	
+	
+		////////////////
+		// Loop
+		else if (mlAnimState == eUsingItemAnimState_Loop)
+		{
+			GetStateAnims(eUsingItemAnimState_Loop, msFocusLoopAnim_R, msFocusLoopAnim_L);
+			
+			mbCustomBonePosActiveR = true;
+			mbCustomBonePosActiveL = bAdjustLeftArm;
+		}	
+	
+		////////////////
+		// Outro
+		else if (mlAnimState == eUsingItemAnimState_Outro)
+		{
+			GetStateAnims(eUsingItemAnimState_Outro, msFocusOutroAnim_R, msFocusOutroAnim_L);
+			
+			cAnimationState@ pAnim = PlayerBody_GetAnimationState(msFocusOutroAnim_R);
+			bool bCustomBonePosActive = pAnim !is null && pAnim.IsActive() && pAnim.GetRelativeTimePosition() < 0.3f;
+			
+			mbCustomBonePosActiveR = bCustomBonePosActive;
+			mbCustomBonePosActiveL = bAdjustLeftArm && bCustomBonePosActive;
+			
+			ResetZoom();
+		}
+		
+		////////////////
+		// Settings
+		mbUsesOtherHandAnims = mAimMode == eGunAimMode_TwoHands || mbWeaponSwayActive == false;
+		
+		if (ForceDeactivateHandPlacement())
+		{
+			mbCustomBonePosActiveR = false;
+			mbCustomBonePosActiveL = false;
+		}
+		
+		////////////////
+		// Enter reload?
+		if (mlUseItemMode == eUseItemMode_Toggle && mbLeaveState == false)
+		{
+			if (cInput_IsTriggered(eAction_CheckAmmo))
+			{
+				mfReloadPressedCount += afTimeStep;
+				if (mfReloadPressedCount >= 0.4f)
+				{
+					mfReloadPressedCount = 0.f;
+				
+					mbLeaveState = true;
+					mbAllowLeavingState = true;
+					Player_SetCanRun(true);
+					
+					int lQueuedState = Gun_GetReloadStateId(msWeaponType);
+					
+					cScript_SetGlobalArgInt(0, lQueuedState);
+					cScript_SetGlobalArgInt(1, eItemHandlerHand_Right);
+					cScript_SetGlobalArgString(2, msItemType);
+					cScript_RunGlobalFunc("State_Normal", "", "_Global_SetQueuedState");
+				}
+			}
+			else
+			{
+				mfReloadPressedCount = 0.f;
+			}
+		}
+		
+		////////////////
+		// Update base
+		iScrPlayerState_UsingItem_Base::Update(afTimeStep);
+		
+		////////////////
+		// Update prev
+		mPrevAimMode = mAimMode;
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateHandPlacement(float afTimeStep)
+	{
+		//////////////////
+		// Get goals
+		float fWristBonePitchOffsetGoal = mfWristBonePitchOffset_Default;
+		float fWristBoneYawOffsetGoal = mfWristBoneYawOffset_Default;
+		cVector3f vHandBonePosOffsetGoalL = mvBonePosRelativeToCamL_Default;
+		cVector3f vHandBonePosOffsetGoalR = mvBonePosRelativeToCamR_Default;
+		
+		bool bCrouching = Player_GetCrouching();
+		float fLeanAmount = PlayerBody_GetTargetLeanAmount();
+		bool bLeaning = cMath_Abs(fLeanAmount) > 0.f;
+		
+		if (bLeaning)
+		{
+			if (bCrouching)
+			{
+				if (fLeanAmount > 0.f)
+				{
+					fWristBonePitchOffsetGoal = mfWristBonePitchOffset_LeanCrouchRight;
+					fWristBoneYawOffsetGoal = mfWristBoneYawOffset_LeanCrouchRight;
+					vHandBonePosOffsetGoalL = mvBonePosRelativeToCamL_LeanCrouchRight;
+					vHandBonePosOffsetGoalR = mvBonePosRelativeToCamR_LeanCrouchRight;
+				}
+				else
+				{
+					fWristBonePitchOffsetGoal = mfWristBonePitchOffset_LeanCrouchLeft;
+					fWristBoneYawOffsetGoal = mfWristBoneYawOffset_LeanCrouchLeft;
+					vHandBonePosOffsetGoalL = mvBonePosRelativeToCamL_LeanCrouchLeft;
+					vHandBonePosOffsetGoalR = mvBonePosRelativeToCamR_LeanCrouchLeft;
+				}
+			}
+			else
+			{
+				if (fLeanAmount > 0.f)
+				{
+					fWristBonePitchOffsetGoal = mfWristBonePitchOffset_LeanRight;
+					fWristBoneYawOffsetGoal = mfWristBoneYawOffset_LeanRight;
+					vHandBonePosOffsetGoalL = mvBonePosRelativeToCamL_LeanRight;
+					vHandBonePosOffsetGoalR = mvBonePosRelativeToCamR_LeanRight;
+				}
+				else
+				{
+					fWristBonePitchOffsetGoal = mfWristBonePitchOffset_LeanLeft;
+					fWristBoneYawOffsetGoal = mfWristBoneYawOffset_LeanLeft;
+					vHandBonePosOffsetGoalL = mvBonePosRelativeToCamL_LeanLeft;
+					vHandBonePosOffsetGoalR = mvBonePosRelativeToCamR_LeanLeft;
+				}
+			}
+		}
+		else if (bCrouching)
+		{
+			fWristBonePitchOffsetGoal = mfWristBonePitchOffset_Crouch;
+			fWristBoneYawOffsetGoal = mfWristBoneYawOffset_Crouch;
+			vHandBonePosOffsetGoalL = mvBonePosRelativeToCamL_Crouch;
+			vHandBonePosOffsetGoalR =  mvBonePosRelativeToCamR_Crouch;
+		}
+		
+		//////////////////
+		// Get speeds
+		if (bLeaning)
+		{			
+			float fPitchDefault = mfWristBonePitchOffset_Default;
+			float fYawDefault =  mfWristBoneYawOffset_Default;
+			cVector3f vPosLeftDefault =  mvBonePosRelativeToCamL_Default;
+			cVector3f vPosRightDefault =  mvBonePosRelativeToCamR_Default;
+			
+			if (bCrouching)
+			{
+				fPitchDefault = mfWristBonePitchOffset_Crouch;
+				fYawDefault =  mfWristBoneYawOffset_Crouch;
+				vPosLeftDefault =  mvBonePosRelativeToCamL_Crouch;
+				vPosRightDefault =  mvBonePosRelativeToCamR_Crouch;
+			}
+			
+			UpdateHandPlacementOffsetSpeeds(fPitchDefault, fWristBonePitchOffsetGoal,
+											fYawDefault, fWristBoneYawOffsetGoal,
+											vPosLeftDefault, vHandBonePosOffsetGoalL,
+											vPosRightDefault, vHandBonePosOffsetGoalR);
+		}
+		else
+		{
+			UpdateHandPlacementOffsetSpeeds(mfWristBonePitchOffset_Default, mfWristBonePitchOffset_Crouch,
+											mfWristBoneYawOffset_Default, mfWristBoneYawOffset_Crouch,
+											mvBonePosRelativeToCamL_Default, mvBonePosRelativeToCamL_Crouch,
+											mvBonePosRelativeToCamR_Default, mvBonePosRelativeToCamR_Crouch);
+		}
+			
+		//////////////////
+		// Set instantly?
+		if (mvHandBonePosRelativeToCamR.SqrLength() <= 0.f)
+		{
+			mfWristBonePitchOffset = fWristBonePitchOffsetGoal;
+			mfWristBoneYawOffset = fWristBoneYawOffsetGoal;
+			mvHandBonePosRelativeToCamL = vHandBonePosOffsetGoalL;
+			mvHandBonePosRelativeToCamR = vHandBonePosOffsetGoalR;
+		}
+		
+		//////////////////
+		// Increase to goal
+		mfWristBonePitchOffset = cMath_IncreaseTo(mfWristBonePitchOffset, mfHandBoneAngleOffsetFadeSpeed * afTimeStep, fWristBonePitchOffsetGoal);
+		mfWristBoneYawOffset = cMath_IncreaseTo(mfWristBoneYawOffset, mfHandBoneAngleOffsetFadeSpeed * afTimeStep, fWristBoneYawOffsetGoal);
+		mvHandBonePosRelativeToCamL = cMath_Vector3IncreaseTo(mvHandBonePosRelativeToCamL, mfHandBonePosOffsetFadeSpeedL * afTimeStep, vHandBonePosOffsetGoalL);
+		mvHandBonePosRelativeToCamR = cMath_Vector3IncreaseTo(mvHandBonePosRelativeToCamR, mfHandBonePosOffsetFadeSpeedR * afTimeStep, vHandBonePosOffsetGoalR);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateHandPlacementOffsetSpeeds(float afPitchA, float afPitchB, float afYawA, float afYawB,
+										 const cVector3f &in avPosLeftA, const cVector3f &in avPosLeftB,
+										 const cVector3f &in avPosRightA, const cVector3f &in avPosRightB)
+	{
+		float fDiffAngleA = cMath_Abs(afPitchA - afPitchB);
+		float fDiffAngleB = cMath_Abs(afYawA - afYawB);
+		float fDiffAngleMax = cMath_Max(fDiffAngleA, fDiffAngleB);
+		float fDiffPosL = (avPosLeftA - avPosLeftB).Length();
+		float fDiffPosR = (avPosRightA - avPosRightB).Length();
+			
+		float fFadeSpeed = 0.333f;
+		
+		if (fDiffAngleMax > 0.f)	mfHandBoneAngleOffsetFadeSpeed = fDiffAngleMax / fFadeSpeed;
+		if (fDiffPosL > 0.f) 		mfHandBonePosOffsetFadeSpeedL = fDiffPosL / fFadeSpeed;
+		if (fDiffPosR > 0.f) 		mfHandBonePosOffsetFadeSpeedR = fDiffPosR / fFadeSpeed;
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateRightArmInstability(float afTimeStep)
+	{
+		////////////////
+		// Update offset
+		float fForce = -cMath_Sin(mfRightArmYawOffset) * gfUsingGun_Aim_LookForceMul;
+		
+		mfRightArmVel += fForce * afTimeStep;
+		mfRightArmVel -= mfRightArmVel * afTimeStep;		
+		mfRightArmYawOffset += mfRightArmVel * afTimeStep;
+			
+		////////////////
+		// Cap offset
+		if (mfRightArmYawOffset > gfUsingGun_Aim_MaxArmAngleOffset)
+		{
+			mfRightArmVel = 0.f;
+			mfRightArmYawOffset = gfUsingGun_Aim_MaxArmAngleOffset;
+		}
+		else if (mfRightArmYawOffset < -gfUsingGun_Aim_MaxArmAngleOffset)
+		{
+			mfRightArmVel = 0.f;
+			mfRightArmYawOffset = -gfUsingGun_Aim_MaxArmAngleOffset;
+		}
+			
+		////////////////
+		// Calculate offset add
+		mfRightArmYawOffsetAdd -= mfRightArmYawOffsetAdd * 0.1f;
+		mfRightArmYawOffsetAdd = cMath_Clamp(mfRightArmYawOffsetAdd, -gfUsingGun_Aim_MaxArmAngleOffset, gfUsingGun_Aim_MaxArmAngleOffset);
+			
+		////////////////
+		// Decrease quickly if in two hand mode
+		if (mAimMode == eGunAimMode_TwoHands)
+		{
+			mfRightArmVel -= mfRightArmYawOffset * 0.1f;
+			mfRightArmYawOffset -= mfRightArmYawOffset * 0.1f;
+		}
+			
+		////////////////
+		// Apply offset
+		float fRightArmYawOffset = mfRightArmYawOffset + mfRightArmYawOffsetAdd;
+		float fRightArmPitchOffset = cMath_Sin(mfRightArmVel * 0.5f) * mfRightArmYawOffset * gfUsingGun_Aim_RightArmPitchOffsetMul;
+			
+		PlayerBody_SetRightArmYawOffset(fRightArmYawOffset);
+		PlayerBody_SetRightArmPitchOffset(fRightArmPitchOffset);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateLanternAnims(float afTimeStep, bool bLanternUnequipped)
+	{
+		if (mlAnimState == eUsingItemAnimState_Outro)
+			return;
+		
+		////////////////
+		// Equip
+		if (mLanternEquipState == eGunLanternEquipState_Equip)
+		{
+			if (mAimMode == eGunAimMode_TwoHands)
+				PlayerBody_SetArmAnimationPitchFadeActive(true, mbWeaponSwayActive, true);
+				
+			mAimMode = eGunAimMode_OneHand;		
+			
+			if (UpdateLanternStateAnims(gsUsingGun_Aim_AimDualTransitionEndLAnim, 
+										gsUsingGun_Aim_AimDualTransitionEndRAnim))
+			{
+				Player_ToggleLightSource();
+				mLanternEquipState = eGunLanternEquipState_None;
+				
+				if (mbWeaponSwayActive)
+					mfAlignYawCount = 0.f;
+			}
+		}
+			
+		////////////////
+		// Unequip
+		else if (mLanternEquipState == eGunLanternEquipState_Unequip && bLanternUnequipped)
+		{
+			if (mAimMode == eGunAimMode_OneHand)
+				PlayerBody_SetArmAnimationPitchFadeActive(false, true, true);
+			
+			mAimMode = eGunAimMode_TwoHands;
+				
+			if (UpdateLanternStateAnims(gsUsingGun_Aim_AimDualTransitionStartLAnim,
+										gsUsingGun_Aim_AimDualTransitionStartRAnim))
+			{
+				mLanternEquipState = eGunLanternEquipState_None;
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateAnimationStates(float afTimeStep) override
+	{
+		if (mlAnimState == eUsingItemAnimState_Loop)
+		{
+			float fFadeTime = mAimMode != mPrevAimMode ? 0.3f : 0.f;
+			bool bCustomCondition = mbLeaveState && GetShootAnimActive() == false;
+			int lState = UpdateStateAnims(msFocusLoopAnim_R, msFocusLoopAnim_L, true, fFadeTime, false, true, bCustomCondition);
+			
+			////////////////
+			// State over?
+			if (lState == -1 || CanUseGun() == false)
+			{
+				ChangeAnimState(eUsingItemAnimState_Outro);
+			}
+		}	
+	
+		////////////////
+		// Outro
+		else if (mlAnimState == eUsingItemAnimState_Outro)
+		{
+			int lState = UpdateStateAnims(msFocusOutroAnim_R, msFocusOutroAnim_L, false, 0.1f, true);
+			
+			////////////////
+			// State over?
+			if (lState == -1)
+			{
+				mBaseObj.mpPlayer.ChangeState(ePlayerState_Normal);
+			}
+		}
+		
+		else
+		{
+			iScrPlayerState_UsingItem_Base::UpdateAnimationStates(afTimeStep);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnUse() 
+	{
+		////////////////
+		// Add hint as given
+		tString sHintEntry = Hint_GetCurrentEntry();
+		if (sHintEntry == "HintAimGun" || sHintEntry == "HintAimGun_Toggle")
+			Hint_StopHint();
+		
+		Hint_AddAsGiven("Hints", "HintAimGun");
+		Hint_AddAsGiven("Hints", "HintAimGun_Toggle");
+		
+		////////////////
+		// Setup vars
+		cLuxMap@ pMap = cLux_GetCurrentMap();
+		if (pMap is null) return;
+		
+		bool bCanFire = Gun_GetCanFire(msWeaponType) || cLux_GetGodModeActivated();			
+		mfShootCooldownCount = mfShootCooldown;
+		
+		////////////////
+		// Trigger gun event
+		Gun_TriggerEvent(msWeaponType, eGunEvent_FireStart);
+		
+		////////////////
+		// Animation
+		mlAnimState = eUsingItemAnimState_Loop;
+		
+		int lAnimId = bCanFire ? GetRandomShootAnimId() : -1;
+		tString sGunAnim = GetGunFireAnimation(lAnimId);
+		tString sPlayerAnimR = GetPlayerFireAnimation(lAnimId, eGunAnimationLayer_RightArm);
+		tString sPlayerAnimL = GetPlayerFireAnimation(lAnimId, eGunAnimationLayer_LeftArm);
+		tString sPlayerHeadAnim = GetPlayerFireAnimation(lAnimId, eGunAnimationLayer_Head);
+		
+		Entity_PlayAnimation(msItemEntity, sGunAnim, 0.1f, false);
+		PlayerBody_PlayAnimation(sPlayerAnimR, ePlayerBodyAnimationLayer_RightArm, false, false, false, 0.1f);
+		
+		if (mAimMode == eGunAimMode_TwoHands)
+		{
+			PlayerBody_PlayAnimation(sPlayerAnimL, ePlayerBodyAnimationLayer_LeftArm, false, false, false, 0.1f);
+		}
+		
+		if (sPlayerHeadAnim != "")
+		{
+			PlayerBody_PlayAdditiveCameraAnimation(sPlayerHeadAnim, false, 0.1f, 1.f);
+		}
+		
+		msActivePlayerShootAnim = sPlayerAnimR;
+		
+		////////////////
+		// Make sure gun's loaded!
+		if (bCanFire == false)
+		{
+			Sound_PlayGui(msShootSound_Dry, 1.f, eSoundEntryType_GuiWorld);
+			
+			if (msShootSound_Dry == "weapons/shotgun/dry_fire")
+				Sound_AddClosedCaption("GeneralClosedCaptions", "ShotgunClicks");
+			else
+				Sound_AddClosedCaption("GeneralClosedCaptions", "GunClicks");
+			
+			cVector3f vSoundHeardEventPos = mBaseObj.mpPlayer.GetCharacterBody().GetPosition();
+			pMap.BroadcastSoundHeardEvent("Gunshot_Dry", vSoundHeardEventPos, 6.f, 1, false, true);
+			return;
+		}			
+		
+		iLuxEntity@ pEnt = cLux_ID_Prop(m_idItemEntity);
+		iPhysicsBody@ pBody = pEnt is null ? null : pEnt.GetBodyFromName("Body_BulletStart");
+		
+		if (pEnt is null) return;
+		
+		cMatrixf mtxMuzzleOrientation = pBody is null ? cLux_GetPlayer().GetCamera().GetMatrix() : pBody.GetWorldMatrix();
+		
+		SpawnProjectiles(mtxMuzzleOrientation);
+					
+		////////////////
+		// Sound
+		tString sSound;
+		tString sPrefix = cLux_GetSoundscapeHandler().GetCurrentSoundPrefix();
+		eSoundEntryType soundType = eSoundEntryType_GuiWorld;
+		
+		if (sPrefix == "small_room")			sSound = msShootSound_SmallRoom;
+		else if (sPrefix == "medium_room")		sSound = msShootSound_MediumRoom;
+		else if (sPrefix == "large_room")		sSound = msShootSound_LargeRoom;
+		else									sSound = msShootSound_Exterior;
+
+		if (Gun_GetMuffledEffectActive())
+		{
+			sSound = msShootSound_Muffled;
+			soundType = eSoundEntryType_Safe;
+		}
+		
+		Sound_PlayGui(sSound, 1.f, soundType);
+		
+		if (sPrefix != "exterior" && 
+			cScript_GetGlobalVarBool("GunMuffledEffectDisabled") == false)
+		{	
+			// TODO: Make a proper gun effect instead of using the hide mode one!
+			Gun_ActivateMuffledEffect(7.f);
+		}
+		
+		////////////////
+		// Particles
+		cParticleSystem@ pPS = pEnt.CreateParticleSystem("PS_GunFire", gsUsingGun_Aim_ShootPS, true, true);
+		if (pPS !is null)
+		{
+			cMatrixf mtxPS = mtxMuzzleOrientation;
+			mtxPS.SetTranslation(mtxPS.GetTranslation() - mtxPS.GetUp() * 0.02f);
+			pPS.SetWorldMatrix(mtxPS);
+		}
+			
+		///////////////
+		// Map callback
+		tString sCallback = "void OnGunshot()";
+		if (pMap.ScriptMethodExists(sCallback) && pMap.ScriptPrepare(sCallback))
+		{
+			pMap.ScriptExecute();
+		}
+		
+		////////////////
+		// Broadcast shot message
+		array<iLuxEntity@> vAgents;
+		pMap.GetEntityArray("*", eLuxEntityType_Agent, "", vAgents);
+		
+		for (int i = 0; i < vAgents.size(); ++i)
+		{
+			vAgents[i].BroadcastMessage(eCustomEntityMessage_PlayerShotGun, null, mtxMuzzleOrientation.GetTranslation(), -1);
+		}
+	}
+	
+	void SpawnProjectiles(const cMatrixf a_mtxOrientation)
+	{
+		Error("[PlayerState_UsingWeapon_Aim_Base] SpawnProjectile() is not implemented for this gun!");
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		////////////////
+		// Check shot cooldown
+		if (alAction == eAction_Interact && abPressed)
+		{
+			if (mfShootCooldownCount > 0.f)
+				return false;
+		}
+		
+		////////////////
+		// Flashlight
+		if (alAction == eAction_Flashlight && abPressed == false)
+		{
+			float fFlashlightPressedCount = mfFlashlightPressedCount;
+			mfFlashlightPressedCount = 0.f;
+			
+			 if (mbAllowUsingLantern == false || 
+				 mlAnimState == eUsingItemAnimState_Outro || 
+				 fFlashlightPressedCount >= 0.5f ||
+				 mLanternEquipState != eGunLanternEquipState_None ||
+				 ItemType_GetCountInInventory("DynamoLantern") == 0 ||
+				 Player_GetCanUseLightSource() == false) 
+			{
+				return false;
+			}
+			
+			int lHeldState = Item_GetHandHeldState(eItemHandlerHand_Left);
+			
+			////////////////
+			// Held
+			if (lHeldState == 3)
+			{
+				Player_ToggleLightSource();
+				mLanternEquipState = eGunLanternEquipState_Unequip;
+			}
+			
+			////////////////
+			// Unequipped
+			else if (lHeldState == 0)
+			{
+				mLanternEquipState = eGunLanternEquipState_Equip;
+			}
+		}
+		
+		return iScrPlayerState_UsingItem_Base::OnAction(alAction, abPressed);
+	}
+	
+	//------------------------------------------------------------
+
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		/////////////////
+		// Allow lean
+		if (alAnalogId == eAnalogType_Lean)
+		{
+			return true;
+		}
+		
+		////////////////
+		// Update base
+		bool bBase = iScrPlayerState_UsingItem_Base::OnAnalogInput(alAnalogId, avAmount);
+			
+		////////////////
+		// Look around!
+		if (alAnalogId == eAnalogType_Look)
+		{
+			////////////////
+			// Add yaw offset
+			if (mAimMode == eGunAimMode_OneHand)
+			{
+				if (mbWeaponSwayActive == false) return false;
+				
+				float fMul = Player_GetLookSpeedMul();
+				mfRightArmYawOffset += avAmount.x * fMul * -0.05f;
+				mfRightArmYawOffsetAdd += avAmount.x * fMul * -0.5f;
+			}
+			
+			return false;
+		}
+		
+		return bBase;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// HELPERS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	tString GetGunFireAnimation(int alIx)
+	{
+		Error("GetGunFireAnimation not implemented");
+		return "";
+	}
+	
+	//------------------------------------------------------------
+	
+	tString GetPlayerFireAnimation(int alIx, eGunAnimationLayer aLayer)
+	{
+		Error("GetPlayerFireAnimation not implemented");
+		return "";
+	}
+	
+	//------------------------------------------------------------
+	
+	int UpdateStateAnims(const tString &in asAnimR, const tString &in asAnimL, bool abLoop, float afFadeTime, 
+						 bool abLeftArmReturnToIdle, bool abUseCustomEndCondition = false, bool abCustomEndCondition = false)
+	{
+		////////////////
+		// Setup vars		
+		cAnimationState@ pPlayerAnimR = PlayerBody_GetAnimationState(asAnimR);
+		cAnimationState@ pPlayerAnimL = PlayerBody_GetAnimationState(asAnimL);	
+				
+		////////////////
+		// Play anims
+		bool bStateOK = mLanternEquipState == eGunLanternEquipState_None || 
+						mlAnimState == eUsingItemAnimState_Outro || 
+						mlAnimState == eUsingItemAnimState_Intro;
+		
+		bool bAnimStarted = pPlayerAnimR !is null && pPlayerAnimR.IsActive() == false;
+		bool bAnimOver = pPlayerAnimR !is null && pPlayerAnimR.IsActive() && pPlayerAnimR.IsOver();
+		
+		if (GetShootAnimActive() == false && bStateOK)
+		{
+			if (pPlayerAnimR !is null && pPlayerAnimR.IsActive() == false)
+			{
+				PlayerBody_PlayAnimation(asAnimR, ePlayerBodyAnimationLayer_RightArm, abLoop, false, false, afFadeTime);
+			}
+			
+			if (pPlayerAnimL !is null && pPlayerAnimL.IsActive() == false)
+			{
+				PlayerBody_PlayAnimation(asAnimL, ePlayerBodyAnimationLayer_LeftArm, abLoop, false, abLeftArmReturnToIdle, afFadeTime);
+			}
+		}
+				
+		////////////////
+		// Return
+		int lRet = 0;
+		if (abUseCustomEndCondition && abCustomEndCondition)
+		{
+			lRet = -1;
+		}
+		else if (bAnimStarted)
+		{
+			lRet = 1;
+		}
+		else if (bAnimOver)
+		{
+			lRet = -1;
+		}
+			
+		return lRet;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool UpdateLanternStateAnims(const tString &in asAnimL, const tString &in asAnimR)
+	{
+		cAnimationState@ pAnimL = PlayerBody_GetAnimationState(asAnimL);
+		cAnimationState@ pAnimR = PlayerBody_GetAnimationState(asAnimR);
+		
+		if (pAnimL !is null && pAnimL.IsActive() == false)
+		{
+			PlayerBody_PlayAnimation(asAnimL, ePlayerBodyAnimationLayer_LeftArm, false, false, false, 0.1f);
+		}
+		
+		if (pAnimR !is null && pAnimR.IsActive() == false && mlAnimState != eUsingItemAnimState_Intro)
+		{
+			PlayerBody_PlayAnimation(asAnimR, ePlayerBodyAnimationLayer_RightArm, false, false, false, 0.1f);
+		}
+		
+		return pAnimL !is null && pAnimL.IsOver();
+	}
+	
+	//------------------------------------------------------------
+	
+	void GetStateAnims(eUsingItemAnimState aState, tString &out asAnimR, tString &out asAnimL)
+	{
+		if (aState == eUsingItemAnimState_Intro)
+		{
+			if (mAimMode == eGunAimMode_OneHand)
+			{
+				asAnimL = "";
+				asAnimR = msAimIntroAnim;
+			}
+			else
+			{
+				asAnimL = msAimDualIntroLAnim;
+				asAnimR = msAimDualIntroRAnim;
+			}
+		}
+		else if (aState == eUsingItemAnimState_Loop)
+		{
+			if (mAimMode == eGunAimMode_OneHand)
+			{
+				asAnimL = "";
+				asAnimR = msAimLoopAnim;
+			}
+			else
+			{
+				asAnimL = msAimDualLoopLAnim;
+				asAnimR = msAimDualLoopRAnim;
+			}
+		}
+		else if (aState == eUsingItemAnimState_Outro)
+		{
+			if (mAimMode == eGunAimMode_OneHand)
+			{
+				asAnimL = "";
+				asAnimR = msAimOutroAnim;
+			}
+			else
+			{
+				asAnimL = msAimDualOutroLAnim;
+				asAnimR = msAimDualOutroRAnim;
+			}
+		}
+				
+		////////////////
+		// Don't override lantern anims
+		if (mLanternEquipState != eGunLanternEquipState_None && aState != eUsingItemAnimState_Outro)
+		{
+			asAnimL = "";
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	bool GetShootAnimActive()
+	{
+		cAnimationState@ pShootAnim = PlayerBody_GetAnimationState(msActivePlayerShootAnim);
+		return pShootAnim !is null && pShootAnim.IsActive() && pShootAnim.IsOver() == false;
+	}
+	
+	//------------------------------------------------------------
+	
+	int GetRandomShootAnimId()
+	{
+		Error("GetRandomShootAnimId not implemented!");
+		return -1;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool CanUseGun()
+	{
+		iPhysicsWorld@ pPhysicsWorld = cLux_GetCurrentMap().GetPhysicsWorld();
+		cCamera@ pCam = mBaseObj.mpPlayer.GetCamera();
+		
+		if (pCam is null) return false;
+		if (pPhysicsWorld is null) return false;
+		
+		////////////////////
+		// Only check if camera has moved since last
+		cVector3f vCamAngles(pCam.GetPitch(), pCam.GetYaw(), pCam.GetRoll());
+		cVector3f vPlayerPos = mBaseObj.mpPlayer.GetCharacterBody().GetPosition();
+		
+		bool bDoCheck = (vCamAngles - mvPrevCanUseGunCameraAngles).SqrLength() > 0.f ||
+						(vPlayerPos - mvPrevCanUseGunPlayerPos).SqrLength() > 0.f;
+		
+		mvPrevCanUseGunCameraAngles = vCamAngles;
+		mvPrevCanUseGunPlayerPos = vPlayerPos;
+		
+		if (bDoCheck == false)
+		{
+			return mbPrevCanUseGun;
+		}
+		
+		cVector3f vPush;
+		cVector3f vBoxOffset = cVector3f(0.f, -0.015f, -0.28f);
+		cMatrixf mtxBox = cMath_MatrixMul(pCam.GetMatrix(), cMath_MatrixTranslate(vBoxOffset));
+		mbPrevCanUseGun = pPhysicsWorld.CheckShapeWorldCollision(vPush, mpCollideShape, mtxBox, null, false, false, false, false) == false;
+		
+		return mbPrevCanUseGun;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool ForceDeactivateHandPlacement()
+	{
+		return false;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GLOBAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void _Global_CanUseGun()
+	{
+		cScript_SetGlobalReturnBool(CanUseGun() && Gun_GetReloadAnimationDone(msWeaponType));
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DEBUG
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+		
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY)
+	{			
+		return afStartY;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// PROPERTIES
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	int mlBulletType = eBulletType_Revolver;
+	
+	float mfShootCooldownCount = 0.f;
+	float mfShootCooldown = 0;
+	
+	float mfRightArmYawOffset = 0.f;
+	float mfRightArmYawOffsetAdd = 0.f;
+	float mfRightArmVel = 0.f;	
+	
+	[nosave] bool mbWeaponSwayActive = true;
+	[nosave] bool mbReduceCameraMotion = false;
+	
+	float mfFlashlightPressedCount = 0.f;
+	float mfReloadPressedCount = 0.f;
+	
+	bool mbPrevCanUseGun = false;
+	cVector3f mvPrevCanUseGunCameraAngles(0.f);
+	cVector3f mvPrevCanUseGunPlayerPos(0.f);
+	
+	array<int> mvShootAnimIds;
+
+	tString msActivePlayerShootAnim = "";
+	
+	eGunAimMode mAimMode = eGunAimMode_OneHand;
+	eGunAimMode mPrevAimMode = eGunAimMode_OneHand;
+	eGunLanternEquipState mLanternEquipState = eGunLanternEquipState_None;
+	bool mbAllowUsingLantern = false;
+	
+	[nosave] iCollideShape@ mpCollideShape = null;
+	
+	tString msWeaponType = "";
+	
+	float mfHandBoneAngleOffsetFadeSpeed = 0.f;
+	float mfHandBonePosOffsetFadeSpeedL = 0.f;
+	float mfHandBonePosOffsetFadeSpeedR = 0.f;
+		
+	float mfWristBonePitchOffset_Default;
+	float mfWristBoneYawOffset_Default;
+	cVector3f mvBonePosRelativeToCamL_Default;
+	cVector3f mvBonePosRelativeToCamR_Default;
+	
+	float mfWristBonePitchOffset_Crouch;
+	float mfWristBoneYawOffset_Crouch;
+	cVector3f mvBonePosRelativeToCamL_Crouch;
+	cVector3f mvBonePosRelativeToCamR_Crouch;
+	
+	float mfWristBonePitchOffset_LeanRight;
+	float mfWristBoneYawOffset_LeanRight;
+	cVector3f mvBonePosRelativeToCamL_LeanRight;
+	cVector3f mvBonePosRelativeToCamR_LeanRight;
+	
+	float mfWristBonePitchOffset_LeanLeft;
+	float mfWristBoneYawOffset_LeanLeft;
+	cVector3f mvBonePosRelativeToCamL_LeanLeft;
+	cVector3f mvBonePosRelativeToCamR_LeanLeft;
+	
+	float mfWristBonePitchOffset_LeanCrouchRight;
+	float mfWristBoneYawOffset_LeanCrouchRight;
+	cVector3f mvBonePosRelativeToCamL_LeanCrouchRight;
+	cVector3f mvBonePosRelativeToCamR_LeanCrouchRight;
+	
+	float mfWristBonePitchOffset_LeanCrouchLeft;
+	float mfWristBoneYawOffset_LeanCrouchLeft;
+	cVector3f mvBonePosRelativeToCamL_LeanCrouchLeft;
+	cVector3f mvBonePosRelativeToCamR_LeanCrouchLeft;
+
+	tString msAimIntroAnim = "";
+	tString msAimLoopAnim = "";
+	tString msAimOutroAnim = "";
+	tString msAimDualIntroLAnim = "";
+	tString msAimDualIntroRAnim = "";
+	tString msAimDualLoopLAnim = "";
+	tString msAimDualLoopRAnim = "";
+	tString msAimDualOutroLAnim = "";
+	tString msAimDualOutroRAnim = "";
+	
+	tString msShootSound_SmallRoom = "";
+	tString msShootSound_MediumRoom = "";
+	tString msShootSound_LargeRoom = "";
+	tString msShootSound_Exterior = "";
+	tString msShootSound_Muffled = "";	
+	tString msShootSound_Dry = "";	
+	
+	//------------------------------------------------------------
+}

@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 601 [Build 48460], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>
+                Plug-in: [Build 48460];
+                Use Absolute Path: No;
+                Merge Reference Items: No;
+                Save Hidden Items: No;
+                Save Cameras: No;
+                Save Lights: No;
+                Save Locators: Yes;
+                Save Triangles as Triangles: No;
+                Bake Matrices: Yes;
+                Save Vertex Normals: Yes;
+                Save UV Texture Coordinates: Yes;
+                Save Vertex Colors: Yes;
+                Save Vertex Weights: Yes;
+                Save Animation: Yes;
+                Sample Animation: No;
+                Sample Animation Start: 0;
+                Sample Animation End: 60;
+                Save modo Profile: No;
+                Save Maya Profile: Yes;
+                Save 3ds Max Profile: No;
+                Formatted Arrays: Yes;
+            </comments>
+            <source_data>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/communication_table_pplant/communication_table_pplant.lxo</source_data>
+        </contributor>
+        <created>2013-02-19T16:17:05Z</created>
+        <modified>2013-02-19T16:17:05Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/communication_table_pplant/communication_table_pplant.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/communication_table_pplant/communication_table_pplant_GUI.psd</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/communication_table_pplant/communication_table_pplant_nrm.tga</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/My%20Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/tech/communication_table_pplant/communication_table_pplant_spec.tga</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-communication_table_pplant" name="communication_table_pplant">
+            <instance_effect url="#Effect-communication_table_pplant" />
+        </material>
+        <material id="Material-communication_table_pplant_GUI" name="communication_table_pplant_GUI">
+            <instance_effect url="#Effect-communication_table_pplant_GUI" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-communication_table_pplant" name="communication_table_pplant">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <newparam sid="Image0004-surface">
+                    <surface type="2D">
+                        <init_from>Image0004</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0004-sampler">
+                    <sampler2D>
+                        <source>Image0004-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <texture texture="Image0004-sampler" texcoord="uvSet1" />
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">24.2515</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-communication_table_pplant_GUI" name="communication_table_pplant_GUI">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh001" name="GUI">
+            <mesh>
+                <source id="Geometry-mesh001-positions" name="positions">
+                    <float_array id="Geometry-mesh001-positions-array" count="24">
+                        0.22697 0.124537 -0.000168018
+                        0.305068 0.122688 -5.64328e-005
+                        0.2952 -0.123468 0.00021975
+                        0.0380604 -0.123691 -0.000140208
+                        -0.241924 0.123958 -0.000623209
+                        -0.313093 0.120113 0.00252249
+                        -0.232468 -0.122327 -0.000404257
+                        -0.304351 -0.126326 0.00287516
+                    </float_array>
+                    <technique_common>
+                        <accessor count="8" source="#Geometry-mesh001-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh001-normals" name="normals">
+                    <float_array id="Geometry-mesh001-normals-array" count="24">
+                        0.0454052 0.00304015 0.998964
+                        0.0294907 0.00215715 0.999563
+                        0.0447116 0.00280913 0.998996
+                        0.014028 0.00142747 0.999901
+                        -0.00125786 0.0010693 0.999999
+                        -0.00111482 0.000960492 0.999999
+                        -0.00140088 0.00117814 0.999998
+                        -0.00140088 0.00117814 0.999998
+                    </float_array>
+                    <technique_common>
+                        <accessor count="8" source="#Geometry-mesh001-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh001-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh001-uvSet1-array" count="16">
+                        0.001131 0.000203222
+                        0.119073 0.000203222
+                        0.001131 0.999755
+                        0.122021 0.999755
+                        0.860927 0.999755
+                        0.545263 0.000203222
+                        0.998523 0.000203222
+                        0.998523 0.999755
+                    </float_array>
+                    <technique_common>
+                        <accessor count="8" source="#Geometry-mesh001-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh001-Falloff" name="Falloff">
+                    <float_array id="Geometry-mesh001-Falloff-array" count="1">
+                        0
+                    </float_array>
+                    <technique_common>
+                        <accessor count="1" source="#Geometry-mesh001-Falloff-array" stride="1">
+                            <param name="WEIGHT" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh001-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh001-positions" />
+                </vertices>
+                <polylist count="6" material="Material-communication_table_pplant_GUI">
+                    <input semantic="VERTEX" source="#Geometry-mesh001-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh001-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh001-uvSet1" offset="2" set="0" />
+                    <input semantic="WEIGHT" source="#Geometry-mesh001-Falloff" offset="3" set="0" />
+                    <vcount>3 3 3 3 3 3</vcount>
+                    <p>7 0 0 0 6 1 1 0 5 2 2 0 4 3 3 0 5 2 2 0 6 1 1 0 0 4 4 0 4 3 3 0 3 5 5 0 6 1 1 0 3 5 5 0 4 3 3 0 3 5 5 0 2 6 6 0 0 4 4 0 1 7 7 0 0 4 4 0 2 6 6 0</p>
+                </polylist>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh001Node" name="GUI" type="NODE">
+                <matrix sid="transform">
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    </matrix>
+                <instance_geometry url="#Geometry-mesh001">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-communication_table_pplant_GUI" target="#Material-communication_table_pplant_GUI">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <extra>
+                <technique profile="MAYA">
+                    <start_time>0</start_time>
+                    <end_time>5</end_time>
+                </technique>
+            </extra>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

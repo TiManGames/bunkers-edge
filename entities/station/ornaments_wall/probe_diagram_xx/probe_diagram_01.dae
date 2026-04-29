@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 66614], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 66614]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 276; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/ornaments_wall/probe_diagram_xx/probe_diagram_xx.lxo</source_data>
+        </contributor>
+        <created>2014-03-02T14:11:44Z</created>
+        <modified>2014-03-02T14:11:44Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/furniture/whiteboard_freestanding/whiteboard_freestanding.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/furniture/whiteboard_freestanding/whiteboard_freestanding_nrm.tga</init_from>
+        </image>
+        <image id="Image0003" name="Image0003">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/ornaments_wall/probe_diagram_xx/probe_diagram_xx.psd</init_from>
+        </image>
+        <image id="Image0004" name="Image0004">
+            <init_from>file:///D:/Work/other/texture%20bases%20and%20stuff/checker_512.gif</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-exploded_diagram" name="exploded_diagram">
+            <instance_effect url="#Effect-exploded_diagram" />
+        </material>
+        <material id="Material-whiteboard_freestanding" name="whiteboard_freestanding">
+            <instance_effect url="#Effect-whiteboard_freestanding" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-exploded_diagram" name="exploded_diagram">
+            <profile_COMMON>
+                <newparam sid="Image0003-surface">
+                    <surface type="2D">
+                        <init_from>Image0003</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0003-sampler">
+                    <sampler2D>
+                        <source>Image0003-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0003-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-whiteboard_freestanding" name="whiteboard_freestanding">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.9 0.9 0.9 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">15.455</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh019" name="frame">
+            <mesh>
+                <source id="Geometry-mesh019-positions" name="positions">
+                    <float_array id="Geometry-mesh019-positions-array" count="48">-1.02043 -0.554709 -0.013521 -1.02043 0.554709 -0.013521 1.02043 0.554709 -0.013521 1.02043 -0.554709 -0.013521 -1.02043 -0.554709 0.013521 -1.02043 0.554709 0.013521 1.02043 0.554709 0.013521 1.02043 -0.554709 0.013521 -0.995391 -0.52967 0.013521 -0.995391 0.52967 0.013521 0.995391 0.52967 0.013521 0.995391 -0.52967 0.013521 -0.995391 -0.52967 0.00413143 -0.995391 0.52967 0.00413143 0.995391 0.52967 0.00413143 0.995391 -0.52967 0.00413143</float_array>
+                    <technique_common>
+                        <accessor count="16" source="#Geometry-mesh019-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh019-normals" name="normals">
+                    <float_array id="Geometry-mesh019-normals-array" count="54">0.894427 -1.50169e-009 0.447214 0.447214 2.82317e-009 0.894427 -0.707107 2.23191e-009 0.707107 -0.707107 6.8382e-009 0.707107 -0.894427 -1.50169e-009 0.447214 -0.447214 2.82317e-009 0.894427 0.707107 2.23191e-009 0.707107 0.707107 6.83821e-009 0.707107 -1 0 0 0 0.707107 0.707107 0 1 0 0 -0.894427 0.447214 0 -0.447214 0.894427 0 0.707107 0.707107 0 -1 0 1 0 0 0 -0.894427 0.447214 0 -0.447214 0.894427</float_array>
+                    <technique_common>
+                        <accessor count="18" source="#Geometry-mesh019-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh019-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh019-uvSet1-array" count="64">0.430857 0.105072 0.739744 0.105071 0.437828 0.119014 0.732772 0.119014 0.431032 0.0428586 0.740699 0.0400205 0.43802 0.0567664 0.73371 0.0540565 0.732772 0.124243 0.437828 0.124243 0.740699 0.0249307 0.431032 0.0277688 0.00146109 0.0845005 0.422003 0.0845021 0.00146109 0.0992614 0.422003 0.0992628 0.00263748 0.0392039 0.424188 0.0382573 0.00946373 0.0528863 0.417314 0.0519706 0.417305 0.0571075 0.00945476 0.058023 0.00266346 0.02441 0.424214 0.0234633 0.430857 0.0900137 0.739743 0.090013 0.73371 0.0592958 0.43802 0.0620059 0.415169 0.0708345 0.00829494 0.0708328 0.00829494 0.0657075 0.415169 0.0657091</float_array>
+                    <technique_common>
+                        <accessor count="32" source="#Geometry-mesh019-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh019-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh019-positions" />
+                </vertices>
+                <triangles count="24" material="Material-whiteboard_freestanding">
+                    <input semantic="VERTEX" source="#Geometry-mesh019-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh019-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh019-uvSet1" offset="2" set="0" />
+                    <p>7 0 0 6 1 1 11 2 2 10 3 3 11 2 2 6 1 1 5 4 4 4 5 5 9 6 6 8 7 7 9 6 6 4 5 5 14 8 8 15 8 9 11 2 2 11 2 2 10 3 3 14 8 8 4 5 5 5 4 4 0 8 10 1 8 11 0 8 10 5 4 4 5 9 12 6 9 13 1 10 14 2 10 15 1 10 14 6 9 13 4 11 16 7 12 17 8 13 18 11 13 19 8 13 18 7 12 17 15 10 20 12 10 21 8 13 18 8 13 18 11 13 19 15 10 20 0 14 22 3 14 23 4 11 16 7 12 17 4 11 16 3 14 23 3 15 24 2 15 25 7 0 0 6 1 1 7 0 0 2 15 25 9 6 6 8 7 7 12 15 26 12 15 26 13 15 27 9 6 6 10 16 28 9 17 29 13 14 30 13 14 30 14 14 31 10 16 28 5 9 12 9 17 29 6 9 13 10 16 28 6 9 13 9 17 29</p>
+                </triangles>
+            </mesh>
+        </geometry>
+        <geometry id="Geometry-mesh057" name="foot">
+            <mesh>
+                <source id="Geometry-mesh057-positions" name="positions">
+                    <float_array id="Geometry-mesh057-positions-array" count="12">-0.995391 -0.52967 0.00413143 -0.995391 0.52967 0.00413143 0.995391 0.52967 0.00413143 0.995391 -0.52967 0.00413143</float_array>
+                    <technique_common>
+                        <accessor count="4" source="#Geometry-mesh057-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh057-normals" name="normals">
+                    <float_array id="Geometry-mesh057-normals-array" count="3">0 -3.07703e-009 1</float_array>
+                    <technique_common>
+                        <accessor count="1" source="#Geometry-mesh057-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh057-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh057-uvSet1-array" count="8">0 1 0 0.5 1 1 1 0.5</float_array>
+                    <technique_common>
+                        <accessor count="4" source="#Geometry-mesh057-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh057-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh057-positions" />
+                </vertices>
+                <triangles count="2" material="Material-exploded_diagram">
+                    <input semantic="VERTEX" source="#Geometry-mesh057-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh057-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh057-uvSet1" offset="2" set="0" />
+                    <p>1 0 0 0 0 1 2 0 2 3 0 3 2 0 2 0 0 1</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh057Node" name="foot" type="NODE">
+                <instance_geometry url="#Geometry-mesh057">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-exploded_diagram" target="#Material-exploded_diagram">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+                <node id="Geometry-mesh019Node" name="frame" type="NODE">
+                    <translate sid="translation011">0 0 0</translate>
+                    <rotate sid="rotation010Y">0 1 0 0</rotate>
+                    <rotate sid="rotation010X">1 0 0 0</rotate>
+                    <rotate sid="rotation010Z">0 0 1 0</rotate>
+                    <scale sid="scale012">1 1 1</scale>
+                    <instance_geometry url="#Geometry-mesh019">
+                        <bind_material>
+                            <technique_common>
+                                <instance_material symbol="Material-whiteboard_freestanding" target="#Material-whiteboard_freestanding">
+                                    <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
+                            </technique_common>
+                        </bind_material>
+                    </instance_geometry>
+                </node>
+            </node>
+            <node id="groupLocator033Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator002Node" name="probe_diagram_xx__Image___Texture_" type="NODE">
+                    <translate sid="translation006">0 0 0</translate>
+                    <rotate sid="rotation005Y">0 1 0 0</rotate>
+                    <rotate sid="rotation005X">1 0 0 0</rotate>
+                    <rotate sid="rotation005Z">0 0 1 0</rotate>
+                    <scale sid="scale003">1 1 1</scale>
+                </node>
+                <node id="txtrLocator024Node" name="whiteboard_freestanding_nrm__Image___Texture_" type="NODE">
+                    <translate sid="translation027">0 0 0</translate>
+                    <rotate sid="rotation026Y">0 1 0 0</rotate>
+                    <rotate sid="rotation026X">1 0 0 0</rotate>
+                    <rotate sid="rotation026Z">0 0 1 0</rotate>
+                    <scale sid="scale025">1 1 1</scale>
+                </node>
+                <node id="txtrLocator028Node" name="whiteboard_freestanding__Image___Texture_" type="NODE">
+                    <translate sid="translation031">0 0 0</translate>
+                    <rotate sid="rotation030Y">0 1 0 0</rotate>
+                    <rotate sid="rotation030X">1 0 0 0</rotate>
+                    <rotate sid="rotation030Z">0 0 1 0</rotate>
+                    <scale sid="scale029">1 1 1</scale>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

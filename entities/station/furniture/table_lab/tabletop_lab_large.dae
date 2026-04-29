@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <authoring_tool>modo 701 [Build 66614], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 66614]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 276; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/furniture/table_lab/tabletop_lab_large.lxo</source_data>
+        </contributor>
+        <created>2014-02-26T09:01:44Z</created>
+        <modified>2014-02-26T09:01:44Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/entities/station/furniture/table_lab/table_lab.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-Default" name="Default">
+            <instance_effect url="#Effect-Default" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-Default" name="Default">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh019" name="Mesh">
+            <mesh>
+                <source id="Geometry-mesh019-positions" name="positions">
+                    <float_array id="Geometry-mesh019-positions-array" count="24">-0.76446 0.0342325 -1.79251 0.76446 0.0342325 -1.79251 -0.76446 0.0342325 1.83721 0.76446 0.0342325 1.83721 -0.76446 -0.0418955 -1.79251 0.76446 -0.0418955 -1.79251 -0.76446 -0.0418955 1.83721 0.76446 -0.0418955 1.83721</float_array>
+                    <technique_common>
+                        <accessor count="8" source="#Geometry-mesh019-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh019-normals" name="normals">
+                    <float_array id="Geometry-mesh019-normals-array" count="18">0 0 -1 -1 0 0 1 0 0 0 -1 0 0 1 0 0 0 1</float_array>
+                    <technique_common>
+                        <accessor count="6" source="#Geometry-mesh019-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh019-Texture" name="Texture">
+                    <float_array id="Geometry-mesh019-Texture-array" count="32">0.662887 0.956473 0.00661281 0.956473 0.662887 0.940134 0.00661281 0.940134 0.675705 0.780657 0.675705 0.00632622 0.708186 0.780657 0.708186 0.00632622 0.666779 0.00573386 0.0124413 0.00573386 0.666779 0.782447 0.0124413 0.782447 0.00618664 0.976473 0.662461 0.976473 0.00618664 0.960134 0.662461 0.960134</float_array>
+                    <technique_common>
+                        <accessor count="16" source="#Geometry-mesh019-Texture-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh019-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh019-positions" />
+                </vertices>
+                <triangles count="12" material="Material-Default">
+                    <input semantic="VERTEX" source="#Geometry-mesh019-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh019-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh019-Texture" offset="2" set="0" />
+                    <p>0 0 0 1 0 1 4 0 2 5 0 3 4 0 2 1 0 1 2 1 4 0 1 5 6 1 6 4 1 7 6 1 6 0 1 5 1 2 5 3 2 4 5 2 7 7 2 6 5 2 7 3 2 4 4 3 8 5 3 9 6 3 10 7 3 11 6 3 10 5 3 9 0 4 8 2 4 10 1 4 9 3 4 11 1 4 9 2 4 10 3 5 12 2 5 13 7 5 14 6 5 15 7 5 14 2 5 13</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh019Node" name="Mesh" type="NODE">
+                <instance_geometry url="#Geometry-mesh019">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-Default" target="#Material-Default">
+                                <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator025Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator020Node" name="table_lab__Image___Texture_" type="NODE">
+                    <translate sid="translation023">0 0 0</translate>
+                    <rotate sid="rotation022Y">0 1 0 0</rotate>
+                    <rotate sid="rotation022X">1 0 0 0</rotate>
+                    <rotate sid="rotation022Z">0 0 1 0</rotate>
+                    <scale sid="scale021">1 1 1</scale>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

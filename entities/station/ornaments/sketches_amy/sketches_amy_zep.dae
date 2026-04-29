@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 2.72.0 commit date:2014-10-21, commit time:11:38, hash:9e963ae</authoring_tool>
+    </contributor>
+    <created>2015-06-16T21:13:44</created>
+    <modified>2015-06-16T21:13:44</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_images>
+    <image id="sketches_amy_zep_dds" name="sketches_amy_zep_dds">
+      <init_from>sketches_amy_zep.dds</init_from>
+    </image>
+  </library_images>
+  <library_effects>
+    <effect id="sketches_amy_zep-effect">
+      <profile_COMMON>
+        <newparam sid="sketches_amy_zep_dds-surface">
+          <surface type="2D">
+            <init_from>sketches_amy_zep_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="sketches_amy_zep_dds-sampler">
+          <sampler2D>
+            <source>sketches_amy_zep_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="sketches_amy_zep_dds-sampler" texcoord="UVMap"/>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">50</float>
+            </shininess>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="sketches_amy_zep-material" name="sketches_amy_zep">
+      <instance_effect url="#sketches_amy_zep-effect"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="Plane-mesh" name="Plane">
+      <mesh>
+        <source id="Plane-mesh-positions">
+          <float_array id="Plane-mesh-positions-array" count="84">-0.2857308 -0.4422995 0.0141803 0.2857308 -0.4422995 0.0141803 -0.2857308 0.4422995 0.0141803 0.2857308 0.4422995 0.0141803 -0.2537261 -0.4422995 0.005811214 -0.175787 -0.4422995 0.001028895 0 -0.4422995 0.001028895 0.175787 -0.4422995 0.001028895 0.2537261 -0.4422995 0.005811214 0.2537261 0.4422995 0.005811214 0.175787 0.4422995 0.001028895 0 0.4422995 0.001028895 -0.175787 0.4422995 0.001028895 -0.2537261 0.4422995 0.005811214 -0.2857308 -0.4422995 0.01353883 0.2857308 -0.4422995 0.01353883 -0.2857308 0.4422995 0.01353883 0.2857308 0.4422995 0.01353883 -0.2537261 -0.4422995 0.005169749 -0.175787 -0.4422995 3.8747e-4 0 -0.4422995 3.8747e-4 0.175787 -0.4422995 3.8747e-4 0.2537261 -0.4422995 0.005169749 0.2537261 0.4422995 0.005169749 0.175787 0.4422995 3.8747e-4 0 0.4422995 3.8747e-4 -0.175787 0.4422995 3.8747e-4 -0.2537261 0.4422995 0.005169749</float_array>
+          <technique_common>
+            <accessor source="#Plane-mesh-positions-array" count="28" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane-mesh-normals">
+          <float_array id="Plane-mesh-normals-array" count="84">-0.2529679 0 0.9674673 -0.2529679 0 0.9674673 -0.1578417 0 0.9874569 0.1578417 0 0.9874569 0.1578417 0 0.9874569 0.2529679 0 0.9674673 0.03061002 0 0.9995117 0.03061002 0 0.9995117 0 0 1 0 0 1 -0.03061002 0 0.9995117 -0.03061002 0 0.9995117 -0.1578417 0 0.9874569 0.1578417 0 -0.9874569 0.2529679 0 -0.9674673 0.2529679 0 -0.9674673 -0.2529679 0 -0.9674673 -0.1578417 0 -0.9874569 -0.1578417 0 -0.9874569 -0.03061002 0 -0.9995117 -0.03061002 0 -0.9995117 0 0 -1 0 0 -1 0.03061002 0 -0.9995117 0.03061002 0 -0.9995117 0.1578417 0 -0.9874569 0.2529679 0 0.9674673 -0.2529679 0 -0.9674673</float_array>
+          <technique_common>
+            <accessor source="#Plane-mesh-normals-array" count="28" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plane-mesh-map-0">
+          <float_array id="Plane-mesh-map-0-array" count="144">0.03633505 0.9788295 0.03633517 0.2238662 0.06660926 0.2238662 0.5312991 0.9788286 0.5312977 0.2238654 0.5615718 0.2238654 0.4598351 0.9788287 0.4598336 0.2238655 0.5312977 0.2238654 0.2989549 0.978829 0.2989535 0.2238658 0.4598336 0.2238655 0.1380746 0.9788294 0.1380734 0.2238661 0.2989535 0.2238658 0.06661063 0.9788295 0.06660926 0.2238662 0.1380734 0.2238661 0.6234721 0.4584249 0.6023269 0.4584249 0.6023259 0.9790758 0.9691819 0.458425 0.9480368 0.458425 0.9480368 0.9790759 0.9480368 0.458425 0.8981223 0.4584249 0.8981223 0.9790759 0.8981223 0.4584249 0.7857544 0.458425 0.7857544 0.9790759 0.7857544 0.458425 0.6733868 0.4584249 0.6733865 0.9790758 0.6733868 0.4584249 0.6234721 0.4584249 0.623472 0.9790758 0.06661063 0.9788295 0.03633505 0.9788295 0.06660926 0.2238662 0.5615746 0.9788285 0.5312991 0.9788286 0.5615718 0.2238654 0.5312991 0.9788286 0.4598351 0.9788287 0.5312977 0.2238654 0.4598351 0.9788287 0.2989549 0.978829 0.4598336 0.2238655 0.2989549 0.978829 0.1380746 0.9788294 0.2989535 0.2238658 0.1380746 0.9788294 0.06661063 0.9788295 0.1380734 0.2238661 0.623472 0.9790758 0.6234721 0.4584249 0.6023259 0.9790758 0.969183 0.9790758 0.9691819 0.458425 0.9480368 0.9790759 0.9480368 0.9790759 0.9480368 0.458425 0.8981223 0.9790759 0.8981223 0.9790759 0.8981223 0.4584249 0.7857544 0.9790759 0.7857544 0.9790759 0.7857544 0.458425 0.6733865 0.9790758 0.6733865 0.9790758 0.6733868 0.4584249 0.623472 0.9790758</float_array>
+          <technique_common>
+            <accessor source="#Plane-mesh-map-0-array" count="72" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Plane-mesh-vertices">
+          <input semantic="POSITION" source="#Plane-mesh-positions"/>
+        </vertices>
+        <polylist material="sketches_amy_zep-material" count="24">
+          <input semantic="VERTEX" source="#Plane-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plane-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plane-mesh-map-0" offset="2" set="0"/>
+          <vcount>3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 </vcount>
+          <p>1 0 0 3 1 1 9 2 2 4 3 3 13 4 4 2 5 5 5 6 6 12 7 7 13 4 8 6 8 9 11 9 10 12 7 11 7 10 12 10 11 13 11 9 14 8 12 15 9 2 16 10 11 17 23 13 18 17 14 19 15 15 20 16 16 21 27 17 22 18 18 23 27 17 24 26 19 25 19 20 26 26 19 27 25 21 28 20 22 29 25 21 30 24 23 31 21 24 32 24 23 33 23 13 34 22 25 35 8 12 36 1 0 37 9 2 38 0 26 39 4 3 40 2 5 41 4 3 42 5 6 43 13 4 44 5 6 45 6 8 46 12 7 47 6 8 48 7 10 49 11 9 50 7 10 51 8 12 52 10 11 53 22 25 54 23 13 55 15 15 56 14 27 57 16 16 58 18 18 59 18 18 60 27 17 61 19 20 62 19 20 63 26 19 64 20 22 65 20 22 66 25 21 67 21 24 68 21 24 69 24 23 70 22 25 71</p>
+        </polylist>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_controllers/>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="Plane" name="Plane" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Plane-mesh">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="sketches_amy_zep-material" target="#sketches_amy_zep-material">
+                <bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

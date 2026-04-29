@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marcus</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.3.1;  Revision: 847M;  Platform: x64;  Configuration: Release_Max2011_static</authoring_tool>
+      <source_data>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch05/tech_camera_flesher/camera_flesher/originals/camera_flesher.max</source_data>
+    </contributor>
+    <created>2012-06-30T18:27:32</created>
+    <modified>2012-06-30T18:27:32</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="_2_-_Default">
+      <profile_COMMON>
+        <newparam sid="camera_flesher_illum_dds-surface">
+          <surface type="2D">
+            <init_from>camera_flesher_illum_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="camera_flesher_illum_dds-sampler">
+          <sampler2D>
+            <source>camera_flesher_illum_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="camera_flesher_dds-surface">
+          <surface type="2D">
+            <init_from>camera_flesher_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="camera_flesher_dds-sampler">
+          <sampler2D>
+            <source>camera_flesher_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="camera_flesher_spec_dds-surface">
+          <surface type="2D">
+            <init_from>camera_flesher_spec_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="camera_flesher_spec_dds-sampler">
+          <sampler2D>
+            <source>camera_flesher_spec_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="camera_flesher_nrm_dds-surface">
+          <surface type="2D">
+            <init_from>camera_flesher_nrm_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="camera_flesher_nrm_dds-sampler">
+          <sampler2D>
+            <source>camera_flesher_nrm_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <texture texture="camera_flesher_illum_dds-sampler" texcoord="CHANNEL1"/>
+            </emission>
+            <ambient>
+              <color>0.5882353 0.5882353 0.5882353 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="camera_flesher_dds-sampler" texcoord="CHANNEL1"/>
+            </diffuse>
+            <specular>
+              <color>0.9 0.9 0.9 1</color>
+            </specular>
+            <shininess>
+              <float>9.999999</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+          <extra>
+            <technique profile="OpenCOLLADA3dsMax">
+              <specularLevel>
+                <texture texture="camera_flesher_spec_dds-sampler" texcoord="CHANNEL1"/>
+              </specularLevel>
+              <bump bumptype="HEIGHTFIELD">
+                <texture texture="camera_flesher_nrm_dds-sampler" texcoord="CHANNEL1"/>
+              </bump>
+            </technique>
+          </extra>
+        </technique>
+      </profile_COMMON>
+      <extra>
+        <technique profile="OpenCOLLADA3dsMax">
+          <extended_shader>
+            <apply_reflection_dimming>0</apply_reflection_dimming>
+            <dim_level>0</dim_level>
+            <falloff_type>0</falloff_type>
+            <index_of_refraction>1.5</index_of_refraction>
+            <opacity_type>0</opacity_type>
+            <reflection_level>3</reflection_level>
+            <wire_size>1</wire_size>
+            <wire_units>0</wire_units>
+          </extended_shader>
+          <shader>
+            <ambient_diffuse_lock>1</ambient_diffuse_lock>
+            <ambient_diffuse_texture_lock>1</ambient_diffuse_texture_lock>
+            <diffuse_specular_lock>0</diffuse_specular_lock>
+            <soften>0.1</soften>
+            <use_self_illum_color>0</use_self_illum_color>
+          </shader>
+        </technique>
+      </extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="_2_-_Default-material" name="_2_-_Default">
+      <instance_effect url="#_2_-_Default"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-camera_flesher_base" name="camera_flesher_base">
+      <mesh>
+        <source id="geom-camera_flesher_base-positions">
+          <float_array id="geom-camera_flesher_base-positions-array" count="78">-0.8442327 -2.963426 -10.87164 0.8442327 -2.963426 -10.87164 -0.8442327 -2.963427 10.87164 0.8442327 -2.963427 10.87164 -0.8442327 2.963427 -10.87164 0.8442327 2.963427 -10.87164 0.8442327 2.963426 10.87164 -0.8442327 2.963426 10.87164 -2.410388 -2.963426 -2.428594 -2.410388 2.963426 -2.428593 0.8442327 -2.963426 -1.29535e-7 -2.410388 -2.963426 2.428593 0.8442327 2.963426 1.29535e-7 -2.410388 2.963426 2.428594 -29.66591 -2.963426 2.428593 -29.66591 2.963426 2.428594 -29.66591 2.963426 -0.09359308 -29.66591 -2.963426 -0.09359333 -29.2426 -2.514303 2.262868 -23.98858 -2.514303 2.262868 -29.2426 -2.514303 5.054611 -23.98858 -2.514303 5.054611 -29.2426 2.514303 2.262868 -23.98858 2.514303 2.262868 -23.98858 2.514303 5.054611 -29.2426 2.514303 5.054611</float_array>
+          <technique_common>
+            <accessor source="#geom-camera_flesher_base-positions-array" count="26" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-camera_flesher_base-normals">
+          <float_array id="geom-camera_flesher_base-normals-array" count="204">0 -1 -5.64769e-8 7.66603e-9 -1 -5.35218e-8 1.35815e-8 -1 -2.05461e-8 0 1 5.64769e-8 -1.35815e-8 1 2.05461e-8 -7.66603e-9 1 5.35218e-8 0 0 -1 0 0 -1 -0.6393805 0 -0.7688904 -0.6393806 3.66983e-9 -0.7688904 1 0 0 1 0 0 1 0 0 1 0 0 -0.6393805 0 0.7688904 -0.6393806 -3.66983e-9 0.7688904 0 0 1 0 0 1 -0.9832272 -9.03016e-9 0.1823851 -0.9832272 -1.46736e-8 0.1823851 0 -1 -2.59605e-8 -7.66603e-9 -1 -5.35218e-8 -1.33252e-8 -1 -2.01584e-8 1.33252e-8 1 2.01584e-8 7.66603e-9 1 5.35218e-8 0 1 2.59605e-8 1 0 0 1 0 0 -0.9832272 9.03016e-9 -0.1823851 -0.9832272 1.46736e-8 -0.1823851 -1 0 0 -1 0 0 -1 0 0 -1 0 0 0 -8.04537e-8 1 0 -8.04537e-8 1 0 -8.04537e-8 1 0 -8.04537e-8 1 0 1 0 0 1 0 -0.08535806 7.50562e-8 -0.9963503 -0.08535807 8.01601e-8 -0.9963503 -0.08535806 4.76889e-8 -0.9963503 -0.08535806 4.2585e-8 -0.9963503 0 -1 0 0 -1 0 0 -1 -5.64769e-8 0 1 5.64769e-8 0 -1 -8.54013e-8 0 -1 -8.54013e-8 0 -1 -8.54013e-8 0 -1 -8.54013e-8 0 1 8.54013e-8 0 1 8.54013e-8 0 1 8.54013e-8 0 1 8.54013e-8 1 0 0 1 0 0 1 0 0 1 0 0 0 0 1 0 0 1 0 0 1 0 0 1 -1 0 0 -1 0 0 -1 0 0 -1 0 0</float_array>
+          <technique_common>
+            <accessor source="#geom-camera_flesher_base-normals-array" count="68" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-camera_flesher_base-map1">
+          <float_array id="geom-camera_flesher_base-map1-array" count="204">1.360714 0.5764253 0 1.344938 0.5764257 0 1.375348 0.7342922 0 0.3607136 0.5764253 0 0.7034345 0.8381119 0 0.7160568 0.8381119 0 0.7160568 0.9120383 0 0.7034345 0.9120383 0 0.4354307 0.9187596 0 0.4480532 0.9187596 0 0.6744989 0.7446476 0 0.6113191 0.7446468 0 0.4480532 0.9926859 0 0.4354307 0.9926859 0 0.5150337 0.9187596 0 0.5122475 0.9187596 0 0.5122475 0.9926859 0 0.5150337 0.9926859 0 0.6392405 0.8381119 0 0.6364542 0.8381119 0 0.3753482 0.7342922 0 0.3449376 0.5764257 0 1.344939 0.7797024 0 1.34494 0.982978 0 0.6364542 0.9120383 0 0.6392405 0.9120383 0 0.716128 0.9187596 0 0.4346229 0.8381119 0 0.4346229 0.9120383 0 0.716128 0.9926859 0 0.6113194 0.6777287 0 0.674499 0.6777295 0 0.4101261 0.9187596 0 0.4328162 0.9187596 0 0.4328162 0.9926859 0 0.4101261 0.9926859 0 1.375349 0.8251109 0 0.3753489 0.8251109 0 0.3449405 0.982978 0 0.3449391 0.7797024 0 0.6300051 0.7779445 0 0.6300054 0.8251035 0 1.630005 0.8251035 0 1.630005 0.7779445 0 1.360717 0.9829776 0 0.3607165 0.9829776 0 0.5481395 0.7446457 0 0.5481398 0.6777276 0 0.1179595 0.6760294 0 0.1179594 0.728198 0 0.07094759 0.7281975 0 0.07094768 0.6760289 0 0.1179594 0.7378563 0 0.1179593 0.8263778 0 0.07094741 0.8263776 0 0.07094756 0.7378559 0 0.1179593 0.8167195 0 0.1179592 0.8785462 0 0.07094732 0.8785459 0 0.07094744 0.8167192 0 0.3873304 0.8735815 0 0.4284961 0.8735815 0 0.4284961 0.9100772 0 0.3873304 0.9100772 0 1.38733 0.8735815 0 1.38733 0.9100772 0 1.428496 0.9100772 0 1.428496 0.8735815 0</float_array>
+          <technique_common>
+            <accessor source="#geom-camera_flesher_base-map1-array" count="68" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-camera_flesher_base-map1-textangents">
+          <float_array id="geom-camera_flesher_base-map1-textangents-array" count="204">-1 -6.3976e-13 1.13278e-5 -1 -7.66659e-9 1.04108e-5 -1 -1.35818e-8 1.24378e-5 -1 -6.3976e-13 1.13278e-5 -1 -1.35818e-8 1.21157e-5 -1 -7.66659e-9 1.04531e-5 1 0 0 1 0 0 0.5911926 1.85099e-8 -0.4916136 0.5911925 3.62376e-8 -0.4916136 0 -7.56365e-6 -1 0 -8.2111e-6 -1 0 -6.75434e-6 -1 0 -6.75434e-6 -1 -0.5911926 1.85099e-8 -0.4916136 -0.5911925 3.62376e-8 -0.4916136 -1 0 0 -1 0 0 -0.1823851 5.55296e-8 -0.9832272 -0.1823851 5.55296e-8 -0.9832272 -1 -3.22774e-13 1.24333e-5 -1 7.66525e-9 1.46154e-5 -1 1.33249e-8 1.43532e-5 -1 1.33249e-8 1.4275e-5 -1 7.66525e-9 1.46578e-5 -1 -3.24818e-13 1.2512e-5 0 -8.93948e-6 -1 0 -8.69669e-6 -1 0.1823851 5.55296e-8 -0.9832272 0.1823851 5.55296e-8 -0.9832272 0 0 -1 0 0 -1 0 0 -1 0 0 -1 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 1.41568e-5 -1 0 1.45031e-5 0.9963503 -5.76609e-16 -0.08535806 0.9963503 -3.47054e-16 -0.08535807 0.9963503 -3.66364e-16 -0.08535806 0.9963503 0 -0.08535806 -1 0 1.38441e-5 -1 0 1.31852e-5 -1 -8.53019e-13 1.51038e-5 -1 -8.53019e-13 1.51038e-5 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 0 1 -5.07445e-6 0 1 -5.07445e-6 0 1 -5.07445e-6 0 1 -5.07445e-6 4.73807e-6 1 0 3.15871e-6 1 0 4.73807e-6 1 0 6.31743e-6 1 0 0 1 2.53723e-6 0 1 2.53723e-6 0 1 2.53723e-6 0 1 2.53723e-6</float_array>
+          <technique_common>
+            <accessor source="#geom-camera_flesher_base-map1-textangents-array" count="68" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-camera_flesher_base-map1-texbinormals">
+          <float_array id="geom-camera_flesher_base-map1-texbinormals-array" count="204">1.13278e-5 -5.64769e-8 1 1.04108e-5 -5.35217e-8 1 1.24378e-5 -2.0546e-8 1 -1.13278e-5 5.64769e-8 -1 -1.21157e-5 2.05459e-8 -1 -1.04531e-5 5.35217e-8 -1 0 1 0 0 1 0 -1.85099e-8 1 1.53921e-8 -3.38912e-8 1 3.29555e-8 0 -1 7.56365e-6 0 -1 8.2111e-6 0 -1 6.75434e-6 0 -1 6.75434e-6 1.85099e-8 1 1.53921e-8 3.38912e-8 1 3.29555e-8 0 1 0 0 1 0 1.24908e-9 1 5.62452e-8 -4.29966e-9 1 5.72745e-8 1.24333e-5 -2.59605e-8 1 1.46154e-5 -5.35219e-8 1 1.43532e-5 -2.01586e-8 1 -1.4275e-5 2.01586e-8 -1 -1.46578e-5 5.35219e-8 -1 -1.2512e-5 2.59605e-8 -1 0 -1 8.93948e-6 0 -1 8.69669e-6 -1.24908e-9 1 5.62452e-8 4.29966e-9 1 5.72745e-8 0 1 0 0 1 0 0 1 0 0 1 0 0 1 8.04537e-8 0 1 8.04537e-8 0 1 8.04537e-8 0 1 8.04537e-8 -1.41568e-5 0 -1 -1.45031e-5 0 -1 6.40665e-9 1 7.47823e-8 6.84231e-9 1 7.98675e-8 4.07063e-9 1 4.75149e-8 3.63498e-9 1 4.24296e-8 1.38441e-5 0 1 1.31852e-5 0 1 1.51038e-5 -5.64769e-8 1 -1.51038e-5 5.64769e-8 -1 0 8.54013e-8 -1 0 8.54013e-8 -1 0 8.54013e-8 -1 0 8.54013e-8 -1 0 -8.54013e-8 1 0 -8.54013e-8 1 0 -8.54013e-8 1 0 -8.54013e-8 1 0 -5.07445e-6 -1 0 -5.07445e-6 -1 0 -5.07445e-6 -1 0 -5.07445e-6 -1 1 -4.73807e-6 0 1 -3.15871e-6 0 1 -4.73807e-6 0 1 -6.31743e-6 0 0 -2.53723e-6 1 0 -2.53723e-6 1 0 -2.53723e-6 1 0 -2.53723e-6 1</float_array>
+          <technique_common>
+            <accessor source="#geom-camera_flesher_base-map1-texbinormals-array" count="68" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-camera_flesher_base-vertices">
+          <input semantic="POSITION" source="#geom-camera_flesher_base-positions"/>
+        </vertices>
+        <triangles material="_2_-_Default_1" count="42">
+          <input semantic="VERTEX" source="#geom-camera_flesher_base-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-camera_flesher_base-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-camera_flesher_base-map1" offset="2" set="0"/>
+          <input semantic="TEXTANGENT" source="#geom-camera_flesher_base-map1-textangents" offset="3" set="1"/>
+          <input semantic="TEXBINORMAL" source="#geom-camera_flesher_base-map1-texbinormals" offset="3" set="1"/>
+          <p>0 0 0 0 1 1 1 1 8 2 2 2 4 3 3 3 9 4 20 4 5 5 21 5 5 6 5 6 1 7 6 7 0 8 7 8 0 8 7 8 4 9 4 9 5 6 5 6 12 10 11 10 10 11 30 11 1 12 31 12 1 12 31 12 5 13 10 13 12 10 11 10 7 14 9 14 2 15 12 15 3 16 13 16 3 16 13 16 6 17 8 17 7 14 9 14 13 18 15 18 11 19 16 19 2 15 12 15 2 15 12 15 7 14 9 14 13 18 15 18 10 20 22 20 3 21 23 21 11 22 36 22 13 23 37 23 6 24 38 24 12 25 39 25 6 26 46 26 3 27 47 27 10 11 30 11 10 11 30 11 12 10 11 10 6 26 46 26 4 9 4 9 0 8 7 8 8 28 25 28 8 28 25 28 9 29 18 29 4 9 4 9 10 20 22 20 11 22 36 22 8 2 2 2 9 4 20 4 13 23 37 23 12 25 39 25 15 30 32 30 16 31 33 31 17 32 34 32 17 32 34 32 14 33 35 33 15 30 32 30 11 34 17 34 13 35 14 35 15 36 26 36 15 36 26 36 14 37 29 37 11 34 17 34 13 23 37 23 9 4 20 4 16 38 40 38 16 38 40 38 15 39 41 39 13 23 37 23 9 40 19 40 8 41 24 41 17 42 28 42 17 42 28 42 16 43 27 43 9 40 19 40 8 2 2 2 11 22 36 22 14 44 42 44 14 44 42 44 17 45 43 45 8 2 2 2 3 21 23 21 2 46 44 46 11 22 36 22 13 23 37 23 7 47 45 47 6 24 38 24 1 1 1 1 10 20 22 20 8 2 2 2 9 4 20 4 12 25 39 25 5 5 21 5 18 48 60 48 19 49 61 49 21 50 62 50 21 50 62 50 20 51 63 51 18 48 60 48 22 52 64 52 25 53 65 53 24 54 66 54 24 54 66 54 23 55 67 55 22 52 64 52 24 56 49 56 21 57 50 57 19 58 51 58 19 58 51 58 23 59 48 59 24 56 49 56 25 60 56 60 20 61 59 61 21 62 55 62 21 62 55 62 24 63 52 63 25 60 56 60 22 64 57 64 18 65 58 65 20 66 54 66 20 66 54 66 25 67 53 67 22 64 57 64</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_images>
+    <image id="camera_flesher_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch05/tech_camera_flesher/camera_flesher/tech/camera_flesher/camera_flesher.dds</init_from>
+    </image>
+    <image id="camera_flesher_illum_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch05/tech_camera_flesher/camera_flesher/tech/camera_flesher/camera_flesher_illum.dds</init_from>
+    </image>
+    <image id="camera_flesher_nrm_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch05/tech_camera_flesher/camera_flesher/tech/camera_flesher/camera_flesher_nrm.dds</init_from>
+    </image>
+    <image id="camera_flesher_spec_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch05/tech_camera_flesher/camera_flesher/tech/camera_flesher/camera_flesher_spec.dds</init_from>
+    </image>
+  </library_images>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-camera_flesher_base" name="camera_flesher_base">
+        <translate>17.48608 -2.226858 -1.155733</translate>
+        <instance_geometry url="#geom-camera_flesher_base">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="_2_-_Default_1" target="#_2_-_Default-material">
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

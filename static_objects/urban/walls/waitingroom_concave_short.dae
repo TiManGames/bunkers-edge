@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>illerulf</author>
+      <authoring_tool>OpenCOLLADA2011 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=1;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=0;
+			exportCameras=0;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/Maya/deeper/scenes/beveled%20walls.mb</source_data>
+    </contributor>
+    <created>2012-12-17T16:33:55</created>
+    <modified>2012-12-17T16:33:55</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="waitingroom_concave_short_lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="waitingroom_concave_short_file1">
+      <init_from>file:///F:/depth/redist/static_objects/urban/urban_waitingroom.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>waitingroom_concave_short_file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="polySurfaceShape13" name="waitingroom_concave_shortShape">
+      <mesh>
+        <source id="polySurfaceShape13-positions" name="polySurfaceShape13-positions">
+          <float_array id="polySurfaceShape13-positions-array" count="90">-3.986881 0 4.048216 -3.4144 0 100 -3.986881 400 4.048216 -3.4144 400 100 -3.4144 9.6941 100 -3.986881 9.6941 4.048216 0 12.6017 100 -0.572481 12.6017 0.6338183 -3.4144 396.7891 100 -3.986881 396.7891 4.048216 0 394.6748 100 -0.572481 394.6748 0.6338183 -100 0 3.414398 -100 400 3.414398 -100 9.6941 3.414398 -100 12.6017 0 -100 396.7891 3.414398 -100 394.6748 0 -3.4144 400 5.465244 -3.4144 396.7891 5.465242 0 394.6748 2.123344 0 12.6017 2.123344 -3.4144 9.6941 5.465242 -3.4144 0 5.465244 -5.278568 400 3.414398 -5.278568 396.7891 3.414398 -1.930068 394.6748 0 -1.930068 12.6017 0 -5.278568 9.694099 3.414398 -5.278568 0 3.414398</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape13-positions-array" count="30" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape13-normals" name="polySurfaceShape13-normals">
+          <float_array id="polySurfaceShape13-normals-array" count="234">-0.9078387 0.4193198 0 -1 0 0 -1 0 0 -0.9078384 0.4193202 0 -0.9078387 0.4193198 0 -0.9078384 0.4193202 0 -0.6483411 0.7613501 0 -0.6482927 0.7613913 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -0.8736191 -0.4866106 0 -0.8736278 -0.4865949 0 -1 0 0 -0.8736191 -0.4866106 0 -0.5264889 -0.8501821 0 -0.5264508 -0.8502056 0 -0.8736278 -0.4865949 0 0 0.4193182 0.9078394 0 0 1 -0.7321743 0 0.6811174 -0.6404263 0.4862807 0.5944622 0 0.7613493 0.648342 0 0.4193182 0.9078394 -0.6404263 0.4862807 0.5944622 -0.3799007 0.8558012 0.3511123 0 0 1 0 0 1 -0.7313707 0 0.6819801 -0.7313707 0 0.6819801 0 0 1 0 -0.4866106 0.8736191 -0.6063554 -0.5618094 0.5627641 -0.7321733 0 0.6811184 0 -0.8501821 0.5264889 -0.2956858 -0.9154658 0.272933 -0.6063554 -0.5618094 0.5627641 0 -0.4866106 0.8736191 -0.8736191 -0.4866106 0 -1 0 0 -0.6063554 -0.5618094 0.5627641 -0.2956858 -0.9154658 0.272933 -0.5264889 -0.8501821 0 -0.8736191 -0.4866106 0 -0.7313707 0 0.6819801 -0.7313707 0 0.6819801 -1 0 0 -1 0 0 -0.6404263 0.4862807 0.5944622 -0.9078394 0.4193182 0 -0.6482927 0.7613913 0 -0.3799007 0.8558012 0.3511123 -0.6404263 0.4862807 0.5944622 -0.7321743 0 0.6811174 -1 0 0 -0.9078394 0.4193182 0 0 0 1 0 -0.486596 0.8736271 0 -0.4866106 0.8736191 0 0 1 0 -0.8502061 0.52645 0 -0.8501821 0.5264889 0 -0.4866106 0.8736191 0 -0.486596 0.8736271 0 0 1 0 0 1 0 0 1 0 0 1 0 0.7613482 0.6483432 0 0.419319 0.907839 0 0.4193182 0.9078394 0 0.7613493 0.648342 0 0.419319 0.907839 0 0 1 0 0 1 0 0.4193182 0.9078394</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape13-normals-array" count="78" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape13-polySurfaceShape13-map1" name="polySurfaceShape13-polySurfaceShape13-map1">
+          <float_array id="polySurfaceShape13-polySurfaceShape13-map1-array" count="92">0.713252 0.002956 0.953754 0.002956 0.953754 0.016723 0.713252 0.016723 0.953754 0.02338 0.83445 0.368196 0.999233 0.997614 0.713036 0.025289 0.873995 0.033067 0.713036 0.033067 0.873995 0.039312 0.713036 0.039312 0.756784 0.002956 0.997285 0.002956 0.997285 0.016723 0.756784 0.016723 0.999233 0.368196 0.669667 0.368196 0.997276 0.025289 0.836318 0.025289 0.997276 0.033067 0.836318 0.033067 0.997276 0.039312 0.836318 0.039312 0.83445 0.997614 0.873995 0.025289 0.669667 0.997614 0.713252 0.02338 0.997285 0.02338 0.756784 0.02338 0.7164537 0.039312 0.7164537 0.033067 0.8379489 0.997614 0.7164537 0.025289 0.7183587 0.02338 0.8379489 0.368196 0.7183587 0.016723 0.7183588 0.002956 0.9941694 0.039312 0.9941694 0.033067 0.8312696 0.997614 0.9941694 0.025289 0.9926432 0.02338 0.8312696 0.368196 0.9926432 0.016723 0.9926432 0.002956</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape13-polySurfaceShape13-map1-array" count="46" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurfaceShape13-vertices" name="polySurfaceShape13-vertices">
+          <input semantic="POSITION" source="#polySurfaceShape13-positions"/>
+        </vertices>
+        <triangles material="waitingroom_concave_short_lambert2SG" count="40">
+          <input semantic="VERTEX" source="#polySurfaceShape13-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#polySurfaceShape13-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#polySurfaceShape13-polySurfaceShape13-map1" offset="2" set="0"/>
+          <p>22 0 36 23 1 37 4 3 2 4 3 2 23 1 37 1 2 1 4 5 2 6 6 4 22 4 36 22 4 36 6 6 4 21 7 34 20 8 32 21 9 35 10 11 6 10 11 6 21 9 35 6 10 16 18 12 30 19 13 31 3 15 10 3 15 10 19 13 31 8 14 8 20 17 33 10 18 25 19 16 31 19 16 31 10 18 25 8 19 8 28 20 44 29 21 45 5 23 14 5 23 14 29 21 45 0 22 13 28 25 44 5 26 14 27 24 42 27 24 42 5 26 14 7 27 28 26 28 40 27 29 43 11 31 24 11 31 24 27 29 43 7 30 5 24 32 38 25 33 39 2 35 22 2 35 22 25 33 39 9 34 20 11 37 18 9 38 20 26 36 41 26 36 41 9 38 20 25 39 39 2 35 11 9 34 9 18 41 30 18 41 30 9 34 9 19 40 31 11 43 7 20 44 33 9 42 9 9 42 9 20 44 33 19 45 31 11 46 24 7 47 5 20 49 32 20 49 32 7 47 5 21 48 35 22 51 36 21 52 34 5 50 3 5 50 3 21 52 34 7 53 27 5 54 3 0 55 0 22 57 36 22 57 36 0 55 0 23 56 37 13 58 23 16 59 21 24 61 38 24 61 38 16 59 21 25 60 39 26 63 41 25 64 39 17 62 19 17 62 19 25 64 39 16 65 21 17 66 26 15 67 17 26 69 40 26 69 40 15 67 17 27 68 43 14 71 15 28 72 44 15 70 29 15 70 29 28 72 44 27 73 42 14 74 15 12 75 12 28 77 44 28 77 44 12 75 12 29 76 45</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>waitingroom_concave_shortShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="beveled_walls">
+      <node id="polySurface13" name="waitingroom_concave_short" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#polySurfaceShape13">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="waitingroom_concave_short_lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>waitingroom_concave_short</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

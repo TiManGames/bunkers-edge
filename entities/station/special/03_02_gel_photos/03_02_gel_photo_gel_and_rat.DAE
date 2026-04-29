@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marc</author>
+      <authoring_tool>OpenCOLLADA2008</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=1;curveConstrainSampling=0;removeStaticCurves=0;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=1;exportAnimations=1;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///E:/depth/redist/entities/station/special/03_02_gel_photos/03_02_gel_photo_gel_and_rat.DAE</source_data>
+    </contributor>
+    <created>2015-04-13T10:22:45</created>
+    <modified>2015-04-13T10:22:45</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert1" name="lambert1">
+      <instance_effect url="#lambert1-fx"/>
+    </material>
+    <material id="_08___Default" name="_08___Default">
+      <instance_effect url="#_08___Default-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="_08___Default-fx">
+      <profile_COMMON>
+        <newparam sid="Map__1_image-surface">
+          <surface type="2D">
+            <init_from>Map__1_image</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="Map__1_image-sampler">
+          <sampler2D>
+            <source>Map__1_image-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0.588235 0.588235 0.588235 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="Map__1_image-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU sid="coverageU">1</coverageU>
+                    <coverageV sid="coverageV">1</coverageV>
+                    <fast sid="fast">0</fast>
+                    <mirrorU sid="mirrorU">0</mirrorU>
+                    <mirrorV sid="mirrorV">0</mirrorV>
+                    <noiseU sid="noiseU">0</noiseU>
+                    <noiseV sid="noiseV">0</noiseV>
+                    <offsetU sid="offsetU">0</offsetU>
+                    <offsetV sid="offsetV">0</offsetV>
+                    <repeatU sid="repeatU">1</repeatU>
+                    <repeatV sid="repeatV">1</repeatV>
+                    <rotateFrame sid="rotateFrame">0</rotateFrame>
+                    <rotateUV sid="rotateUV">0</rotateUV>
+                    <stagger sid="stagger">0</stagger>
+                    <translateFrameU sid="translateFrameU">0</translateFrameU>
+                    <translateFrameV sid="translateFrameV">0</translateFrameV>
+                    <wrapU sid="wrapU">1</wrapU>
+                    <wrapV sid="wrapV">1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <specular>
+              <color sid="specular">0 0 0 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">2</float>
+            </shininess>
+            <reflective>
+              <color sid="reflective">0 0 0 1</color>
+            </reflective>
+            <reflectivity>
+              <float sid="reflectivity">0.5</float>
+            </reflectivity>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="lambert1-fx">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.4 0.4 0.4 1</color>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color sid="transparent">0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="Map__1_image" name="Map__1_image">
+      <init_from>file:///D:/SOMA/trunk/redist/entities/station/special/03_02_gel_photos/03_02_gel_photos.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>Map__1_image</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="photograph_gel_and_ratShape" name="photograph_gel_and_ratShape">
+      <mesh>
+        <source id="photograph_gel_and_ratShape-positions" name="photograph_gel_and_ratShape-positions">
+          <float_array id="photograph_gel_and_ratShape-positions-array" count="120">0.081456 0.073236 -0.001213 -0.077552 0.073236 -0.001213 -0.077552 -0.076291 -0.001213 0.08145599 -0.076291 -0.001213 -0.051556 0.073236 0.002403 -0.051556 -0.076291 0.002403 0 0.073236 0.003442 0 -0.076291 0.003442 0.051556 0.073236 0.002403 0.051556 -0.076291 0.002403 -0.077552 -0.02543 1.18e-4 -0.051556 -0.02543 0.003734 0 -0.02543 0.004772 0.051556 -0.02543 0.003734 0.081456 -0.02543 1.18e-4 -0.07755199 0.02543 1.18e-4 -0.051556 0.02543 0.003734 0 0.02543 0.004772 0.051556 0.02543 0.003734 0.08145599 0.02543 1.18e-4 0.081456 0.073236 0 -0.077552 0.073236 0 -0.077552 -0.076291 0 0.08145599 -0.076291 0 -0.051556 0.073236 0.003616 -0.051556 -0.076291 0.003616 0 0.073236 0.004655 0 -0.076291 0.004655 0.051556 0.073236 0.003616 0.051556 -0.076291 0.003616 -0.077552 -0.02543 0.001331 -0.051556 -0.02543 0.004947 0 -0.02543 0.005985 0.051556 -0.02543 0.004947 0.081456 -0.02543 0.001331 -0.07755199 0.02543 0.001331 -0.051556 0.02543 0.004947 0 0.02543 0.005985 0.051556 0.02543 0.004947 0.08145599 0.02543 0.001331</float_array>
+          <technique_common>
+            <accessor source="#photograph_gel_and_ratShape-positions-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_gel_and_ratShape-normals" name="photograph_gel_and_ratShape-normals">
+          <float_array id="photograph_gel_and_ratShape-normals-array" count="120">-0.1200158 -0.02762968 -0.9923875 0.1377195 -0.02756569 -0.9900876 0.1377256 0.02591112 -0.9901314 -0.1200211 0.02597128 -0.9924315 0.09867934 -0.02769507 -0.9947338 0.09868371 0.02603271 -0.9947783 0 -0.02782046 -0.9996129 0 0.02615059 -0.999658 -0.08682095 -0.0277258 -0.995838 -0.08682481 0.0260616 -0.9958826 0.1377513 0.01727536 -0.9903161 0.07908832 0.01305746 -0.9967821 0.004026986 0.01045708 -0.9999372 -0.05349853 0.01305933 -0.9984825 -0.1200515 0.01298674 -0.9926827 0.1377588 -0.01378416 -0.9903699 0.05943318 -0.01388873 -0.9981357 -0.004027031 -0.01112495 -0.99993 -0.07018334 -0.01389534 -0.9974374 -0.1200413 -0.01842139 -0.9925979 0.1200158 0.02762969 0.9923875 -0.1377195 0.02756569 0.9900876 -0.1377256 -0.02591112 0.9901314 0.1200211 -0.0259713 0.9924315 -0.09867933 0.02769507 0.9947338 -0.09868371 -0.02603271 0.9947783 0 0.02782046 0.9996129 0 -0.02615059 0.999658 0.08682095 0.0277258 0.995838 0.0868248 -0.02606161 0.9958826 -0.1377513 -0.01727536 0.9903161 -0.07908832 -0.01305746 0.9967821 -0.004026988 -0.01045708 0.9999372 0.05349853 -0.01305932 0.9984825 0.1200515 -0.01298674 0.9926827 -0.1377588 0.01378416 0.9903699 -0.05943318 0.01388873 0.9981357 0.004027031 0.01112495 0.99993 0.07018334 0.01389534 0.9974374 0.1200413 0.01842139 0.9925979</float_array>
+          <technique_common>
+            <accessor source="#photograph_gel_and_ratShape-normals-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_gel_and_ratShape-UVSet0" name="photograph_gel_and_ratShape-UVSet0">
+          <float_array id="photograph_gel_and_ratShape-UVSet0-array" count="80">0.5254219 0.1732018 0.5254065 0.1237344 0.4777225 0.1237124 0.477724 0.1732007 0.3139498 0.1732007 0.3139583 0.1237124 0.2724274 0.1237124 0.2724204 0.1732458 0.3958395 0.1732007 0.3958403 0.1237124 0.3139583 0.07106367 0.3139583 0.01841552 0.2724274 0.01841552 0.2724274 0.0710383 0.3958403 0.07106367 0.3958403 0.01841552 0.4777225 0.07106367 0.4777225 0.01841552 0.5254065 0.07106423 0.5254065 0.01837436 0.919974 0.316984 0.858042 0.316916 0.858032 0.229382 0.919968 0.229382 0.645321 0.316917 0.591356 0.316919 0.591379 0.229427 0.645322 0.229382 0.751679 0.316916 0.751677 0.229382 0.645322 0.136257 0.591379 0.136257 0.591379 0.043047 0.645322 0.043133 0.751677 0.136257 0.751677 0.043133 0.858032 0.136257 0.858032 0.043133 0.919968 0.136219 0.919968 0.043133</float_array>
+          <technique_common>
+            <accessor source="#photograph_gel_and_ratShape-UVSet0-array" count="40" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="photograph_gel_and_ratShape-vertices" name="photograph_gel_and_ratShape-vertices">
+          <input semantic="POSITION" source="#photograph_gel_and_ratShape-positions"/>
+          <input semantic="NORMAL" source="#photograph_gel_and_ratShape-normals"/>
+        </vertices>
+        <triangles material="photograph_gel_and_ratSG" count="48">
+          <input semantic="VERTEX" source="#photograph_gel_and_ratShape-vertices" offset="0"/>
+          <input semantic="TEXCOORD" source="#photograph_gel_and_ratShape-UVSet0" offset="1" set="0"/>
+          <p>19 1 18 2 8 3 8 3 0 0 19 1 15 6 1 7 4 4 4 4 16 5 15 6 16 5 4 4 6 8 6 8 17 9 16 5 18 2 17 9 6 8 6 8 8 3 18 2 5 11 2 12 10 13 10 13 11 10 5 11 7 15 5 11 11 10 11 10 12 14 7 15 7 15 12 14 13 16 13 16 9 17 7 15 9 17 13 16 14 18 14 18 3 19 9 17 11 10 10 13 15 6 15 6 16 5 11 10 12 14 11 10 16 5 16 5 17 9 12 14 13 16 12 14 17 9 17 9 18 2 13 16 14 18 13 16 18 2 18 2 19 1 14 18 28 21 38 22 39 23 39 23 20 20 28 21 35 26 36 27 24 24 24 24 21 25 35 26 36 27 37 29 26 28 26 28 24 24 36 27 26 28 37 29 38 22 38 22 28 21 26 28 30 31 22 32 25 33 25 33 31 30 30 31 31 30 25 33 27 35 27 35 32 34 31 30 27 35 29 37 33 36 33 36 32 34 27 35 29 37 23 39 34 38 34 38 33 36 29 37 35 26 30 31 31 30 31 30 36 27 35 26 36 27 31 30 32 34 32 34 37 29 36 27 37 29 32 34 33 36 33 36 38 22 37 29 38 22 33 36 34 38 34 38 39 23 38 22</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>photograph_gel_and_ratShape</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="_3_02_gel_photo_gel_and_rat">
+      <node id="photograph_gel_and_rat" name="photograph_gel_and_rat" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#photograph_gel_and_ratShape">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="photograph_gel_and_ratSG" target="#_08___Default">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>photograph_gel_and_rat</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

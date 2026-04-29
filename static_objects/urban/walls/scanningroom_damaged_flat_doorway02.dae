@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///C:/Users/marcus/Documents/maya/projects/default/untitled</source_data>
+    </contributor>
+    <created>2012-05-07T15:13:48</created>
+    <modified>2012-05-07T15:13:48</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="scanningroom_damaged_flat_lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file1-surface">
+          <surface type="2D">
+            <init_from>file1</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file1-sampler">
+          <sampler2D>
+            <source>file1-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file1-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file1" name="scanningroom_damaged_flat_file1">
+      <init_from>file:///D:/Projects/depth/redist/static_objects/urban/urban_scanningroom_damaged.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>scanningroom_damaged_flat_file1</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="polySurfaceShape8" name="scanningroom_damaged_flat_polySurfaceShape7">
+      <mesh>
+        <source id="polySurfaceShape8-positions" name="polySurfaceShape8-positions">
+          <float_array id="polySurfaceShape8-positions-array" count="72">-2 0 0.034144 2 0 0.034144 -2 4 0.034144 2 4 0.034144 2 0.033474 0.034144 -2 0.033474 0.034144 2 0.033474 0 -2 0.033474 0 2 3.967891 0.034144 -2 3.967891 0.034144 2 3.967891 0 -2 3.967891 0 0 4 0.034144 0 3.967891 0.034144 0 3.967891 0 0 2.924554 0 0.6863966 2.924554 0 0.6863966 0.033474 0 0.6863966 0.033474 0.034144 0.6863966 0 0.034144 -0.7112624 2.924554 0 -0.7112624 0.033474 0 -0.7112624 0.033474 0.034144 -0.7112624 0 0.034144</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape8-positions-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape8-normals" name="polySurfaceShape8-normals">
+          <float_array id="polySurfaceShape8-normals-array" count="144">0 0 1 0 0 1 0 0 1 0 0.7071068 0.7071068 0 1 0 0 1 0 0 0.7071068 0.7071068 0 1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 -0.7071068 0.7071068 0 0 1 0 0 1 0 -0.7071068 0.7071068 0 -1 0 0 -0.7071068 0.7071068 0 -0.7071068 0.7071068 0 -1 0 0 -0.7071068 0.7071068 0 0 1 0 0 1 0 -0.7071068 0.7071068 0 -1 0 0 -0.7071068 0.7071068 0 -0.7071068 0.7071068 0 -1 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 1 0 0 1 0 0 1 0 0 0.7071068 0.7071068 0 0 1 0 0 1 0 0.7071068 0.7071068 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape8-normals-array" count="48" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="polySurfaceShape8-polySurfaceShape8-map1" name="polySurfaceShape8-polySurfaceShape8-map1">
+          <float_array id="polySurfaceShape8-polySurfaceShape8-map1-array" count="72">0.64697 0.344672 0.999151 0.344672 0.999151 0.352368 0.64697 0.352368 0.999151 0.358889 0.658295 0.36206 0.98777 0.997614 0.713221 0.328349 0.713221 0.336126 0.99725 0.336126 0.99725 0.342371 0.713221 0.342371 0.99725 0.328349 0.658295 0.997614 0.98777 0.36206 0.64697 0.358889 0.713221 0.342371 0.99725 0.336126 0.98777 0.997614 0.99725 0.328349 0.713221 0.336126 0.713221 0.328349 0.99725 0.342371 0.658295 0.997614 0.658295 0.8290765 0.98777 0.8290765 0.7713702 0.8290765 0.7678379 0.358889 0.7713703 0.36206 0.7678379 0.352368 0.7678379 0.344672 0.8705984 0.8290764 0.8705984 0.36206 0.8739045 0.358889 0.8739045 0.352368 0.8739045 0.344672</float_array>
+          <technique_common>
+            <accessor source="#polySurfaceShape8-polySurfaceShape8-map1-array" count="36" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="polySurfaceShape8-vertices" name="polySurfaceShape8-vertices">
+          <input semantic="POSITION" source="#polySurfaceShape8-positions"/>
+        </vertices>
+        <triangles material="scanningroom_damaged_flat_lambert2SG" count="24">
+          <input semantic="VERTEX" source="#polySurfaceShape8-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#polySurfaceShape8-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#polySurfaceShape8-polySurfaceShape8-map1" offset="2" set="0"/>
+          <p>18 0 29 19 1 30 4 3 2 4 3 2 19 1 30 1 2 1 17 4 27 18 5 29 6 7 4 6 7 4 18 5 29 4 6 2 17 9 28 6 10 14 16 8 26 16 8 26 6 10 14 10 11 6 8 12 9 3 13 10 13 15 20 13 15 20 3 13 10 12 14 16 10 16 12 8 17 9 14 19 21 14 19 21 8 17 9 13 18 20 13 20 17 12 21 22 9 23 8 9 23 8 12 21 22 2 22 11 14 24 19 13 25 17 11 27 7 11 27 7 13 25 17 9 26 8 10 29 6 14 30 23 16 28 26 16 28 26 14 30 23 15 31 24 15 33 25 14 34 18 20 32 31 20 32 31 14 34 18 11 35 13 11 36 13 7 37 5 20 39 31 20 39 31 7 37 5 21 38 32 22 40 34 21 41 33 5 43 3 5 43 3 21 41 33 7 42 15 23 44 35 22 45 34 0 47 0 0 47 0 22 45 34 5 46 3</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>scanningroom_damaged_flat_polySurfaceShape7</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="untitled">
+      <node id="polySurface7" name="scanningroom_damaged_flat_polySurface7" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#polySurfaceShape8">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="scanningroom_damaged_flat_lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>scanningroom_damaged_flat_polySurface7</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

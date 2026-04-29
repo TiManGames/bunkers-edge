@@ -1,0 +1,650 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "helpers/helper_player.hps"
+#include "helpers/helper_components.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+/////////////////////////////////////////
+// SETTINGS
+/////////////////////////////////////////
+
+//------------------------------------------------------------
+
+const float gfSlideLookSpeedMul = 0.2f;
+const float gfParkourSlideJumpMinTime = 0.18f;
+const float gfParkourSlideJumpForwardSpeedMin = 3.8f;
+const float gfParkourSlideJumpForwardSpeedMax = 5.0f;
+const float gfParkourSlideJumpUpSpeedMin = 1.85f;
+const float gfParkourSlideJumpUpSpeedMax = 2.35f;
+const float gfParkourSlideCarrySpeedMin = 1.15f;
+const float gfParkourSlideCarrySpeedMax = 2.15f;
+const float gfParkourSlideCameraLowerTime = 0.16f;
+const float gfParkourSlideCameraRestoreTime = 0.18f;
+const float gfParkourSlideHeadBobFadeOutTime = 0.08f;
+const float gfParkourSlideHeadBobFadeInTime = 0.18f;
+const float gfParkourSlideCameraRollDeg = 4.0f;
+const float gfParkourSlideCameraRollInSpeed = 6.5f;
+const float gfParkourSlideCameraRollOutSpeed = 8.0f;
+const float gfParkourSlideCameraRollMaxSpeedDeg = 140.0f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_Slide : iScrPlayerState, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GLOBAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+
+	void OnAttachBodyToStickyArea()
+	{
+	}
+	
+	//------------------------------------------------------------
+		
+	/////////////////////////////////////////
+	// INIT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Init()
+	{
+		mlSlideStage = -1;
+		mfSlideTime = 0.f;
+		mfSlideCount = 0.f;
+		mvSlideStart = 0.f;
+		mvSlideEnd = 0.f;
+		mfStartYaw = 0.f;
+		mfAngle = 0.f;
+		mbSlideOnBack = false;
+		mbParkourSlide = false;
+		mbParkourSlideJumped = false;
+		mfParkourSlideTime = -1.f;
+		mfParkourSlideFlow = 0.f;
+		mfSavedParkourSlideHeadBobMul = 1.f;
+		mfParkourSlideRollDir = 1.f;
+		m_idLeftPS = tID_Invalid;
+		m_idRightPS = tID_Invalid;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// USER SETTINGS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ENTER MAP
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnMapEnter(cLuxMap @apMap) 
+	{
+		/////////////
+		// Preload
+		ParticleSystem_Preload("sand_slide.ps");
+	}
+
+	void OnMapLeave(cLuxMap @apMap) {}
+	
+	//------------------------------------------------------------
+	
+	void CreateWorldEntities(cLuxMap @apMap) {}	
+	void DestroyWorldEntities(cLuxMap @apMap) {}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetupSlide()
+	{
+		mlSlideStage = 0;
+		mvSlideStart = cScript_GetGlobalArgVector3f(0);
+		mvSlideEnd = cScript_GetGlobalArgVector3f(1);
+		mvSlideDir = cScript_GetGlobalArgVector3f(2);
+		mbSlideOnBack = cScript_GetGlobalArgBool(3);
+		mbUseParticles = cScript_GetGlobalArgBool(4);
+		mbParkourSlide = false;
+		mbParkourSlideJumped = false;
+		mfParkourSlideTime = -1.f;
+		mfParkourSlideFlow = 0.f;
+		mfParkourSlideRollDir = 1.f;
+		
+		cLux_GetPlayer().ChangeState(ePlayerState_Custom_Slide);
+	}
+	
+	//------------------------------------------------------------
+	
+	void _Global_SetupParkourSlide()
+	{
+		mlSlideStage = 0;
+		mvSlideStart = cScript_GetGlobalArgVector3f(0);
+		mvSlideEnd = cScript_GetGlobalArgVector3f(1);
+		mvSlideDir = cScript_GetGlobalArgVector3f(2);
+		mvSlideDir.y = 0.f;
+		if (mvSlideDir.SqrLength() > 0.001f) mvSlideDir.Normalize();
+		
+		mbSlideOnBack = false;
+		mbUseParticles = false;
+		mbParkourSlide = true;
+		mbParkourSlideJumped = false;
+		mfParkourSlideTime = cMath_Max(0.1f, cScript_GetGlobalArgFloat(3));
+		mfParkourSlideFlow = cMath_Clamp(cScript_GetGlobalArgFloat(4), 0.f, 1.f);
+		mfParkourSlideRollDir = 1.f;
+		
+		cLux_GetPlayer().ChangeState(ePlayerState_Custom_Slide);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{
+		/////////////////
+		// Put away items
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+		
+		/////////////////
+		// Get start rotation
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		mfStartYaw = mBaseObj.mpPlayer.GetCharacterBody().GetYaw();
+		if (mbParkourSlide)
+		{
+			mfAngle = pBody.GetYaw();
+			SetPlayerCrouchingForced(true);
+			pBody.SetActiveSize(1);
+			SetParkourSlideCameraLowered(true, false);
+			StartParkourSlideViewEffects();
+		}
+		else
+		{
+			mfAngle = cMath_ATan2(mvSlideDir.x, mvSlideDir.z);
+			
+			if (mbSlideOnBack)
+				mfAngle += cMath_Pi;
+			
+			/////////////////
+			// Setup player body
+			PlayerBody_StartCustomAnimation("", true, 0.5f, true, pBody.GetFeetPosition(), mfAngle);		
+			FootPlacement_FadeOut(PlayerBody_GetEntityName(), 0.3f);
+			
+			/////////////////
+			// Pause dialogue
+			cLux_GetVoiceHandler().SetPausedAll(true);
+		}
+	}
+	
+	//------------------------------------------------------------
+
+	void OnLeaveState(int alNextStateId)
+	{
+		bool bWasParkourSlide = mbParkourSlide;
+		
+		mlSlideStage = -1;			
+		StopSlideEffects(0.15f);
+	
+		if (bWasParkourSlide == false)
+		{
+			PlayerBody_StopCustomAnimation();		
+			FootPlacement_FadeIn(PlayerBody_GetEntityName(), 0.3f);
+		}
+		
+		if (bWasParkourSlide)
+		{
+			SetPlayerCrouchingForced(false);
+			SetParkourSlideCameraLowered(false, false);
+			RestoreParkourSlideViewEffects();
+		}
+		
+		mbParkourSlide = false;
+		mbParkourSlideJumped = false;
+		mfParkourSlideTime = -1.f;
+		mfParkourSlideFlow = 0.f;
+		mfParkourSlideRollDir = 1.f;
+		
+		if (bWasParkourSlide == false)
+		{
+			/////////////////
+			// Resume dialogue
+			cLux_GetVoiceHandler().SetPausedAll(false);
+		}
+	}
+		
+	//------------------------------------------------------------
+	
+	void Reset()
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{		
+		/////////////////
+		// Time		
+		mfSlideCount = cMath_Min(mfSlideCount + afTimeStep, mfSlideTime);
+	
+		if (mlSlideStage == 0)
+		{					
+			/////////////////
+			// Play anim
+			tString sAnim = mbSlideOnBack ? "player_slide_back_loop" : "player_slide_loop";
+			if (mbParkourSlide == false)
+				PlayerBody_PlayAnimation(sAnim, ePlayerBodyAnimationLayer_FullBody, true, false, false, 0.5f);
+			
+			/////////////////
+			// Create particles
+			cWorld@ pWorld = cLux_GetCurrentMap().GetWorld();
+			if (mbUseParticles)
+			{
+				cParticleSystem@ pLeftPS = pWorld.CreateParticleSystem("PS_SlideSand_L", "sand_slide.ps", cVector3f(1.f), true, false);
+				cParticleSystem@ pRightPS = pWorld.CreateParticleSystem("PS_SlideSand_R", "sand_slide.ps", cVector3f(1.f), true, false);
+				
+				pLeftPS.SetFadeAtDistance(false);
+				pRightPS.SetFadeAtDistance(false);			
+				
+				m_idLeftPS = pLeftPS.GetID();
+				m_idRightPS = pRightPS.GetID();
+			}
+			
+			/////////////////
+			// Sounds
+			Sound_CreateAtEntity("Sound_SlideLoop", "player/foley/animations/2.6/sand_slide/sand_slide_loop", "player");
+			
+			/////////////////
+			// Set up stage
+			mfSlideCount = 0.f;
+			if (mbParkourSlide && mfParkourSlideTime > 0.f)
+				mfSlideTime = mfParkourSlideTime;
+			else
+				mfSlideTime = cMath_Min((mvSlideEnd - mvSlideStart).Length() / 2.5f, 2.f);
+			mlSlideStage = 1;
+		}
+		else if (mlSlideStage == 1)
+		{
+			/////////////////
+			// Slide down!
+			float fPosT = cMath_Easing(eEasing_SineIn, mfSlideCount / cMath_Max(mfSlideTime, 0.001f));			
+			if (mbParkourSlide)
+			{
+				ApplyParkourSlideVelocity();
+			}
+			else
+			{
+				cVector3f vPos = mvSlideStart * (1.f - fPosT) + mvSlideEnd * fPosT;		
+				PlayerBody_SetCameraAnimationPositionAndYaw(true, vPos, mfAngle, 0.f);
+			}
+			
+			/////////////////
+			// Update particles
+			cParticleSystem@ pLeftPS = cLux_ID_ParticleSystem(m_idLeftPS);
+			cParticleSystem@ pRightPS = cLux_ID_ParticleSystem(m_idRightPS);
+			
+			cVector3f vOffset = cMath_Vector3Normalize(mvSlideEnd - mvSlideStart) * 1.f;
+			if (pLeftPS !is null) pLeftPS.SetWorldPosition(PlayerBody_GetSocket("L_Hand").GetWorldPosition() + vOffset);
+			if (pRightPS !is null) pRightPS.SetWorldPosition(PlayerBody_GetSocket("R_Hand").GetWorldPosition() + vOffset);
+			
+			/////////////////
+			// Stop sliding!	
+			if (fPosT >= 1.f)
+			{
+				if (mbParkourSlide)
+				{
+					CompleteParkourSlide();
+					return;
+				}
+				
+				tString sAnim = mbSlideOnBack ? "player_slide_back_end" : "player_slide_end";
+				PlayerBody_PlayAnimation(sAnim, ePlayerBodyAnimationLayer_FullBody, false, false, false, 0.3f);
+				
+				mlSlideStage = 2;
+				mfSlideCount = 0.f;
+				mfSlideTime = PlayerBody_GetAnimationState(sAnim).GetLength();
+				
+				/////////////////
+				// Stop sounds
+				StopSlideEffects(0.3f);
+				Sound_CreateAtEntity("Sound_SlideStop", "player/foley/animations/2.6/sand_slide/sand_slide_stop", "player");
+			}
+		}
+		else if (mlSlideStage == 2)
+		{						
+			/////////////////
+			// Leave state!
+			if (mfSlideCount >= mfSlideTime)
+			{		
+				mlSlideStage = -1;
+				
+				tString sAnim = mbSlideOnBack ? "player_slide_back_end" : "player_slide_end";
+				PlayerBody_StopAnimation(sAnim, 0.f);				
+				
+				mBaseObj.mpPlayer.ChangeState(ePlayerState_Normal);
+			}
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void PostUpdate(float afTimeStep) {}
+	void OnGui(float afTimeStep) {}
+
+	//------------------------------------------------------------
+	
+	void StopSlideEffects(float afFadeTime)
+	{
+		cParticleSystem@ pLeftPS = cLux_ID_ParticleSystem(m_idLeftPS);
+		cParticleSystem@ pRightPS = cLux_ID_ParticleSystem(m_idRightPS);
+		
+		if (pLeftPS !is null) pLeftPS.Kill();
+		if (pRightPS !is null) pRightPS.Kill();
+		
+		m_idLeftPS = tID_Invalid;
+		m_idRightPS = tID_Invalid;
+		
+		Sound_Stop("Sound_SlideLoop", afFadeTime);
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetPlayerCrouchingForced(bool abCrouch)
+	{
+		cScript_SetGlobalArgBool(0, abCrouch);
+		cScript_SetGlobalArgBool(1, false);
+		cScript_SetGlobalArgBool(2, true);
+		cScript_SetGlobalArgBool(3, true);
+		cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_SetCrouching");
+	}
+	
+	//------------------------------------------------------------
+	
+	void SetParkourSlideCameraLowered(bool abLowered, bool abInstant)
+	{
+		float fDiff = gvBodySize.y - gvBodyCrouchSize.y;
+		cVector3f vTarget = abLowered ? cVector3f(0.f, -fDiff, 0.f) : cVector3f_Zero;
+		
+		if (abInstant)
+			cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, vTarget);
+		else
+		{
+			float fMoveTime = abLowered ? gfParkourSlideCameraLowerTime : gfParkourSlideCameraRestoreTime;
+			cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, vTarget, 10.f, 3.f, fMoveTime);
+		}
+	}
+	
+	//------------------------------------------------------------
+
+	void StartParkourSlideViewEffects()
+	{
+		mfSavedParkourSlideHeadBobMul = Player_GetHeadBobMul();
+		Player_FadeHeadBobMul(0.f, gfParkourSlideHeadBobFadeOutTime);
+		
+		mfParkourSlideRollDir = GetParkourSlideCameraRollDir();
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script,
+										   cMath_ToRad(gfParkourSlideCameraRollDeg * mfParkourSlideRollDir),
+										   gfParkourSlideCameraRollInSpeed,
+										   cMath_ToRad(gfParkourSlideCameraRollMaxSpeedDeg));
+	}
+	
+	//------------------------------------------------------------
+
+	void RestoreParkourSlideViewEffects()
+	{
+		Player_FadeHeadBobMul(mfSavedParkourSlideHeadBobMul, gfParkourSlideHeadBobFadeInTime);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script,
+										   0.f,
+										   gfParkourSlideCameraRollOutSpeed,
+										   cMath_ToRad(gfParkourSlideCameraRollMaxSpeedDeg));
+	}
+	
+	//------------------------------------------------------------
+
+	float GetParkourSlideCameraRollDir()
+	{
+		cVector3f vSlideDir = mvSlideDir;
+		vSlideDir.y = 0.f;
+		if (vSlideDir.SqrLength() <= 0.001f)
+			return 1.f;
+		vSlideDir.Normalize();
+		
+		cVector3f vCameraRight = cLux_GetPlayer().GetCamera().GetRight();
+		vCameraRight.y = 0.f;
+		if (vCameraRight.SqrLength() <= 0.001f)
+			return 1.f;
+		vCameraRight.Normalize();
+		
+		float fRightDot = cMath_Vector3Dot(vCameraRight, vSlideDir);
+		return fRightDot < -0.15f ? -1.f : 1.f;
+	}
+	
+	//------------------------------------------------------------
+	
+	void ApplyParkourSlideVelocity()
+	{
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		if (pBody is null) return;
+		
+		cVector3f vSlideFlat = mvSlideEnd - mvSlideStart;
+		vSlideFlat.y = 0.f;
+		float fSlideDistance = vSlideFlat.Length();
+		float fSpeed = fSlideDistance / cMath_Max(mfSlideTime, 0.001f);
+		
+		cVector3f vVel = pBody.GetForceVelocity();
+		vVel.x = mvSlideDir.x * fSpeed;
+		vVel.z = mvSlideDir.z * fSpeed;
+		
+		pBody.StopMovement();
+		pBody.SetForceVelocity(vVel);
+	}
+	
+	//------------------------------------------------------------
+	
+	void CompleteParkourSlide()
+	{
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		if (pBody !is null)
+		{
+			float fCarrySpeed = cMath_InterpolateLinear(gfParkourSlideCarrySpeedMin,
+														gfParkourSlideCarrySpeedMax,
+														mfParkourSlideFlow);
+			cVector3f vVel = pBody.GetForceVelocity();
+			vVel.x = mvSlideDir.x * fCarrySpeed;
+			vVel.z = mvSlideDir.z * fCarrySpeed;
+			
+			pBody.StopMovement();
+			pBody.SetForceVelocity(vVel);
+		}
+		
+		Parkour_NotifyFlowEvent(geParkourFlowEvent_SlideComplete, 1.f);
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Slide complete.", true);
+		
+		StopSlideEffects(0.2f);
+		mBaseObj.mpPlayer.ChangeState(ePlayerState_Normal);
+	}
+	
+	//------------------------------------------------------------
+	
+	void ParkourSlideJump()
+	{
+		if (mbParkourSlide == false) return;
+		if (mlSlideStage != 1) return;
+		if (mfSlideCount < gfParkourSlideJumpMinTime) return;
+		
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		if (pBody is null) return;
+		
+		cVector3f vJumpDir = mvSlideDir;
+		vJumpDir.y = 0.f;
+		if (vJumpDir.SqrLength() > 0.001f)
+			vJumpDir.Normalize();
+		else
+		{
+			vJumpDir = pBody.GetForward();
+			vJumpDir.y = 0.f;
+			if (vJumpDir.SqrLength() > 0.001f) vJumpDir.Normalize();
+		}
+		
+		float fForwardSpeed = cMath_InterpolateLinear(gfParkourSlideJumpForwardSpeedMin,
+													  gfParkourSlideJumpForwardSpeedMax,
+													  mfParkourSlideFlow);
+		float fUpSpeed = cMath_InterpolateLinear(gfParkourSlideJumpUpSpeedMin,
+												 gfParkourSlideJumpUpSpeedMax,
+												 mfParkourSlideFlow);
+		cVector3f vJumpVel = vJumpDir * fForwardSpeed;
+		vJumpVel.y = fUpSpeed;
+		
+		mbParkourSlideJumped = true;
+		StopSlideEffects(0.1f);
+		SetPlayerCrouchingForced(false);
+		SetParkourSlideCameraLowered(false, false);
+		pBody.StopMovement();
+		pBody.SetForceVelocity(vJumpVel);
+		Parkour_NotifyFlowEvent(geParkourFlowEvent_SlideJump, 1.f);
+		
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Slide jump. speed=" + fForwardSpeed + " up=" + fUpSpeed + " flow=" + mfParkourSlideFlow, true);
+		
+		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
+		mBaseObj.mpPlayer.ChangeState(ePlayerState_Normal);
+	}
+
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if (mbParkourSlide)
+		{
+			if (alAction == eAction_Jump && abPressed)
+			{
+				ParkourSlideJump();
+				return false;
+			}
+			
+			if (alAction == eAction_Crouch ||
+				alAction == eAction_Run ||
+				alAction == eAction_Interact)
+			{
+				return false;
+			}
+		}
+		
+		return false;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		/////////////////
+		// Look
+		if (alAnalogId == eAnalogType_Look)
+		{	
+			iScrPlayerBodyHandler_Interface@ pBody = cast<iScrPlayerBodyHandler_Interface>(cLux_GetUserModuleFromID(eModuleType_PlayerBodyHandler));	
+			float fMul = Player_GetLookSpeedMul() * gfSlideLookSpeedMul;
+			
+			pBody.Cutscene_AddPitch(avAmount.y * fMul);
+			pBody.Cutscene_AddYaw(avAmount.x * fMul);
+		}
+		
+		return false;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnExitPressed()
+	{
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// BODY CALLBACKS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	bool AllowBuoyancy(iPhysicsBody @apBody)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// CHARACTER CALLBACK
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody,const cVector3f &in avVel) {}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// DEBUG
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+		
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY)
+	{
+		return afStartY;
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// PROPERTIES
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+
+	int mlSlideStage;
+	float mfSlideTime;	
+	float mfSlideCount;
+	float mfStartYaw;
+	float mfAngle;
+	bool mbSlideOnBack;
+	bool mbUseParticles;
+	bool mbParkourSlide;
+	bool mbParkourSlideJumped;
+	float mfParkourSlideTime;
+	float mfParkourSlideFlow;
+	float mfSavedParkourSlideHeadBobMul;
+	float mfParkourSlideRollDir;
+	cVector3f mvSlideStart;
+	cVector3f mvSlideEnd;
+	cVector3f mvSlideDir;
+	tID m_idLeftPS;
+	tID m_idRightPS;
+
+	//------------------------------------------------------------
+}

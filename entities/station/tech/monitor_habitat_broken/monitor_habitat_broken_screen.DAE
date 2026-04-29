@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Marcus</author>
+      <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.3.1;  Revision: 847M;  Platform: x64;  Configuration: Release_Max2011_static</authoring_tool>
+      <source_data>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/monitor_habitat_broken/monitor_habitat_broken/orginals/monitor_habitat_broken.max</source_data>
+    </contributor>
+    <created>2012-10-24T01:23:53</created>
+    <modified>2012-10-24T01:23:53</modified>
+    <unit name="centimeter" meter="0.01"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="monitor_habitat_broken">
+      <profile_COMMON>
+        <newparam sid="monitor_habitat_broken_dds-surface">
+          <surface type="2D">
+            <init_from>monitor_habitat_broken_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="monitor_habitat_broken_dds-sampler">
+          <sampler2D>
+            <source>monitor_habitat_broken_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="monitor_habitat_broken_spec_dds-surface">
+          <surface type="2D">
+            <init_from>monitor_habitat_broken_spec_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="monitor_habitat_broken_spec_dds-sampler">
+          <sampler2D>
+            <source>monitor_habitat_broken_spec_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <newparam sid="monitor_habitat_broken_nrm_dds-surface">
+          <surface type="2D">
+            <init_from>monitor_habitat_broken_nrm_dds</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="monitor_habitat_broken_nrm_dds-sampler">
+          <sampler2D>
+            <source>monitor_habitat_broken_nrm_dds-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <blinn>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0.588 0.588 0.588 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="monitor_habitat_broken_dds-sampler" texcoord="CHANNEL1"/>
+            </diffuse>
+            <specular>
+              <color>0.9 0.9 0.9 1</color>
+            </specular>
+            <shininess>
+              <float>10</float>
+            </shininess>
+            <reflective>
+              <color>0 0 0 1</color>
+            </reflective>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </blinn>
+          <extra>
+            <technique profile="OpenCOLLADA3dsMax">
+              <specularLevel>
+                <texture texture="monitor_habitat_broken_spec_dds-sampler" texcoord="CHANNEL1"/>
+              </specularLevel>
+              <bump bumptype="HEIGHTFIELD">
+                <texture texture="monitor_habitat_broken_nrm_dds-sampler" texcoord="CHANNEL1"/>
+              </bump>
+            </technique>
+          </extra>
+        </technique>
+      </profile_COMMON>
+      <extra>
+        <technique profile="OpenCOLLADA3dsMax">
+          <extended_shader>
+            <apply_reflection_dimming>0</apply_reflection_dimming>
+            <dim_level>0</dim_level>
+            <falloff_type>0</falloff_type>
+            <index_of_refraction>1.5</index_of_refraction>
+            <opacity_type>0</opacity_type>
+            <reflection_level>3</reflection_level>
+            <wire_size>1</wire_size>
+            <wire_units>0</wire_units>
+          </extended_shader>
+          <shader>
+            <ambient_diffuse_lock>1</ambient_diffuse_lock>
+            <ambient_diffuse_texture_lock>1</ambient_diffuse_texture_lock>
+            <diffuse_specular_lock>0</diffuse_specular_lock>
+            <soften>0.1</soften>
+            <use_self_illum_color>0</use_self_illum_color>
+          </shader>
+        </technique>
+      </extra>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="monitor_habitat_broken-material" name="monitor_habitat_broken">
+      <instance_effect url="#monitor_habitat_broken"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="geom-monitor_habitat_broken_screen" name="monitor_habitat_broken_screen">
+      <mesh>
+        <source id="geom-monitor_habitat_broken_screen-positions">
+          <float_array id="geom-monitor_habitat_broken_screen-positions-array" count="18">0 -1.173672 -5.350374 19.1224 -1.214878 -5.350369 19.1224 -1.214878 22.1282 0 -1.173672 22.1282 -19.1224 -1.214878 22.1282 -19.1224 -1.214878 -5.350369</float_array>
+          <technique_common>
+            <accessor source="#geom-monitor_habitat_broken_screen-positions-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-monitor_habitat_broken_screen-normals">
+          <float_array id="geom-monitor_habitat_broken_screen-normals-array" count="18">1.48225e-10 -1 0 -0.00215485 -0.9999977 0 0 -1 0 -0.00215485 -0.9999977 0 0.00215485 -0.9999977 0 0.00215485 -0.9999977 0</float_array>
+          <technique_common>
+            <accessor source="#geom-monitor_habitat_broken_screen-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-monitor_habitat_broken_screen-map1">
+          <float_array id="geom-monitor_habitat_broken_screen-map1-array" count="21">0.332599 0.598356 0 0.510662 0.598356 0 0.510662 0.883998 0 0.332599 0.883998 0 0.332599 0.598356 0 0.154548 0.883998 0 0.154548 0.598356 0</float_array>
+          <technique_common>
+            <accessor source="#geom-monitor_habitat_broken_screen-map1-array" count="7" stride="3">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+              <param name="P" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-monitor_habitat_broken_screen-map1-textangents">
+          <float_array id="geom-monitor_habitat_broken_screen-map1-textangents-array" count="21">0.9999977 1.48225e-10 2.74296e-7 0.9999977 -0.00215485 1.37148e-7 0.9999977 0 0 0.9999977 -0.00215485 0 0.9999977 1.48225e-10 -2.74296e-7 0.9999977 0.00215485 -1.37148e-7 0.9999977 0.00215485 0</float_array>
+          <technique_common>
+            <accessor source="#geom-monitor_habitat_broken_screen-map1-textangents-array" count="7" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="geom-monitor_habitat_broken_screen-map1-texbinormals">
+          <float_array id="geom-monitor_habitat_broken_screen-map1-texbinormals-array" count="21">2.74297e-7 0 -1 1.37148e-7 -2.95533e-10 -1 0 0 -1 0 0 -1 -2.74297e-7 0 -1 -1.37148e-7 -2.95533e-10 -1 0 0 -1</float_array>
+          <technique_common>
+            <accessor source="#geom-monitor_habitat_broken_screen-map1-texbinormals-array" count="7" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-monitor_habitat_broken_screen-vertices">
+          <input semantic="POSITION" source="#geom-monitor_habitat_broken_screen-positions"/>
+        </vertices>
+        <triangles material="monitor_habitat_broken" count="4">
+          <input semantic="VERTEX" source="#geom-monitor_habitat_broken_screen-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#geom-monitor_habitat_broken_screen-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#geom-monitor_habitat_broken_screen-map1" offset="2" set="0"/>
+          <input semantic="TEXTANGENT" source="#geom-monitor_habitat_broken_screen-map1-textangents" offset="3" set="1"/>
+          <input semantic="TEXBINORMAL" source="#geom-monitor_habitat_broken_screen-map1-texbinormals" offset="3" set="1"/>
+          <p>0 0 0 0 1 1 1 1 3 2 3 2 3 2 3 2 1 1 1 1 2 3 2 3 0 0 4 4 3 2 3 2 5 4 6 5 5 4 6 5 3 2 3 2 4 5 5 6</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_lights>
+    <light id="EnvironmentAmbientLight" name="EnvironmentAmbientLight">
+      <technique_common>
+        <ambient>
+          <color>0 0 0</color>
+        </ambient>
+      </technique_common>
+    </light>
+  </library_lights>
+  <library_images>
+    <image id="monitor_habitat_broken_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/monitor_habitat_broken/monitor_habitat_broken/tech/monitor_habitat_broken/monitor_habitat_broken.dds</init_from>
+    </image>
+    <image id="monitor_habitat_broken_nrm_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/monitor_habitat_broken/monitor_habitat_broken/tech/monitor_habitat_broken/monitor_habitat_broken_nrm.dds</init_from>
+    </image>
+    <image id="monitor_habitat_broken_spec_dds">
+      <init_from>file:///C:/Program%20Files/Autodesk/3ds%20Max%202009/sceneassets/scenes/Frictional_Games/Props/station_batch11/monitor_habitat_broken/monitor_habitat_broken/tech/monitor_habitat_broken/monitor_habitat_broken_spec.dds</init_from>
+    </image>
+  </library_images>
+  <library_visual_scenes>
+    <visual_scene id="MaxScene">
+      <node name="EnvironmentAmbientLight">
+        <instance_light url="#EnvironmentAmbientLight"/>
+      </node>
+      <node id="node-monitor_habitat_broken_screen" name="monitor_habitat_broken_screen">
+        <rotate>1 0 0 -90</rotate>
+        <node>
+          <matrix>1 0 0 0 0 1 0 0.8725221 0 0 1 19.88937 0 0 0 1</matrix>
+          <instance_geometry url="#geom-monitor_habitat_broken_screen">
+            <bind_material>
+              <technique_common>
+                <instance_material symbol="monitor_habitat_broken" target="#monitor_habitat_broken-material">
+                  <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                  <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                  <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+                </instance_material>
+              </technique_common>
+            </bind_material>
+          </instance_geometry>
+        </node>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#MaxScene"/>
+  </scene>
+</COLLADA>

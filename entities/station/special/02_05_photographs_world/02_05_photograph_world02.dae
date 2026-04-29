@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>marcus</author>
+      <authoring_tool>OpenCOLLADA2008 x64</authoring_tool>
+      <comments>
+			ColladaMaya export options: 
+			bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=1;exportCgfxFileReferences=1;
+			isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;exportPolygonMeshes=1;exportLights=1;
+			exportCameras=1;exportJointsAndSkin=0;exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;
+			exportTexCoords=1;exportNormals=1;exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;
+			exportTexTangents=0;exportTangents=0;exportReferencedMaterials=0;exportMaterialsOnly=0;
+			exportXRefs=1;dereferenceXRefs=1;exportCameraAsLookat=0;cameraXFov=0;cameraYFov=1;doublePrecision=0
+		</comments>
+      <source_data>file:///D:/work/DropBox/Team/Depth_marcus/models/Levels/02_05/special/02_05_photos_world.ma</source_data>
+    </contributor>
+    <created>2014-01-21T13:35:24</created>
+    <modified>2014-01-21T13:35:24</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_materials>
+    <material id="lambert2" name="lambert2">
+      <instance_effect url="#lambert2-fx"/>
+    </material>
+  </library_materials>
+  <library_effects>
+    <effect id="lambert2-fx">
+      <profile_COMMON>
+        <newparam sid="file2-surface">
+          <surface type="2D">
+            <init_from>file2</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="file2-sampler">
+          <sampler2D>
+            <source>file2-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color>0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <texture texture="file2-sampler" texcoord="TEX0">
+                <extra>
+                  <technique profile="OpenCOLLADAMaya">
+                    <blend_mode>NONE</blend_mode>
+                    <coverageU>1</coverageU>
+                    <coverageV>1</coverageV>
+                    <fast>0</fast>
+                    <mirrorU>0</mirrorU>
+                    <mirrorV>0</mirrorV>
+                    <noiseU>0</noiseU>
+                    <noiseV>0</noiseV>
+                    <offsetU>0</offsetU>
+                    <offsetV>0</offsetV>
+                    <repeatU>1</repeatU>
+                    <repeatV>1</repeatV>
+                    <rotateFrame>0</rotateFrame>
+                    <rotateUV>0</rotateUV>
+                    <stagger>0</stagger>
+                    <translateFrameU>0</translateFrameU>
+                    <translateFrameV>0</translateFrameV>
+                    <wrapU>1</wrapU>
+                    <wrapV>1</wrapV>
+                  </technique>
+                </extra>
+              </texture>
+            </diffuse>
+            <transparent opaque="RGB_ZERO">
+              <color>0 0 0 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images>
+    <image id="file2" name="file2">
+      <init_from>file:///D:/work/depth/redist/entities/station/special/02_05_photographs_world/02_05_photographs_world.dds</init_from>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <dgnode_type>kFile</dgnode_type>
+          <image_sequence>0</image_sequence>
+          <originalMayaNodeId>file2</originalMayaNodeId>
+        </technique>
+      </extra>
+    </image>
+  </library_images>
+  <library_geometries>
+    <geometry id="photograph_world0Shape2" name="photograph_world0Shape2">
+      <mesh>
+        <source id="photograph_world0Shape2-positions" name="photograph_world0Shape2-positions">
+          <float_array id="photograph_world0Shape2-positions-array" count="120">0.1032407 -0.00121301 -0.06873534 0.1032407 -0.00121301 0.06873534 -0.1032407 -0.00121301 -0.06873534 -0.1032407 -0.00121301 0.06873534 -0.05162033 0.002403089 0.06873534 -0.05162033 0.002403089 -0.06873534 0 0.003441516 0.06873534 0 0.003441516 -0.06873534 0.05162033 0.002403089 0.06873534 0.05162033 0.002403089 -0.06873534 0.1032407 1.17923e-4 0.02291177 0.05162033 0.003734031 0.02291177 0 0.004772457 0.02291177 -0.05162033 0.003734031 0.02291177 -0.1032407 1.17923e-4 0.02291177 0.1032407 1.17923e-4 -0.02291179 0.05162033 0.003734031 -0.02291179 0 0.004772457 -0.02291179 -0.05162033 0.003734031 -0.02291179 -0.1032407 1.17923e-4 -0.02291179 0.1032407 0 -0.06873534 0.1032407 0 0.06873534 -0.1032407 0 -0.06873534 -0.1032407 0 0.06873534 -0.05162033 0.003616089 0.06873534 -0.05162033 0.003616089 -0.06873534 0 0.004654516 0.06873534 0 0.004654516 -0.06873534 0.05162033 0.003616089 0.06873534 0.05162033 0.003616089 -0.06873534 0.1032407 0.001330923 0.02291177 0.05162033 0.004947031 0.02291177 0 0.005985457 0.02291177 -0.05162033 0.004947031 0.02291177 -0.1032407 0.001330923 0.02291177 0.1032407 0.001330923 -0.02291179 0.05162033 0.004947031 -0.02291179 0 0.005985457 -0.02291179 -0.05162033 0.004947031 -0.02291179 -0.1032407 0.001330923 -0.02291179</float_array>
+          <technique_common>
+            <accessor source="#photograph_world0Shape2-positions-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_world0Shape2-normals" name="photograph_world0Shape2-normals">
+          <float_array id="photograph_world0Shape2-normals-array" count="222">0.04500582 -0.9988814 -0.01450313 0.04499162 -0.9985662 -0.02900321 0.06985127 -0.997137 -0.02896166 0.06987329 -0.9974507 -0.01448235 0 -0.9998946 -0.01451786 0 -0.9995785 -0.02903266 -0.04500588 -0.9988814 -0.01450314 -0.04499167 -0.9985662 -0.02900321 -0.06987339 -0.9974508 -0.01448235 -0.06985137 -0.997137 -0.02896166 -0.06987339 -0.9974508 0.01448235 -0.04500588 -0.9988814 0.01450314 0 -0.9998946 0.01451787 0.04500582 -0.9988814 0.01450314 0.06987329 -0.9974508 0.01448235 -0.06985135 -0.9971369 0.02896167 -0.04499166 -0.9985662 0.02900322 0 -0.9995785 0.02903267 0.04499161 -0.9985662 0.02900322 0.06985126 -0.997137 0.02896167 -0.04500582 0.9988814 0.01450313 -0.06987329 0.9974507 0.01448234 -0.06985126 0.997137 0.02896165 -0.04499161 0.9985662 0.02900321 0 0.9998946 0.01451786 0 0.9995785 0.02903265 0.04500588 0.9988814 0.01450313 0.04499166 0.9985662 0.02900321 0.06987339 0.9974508 0.01448234 0.06985136 0.997137 0.02896165 0.06987339 0.9974508 -0.01448235 0.04500587 0.9988814 -0.01450314 0 0.9998946 -0.01451786 -0.04500582 0.9988814 -0.01450314 -0.06987329 0.9974508 -0.01448235 0.06985135 0.9971369 -0.02896166 0.04499166 0.9985662 -0.02900321 0 0.9995785 -0.02903266 -0.04499161 0.9985662 -0.02900322 -0.06985126 0.997137 -0.02896166 -1 0 0 -1 0 0 -1 0 0 -1 0 0 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 -1 0 0 -1 0 0 -1 0 0 -1 0 0 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0 0 -1 0.7071068 0 -0.7071066 0.7071068 0 -0.7071066 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0</float_array>
+          <technique_common>
+            <accessor source="#photograph_world0Shape2-normals-array" count="74" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="photograph_world0Shape2-map1" name="photograph_world0Shape2-map1">
+          <float_array id="photograph_world0Shape2-map1-array" count="192">0.1298815 0.1675655 0.1298815 0.06117237 0.01045096 0.06117237 0.01045096 0.1675655 0.2493123 0.1675656 0.2493123 0.06117237 0.3687429 0.1675656 0.3687429 0.06117237 0.4881735 0.1675656 0.4881734 0.06117237 0.4881735 0.2739589 0.3687429 0.273959 0.2493123 0.273959 0.1298815 0.273959 0.01045096 0.273959 0.4881734 0.3803521 0.3687429 0.3803521 0.2493123 0.3803521 0.1298815 0.3803521 0.01045096 0.3803521 0.6249166 0.7789006 0.5003821 0.7789006 0.5003821 0.6683509 0.6249166 0.6683509 0.749451 0.7789006 0.749451 0.6683509 0.8739855 0.7789006 0.8739855 0.6683509 0.99852 0.7789006 0.9985201 0.6683509 0.99852 0.8894503 0.8739855 0.8894503 0.749451 0.8894503 0.6249166 0.8894503 0.5003821 0.8894503 0.9985201 1 0.8739855 1 0.749451 1 0.6249166 1 0.5003821 1 0.01005865 0.01516991 0.660659 0.01516991 0.6601592 0.0323775 0.009558862 0.0323775 0.009558862 0.01516991 0.6595942 0.01516991 0.660659 0.03037015 0.01062367 0.03037015 0.009558862 0.01516991 0.6603515 0.01516991 0.660659 0.03045637 0.009866396 0.03045637 0.009866396 0.01516991 0.660659 0.01516991 0.6603515 0.03045637 0.009558862 0.03045637 0.01062366 0.01516991 0.660659 0.01516991 0.6595942 0.03037017 0.009558862 0.03037017 0.009558862 0.03240525 0.660659 0.03240525 0.660659 0.01516991 0.009558862 0.01516991 0.009558862 0.01516991 0.6601592 0.01516991 0.660659 0.0323775 0.01005865 0.0323775 0.01062367 0.01516991 0.660659 0.01516991 0.6595942 0.03037015 0.009558862 0.03037015 0.009866396 0.01516991 0.660659 0.01516991 0.6603515 0.03045637 0.009558862 0.03045637 0.009558862 0.01516991 0.6603515 0.01516991 0.660659 0.03045637 0.009866396 0.03045637 0.009558862 0.01516991 0.6595942 0.01516991 0.660659 0.03037017 0.01062366 0.03037017 0.01005865 0.01516991 0.660659 0.01516991 0.6601592 0.0323775 0.009558862 0.0323775 0.009558862 0.03240525 0.660659 0.03240525 0.660659 0.01516991 0.009558862 0.01516991 0.009558862 0.01516991 0.6601592 0.01516991 0.660659 0.0323775 0.01005865 0.0323775</float_array>
+          <technique_common>
+            <accessor source="#photograph_world0Shape2-map1-array" count="96" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="photograph_world0Shape2-vertices" name="photograph_world0Shape2-vertices">
+          <input semantic="POSITION" source="#photograph_world0Shape2-positions"/>
+        </vertices>
+        <triangles material="lambert2SG" count="76">
+          <input semantic="VERTEX" source="#photograph_world0Shape2-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#photograph_world0Shape2-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#photograph_world0Shape2-map1" offset="2" set="0"/>
+          <p>13 0 0 4 1 1 14 3 3 14 3 3 4 1 1 3 2 2 12 4 4 6 5 5 13 0 0 13 0 0 6 5 5 4 1 1 8 7 7 6 5 5 11 6 6 11 6 6 6 5 5 12 4 4 1 9 9 8 7 7 10 8 8 10 8 8 8 7 7 11 6 6 15 10 10 10 8 8 16 11 11 16 11 11 10 8 8 11 6 6 16 11 11 11 6 6 17 12 12 17 12 12 11 6 6 12 4 4 17 12 12 12 4 4 18 13 13 18 13 13 12 4 4 13 0 0 18 13 13 13 0 0 19 14 14 19 14 14 13 0 0 14 3 3 0 15 15 15 10 10 9 16 16 9 16 16 15 10 10 16 11 11 9 16 16 16 11 11 7 17 17 7 17 17 16 11 11 17 12 12 17 12 12 18 13 13 7 17 17 7 17 17 18 13 13 5 18 18 18 13 13 19 14 14 5 18 18 5 18 18 19 14 14 2 19 19 33 20 20 34 21 21 24 23 23 24 23 23 34 21 21 23 22 22 32 24 24 33 20 20 26 25 25 26 25 25 33 20 20 24 23 23 32 24 24 26 25 25 31 26 26 31 26 26 26 25 25 28 27 27 31 26 26 28 27 27 30 28 28 30 28 28 28 27 27 21 29 29 35 30 30 36 31 31 30 28 28 30 28 28 36 31 31 31 26 26 36 31 31 37 32 32 31 26 26 31 26 26 37 32 32 32 24 24 37 32 32 38 33 33 32 24 24 32 24 24 38 33 33 33 20 20 38 33 33 39 34 34 33 20 20 33 20 20 39 34 34 34 21 21 20 35 35 29 36 36 35 30 30 35 30 30 29 36 36 36 31 31 29 36 36 27 37 37 36 31 31 36 31 31 27 37 37 37 32 32 25 38 38 38 33 33 27 37 37 27 37 37 38 33 33 37 32 32 22 39 39 39 34 34 25 38 38 25 38 38 39 34 34 38 33 33 34 41 41 14 42 42 23 40 40 23 40 40 14 42 42 3 43 43 24 44 44 23 45 45 4 47 47 4 47 47 23 45 45 3 46 46 26 48 48 24 44 49 6 49 51 6 49 51 24 44 49 4 47 50 8 50 53 28 51 54 6 49 52 6 49 52 28 51 54 26 48 55 28 51 57 8 50 58 21 52 56 21 52 56 8 50 58 1 53 59 34 41 60 39 54 61 14 42 63 14 42 63 39 54 61 19 55 62 39 54 64 22 56 65 19 55 67 19 55 67 22 56 65 2 57 66 25 59 69 5 60 70 22 58 68 22 58 68 5 60 70 2 61 71 27 62 73 7 63 74 25 59 72 25 59 72 7 63 74 5 60 75 27 62 76 29 64 77 7 63 79 7 63 79 29 64 77 9 65 78 29 64 80 20 66 81 9 65 83 9 65 83 20 66 81 0 67 82 35 68 85 15 69 86 20 66 84 20 66 84 15 69 86 0 67 87 35 68 88 30 70 89 15 69 91 15 69 91 30 70 89 10 71 90 30 70 92 21 72 93 10 71 95 10 71 95 21 72 93 1 73 94</p>
+        </triangles>
+      </mesh>
+      <extra>
+        <technique profile="OpenCOLLADAMaya">
+          <originalMayaNodeId>photograph_world0Shape2</originalMayaNodeId>
+          <double_sided>1</double_sided>
+        </technique>
+      </extra>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="VisualSceneNode" name="_2_05_photos_world">
+      <node id="photograph_world02" name="photograph_world02" type="NODE">
+        <translate sid="translate">0 0 0</translate>
+        <rotate sid="rotateZ">0 0 1 0</rotate>
+        <rotate sid="rotateY">0 1 0 0</rotate>
+        <rotate sid="rotateX">1 0 0 0</rotate>
+        <scale sid="scale">1 1 1</scale>
+        <instance_geometry url="#photograph_world0Shape2">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="lambert2SG" target="#lambert2">
+                <bind_vertex_input semantic="TEX0" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <extra>
+          <technique profile="OpenCOLLADAMaya">
+            <originalMayaNodeId>photograph_world02</originalMayaNodeId>
+          </technique>
+        </extra>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#VisualSceneNode"/>
+  </scene>
+</COLLADA>

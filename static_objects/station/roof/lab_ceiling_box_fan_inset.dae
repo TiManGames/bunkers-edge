@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+    <asset>
+        <contributor>
+            <author>illerulf</author>
+            <authoring_tool>modo 701 [Build 66614], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 66614]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: Yes; Save Vertex Weights: Yes; Save Animation: No; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 276; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <source_data>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/roof/lab_ceiling.lxo</source_data>
+        </contributor>
+        <created>2014-03-04T21:23:00Z</created>
+        <modified>2014-03-04T21:23:00Z</modified>
+        <unit name="game" meter="1" />
+        <up_axis>Y_UP</up_axis>
+    </asset>
+    <library_images>
+        <image id="Image0001" name="Image0001">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/lab_set.psd</init_from>
+        </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>file:///D:/Work/Dropbox/Frictional%20Games%20-%20Team/Aaron/models/static_objects/station/roof/lab_ceiling_pipes.psd</init_from>
+        </image>
+    </library_images>
+    <library_materials>
+        <material id="Material-lab_ceiling_pipes" name="lab_ceiling_pipes">
+            <instance_effect url="#Effect-lab_ceiling_pipes" />
+        </material>
+        <material id="Material-lab_set" name="lab_set">
+            <instance_effect url="#Effect-lab_set" />
+        </material>
+    </library_materials>
+    <library_effects>
+        <effect id="Effect-lab_ceiling_pipes" name="lab_ceiling_pipes">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">16.5642</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-lab_set" name="lab_set">
+            <profile_COMMON>
+                <newparam sid="Image0001-surface">
+                    <surface type="2D">
+                        <init_from>Image0001</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0001-sampler">
+                    <sampler2D>
+                        <source>Image0001-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0001-sampler" texcoord="uvSet1" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+    </library_effects>
+    <library_geometries>
+        <geometry id="Geometry-mesh021" name="lab_ceiling_box_fan">
+            <mesh>
+                <source id="Geometry-mesh021-positions" name="positions">
+                    <float_array id="Geometry-mesh021-positions-array" count="84">1 -0.710301 -1.09007 -1 -0.710301 -1.09007 1 0 -1.09007 -1 0 -1.09007 1 -0.75 -1.01497 -1 -0.75 -1.01497 1 -0.742051 -1.06314 -1 -0.742051 -1.06314 -1 -0.710301 1.09007 1 -0.710301 1.09007 -1 0 1.09007 1 0 1.09007 -1 -0.75 1.01497 1 -0.75 1.01497 -1 -0.742051 1.06314 1 -0.742051 1.06314 -0.57514 -0.75 -0.576378 -0.785659 -0.75 -0.211753 -0.210519 -0.75 -0.786896 0.210514 -0.75 -0.786897 0.575137 -0.75 -0.57638 0.785659 -0.75 -0.211753 -0.785659 -0.75 0.209278 -0.575142 -0.75 0.573904 -0.210519 -0.75 0.78442 0.210514 -0.75 0.784422 0.785659 -0.75 0.209281 0.575137 -0.75 0.573906</float_array>
+                    <technique_common>
+                        <accessor count="28" source="#Geometry-mesh021-positions-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh021-normals" name="normals">
+                    <float_array id="Geometry-mesh021-normals-array" count="39">0 -0.456042 -0.889958 0 -0.228021 -0.973656 0 0 -1 0 -0.923522 -0.383546 0 -0.803795 -0.594906 0 -0.986652 -0.162844 0 -0.456042 0.889958 0 -0.228021 0.973656 0 0 1 0 -0.923522 0.383546 0 -0.803795 0.594906 0 -0.986652 0.162844 0 -1 0</float_array>
+                    <technique_common>
+                        <accessor count="13" source="#Geometry-mesh021-normals-array" stride="3">
+                            <param name="X" type="float" />
+                            <param name="Y" type="float" />
+                            <param name="Z" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <source id="Geometry-mesh021-uvSet1" name="uvSet1">
+                    <float_array id="Geometry-mesh021-uvSet1-array" count="48">0.14015 0.479545 0.14015 0.00243075 0.261225 0.479545 0.261225 0.00243075 0.136363 0.479545 0.136363 0.00243075 0.129592 0.479545 0.129592 0.00243075 0.246454 0.964315 0.149852 0.913022 0.193705 0.862644 0.00231526 0.48571 0.0553618 0.587379 0.0300433 0.674634 0.219023 0.775389 0.00231532 0.964315 0.0553616 0.862644 0.0992146 0.913022 0.0300432 0.775389 0.246454 0.48571 0.219023 0.674634 0.193705 0.58738 0.149852 0.537002 0.0992149 0.537002</float_array>
+                    <technique_common>
+                        <accessor count="24" source="#Geometry-mesh021-uvSet1-array" stride="2">
+                            <param name="S" type="float" />
+                            <param name="T" type="float" />
+                        </accessor>
+                    </technique_common>
+                </source>
+                <vertices id="Geometry-mesh021-vertices">
+                    <input semantic="POSITION" source="#Geometry-mesh021-positions" />
+                </vertices>
+                <triangles count="28" material="Material-lab_set">
+                    <input semantic="VERTEX" source="#Geometry-mesh021-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh021-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh021-uvSet1" offset="2" set="0" />
+                    <p>0 0 0 1 1 1 2 2 2 2 2 2 1 1 1 3 2 3 6 3 4 7 4 5 0 0 0 0 0 0 7 4 5 1 1 1 4 5 6 5 5 7 6 3 4 6 3 4 5 5 7 7 4 5 8 6 0 9 7 1 10 8 2 10 8 2 9 7 1 11 8 3 14 9 4 15 10 5 8 6 0 8 6 0 15 10 5 9 7 1 12 11 6 13 11 7 14 9 4 14 9 4 13 11 7 15 10 5 4 12 8 21 12 9 20 12 10 12 12 11 23 12 12 24 12 13 4 12 8 20 12 10 19 12 14 13 12 15 27 12 16 26 12 17 13 12 15 25 12 18 27 12 16 5 12 19 18 12 20 16 12 21 5 12 19 16 12 21 17 12 22 12 12 11 22 12 23 23 12 12 12 12 11 24 12 13 13 12 15 25 12 18 13 12 15 24 12 13 4 12 8 13 12 15 21 12 9 26 12 17 21 12 9 13 12 15 5 12 19 4 12 8 18 12 20 19 12 14 18 12 20 4 12 8 12 12 11 5 12 19 22 12 23 17 12 22 22 12 23 5 12 19</p>
+                </triangles>
+            </mesh>
+        </geometry>
+    </library_geometries>
+    <library_visual_scenes>
+        <visual_scene id="DefaultScene">
+            <node id="Geometry-mesh021Node" name="lab_ceiling_box_fan" type="NODE">
+                <translate sid="translation024">0 0 0</translate>
+                <rotate sid="rotation023Y">0 1 0 0</rotate>
+                <rotate sid="rotation023X">1 0 0 0</rotate>
+                <rotate sid="rotation023Z">0 0 1 0</rotate>
+                <scale sid="scale022">1 1 1</scale>
+                <instance_geometry url="#Geometry-mesh021">
+                    <bind_material>
+                        <technique_common>
+                            <instance_material symbol="Material-lab_set" target="#Material-lab_set">
+                                <bind_vertex_input semantic="uvSet1" input_semantic="TEXCOORD" input_set="0" />
+                            </instance_material>
+                        </technique_common>
+                    </bind_material>
+                </instance_geometry>
+            </node>
+            <node id="groupLocator027Node" name="Texture_Group" type="NODE">
+                <node id="txtrLocator004Node" name="lab_ceiling_pipes__2___Image___Texture_" type="NODE">
+                    <translate sid="translation007">0 0 0</translate>
+                    <rotate sid="rotation006Y">0 1 0 0</rotate>
+                    <rotate sid="rotation006X">1 0 0 0</rotate>
+                    <rotate sid="rotation006Z">0 0 1 0</rotate>
+                    <scale sid="scale005">1 1 1</scale>
+                </node>
+                <node id="txtrLocator023Node" name="lab_set__Image___Texture_" type="NODE">
+                    <translate sid="translation026">0 0 0</translate>
+                    <rotate sid="rotation025Y">0 1 0 0</rotate>
+                    <rotate sid="rotation025X">1 0 0 0</rotate>
+                    <rotate sid="rotation025Z">0 0 1 0</rotate>
+                    <scale sid="scale024">1 1 1</scale>
+                </node>
+            </node>
+        </visual_scene>
+    </library_visual_scenes>
+    <scene>
+        <instance_visual_scene url="#DefaultScene" />
+    </scene>
+</COLLADA>

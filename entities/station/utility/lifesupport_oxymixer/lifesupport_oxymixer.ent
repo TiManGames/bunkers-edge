@@ -1,0 +1,83 @@
+<Entity>
+    <ModelData>
+        <Entities>
+            <Sound ID="17" Name="motor_sound" CreStamp="1421232562" ModStamp="1421232594" WorldPos="0 0 0" Rotation="0 0 0" Scale="1 1 1" SoundEntityFile="Entities_Station/object/oxymixer/tone" MinDistance="1" MaxDistance="12" Volume="1" Active="true" UseCustomProperties="false" />
+        </Entities>
+        <Mesh Filename="entities/station/utility/lifesupport_oxymixer/lifesupport_oxymixer.dae">
+            <SubMesh ID="0" Name="glass" CreStamp="0" ModStamp="0" WorldPos="0 0 0" Rotation="0 0 0" Scale="1 1 1" TriCount="60" Material="" />
+            <SubMesh ID="1" Name="lifesupport_oxymixer" CreStamp="0" ModStamp="1417703639" WorldPos="0 0 0" Rotation="0 0 0" Scale="1 1 1" TriCount="738" Material="" />
+        </Mesh>
+        <Bones>
+            <Bone ID="2" Name="glass" />
+            <Bone ID="3" Name="root" />
+            <Bone ID="4" Name="joint_mixer" />
+            <Bone ID="5" Name="joint_piston01" />
+            <Bone ID="6" Name="joint_piston02" />
+            <Bone ID="7" Name="lifesupport_oxymixer" />
+        </Bones>
+        <Shapes>
+            <Shape ID="8" Name="Shape_1" CreStamp="0" ModStamp="0" WorldPos="0.0100105 0.0705604 0.133819" Rotation="0 0 0" Scale="1.07756 0.840301 0.290039" RelativeTranslation="0.0053325 0.0699469 -0.0500744" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="9" Name="Shape_2" CreStamp="0" ModStamp="0" WorldPos="-0.00195834 -0.263574 0.295171" Rotation="0 0 0" Scale="1.05571 0.158568 0.154589" RelativeTranslation="-0.00663634 -0.264188 0.111278" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="10" Name="Shape_3" CreStamp="0" ModStamp="0" WorldPos="-0.00156114 0.490648 0.185524" Rotation="0 0 0" Scale="0.786913 0.213167 0.375282" RelativeTranslation="-0.00623914 0.490035 0.00163065" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="11" Name="Shape_4" CreStamp="0" ModStamp="0" WorldPos="-0.428842 0.490515 0.180238" Rotation="0 -0 -0.879688" Scale="0.126285 0.191874 0.37474" RelativeTranslation="-0.43352 0.489901 -0.00365536" RelativeRotation="0 -0 -0.879688" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="12" Name="Shape_5" CreStamp="0" ModStamp="0" WorldPos="0.438198 0.482535 0.185162" Rotation="0 -0 0.972604" Scale="0.13424 0.195388 0.361819" RelativeTranslation="0.43352 0.481921 0.00126864" RelativeRotation="0 -0 0.972604" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="13" Name="Shape_6" CreStamp="0" ModStamp="0" WorldPos="-0.00699534 0.407691 0.293722" Rotation="-0.405365 -0 0" Scale="1.06759 0.133649 0.115591" RelativeTranslation="-0.0116733 0.407077 0.109829" RelativeRotation="-0.405365 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="14" Name="Shape_7" CreStamp="0" ModStamp="0" WorldPos="0.051209 -0.489421 0.0726157" Rotation="0 0 0" Scale="1 0.252578 0.0754639" RelativeTranslation="0.046531 -0.490035 -0.111278" RelativeRotation="0 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+            <Shape ID="15" Name="Shape_8" CreStamp="0" ModStamp="0" WorldPos="0.0445445 -0.365479 0.165716" Rotation="0.830411 -0 0" Scale="1 0.258046 0.195287" RelativeTranslation="0.0398665 -0.366093 -0.0181773" RelativeRotation="0.830411 -0 0" RelativeScale="1 1 1" ShapeType="Box" />
+        </Shapes>
+        <Bodies>
+            <Body ID="16" Name="ventilation_oxymixer" CreStamp="0" ModStamp="1417703675" WorldPos="0.004678 0.000613496 0.183893" Rotation="0 0 0" Scale="1 1 1" Material="Metal Box Hollow" Mass="0" AngularDamping="0.1" LinearDamping="0.1" MaxAngularSpeed="20" MaxLinearSpeed="20" BuoyancyDensityMul="1" BlocksSound="false" ContinuousCollision="true" CanAttachCharacter="false" PushedByCharacterGravity="false" CollideCharacter="true" CollideNonCharacter="true" Volatile="false" UseSurfaceEffects="true" HasGravity="false" BlocksLight="true">
+                <Shape ID="15" />
+                <Shape ID="14" />
+                <Shape ID="11" />
+                <Shape ID="10" />
+                <Shape ID="12" />
+                <Shape ID="13" />
+                <Shape ID="9" />
+                <Shape ID="8" />
+            </Body>
+        </Bodies>
+        <Joints />
+        <Animations>
+            <Animation Name="lifesupport_oxymixer_spin" File="entities/station/utility/lifesupport_oxymixer/animations/lifesupport_oxymixer_spin.dae_anim" Layer="Default" Speed="0.4">
+                <Event Name="ventilator" Time="0" Type="PlaySound" DestSocket="" Value="Entities_Station/object/oxymixer/active" />
+            </Animation>
+        </Animations>
+        <ProcAnimations />
+    </ModelData>
+    <UserDefinedVariables EntityType="Prop_Rigid">
+        <Var Name="Health" Value="100" />
+        <Var Name="Toughness" Value="0" />
+        <Var Name="MaxInteractDistance" Value="0" />
+        <Var Name="EventTag" Value="" />
+        <Var Name="ShowHints" Value="true" />
+        <Var Name="LifeLength" Value="0" />
+        <Var Name="DissolveDuringLifeDecrease" Value="true" />
+        <Var Name="BlocksLineOfSight" Value="true" />
+        <Var Name="MainPhysicsBody" Value="" />
+        <Var Name="CustomScriptFile" Value="" />
+        <Var Name="CustomScriptClass" Value="" />
+        <Var Name="ShowMesh" Value="true" />
+        <Var Name="DissolveOnDestruction" Value="false" />
+        <Var Name="DissolveTime" Value="1.0" />
+        <Var Name="RandomizeAnimationStart" Value="true" />
+        <Var Name="EffectsOnSound" Value="" />
+        <Var Name="EffectsOffSound" Value="" />
+        <Var Name="EffectsOnTime" Value="0.2" />
+        <Var Name="EffectsOffTime" Value="0.2" />
+        <Var Name="StaticMoveCheckCollision" Value="false" />
+        <Var Name="StaticMoveStartSound" Value="" />
+        <Var Name="StaticMoveStopSound" Value="" />
+        <Var Name="StaticMoveLoopSound" Value="" />
+        <Var Name="StaticMoveLoopSoundFade" Value="true" />
+        <Var Name="BreakActive" Value="false" />
+        <Var Name="BreakOnlyOnMainBody" Value="false" />
+        <Var Name="BreakDestroyJoints" Value="false" />
+        <Var Name="BreakMinEnergy" Value="100" />
+        <Var Name="BreakEntity" Value="" />
+        <Var Name="BreakEntityAlignBody" Value="" />
+        <Var Name="BreakSound" Value="" />
+        <Var Name="BreakParticleSystem" Value="" />
+        <Var Name="BreakImpulse" Value="4" />
+    </UserDefinedVariables>
+</Entity>

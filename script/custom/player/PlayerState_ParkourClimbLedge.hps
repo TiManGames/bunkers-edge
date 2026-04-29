@@ -1,0 +1,265 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+
+#include "helpers/helper_player.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourClimb_SnapTime = 0.18f;
+const float gfParkourClimb_ClimbTime = 0.68f;
+const float gfParkourClimb_ArcHeight = 0.18f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+	
+	void OnAttachBodyToStickyArea() {}
+	
+	//------------------------------------------------------------
+	
+	void Init() {}
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void OnMapLeave(cLuxMap @apMap) {}
+	void CreateWorldEntities(cLuxMap @apMap) {}
+	void DestroyWorldEntities(cLuxMap @apMap) {}
+	
+	//------------------------------------------------------------
+	
+	void SetupParkourClimbLedge()
+	{
+		mvFeetPosition = cScript_GetGlobalArgVector3f(0);
+		mbCrouch = cScript_GetGlobalArgBool(1);
+		mvAreaDirection = cScript_GetGlobalArgVector3f(2);
+		mvAreaPosition = cScript_GetGlobalArgVector3f(3);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnEnterState(int alPrevStateId)
+	{
+		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
+		if (pCharBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		cCamera@ pCam = cLux_GetPlayer().GetCamera();
+		
+		mvAreaDirection.y = 0.f;
+		if (mvAreaDirection.SqrLength() > 0.001f)
+			mvAreaDirection.Normalize();
+		else
+			mvAreaDirection = cVector3f_Forward;
+		
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+		pCharBody.SetGravityActive(false);
+		pCharBody.SetTestCollision(false);
+		pCharBody.SetPhysicsBodyActive(false);
+		pCharBody.StopMovement();
+		pCharBody.ResetClimbing();
+		
+		Player_SetCrouching(false);
+		Player_CancelJump();
+		
+		mbCrouchCompleted = false;
+		mlState = 0;
+		mfTimeCount = 0.f;
+		mfTimeCountAdd = 1.f / gfParkourClimb_SnapTime;
+		
+		cVector3f vArmPosition = mvAreaPosition + mvAreaDirection * 0.18f + cVector3f(0.f, 0.05f, 0.f);
+		mvHangFeetPosition = vArmPosition - cVector3f(0.f, pCharBody.GetSize().y + cLux_GetPlayer().GetBaseCameraPosAdd().y, 0.f);
+		
+		mvFadePosStart = pCharBody.GetFeetPosition();
+		mvFadePosEnd = mvHangFeetPosition;
+		
+		float fAngle = cMath_GetAngleFromPoints3D(cVector3f_Zero, mvAreaDirection * -1.f).y;
+		mvFadeRotStart = cVector3f(pCam.GetPitch(), pCam.GetYaw(), 0.f);
+		mvFadeRotEnd = cVector3f(0.f, fAngle, 0.f);
+		
+		tString sSound = "player/climb_ledge/low";
+		if (mvAreaPosition.y > pCam.GetPosition().y + 0.1f)
+			sSound = "player/climb_ledge/high";
+		if (cLux_GetUnderwaterEffectsActive())
+			sSound += "_underwater";
+		cLux_PlayGuiSoundData(sSound, eSoundEntryType_WorldClean, 1.f, true);
+		
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, -0.05f, 0.08f), 12.f, 6.f, 0.08f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveState(int alNextStateId)
+	{
+		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
+		if (pCharBody !is null)
+		{
+			pCharBody.SetGravityActive(true);
+			pCharBody.SetTestCollision(true);
+			pCharBody.SetPhysicsBodyActive(true);
+		}
+		
+		Player_ResetCameraLimits();
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Climb, 0.f, 4.f, 5.f);
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+	}
+	
+	//------------------------------------------------------------
+	
+	void Reset() {}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
+		if (pCharBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+		
+		cCamera@ pCam = cLux_GetPlayer().GetCamera();
+		
+		mfTimeCount += afTimeStep * mfTimeCountAdd;
+		if (mfTimeCount >= 1.f)
+			mfTimeCount = 1.f;
+		
+		if (mlState == 0)
+		{
+			float fT = cMath_Easing(eEasing_QuadOut, mfTimeCount);
+			pCharBody.SetFeetPosition(LerpVector(mvFadePosStart, mvFadePosEnd, fT), true);
+			
+			float fRotTotalX = cMath_GetAngleDistance(mvFadeRotStart.x, mvFadeRotEnd.x, cMath_PiMul2);
+			float fRotTotalY = cMath_GetAngleDistance(mvFadeRotStart.y, mvFadeRotEnd.y, cMath_PiMul2);
+			float fRotT = cMath_Easing(eEasing_QuadInOut, mfTimeCount);
+			pCam.SetPitch(mvFadeRotStart.x + fRotTotalX * fRotT);
+			pCharBody.SetYaw(mvFadeRotStart.y + fRotTotalY * fRotT);
+			
+			if (mfTimeCount >= 1.f)
+			{
+				mlState = 1;
+				mfTimeCount = 0.f;
+				mfTimeCountAdd = 1.f / gfParkourClimb_ClimbTime;
+				mvFadePosStart = pCharBody.GetFeetPosition();
+				mvFadePosEnd = mvFeetPosition + cVector3f(0.f, 0.01f, 0.f);
+			}
+		}
+		else if (mlState == 1)
+		{
+			float fT = cMath_Easing(eEasing_QuadInOut, mfTimeCount);
+			cVector3f vPos = LerpVector(mvFadePosStart, mvFadePosEnd, fT);
+			vPos.y += cMath_Sin(fT * cMath_Pi) * gfParkourClimb_ArcHeight;
+			pCharBody.SetFeetPosition(vPos, true);
+			
+			float fRollAmount = cMath_Sin(fT * cMath_Pi) * 5.f;
+			cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Climb, cMath_ToRad(fRollAmount));
+			
+			if (mbCrouch && mbCrouchCompleted == false && mfTimeCount > 0.65f)
+			{
+				Player_SetCrouching(true);
+				mbCrouchCompleted = true;
+			}
+			
+			if (mfTimeCount >= 1.f)
+				cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+		}
+	}
+	
+	//------------------------------------------------------------
+	
+	void PostUpdate(float afTimeStep) {}
+	
+	//------------------------------------------------------------
+	
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if (abPressed == false) return true;
+		
+		if (alAction == eAction_Jump ||
+			alAction == eAction_Interact ||
+			alAction == eAction_Crouch)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (alAnalogId == eAnalogType_Look ||
+			alAnalogId == eAnalogType_Move ||
+			alAnalogId == eAnalogType_GamepadMove ||
+			alAnalogId == eAnalogType_Lean)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool OnExitPressed()
+	{
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	bool AllowBuoyancy(iPhysicsBody @apBody)
+	{
+		return true;
+	}
+	
+	//------------------------------------------------------------
+	
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody, const cVector3f &in avVel) {}
+	
+	//------------------------------------------------------------
+	
+	float DrawDebugOutput(cGuiSet @apSet, iFontData @apFont, float afStartY)
+	{
+		return afStartY;
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f LerpVector(const cVector3f &in avA, const cVector3f &in avB, float afT)
+	{
+		return avA * (1.f - afT) + avB * afT;
+	}
+	
+	//------------------------------------------------------------
+	
+	cVector3f mvFeetPosition = cVector3f_Zero;
+	cVector3f mvAreaDirection = cVector3f_Forward;
+	cVector3f mvAreaPosition = cVector3f_Zero;
+	cVector3f mvHangFeetPosition = cVector3f_Zero;
+	
+	bool mbCrouch = false;
+	bool mbCrouchCompleted = false;
+	
+	float mfTimeCount = 0.f;
+	float mfTimeCountAdd = 1.f;
+	
+	cVector3f mvFadePosStart = cVector3f_Zero;
+	cVector3f mvFadePosEnd = cVector3f_Zero;
+	cVector3f mvFadeRotStart = cVector3f_Zero;
+	cVector3f mvFadeRotEnd = cVector3f_Zero;
+	
+	int mlState = 0;
+	
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------
