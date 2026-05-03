@@ -10,6 +10,7 @@
 #include "helpers/helper_game.hps"
 #include "helpers/helper_modules.hps"
 #include "helpers/helper_ai.hps"
+#include "helpers/helper_player.hps"
 
 #include "helpers/helper_agent.hps"
 #include "helpers/helper_gun.hps"
@@ -94,6 +95,9 @@ class cScrMap : iScrMap
 			Parkour_SetDebug(true);
 			// Inventory_SetActive(false)
 		}
+
+		Player_SetGravity(cVector3f(0,-18,0));
+		Sketchbook_SetInventoryEnabled(false);
 	}
 
 	//-------------------------------------------------------

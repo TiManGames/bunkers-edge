@@ -40,11 +40,11 @@ const float gfMapDeepShadowDefault=0.35f;
 const float gfLookAccelerationSpeedReduction = 0.75f; // Higher value means mouse movement adds less to velocity
 const float gfLookAccelerationDrag = 4.0f; // Controls how quickly the mouse velocity goes back to 0. Higher = faster.
 const float gfParkourMoveTilt_StrafeRollDeg = 2.10f;
-const float gfParkourMoveTilt_TurnRollDeg = 2.50f;
-const float gfParkourMoveTilt_MaxRollDeg = 3.15f;
+const float gfParkourMoveTilt_TurnRollDeg = 3.50f;
+const float gfParkourMoveTilt_MaxRollDeg = 5.15f;
 const float gfParkourMoveTilt_YawSpeedForMax = 2.80f;
 const float gfParkourMoveTilt_TargetFadeSpeed = 8.0f;
-const float gfParkourMoveTilt_RollEaseSpeed = 11.0f;
+const float gfParkourMoveTilt_RollEaseSpeed = 15.0f;
 
 const float gfVertigoMinDist = 15.f;
 const float gfVertigoFovAdd = 0.2f;
@@ -450,8 +450,7 @@ class cScrPlayerCustom : cScrPlayer
 			float fStrafe = cMath_Clamp(pBody.GetMoveSpeed(eCharDir_Right), -1.f, 1.f);
 			if (cMath_Abs(fStrafe) < 0.05f)
 			{
-				cVector3f vFlatVel = pBody.GetVelocity(cMath_Max(afTimeStep, 1.0f / 60.0f));
-				vFlatVel.y = 0.f;
+				cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
 				cVector3f vRight = pBody.GetRight();
 				vRight.y = 0.f;
 				if (vRight.SqrLength() > 0.001f)

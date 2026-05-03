@@ -8,10 +8,10 @@
 
 //------------------------------------------------------------
 
-const float gfParkour_RunSpeedMulMin = 0.62f;
+const float gfParkour_RunSpeedMulMin = 1.6f;
 const float gfParkour_RunSpeedMulMax = 2.55f;
 const float gfParkour_WallRunMaxAge = 1.1f;
-const float gfParkour_WallRunMinSpeed = 1.6f;
+const float gfParkour_WallRunMinSpeed = 1.7f;
 const float gfParkour_FrontWallDot = -0.65f;
 const float gfParkour_FrontWallUpSpeed = 1.7f;
 const float gfParkour_FrontWallOutSpeed = 0.85f;
@@ -27,10 +27,12 @@ const float gfParkour_WallRunChainCameraForwardDot = 0.18f;
 const float gfParkour_WallScrambleEntryRayLength = 0.65f;
 const float gfParkour_WallScrambleChainRayLength = 0.95f;
 const float gfParkour_WallScrambleLookUpForwardY = 0.12f;
+const float gfParkour_WallScrambleCameraAssistPitchDeg = 7.0f;
 const float gfParkour_WallScrambleChainGrace = 1.05f;
 const float gfParkour_WallScrambleSameWallRejectTime = 0.48f;
 const float gfParkour_WallScrambleSameWallDot = 0.65f;
 const float gfParkour_LedgeGrabMinRiseSpeed = 0.75f;
+const float gfParkour_PoleSwingCandidateTTL = 0.12f;
 const float gfParkour_AutoLedgeFaceRayLength = 0.95f;
 const float gfParkour_AutoLedgeTopRayUp = 2.60f;
 const float gfParkour_AutoLedgeTopRayLength = 3.10f;
@@ -86,14 +88,14 @@ const float gfParkour_HealthRegenRate = 0.10f;
 class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 {
 	//------------------------------------------------------------
-	
+
 	void Init()
 	{
 		Reset();
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void LoadUserConfig() {}
 	void SaveUserConfig() {}
 	void OnMapEnter(cLuxMap @apMap) { ResetMapData(); }
@@ -113,37 +115,43 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	void OnExitPressed() {}
 	void AppGotInputFocus() {}
 	void AppLostInputFocus() {}
-	
+
 	//------------------------------------------------------------
-	
+
 	void Reset()
 	{
 		mbEnabled = true;
 		mbDebug = false;
 		ResetMapData();
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void Update(float afTimeStep)
 	{
 		if (mfLedgeDebugTimer > 0.f)
 			mfLedgeDebugTimer -= afTimeStep;
-		
+
 		if (mfLedgeCandidateTime > 0.f)
 		{
 			mfLedgeCandidateTime -= afTimeStep;
 			if (mfLedgeCandidateTime <= 0.f)
 				mbLedgeCandidateActive = false;
 		}
-		
+		if (mfPoleSwingCandidateTime > 0.f)
+		{
+			mfPoleSwingCandidateTime -= afTimeStep;
+			if (mfPoleSwingCandidateTime <= 0.f)
+				ClearPoleSwingCandidate();
+		}
+
 		UpdateWallRunChain(afTimeStep);
 		UpdateAirFlow(afTimeStep);
 		UpdateHealthRegen(afTimeStep);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ResetMapData()
 	{
 		mbLedgeCandidateActive = false;
@@ -157,14 +165,15 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfLedgeRequiredFacingDot = 0.35f;
 		mfLedgeMinFallSpeed = 0.5f;
 		mfLedgeMaxPlayerFeetY = 999999.f;
+		ClearPoleSwingCandidate();
 		ResetWallRunChain();
 		ResetFlow();
 		mfHealthRegenDelay = 0.f;
 		mfLastPlayerHealth = -1.f;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool PlayerCanUseParkour(bool abRequireNormalMoveState = true)
 	{
 		if (mbEnabled == false) return false;
@@ -173,15 +182,15 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		if (abRequireNormalMoveState && cLux_GetPlayer().GetCurrentMoveStateId() != eMoveState_Normal) return false;
 		if (Player_GetUnderwater()) return false;
 		if (Player_IsInteracting()) return false;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null) return false;
-		
+
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	cVector3f GetCameraForward2D()
 	{
 		cVector3f vFwd = cLux_GetPlayer().GetCamera().GetForward();
@@ -189,21 +198,21 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		if (vFwd.SqrLength() > 0.001f) vFwd.Normalize();
 		return vFwd;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	cVector3f GetTravelForward2D(iCharacterBody@ apBody)
 	{
 		cVector3f vFwd;
 		cVector3f vRight;
 		if (Parkour_GetWallRunBasis(apBody, vFwd, vRight))
 			return vFwd;
-		
+
 		return GetCameraForward2D();
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ResetFlow()
 	{
 		mfParkourFlow = 0.f;
@@ -213,18 +222,18 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfFlowBlockedRunTimer = 0.f;
 		mfFlowBlockedRunCooldown = 0.f;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	float GetRunSpeedMul()
 	{
 		return cMath_InterpolateLinear(gfParkour_RunSpeedMulMin,
 									   gfParkour_RunSpeedMulMax,
 									   mfParkourFlow);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	float GetWallRunPowerMul()
 	{
 		float fFlowPower = cMath_InterpolateLinear(gfParkour_FlowWallPowerMin,
@@ -232,19 +241,19 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 												   mfParkourFlow);
 		return mfWallRunPowerMul * fFlowPower;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ChangeFlow(float afAmount,
 					const tString &in asReason,
 					bool abDebug)
 	{
 		if (mbEnabled == false) return;
-		
+
 		float fOldFlow = mfParkourFlow;
 		mfParkourFlow = cMath_Clamp(mfParkourFlow + afAmount, 0.f, 1.f);
 		float fChange = mfParkourFlow - fOldFlow;
-		
+
 		if (abDebug && mbDebug && cMath_Abs(fChange) > 0.001f)
 		{
 			tString sSign = "";
@@ -252,14 +261,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			cLux_AddDebugMessage("[Parkour] Flow " + sSign + fChange + " " + asReason + " -> " + mfParkourFlow, true);
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ApplyFlowEvent(int alEventId, float afScale)
 	{
 		float fScale = cMath_Max(0.f, afScale);
 		if (fScale <= 0.f) return;
-		
+
 		if (alEventId == geParkourFlowEvent_WallRunStart)
 			ChangeFlow(0.06f * fScale, "wall run start", true);
 		else if (alEventId == geParkourFlowEvent_WallJump)
@@ -299,9 +308,9 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		else if (alEventId == geParkourFlowEvent_SpeedVault)
 			ChangeFlow(0.08f * fScale, "speed vault", true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateGroundFlow(float afTimeStep,
 						  bool abRunning,
 						  bool abForwardIntent,
@@ -310,23 +319,23 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	{
 		if (mbEnabled == false) return;
 		if (afTimeStep <= 0.f) return;
-		
+
 		if (mfFlowSharpTurnCooldown > 0.f)
 			mfFlowSharpTurnCooldown -= afTimeStep;
 		if (mfFlowBlockedRunCooldown > 0.f)
 			mfFlowBlockedRunCooldown -= afTimeStep;
-		
+
 		cVector3f vMoveDir = avMoveDir;
 		vMoveDir.y = 0.f;
 		bool bHasMoveDir = vMoveDir.SqrLength() > 0.001f;
 		if (bHasMoveDir)
 			vMoveDir.Normalize();
-		
+
 		bool bCleanRun = abForwardIntent &&
 						 afFlatSpeed >= gfParkour_FlowRunMinSpeed &&
 						 Player_GetUnderwater() == false &&
 						 Player_IsInteracting() == false;
-		
+
 		if (bCleanRun && bHasMoveDir)
 		{
 			if (mbFlowHasMoveDir && mfFlowSharpTurnCooldown <= 0.f)
@@ -338,14 +347,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 					mfFlowSharpTurnCooldown = gfParkour_FlowSharpTurnCooldown;
 				}
 			}
-			
+
 			mvFlowLastMoveDir = vMoveDir;
 			mbFlowHasMoveDir = true;
 			mfFlowBlockedRunTimer = 0.f;
 			ChangeFlow(gfParkour_FlowGroundRunGain * afTimeStep, "", false);
 			return;
 		}
-		
+
 		if (abForwardIntent &&
 			afFlatSpeed <= gfParkour_FlowBlockedSpeed &&
 			mfParkourFlow >= gfParkour_FlowBlockedMinFlow)
@@ -362,7 +371,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		{
 			mfFlowBlockedRunTimer = 0.f;
 		}
-		
+
 		if (afFlatSpeed <= gfParkour_FlowIdleSpeed || abForwardIntent == false)
 		{
 			ChangeFlow(-gfParkour_FlowIdleDecay * afTimeStep, "", false);
@@ -370,42 +379,42 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				mbFlowHasMoveDir = false;
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateAirFlow(float afTimeStep)
 	{
 		if (mbEnabled == false) return;
 		if (afTimeStep <= 0.f) return;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null) return;
 		if (pBody.IsOnGround()) return;
 		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
 		if (cLux_GetPlayer().GetCurrentMoveStateId() != eMoveState_Normal) return;
 		if (mbWallJumpChainActive || mbWallScrambleJumpChainActive) return;
-		
+
 		ChangeFlow(-gfParkour_FlowAirDecay * afTimeStep, "", false);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateHealthRegen(float afTimeStep)
 	{
 		if (mbEnabled == false) return;
 		if (afTimeStep <= 0.f) return;
 		if (cLux_GetPlayer().IsActive() == false) return;
-		
+
 		float fHealth = Player_GetHealth();
 		float fMaxHealth = Player_GetMaxHealth();
 		if (fMaxHealth <= 0.f) return;
-		
+
 		if (mfLastPlayerHealth < 0.f)
 			mfLastPlayerHealth = fHealth;
-		
+
 		if (fHealth < mfLastPlayerHealth - 0.001f)
 			mfHealthRegenDelay = gfParkour_HealthRegenDelay;
-		
+
 		if (mfHealthRegenDelay > 0.f)
 		{
 			mfHealthRegenDelay -= afTimeStep;
@@ -417,12 +426,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			fHealth = cMath_Min(fMaxHealth, fHealth + gfParkour_HealthRegenRate * afTimeStep);
 			Player_SetHealth(fHealth);
 		}
-		
+
 		mfLastPlayerHealth = Player_GetHealth();
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ResetWallRunChain()
 	{
 		mbWallJumpChainActive = false;
@@ -435,9 +444,9 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mvWallJumpLastNormal = cVector3f_Zero;
 		mvWallScrambleJumpLastNormal = cVector3f_Zero;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateWallRunChain(float afTimeStep)
 	{
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
@@ -446,7 +455,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			ResetWallRunChain();
 			return;
 		}
-		
+
 		if (mbWallJumpChainActive)
 		{
 			mfWallJumpChainAge += afTimeStep;
@@ -456,7 +465,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				mfWallJumpChainAge = -1.f;
 			}
 		}
-		
+
 		if (mbWallScrambleJumpChainActive)
 		{
 			mfWallScrambleJumpChainAge += afTimeStep;
@@ -466,7 +475,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				mfWallScrambleJumpChainAge = -1.f;
 			}
 		}
-		
+
 		if (mfWallRunChainResetTimer > 0.f)
 		{
 			mfWallRunChainResetTimer -= afTimeStep;
@@ -474,9 +483,9 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				ResetWallRunChain();
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ArmWallJumpChain(const cVector3f &in avWallNormal)
 	{
 		mbWallJumpChainActive = true;
@@ -486,13 +495,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mvWallJumpLastNormal.y = 0.f;
 		if (mvWallJumpLastNormal.SqrLength() > 0.001f)
 			mvWallJumpLastNormal.Normalize();
-		
+
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Wall jump chain armed. power=" + GetWallRunPowerMul() + " flow=" + mfParkourFlow + " chain=" + mlWallRunChainCount, true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void ArmWallScrambleJumpChain(const cVector3f &in avWallNormal)
 	{
 		mbWallScrambleJumpChainActive = true;
@@ -502,42 +511,42 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mvWallScrambleJumpLastNormal.y = 0.f;
 		if (mvWallScrambleJumpLastNormal.SqrLength() > 0.001f)
 			mvWallScrambleJumpLastNormal.Normalize();
-		
+
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Wall scramble jump chain armed. power=" + GetWallRunPowerMul() + " flow=" + mfParkourFlow + " chain=" + mlWallRunChainCount, true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool IsSameWallChainReject(const cVector3f &in avWallNormal)
 	{
 		if (mbWallJumpChainActive == false) return false;
 		if (mfWallJumpChainAge > gfParkour_WallJumpSameWallRejectTime) return false;
 		if (mvWallJumpLastNormal.SqrLength() <= 0.001f) return false;
-		
+
 		return cMath_Vector3Dot(avWallNormal, mvWallJumpLastNormal) >= gfParkour_WallJumpSameWallDot;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool IsSameWallScrambleChainReject(const cVector3f &in avWallNormal)
 	{
 		if (mbWallScrambleJumpChainActive == false) return false;
 		if (mfWallScrambleJumpChainAge > gfParkour_WallScrambleSameWallRejectTime) return false;
 		if (mvWallScrambleJumpLastNormal.SqrLength() <= 0.001f) return false;
-		
+
 		return cMath_Vector3Dot(avWallNormal, mvWallScrambleJumpLastNormal) >= gfParkour_WallScrambleSameWallDot;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void PrepareWallRunPower(bool abFromWallJumpChain)
 	{
 		if (abFromWallJumpChain)
 			mlWallRunChainCount++;
 		else
 			mlWallRunChainCount = 0;
-		
+
 		mfWallRunPowerMul = cMath_Clamp(1.f - gfParkour_WallRunChainPowerLoss * float(mlWallRunChainCount),
 										gfParkour_WallRunChainMinPowerMul,
 										1.f);
@@ -547,33 +556,33 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfWallScrambleJumpChainAge = -1.f;
 		mfWallRunChainResetTimer = gfParkour_WallRunChainResetTime;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugWallRunFail(const tString &in asReason)
 	{
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Wall run failed: " + asReason, true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugWallRunStart(int alWallSide, float afDistance)
 	{
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Wall run started. side=" + alWallSide + " distance=" + afDistance + " power=" + GetWallRunPowerMul() + " flow=" + mfParkourFlow + " chain=" + mlWallRunChainCount, true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugFrontWallScramble(float afDistance)
 	{
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Front wall scramble. distance=" + afDistance, true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugWallScrambleStart(float afDistance, bool abFromChain)
 	{
 		if (mbDebug)
@@ -583,35 +592,35 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			cLux_AddDebugMessage("[Parkour] Wall scramble started. distance=" + afDistance + " power=" + GetWallRunPowerMul() + " flow=" + mfParkourFlow + " chain=" + mlWallRunChainCount + " fromChain=" + sFromChain, true);
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugLedgeFail(const tString &in asReason)
 	{
 		if (mbDebug == false) return;
 		if (mfLedgeDebugTimer > 0.f) return;
-		
+
 		cLux_AddDebugMessage("[Parkour] Ledge grab failed: " + asReason, true);
 		mfLedgeDebugTimer = 0.35f;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugLedgeStart()
 	{
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Ledge grab started.", true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool FailLedgeGrab(const tString &in asReason)
 	{
 		DebugLedgeFail(asReason);
 		ApplyFlowEvent(geParkourFlowEvent_LedgeFail, 1.f);
 		return false;
 	}
-	
+
 	//------------------------------------------------------------
 
 	void DebugAutoLedgeFail(const tString &in asReason)
@@ -883,32 +892,32 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	}
 
 	//------------------------------------------------------------
-	
+
 	bool IsLookingUpForWallScramble()
 	{
 		return cLux_GetPlayer().GetCamera().GetForward().y >= gfParkour_WallScrambleLookUpForwardY;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool IsFrontWall(iCharacterBody@ apBody,
 					 const cVector3f &in avWallNormal)
 	{
 		cVector3f vTravelFwd = GetTravelForward2D(apBody);
 		if (vTravelFwd.SqrLength() <= 0.001f) return false;
-		
+
 		return cMath_Vector3Dot(avWallNormal, vTravelFwd) <= gfParkour_FrontWallDot;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DoFrontWallScramble(iCharacterBody@ apBody,
 							 const cVector3f &in avWallNormal,
 							 float afDistance)
 	{
 		cVector3f vTravelFwd = GetTravelForward2D(apBody);
 		cVector3f vVel = apBody.GetForceVelocity();
-		
+
 		float fForwardSpeed = cMath_Vector3Dot(vVel, vTravelFwd);
 		if (fForwardSpeed > 0.f)
 			vVel = vVel - vTravelFwd * fForwardSpeed * gfParkour_FrontWallForwardDamp;
@@ -916,14 +925,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		vVel = vVel + avWallNormal * gfParkour_FrontWallOutSpeed;
 		vVel.y = cMath_Max(vVel.y, gfParkour_FrontWallUpSpeed);
 		apBody.SetForceVelocity(vVel);
-		
+
 		Effect_Shake_Start(0.07f, 0.12f, 0.f, 0.10f, cVector3f(1, 1, 1), 13);
 		ApplyFlowEvent(geParkourFlowEvent_FrontWallImpact, 1.f);
 		DebugFrontWallScramble(afDistance);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void SetupWallRunGlobals(iCharacterBody@ apBody,
 							 const cVector3f &in avWallNormal,
 							 int alWallSide,
@@ -932,48 +941,61 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		cVector3f vWallForward = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, avWallNormal));
 		cVector3f vTravelFwd = GetTravelForward2D(apBody);
 		cVector3f vReferenceFwd = vTravelFwd;
-		
+
 		if (abFromWallJumpChain)
 		{
 			cVector3f vCamFwd = GetCameraForward2D();
 			if (cMath_Abs(cMath_Vector3Dot(vWallForward, vCamFwd)) >= gfParkour_WallRunChainCameraForwardDot)
 				vReferenceFwd = vCamFwd;
 		}
-		
+
 		if (cMath_Vector3Dot(vWallForward, vReferenceFwd) < 0.f)
 			vWallForward *= -1.f;
-		
+
 		cScript_SetGlobalVarVector3f("Parkour_WallRun_Normal", avWallNormal);
 		cScript_SetGlobalVarVector3f("Parkour_WallRun_Forward", vWallForward);
 		cScript_SetGlobalVarInt("Parkour_WallRun_Side", alWallSide);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void SetupWallScrambleGlobals(const cVector3f &in avWallNormal,
 								  float afWallDistance)
 	{
 		cScript_SetGlobalVarVector3f("Parkour_WallScramble_Normal", avWallNormal);
 		cScript_SetGlobalVarFloat("Parkour_WallScramble_Distance", afWallDistance);
 	}
-	
+
 	//------------------------------------------------------------
-	
-	bool TryStartWallScramble(float afAge, bool abFromWallScrambleChain)
+
+	void ApplyWallScrambleCameraAssist()
+	{
+		cLux_GetPlayer().GetCamera().AddPitch(cMath_ToRad(gfParkour_WallScrambleCameraAssistPitchDeg));
+
+		if (mbDebug)
+			cLux_AddDebugMessage("[Parkour] Wall scramble camera assist.", true);
+	}
+
+	//------------------------------------------------------------
+
+	bool TryStartWallScramble(float afAge,
+							  bool abFromWallScrambleChain,
+							  float afTimeStep = 0.f,
+							  bool abAllowCameraAssist = false)
 	{
 		if (PlayerCanUseParkour(true) == false)
 		{
 			DebugWallRunFail("player cannot use parkour");
 			return false;
 		}
-		
+
 		float fMaxAge = abFromWallScrambleChain ? gfParkour_WallScrambleChainGrace : gfParkour_WallRunMaxAge;
 		if (afAge < 0.f || afAge > fMaxAge)
 		{
 			DebugWallRunFail("wall scramble grace expired");
 			return false;
 		}
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
@@ -985,13 +1007,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugWallRunFail("player is grounded");
 			return false;
 		}
-		
-		if (abFromWallScrambleChain == false && IsLookingUpForWallScramble() == false)
+
+		bool bUseCameraAssist = abFromWallScrambleChain == false && IsLookingUpForWallScramble() == false;
+		if (bUseCameraAssist && abAllowCameraAssist == false)
 		{
 			DebugWallRunFail("not looking up for wall scramble");
 			return false;
 		}
-		
+
 		bool bForwardInput = cInput_IsTriggered(eAction_Forward);
 		bool bForwardMove = pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
 		if (abFromWallScrambleChain == false && bForwardInput == false && bForwardMove == false)
@@ -999,41 +1022,43 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugWallRunFail("no forward input");
 			return false;
 		}
-		
+
 		cVector3f vWallNormal;
 		float fWallDistance;
 		tString sFailReason;
 		float fRayLength = abFromWallScrambleChain ? gfParkour_WallScrambleChainRayLength : gfParkour_WallScrambleEntryRayLength;
-		if (Parkour_FindFrontWall(pBody, fRayLength, true, vWallNormal, fWallDistance, sFailReason) == false)
+		if (Parkour_FindFrontWall(pBody, fRayLength, true, vWallNormal, fWallDistance, sFailReason, afTimeStep) == false)
 		{
 			DebugWallRunFail(sFailReason);
 			return false;
 		}
-		
+
 		if (IsFrontWall(pBody, vWallNormal) == false && abFromWallScrambleChain == false)
 		{
 			DebugWallRunFail("front wall angle invalid");
 			return false;
 		}
-		
+
 		if (abFromWallScrambleChain && IsSameWallScrambleChainReject(vWallNormal))
 		{
 			DebugWallRunFail("same wall scramble chain cooldown");
 			return false;
 		}
-		
+
 		PrepareWallRunPower(abFromWallScrambleChain);
 		ApplyFlowEvent(geParkourFlowEvent_WallScrambleStart, 1.f);
 		SetupWallScrambleGlobals(vWallNormal, fWallDistance);
 		DebugWallScrambleStart(fWallDistance, abFromWallScrambleChain);
-		
+		if (bUseCameraAssist)
+			ApplyWallScrambleCameraAssist();
+
 		cLux_GetPlayer().ChangeMoveState(eMoveState_ParkourWallScramble);
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
-	bool TryStartWallRun(float afRunJumpAge, bool abFromWallJumpChain)
+
+	bool TryStartWallRun(float afRunJumpAge, bool abFromWallJumpChain, float afTimeStep = 0.f)
 	{
 		if (PlayerCanUseParkour(true) == false)
 		{
@@ -1045,7 +1070,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugWallRunFail("run-jump grace expired");
 			return false;
 		}
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
@@ -1057,7 +1082,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugWallRunFail("player is grounded");
 			return false;
 		}
-		
+
 		bool bForwardInput = cInput_IsTriggered(eAction_Forward);
 		bool bForwardMove = pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
 		if (bForwardInput == false && bForwardMove == false)
@@ -1065,94 +1090,109 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugWallRunFail("no forward input");
 			return false;
 		}
-		
-		cVector3f vVel = pBody.GetVelocity(1.0f / 60.0f);
-		vVel.y = 0.f;
+
+		cVector3f vVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
 		if (vVel.Length() < gfParkour_WallRunMinSpeed && bForwardInput == false)
 		{
 			DebugWallRunFail("speed too low");
 			return false;
 		}
-		
+
 		if (abFromWallJumpChain == false && IsLookingUpForWallScramble())
 		{
-			if (TryStartWallScramble(afRunJumpAge, false))
+			if (TryStartWallScramble(afRunJumpAge, false, afTimeStep))
 				return true;
 		}
-		
+
 		cVector3f vWallNormal;
 		int lWallSide;
 		float fWallDistance;
 		tString sFailReason;
-		if (Parkour_FindWallRunWall(pBody, 0, gfParkourWallDetect_EntryRayLength, abFromWallJumpChain, vWallNormal, lWallSide, fWallDistance, sFailReason) == false)
+		if (Parkour_FindWallRunWall(pBody, 0, gfParkourWallDetect_EntryRayLength, abFromWallJumpChain, vWallNormal, lWallSide, fWallDistance, sFailReason, afTimeStep) == false)
 		{
 			DebugWallRunFail(sFailReason);
 			return false;
 		}
-		
+
 		if (abFromWallJumpChain && IsSameWallChainReject(vWallNormal))
 		{
 			DebugWallRunFail("same wall chain cooldown");
 			return false;
 		}
-		
+
 		if (IsFrontWall(pBody, vWallNormal) && abFromWallJumpChain == false)
 		{
-			if (TryStartWallScramble(afRunJumpAge, false))
+			if (TryStartWallScramble(afRunJumpAge, false, afTimeStep, true))
 				return true;
-			
+
 			DoFrontWallScramble(pBody, vWallNormal, fWallDistance);
 			return true;
 		}
-		
+
 		PrepareWallRunPower(abFromWallJumpChain);
 		ApplyFlowEvent(geParkourFlowEvent_WallRunStart, 1.f);
 		SetupWallRunGlobals(pBody, vWallNormal, lWallSide, abFromWallJumpChain);
 		DebugWallRunStart(lWallSide, fWallDistance);
-		
+
 		cLux_GetPlayer().ChangeMoveState(eMoveState_ParkourWallRun);
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
-	bool TryStartLedgeGrab(bool abRequireNormalMoveState = true)
+
+	bool TryStartLedgeGrab(bool abRequireNormalMoveState = true,
+						   bool abDebugAutoFailures = true)
 	{
 		if (PlayerCanUseParkour(abRequireNormalMoveState) == false)
 		{
 			if (mbLedgeCandidateActive)
-				return FailLedgeGrab("player cannot use parkour");
+			{
+				if (abDebugAutoFailures) return FailLedgeGrab("player cannot use parkour");
+				return false;
+			}
 
-			DebugAutoLedgeFail("player cannot use parkour");
+			if (abDebugAutoFailures) DebugAutoLedgeFail("player cannot use parkour");
 			return false;
 		}
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
 			if (mbLedgeCandidateActive)
-				return FailLedgeGrab("no player body");
+			{
+				if (abDebugAutoFailures) return FailLedgeGrab("no player body");
+				return false;
+			}
 
-			DebugAutoLedgeFail("no player body");
+			if (abDebugAutoFailures) DebugAutoLedgeFail("no player body");
 			return false;
 		}
 
-		if (TryStartAutoLedgeGrab(pBody, mbLedgeCandidateActive == false))
+		if (TryStartAutoLedgeGrab(pBody, abDebugAutoFailures && mbLedgeCandidateActive == false))
 			return true;
 
 		if (mbLedgeCandidateActive == false || mfLedgeCandidateTime <= 0.f) return false;
 
 		if (pBody.IsOnGround())
-			return FailLedgeGrab("player is grounded");
+		{
+			if (abDebugAutoFailures) return FailLedgeGrab("player is grounded");
+			return false;
+		}
 		if (pBody.GetFeetPosition().y > mfLedgeMaxPlayerFeetY)
-			return FailLedgeGrab("player above ledge. feetY=" + pBody.GetFeetPosition().y + " maxY=" + mfLedgeMaxPlayerFeetY);
-		
+		{
+			if (abDebugAutoFailures) return FailLedgeGrab("player above ledge. feetY=" + pBody.GetFeetPosition().y + " maxY=" + mfLedgeMaxPlayerFeetY);
+			return false;
+		}
+
 		float fVerticalVelocity = pBody.GetForceVelocity().y;
 		bool bFallingFastEnough = fVerticalVelocity <= -mfLedgeMinFallSpeed;
 		bool bRisingFastEnough = fVerticalVelocity >= gfParkour_LedgeGrabMinRiseSpeed;
 		if (mfLedgeMinFallSpeed > 0.f && bFallingFastEnough == false && bRisingFastEnough == false)
-			return FailLedgeGrab("vertical speed too low. velocity=" + fVerticalVelocity + " fallMin=" + mfLedgeMinFallSpeed + " riseMin=" + gfParkour_LedgeGrabMinRiseSpeed);
-		
+		{
+			if (abDebugAutoFailures) return FailLedgeGrab("vertical speed too low. velocity=" + fVerticalVelocity + " fallMin=" + mfLedgeMinFallSpeed + " riseMin=" + gfParkour_LedgeGrabMinRiseSpeed);
+			return false;
+		}
+
 		float fGrabRadius = cMath_Max(0.05f, mfLedgeGrabRadius);
 		cVector3f vFeetFlat = pBody.GetFeetPosition();
 		cVector3f vAreaFlat = mvLedgeAreaPos;
@@ -1160,13 +1200,16 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		vAreaFlat.y = 0.f;
 		float fDistance = cMath_Vector3Dist(vFeetFlat, vAreaFlat);
 		if (fDistance > fGrabRadius)
-			return FailLedgeGrab("outside horizontal grab radius. distance=" + fDistance + " radius=" + fGrabRadius);
-		
+		{
+			if (abDebugAutoFailures) return FailLedgeGrab("outside horizontal grab radius. distance=" + fDistance + " radius=" + fGrabRadius);
+			return false;
+		}
+
 		cVector3f vCamFwd = GetCameraForward2D();
 		cVector3f vAreaDir = mvLedgeAreaDir;
 		vAreaDir.y = 0.f;
 		if (vAreaDir.SqrLength() > 0.001f) vAreaDir.Normalize();
-		
+
 		float fRequiredFacing = cMath_Clamp(mfLedgeRequiredFacingDot, 0.f, 1.f);
 		float fFacingDot = cMath_Vector3Dot(vAreaDir, vCamFwd);
 		if (fFacingDot > -fRequiredFacing)
@@ -1177,17 +1220,18 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			{
 				vAreaDir = vFlippedAreaDir;
 				fFacingDot = fFlippedFacingDot;
-				
+
 				if (mbDebug)
 					cLux_AddDebugMessage("[Parkour] Ledge direction auto-flipped for grab. dot=" + fFacingDot, true);
 			}
 			else
 			{
 				float fRequiredDot = -fRequiredFacing;
-				return FailLedgeGrab("facing dot too low. dot=" + fFacingDot + " flippedDot=" + fFlippedFacingDot + " required<=" + fRequiredDot);
+				if (abDebugAutoFailures) return FailLedgeGrab("facing dot too low. dot=" + fFacingDot + " flippedDot=" + fFlippedFacingDot + " required<=" + fRequiredDot);
+				return false;
 			}
 		}
-		
+
 		return StartLedgeClimb(mvLedgeFeetPos,
 							   mbLedgeCrouchOnFinish,
 							   vAreaDir,
@@ -1196,7 +1240,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 							   0.f,
 							   0.f);
 	}
-	
+
 	//------------------------------------------------------------
 
 	void DebugSpeedVaultFail(const tString &in asReason)
@@ -1432,7 +1476,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
-	bool TryStartSpeedVault()
+	bool TryStartSpeedVault(float afTimeStep = 0.f)
 	{
 		if (PlayerCanUseParkour(true) == false)
 		{
@@ -1465,13 +1509,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			return false;
 		}
 
-		cVector3f vFlatVel = pBody.GetVelocity(1.0f / 60.0f);
-		vFlatVel.y = 0.f;
-		if (vFlatVel.SqrLength() <= 0.001f)
-		{
-			vFlatVel = pBody.GetForceVelocity();
-			vFlatVel.y = 0.f;
-		}
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
 		float fFlatSpeed = vFlatVel.Length();
 		if (mfParkourFlow < gfParkour_SpeedVaultMinFlow && fFlatSpeed < gfParkour_SpeedVaultMinSpeed)
 		{
@@ -1568,7 +1606,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	}
 
 	//------------------------------------------------------------
-	
+
 	bool TryStartPoleSwing(const cVector3f &in avPivot,
 						   const cVector3f &in avPoleAxis,
 						   const cVector3f &in avSwingForward,
@@ -1583,15 +1621,16 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 						   float afPeakEnd,
 						   float afLaunchSpeed,
 						   float afLaunchUpSpeed,
-						   float afFlowLaunchBonus)
+						   float afFlowLaunchBonus,
+						   bool abRequireNormalMoveState = true)
 	{
-		if (PlayerCanUseParkour(true) == false)
+		if (PlayerCanUseParkour(abRequireNormalMoveState) == false)
 		{
 			if (mbDebug)
 				cLux_AddDebugMessage("[Parkour] Pole swing failed: player cannot use parkour", true);
 			return false;
 		}
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
@@ -1605,14 +1644,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				cLux_AddDebugMessage("[Parkour] Pole swing failed: player is grounded", true);
 			return false;
 		}
-		
-		cVector3f vFlatVel = pBody.GetVelocity(1.0f / 60.0f);
-		vFlatVel.y = 0.f;
-		if (vFlatVel.SqrLength() <= 0.001f)
-		{
-			vFlatVel = pBody.GetForceVelocity();
-			vFlatVel.y = 0.f;
-		}
+
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody);
 		float fApproachSpeed = vFlatVel.Length();
 		if (fApproachSpeed < afMinApproachSpeed)
 		{
@@ -1620,7 +1653,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				cLux_AddDebugMessage("[Parkour] Pole swing failed: approach speed too low. speed=" + fApproachSpeed + " min=" + afMinApproachSpeed, true);
 			return false;
 		}
-		
+
 		float fVerticalVel = pBody.GetForceVelocity().y;
 		if (fVerticalVel < afMinVerticalSpeed)
 		{
@@ -1628,7 +1661,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				cLux_AddDebugMessage("[Parkour] Pole swing failed: vertical speed too low. velocity=" + fVerticalVel + " min=" + afMinVerticalSpeed, true);
 			return false;
 		}
-		
+
 		float fGrabRadius = cMath_Max(0.05f, afGrabRadius);
 		float fDistance = cMath_Vector3Dist(pBody.GetFeetPosition(), avPivot);
 		if (fDistance > fGrabRadius + cMath_Max(0.5f, afPoleLength))
@@ -1637,27 +1670,27 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				cLux_AddDebugMessage("[Parkour] Pole swing failed: outside grab radius. distance=" + fDistance + " radius=" + fGrabRadius, true);
 			return false;
 		}
-		
+
 		cVector3f vPoleAxis = avPoleAxis;
 		vPoleAxis.y = 0.f;
 		if (vPoleAxis.SqrLength() > 0.001f)
 			vPoleAxis.Normalize();
 		else
 			vPoleAxis = cVector3f_Right;
-		
+
 		cVector3f vSwingForward = avSwingForward;
 		vSwingForward.y = 0.f;
 		if (vSwingForward.SqrLength() > 0.001f)
 			vSwingForward.Normalize();
 		else
 			vSwingForward = GetTravelForward2D(pBody);
-		
+
 		if (vFlatVel.SqrLength() > 0.001f && cMath_Vector3Dot(vFlatVel, vSwingForward) < 0.f)
 			vSwingForward *= -1.f;
-		
+
 		float fPeakStart = cMath_Clamp(afPeakStart, 0.05f, 0.95f);
 		float fPeakEnd = cMath_Clamp(afPeakEnd, fPeakStart + 0.05f, 0.98f);
-		
+
 		cScript_SetGlobalArgVector3f(0, avPivot);
 		cScript_SetGlobalArgVector3f(1, vPoleAxis);
 		cScript_SetGlobalArgVector3f(2, vSwingForward);
@@ -1671,61 +1704,139 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		cScript_SetGlobalArgFloat(10, cMath_Max(0.f, afLaunchUpSpeed));
 		cScript_SetGlobalArgFloat(11, cMath_Max(0.f, afFlowLaunchBonus));
 		cScript_RunGlobalFunc("State_ParkourPoleSwing", "", "SetupParkourPoleSwing");
-		
+
 		ApplyFlowEvent(geParkourFlowEvent_PoleSwingGrab, 1.f);
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Pole swing started. speed=" + fApproachSpeed + " flow=" + mfParkourFlow, true);
-		
+
 		cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourPoleSwing);
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
+	void RegisterPoleSwingCandidate(const cVector3f &in avPivot,
+									const cVector3f &in avPoleAxis,
+									const cVector3f &in avSwingForward,
+									const cVector3f &in avLaunchTarget,
+									bool abHasLaunchTarget,
+									float afPoleLength,
+									float afGrabRadius,
+									float afMinApproachSpeed,
+									float afMinVerticalSpeed,
+									float afSwingDuration,
+									float afPeakStart,
+									float afPeakEnd,
+									float afLaunchSpeed,
+									float afLaunchUpSpeed,
+									float afFlowLaunchBonus)
+	{
+		if (mbEnabled == false) return;
+
+		mvPoleSwingCandidatePivot = avPivot;
+		mvPoleSwingCandidateAxis = avPoleAxis;
+		mvPoleSwingCandidateForward = avSwingForward;
+		mvPoleSwingCandidateLaunchTarget = avLaunchTarget;
+		mbPoleSwingCandidateHasLaunchTarget = abHasLaunchTarget;
+		mfPoleSwingCandidatePoleLength = afPoleLength;
+		mfPoleSwingCandidateGrabRadius = afGrabRadius;
+		mfPoleSwingCandidateMinApproachSpeed = afMinApproachSpeed;
+		mfPoleSwingCandidateMinVerticalSpeed = afMinVerticalSpeed;
+		mfPoleSwingCandidateDuration = afSwingDuration;
+		mfPoleSwingCandidatePeakStart = afPeakStart;
+		mfPoleSwingCandidatePeakEnd = afPeakEnd;
+		mfPoleSwingCandidateLaunchSpeed = afLaunchSpeed;
+		mfPoleSwingCandidateLaunchUpSpeed = afLaunchUpSpeed;
+		mfPoleSwingCandidateFlowLaunchBonus = afFlowLaunchBonus;
+		mfPoleSwingCandidateTime = gfParkour_PoleSwingCandidateTTL;
+		mbPoleSwingCandidateActive = true;
+	}
+
+	//------------------------------------------------------------
+
+	bool TryStartPoleSwingCandidate(bool abRequireNormalMoveState = true)
+	{
+		if (mbPoleSwingCandidateActive == false || mfPoleSwingCandidateTime <= 0.f)
+			return false;
+
+		if (TryStartPoleSwing(mvPoleSwingCandidatePivot,
+							  mvPoleSwingCandidateAxis,
+							  mvPoleSwingCandidateForward,
+							  mvPoleSwingCandidateLaunchTarget,
+							  mbPoleSwingCandidateHasLaunchTarget,
+							  mfPoleSwingCandidatePoleLength,
+							  mfPoleSwingCandidateGrabRadius,
+							  mfPoleSwingCandidateMinApproachSpeed,
+							  mfPoleSwingCandidateMinVerticalSpeed,
+							  mfPoleSwingCandidateDuration,
+							  mfPoleSwingCandidatePeakStart,
+							  mfPoleSwingCandidatePeakEnd,
+							  mfPoleSwingCandidateLaunchSpeed,
+							  mfPoleSwingCandidateLaunchUpSpeed,
+							  mfPoleSwingCandidateFlowLaunchBonus,
+							  abRequireNormalMoveState))
+		{
+			ClearPoleSwingCandidate();
+			return true;
+		}
+
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	void ClearPoleSwingCandidate()
+	{
+		mbPoleSwingCandidateActive = false;
+		mfPoleSwingCandidateTime = -1.f;
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_GetEnabled()
 	{
 		cScript_SetGlobalReturnBool(mbEnabled);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_SetEnabled()
 	{
 		mbEnabled = cScript_GetGlobalArgBool(0);
 		if (mbEnabled == false)
 			ResetFlow();
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_GetDebug()
 	{
 		cScript_SetGlobalReturnBool(mbDebug);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_SetDebug()
 	{
 		mbDebug = cScript_GetGlobalArgBool(0);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_GetRunSpeedMul()
 	{
 		cScript_SetGlobalReturnFloat(GetRunSpeedMul());
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_GetFlow()
 	{
 		cScript_SetGlobalReturnFloat(mfParkourFlow);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_UpdateGroundFlow()
 	{
 		UpdateGroundFlow(cScript_GetGlobalArgFloat(0),
@@ -1734,30 +1845,30 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 						 cScript_GetGlobalArgFloat(3),
 						 cScript_GetGlobalArgVector3f(4));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_NotifyFlowEvent()
 	{
 		ApplyFlowEvent(cScript_GetGlobalArgInt(0), cScript_GetGlobalArgFloat(1));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_TryStartWallRun()
 	{
-		cScript_SetGlobalReturnBool(TryStartWallRun(cScript_GetGlobalArgFloat(0), cScript_GetGlobalArgBool(1)));
+		cScript_SetGlobalReturnBool(TryStartWallRun(cScript_GetGlobalArgFloat(0), cScript_GetGlobalArgBool(1), cScript_GetGlobalArgFloat(2)));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_ArmWallJumpChain()
 	{
 		ArmWallJumpChain(cScript_GetGlobalArgVector3f(0));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_GetWallJumpChainAge()
 	{
 		if (mbWallJumpChainActive)
@@ -1765,30 +1876,30 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		else
 			cScript_SetGlobalReturnFloat(-1.f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_GetWallRunPowerMul()
 	{
 		cScript_SetGlobalReturnFloat(GetWallRunPowerMul());
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_TryStartWallScramble()
 	{
-		cScript_SetGlobalReturnBool(TryStartWallScramble(cScript_GetGlobalArgFloat(0), cScript_GetGlobalArgBool(1)));
+		cScript_SetGlobalReturnBool(TryStartWallScramble(cScript_GetGlobalArgFloat(0), cScript_GetGlobalArgBool(1), cScript_GetGlobalArgFloat(2)));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_ArmWallScrambleJumpChain()
 	{
 		ArmWallScrambleJumpChain(cScript_GetGlobalArgVector3f(0));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_GetWallScrambleJumpChainAge()
 	{
 		if (mbWallScrambleJumpChainActive)
@@ -1796,23 +1907,23 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		else
 			cScript_SetGlobalReturnFloat(-1.f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_TryStartLedgeGrab()
 	{
-		cScript_SetGlobalReturnBool(TryStartLedgeGrab(cScript_GetGlobalArgBool(0)));
+		cScript_SetGlobalReturnBool(TryStartLedgeGrab(cScript_GetGlobalArgBool(0), cScript_GetGlobalArgBool(1)));
 	}
-	
+
 	//------------------------------------------------------------
 
 	void _Global_TryStartSpeedVault()
 	{
-		cScript_SetGlobalReturnBool(TryStartSpeedVault());
+		cScript_SetGlobalReturnBool(TryStartSpeedVault(cScript_GetGlobalArgFloat(0)));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void _Global_TryStartPoleSwing()
 	{
 		cScript_SetGlobalReturnBool(TryStartPoleSwing(cScript_GetGlobalArgVector3f(0),
@@ -1831,13 +1942,41 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 													  cScript_GetGlobalArgFloat(13),
 													  cScript_GetGlobalArgFloat(14)));
 	}
-	
+
 	//------------------------------------------------------------
-	
+
+	void _Global_RegisterPoleSwingCandidate()
+	{
+		RegisterPoleSwingCandidate(cScript_GetGlobalArgVector3f(0),
+								   cScript_GetGlobalArgVector3f(1),
+								   cScript_GetGlobalArgVector3f(2),
+								   cScript_GetGlobalArgVector3f(3),
+								   cScript_GetGlobalArgBool(4),
+								   cScript_GetGlobalArgFloat(5),
+								   cScript_GetGlobalArgFloat(6),
+								   cScript_GetGlobalArgFloat(7),
+								   cScript_GetGlobalArgFloat(8),
+								   cScript_GetGlobalArgFloat(9),
+								   cScript_GetGlobalArgFloat(10),
+								   cScript_GetGlobalArgFloat(11),
+								   cScript_GetGlobalArgFloat(12),
+								   cScript_GetGlobalArgFloat(13),
+								   cScript_GetGlobalArgFloat(14));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_TryStartPoleSwingCandidate()
+	{
+		cScript_SetGlobalReturnBool(TryStartPoleSwingCandidate(cScript_GetGlobalArgBool(0)));
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_RegisterLedgeCandidate()
 	{
 		if (mbEnabled == false) return;
-		
+
 		mvLedgeFeetPos = cScript_GetGlobalArgVector3f(0);
 		mbLedgeCrouchOnFinish = cScript_GetGlobalArgBool(1);
 		mvLedgeAreaDir = cScript_GetGlobalArgVector3f(2);
@@ -1849,12 +1988,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfLedgeCandidateTime = gfParkour_LedgeCandidateTTL;
 		mbLedgeCandidateActive = true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool mbEnabled = true;
 	bool mbDebug = false;
-	
+
 	float mfParkourFlow = 0.f;
 	float mfFlowSharpTurnCooldown = 0.f;
 	float mfFlowBlockedRunTimer = 0.f;
@@ -1863,7 +2002,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	float mfLastPlayerHealth = -1.f;
 	bool mbFlowHasMoveDir = false;
 	cVector3f mvFlowLastMoveDir = cVector3f_Zero;
-	
+
 	bool mbLedgeCandidateActive = false;
 	bool mbLedgeCrouchOnFinish = false;
 	float mfLedgeCandidateTime = -1.f;
@@ -1875,7 +2014,25 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	cVector3f mvLedgeFeetPos = cVector3f_Zero;
 	cVector3f mvLedgeAreaDir = cVector3f_Forward;
 	cVector3f mvLedgeAreaPos = cVector3f_Zero;
-	
+
+	bool mbPoleSwingCandidateActive = false;
+	bool mbPoleSwingCandidateHasLaunchTarget = false;
+	float mfPoleSwingCandidateTime = -1.f;
+	float mfPoleSwingCandidatePoleLength = 1.8f;
+	float mfPoleSwingCandidateGrabRadius = 1.0f;
+	float mfPoleSwingCandidateMinApproachSpeed = 1.6f;
+	float mfPoleSwingCandidateMinVerticalSpeed = -8.0f;
+	float mfPoleSwingCandidateDuration = 1.15f;
+	float mfPoleSwingCandidatePeakStart = 0.62f;
+	float mfPoleSwingCandidatePeakEnd = 0.82f;
+	float mfPoleSwingCandidateLaunchSpeed = 5.2f;
+	float mfPoleSwingCandidateLaunchUpSpeed = 2.6f;
+	float mfPoleSwingCandidateFlowLaunchBonus = 0.25f;
+	cVector3f mvPoleSwingCandidatePivot = cVector3f_Zero;
+	cVector3f mvPoleSwingCandidateAxis = cVector3f_Right;
+	cVector3f mvPoleSwingCandidateForward = cVector3f_Forward;
+	cVector3f mvPoleSwingCandidateLaunchTarget = cVector3f_Zero;
+
 	bool mbWallJumpChainActive = false;
 	bool mbWallScrambleJumpChainActive = false;
 	float mfWallJumpChainAge = -1.f;
@@ -1885,7 +2042,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	float mfWallRunPowerMul = 1.f;
 	cVector3f mvWallJumpLastNormal = cVector3f_Zero;
 	cVector3f mvWallScrambleJumpLastNormal = cVector3f_Zero;
-	
+
 	//------------------------------------------------------------
 }
 

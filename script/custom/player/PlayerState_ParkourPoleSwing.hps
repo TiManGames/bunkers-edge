@@ -256,9 +256,7 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 		
 		if (apBody is null) return;
 		
-		cVector3f vEnterVel = apBody.GetForceVelocity();
-		if (vEnterVel.SqrLength() <= 0.001f)
-			vEnterVel = apBody.GetVelocity(1.0f / 60.0f);
+		cVector3f vEnterVel = Parkour_GetFlatVelocity(apBody);
 		
 		float fForwardSpeed = cMath_Vector3Dot(vEnterVel, mvSwingForward);
 		mfSwingAngularVel = cMath_Clamp((fForwardSpeed / mfPoleLength) * gfParkourPoleSwing_InitialVelMul,

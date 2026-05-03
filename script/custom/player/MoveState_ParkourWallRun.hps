@@ -9,7 +9,7 @@
 
 //------------------------------------------------------------
 
-const float gfParkourWallRun_MaxTime = 1.f;
+const float gfParkourWallRun_MaxTime = 1.5f;
 const float gfParkourWallRun_Speed = 4.1f;
 const float gfParkourWallRun_MinVerticalVel = -0.65f;
 const float gfParkourWallRun_AntiGravityMul = 0.72f;
@@ -135,7 +135,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		}
 		
 		cVector3f vNewNormal;
-		if (RefreshWallNormal(pBody, vNewNormal) == false)
+		if (RefreshWallNormal(pBody, vNewNormal, afTimeStep) == false)
 		{
 			mfLostWallTimer -= afTimeStep;
 			if (mfLostWallTimer <= 0.f)
@@ -148,7 +148,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		{
 			mfLostWallTimer = gfParkourWallRun_LostWallGrace;
 			mvWallNormal = vNewNormal;
-			RefreshWallForward(pBody);
+			RefreshWallForward(pBody, afTimeStep);
 		}
 		
 		cVector3f vTarget = mvWallForward * gfParkourWallRun_Speed * mfPowerMul;
@@ -200,13 +200,13 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 
 	//------------------------------------------------------------
 	
-	bool RefreshWallNormal(iCharacterBody@ apBody, cVector3f &out avNormal)
+	bool RefreshWallNormal(iCharacterBody@ apBody, cVector3f &out avNormal, float afTimeStep)
 	{
 		msLastWallRefreshFail = "";
 		int lWallSide;
 		float fDistance;
 		tString sFailReason;
-		if (Parkour_FindWallRunWall(apBody, mlWallSide, gfParkourWallDetect_SustainRayLength, true, avNormal, lWallSide, fDistance, sFailReason))
+		if (Parkour_FindWallRunWall(apBody, mlWallSide, gfParkourWallDetect_SustainRayLength, true, avNormal, lWallSide, fDistance, sFailReason, afTimeStep))
 		{
 			mlWallSide = lWallSide;
 			msLastWallRefreshFail = "";
@@ -273,7 +273,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	
 	//------------------------------------------------------------
 	
-	void RefreshWallForward(iCharacterBody@ apBody)
+	void RefreshWallForward(iCharacterBody@ apBody, float afTimeStep)
 	{
 		cVector3f vReferenceFwd = mvWallForward;
 		vReferenceFwd.y = 0.f;
@@ -282,7 +282,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		else
 		{
 			cVector3f vRight;
-			if (Parkour_GetWallRunBasis(apBody, vReferenceFwd, vRight) == false)
+			if (Parkour_GetWallRunBasis(apBody, vReferenceFwd, vRight, afTimeStep) == false)
 			{
 				vReferenceFwd = cLux_GetPlayer().GetCamera().GetForward();
 				vReferenceFwd.y = 0.f;

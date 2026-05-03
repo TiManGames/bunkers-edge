@@ -1,5 +1,6 @@
 #include "interfaces/Area_Interface.hps"
 #include "player/Player_Types.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
 #include "helpers/helper_player.hps"
 #include "custom/helpers/helper_parkour.hps"
 
@@ -8,7 +9,7 @@
 class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 {
 	//------------------------------------------------------------
-	
+
 	void Init()
 	{
 		mbPlayerIsInside = false;
@@ -19,9 +20,9 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 		mBaseObj.SetAutoSleep(false);
 		mBaseObj.SetVariableUpdateRate(0.015f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void SetupAfterLoad(cWorld @apWorld, cResourceVarsObject @apVars)
 	{
 		mbCanSwing = apVars.GetVarBool("CanSwing", true);
@@ -37,18 +38,18 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 		mfLaunchUpSpeed = apVars.GetVarFloat("LaunchUpSpeed", 2.6f);
 		mfFlowLaunchBonus = apVars.GetVarFloat("FlowLaunchBonus", 0.25f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void OnAfterWorldLoad()
 	{
 		if (msLaunchTarget == "") return;
-		
+
 		iLuxEntity@ pArea = mBaseObj.GetMap().GetEntityByName(msLaunchTarget, eLuxEntityType_Area);
 		if (pArea !is null)
 		{
 			m_idLaunchTargetArea = pArea.GetID();
-			
+
 			if (Parkour_GetDebug())
 				cLux_AddDebugMessage("[Parkour] Pole swing area '" + mBaseObj.GetName() + "' loaded. LaunchTarget='" + msLaunchTarget + "'.", true);
 		}
@@ -57,39 +58,40 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 			Error("Cannot find launch target area '" + msLaunchTarget + "' for pole swing area '" + mBaseObj.GetName() + "'");
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void OnUpdate(float afTimeStep) {}
 	void OnPostUpdate(float afTimeStep) {}
 	void ResetProperties() {}
 	void BeforeEntityDestruction() {}
-	
+
 	//------------------------------------------------------------
-	
+
 	void OnVariableUpdate(float afTimeStep)
 	{
 		if (mfDebugTimer > 0.f)
 			mfDebugTimer -= afTimeStep;
 		if (mfGrabCooldown > 0.f)
 			mfGrabCooldown -= afTimeStep;
-		
+
 		if (mbCanSwing == false) return;
 		if (Parkour_GetEnabled() == false) return;
 		if (cLux_GetPlayer().IsActive() == false) return;
 		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
-		if (cLux_GetPlayer().GetCurrentMoveStateId() != eMoveState_Normal) return;
+		int lMoveState = cLux_GetPlayer().GetCurrentMoveStateId();
+		if (lMoveState != eMoveState_Normal && lMoveState != eMoveState_ParkourWallRun) return;
 		if (Player_GetUnderwater()) return;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null) return;
-		
+
 		bool bCollide = mBaseObj.CheckCharacterCollision(pBody, mBaseObj.GetMap());
 		if (bCollide && mbPlayerIsInside == false && Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Entered pole swing area '" + mBaseObj.GetName() + "'.", true);
 		else if (bCollide == false && mbPlayerIsInside && Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Left pole swing area '" + mBaseObj.GetName() + "'.", true);
-		
+
 		mbPlayerIsInside = bCollide;
 		if (bCollide == false)
 		{
@@ -98,33 +100,27 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 		}
 		if (mbNeedsExitAfterGrab) return;
 		if (mfGrabCooldown > 0.f) return;
-		
+
 		if (pBody.IsOnGround())
 		{
 			DebugSkip("player is grounded");
 			return;
 		}
-		
-		cVector3f vFlatVel = pBody.GetVelocity(1.0f / 60.0f);
-		vFlatVel.y = 0.f;
-		if (vFlatVel.SqrLength() <= 0.001f)
-		{
-			vFlatVel = pBody.GetForceVelocity();
-			vFlatVel.y = 0.f;
-		}
-		
+
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody);
+
 		if (vFlatVel.Length() < mfMinApproachSpeed)
 		{
 			DebugSkip("approach speed too low. speed=" + vFlatVel.Length() + " min=" + mfMinApproachSpeed);
 			return;
 		}
-		
+
 		if (pBody.GetForceVelocity().y < mfMinVerticalSpeed)
 		{
 			DebugSkip("vertical speed too low. velocity=" + pBody.GetForceVelocity().y + " min=" + mfMinVerticalSpeed);
 			return;
 		}
-		
+
 		cMatrixf mtxArea = cMath_MatrixInverse(mBaseObj.GetAreaBody().GetLocalMatrix());
 		cVector3f vPoleAxis = mtxArea.GetRight();
 		cVector3f vSwingForward = mtxArea.GetForward();
@@ -132,7 +128,7 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 		vSwingForward.y = 0.f;
 		if (vPoleAxis.SqrLength() > 0.001f) vPoleAxis.Normalize();
 		if (vSwingForward.SqrLength() > 0.001f) vSwingForward.Normalize();
-		
+
 		cVector3f vGrabPivot = GetClosestPolePivot(pBody, vPoleAxis);
 		float fGrabDistance = cMath_Vector3Dist(pBody.GetFeetPosition(), vGrabPivot);
 		if (fGrabDistance > mfGrabRadius + cMath_Max(0.5f, mfPoleLength))
@@ -140,7 +136,7 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 			DebugSkip("outside grab radius. distance=" + fGrabDistance);
 			return;
 		}
-		
+
 		cVector3f vLaunchTarget = cVector3f_Zero;
 		bool bHasLaunchTarget = false;
 		if (m_idLaunchTargetArea != tID_Invalid)
@@ -148,120 +144,122 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 			vLaunchTarget = cLux_ID_Entity(m_idLaunchTargetArea).GetPosition();
 			bHasLaunchTarget = true;
 		}
-		
-		if (Parkour_TryStartPoleSwing(vGrabPivot,
-									  vPoleAxis,
-									  vSwingForward,
-									  vLaunchTarget,
-									  bHasLaunchTarget,
-									  mfPoleLength,
-									  mfGrabRadius,
-									  mfMinApproachSpeed,
-									  mfMinVerticalSpeed,
-									  mfSwingDuration,
-									  mfPeakStart,
-									  mfPeakEnd,
-									  mfLaunchSpeed,
-									  mfLaunchUpSpeed,
-									  mfFlowLaunchBonus))
+
+		Parkour_RegisterPoleSwingCandidate(vGrabPivot,
+										   vPoleAxis,
+										   vSwingForward,
+										   vLaunchTarget,
+										   bHasLaunchTarget,
+										   mfPoleLength,
+										   mfGrabRadius,
+										   mfMinApproachSpeed,
+										   mfMinVerticalSpeed,
+										   mfSwingDuration,
+										   mfPeakStart,
+										   mfPeakEnd,
+										   mfLaunchSpeed,
+										   mfLaunchUpSpeed,
+										   mfFlowLaunchBonus);
+
+		if (Parkour_TryStartPoleSwingCandidate(lMoveState == eMoveState_Normal))
 		{
 			mbPlayerIsInside = false;
 			mbNeedsExitAfterGrab = true;
 			mfGrabCooldown = cMath_Max(0.45f, mfSwingDuration + 0.25f);
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	cVector3f GetClosestPolePivot(iCharacterBody@ apBody, const cVector3f &in avPoleAxis)
 	{
 		if (apBody is null) return mBaseObj.GetPosition();
-		
+
 		cVector3f vPoleAxis = avPoleAxis;
 		vPoleAxis.y = 0.f;
 		if (vPoleAxis.SqrLength() <= 0.001f)
 			return mBaseObj.GetPosition();
 		vPoleAxis.Normalize();
-		
+
 		cVector3f vPlayerGrabPos = cLux_GetPlayer().GetCamera().GetPosition();
 		float fAlong = cMath_Vector3Dot(vPlayerGrabPos - mBaseObj.GetPosition(), vPoleAxis);
 		float fHalfLength = GetPoleHalfLength();
 		fAlong = cMath_Clamp(fAlong, -fHalfLength, fHalfLength);
-		
+
 		return mBaseObj.GetPosition() + vPoleAxis * fAlong;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	float GetPoleHalfLength()
 	{
 		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
 		if (pAreaBody is null) return 0.5f;
-		
+
 		return cMath_Max(0.1f, pAreaBody.GetShape().GetSize().x * 0.5f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DebugSkip(const tString &in asReason)
 	{
 		if (Parkour_GetDebug() == false) return;
 		if (mfDebugTimer > 0.f) return;
-		
+
 		cLux_AddDebugMessage("[Parkour] Pole swing ignored: " + asReason, true);
 		mfDebugTimer = 0.35f;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool CanInteract(int alType, iPhysicsBody@ apBody)
 	{
 		return false;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData)
 	{
 		return false;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	int GetInteractIconId(int alType, iPhysicsBody@ apBody)
 	{
 		return -1;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck)
 	{
 		return false;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity)
 	{
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void OnEndCheckCollision(float afTimteStep) {}
 	void OnSetActive(bool abX) {}
 	void OnConnectionStateChange(iLuxEntity@ apEntity,int alState) { if (alState != 0) mbCanSwing = alState == 1; }
-	
+
 	//------------------------------------------------------------
-	
+
 	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY)
 	{
 		return afStartY;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	tString msLaunchTarget = "";
 	tID m_idLaunchTargetArea = tID_Invalid;
 	bool mbCanSwing = true;
@@ -279,7 +277,7 @@ class cScrAreaParkourPoleSwing : iScrArea, iScrArea_Interface
 	float mfFlowLaunchBonus = 0.25f;
 	float mfDebugTimer = 0.f;
 	float mfGrabCooldown = 0.f;
-	
+
 	//------------------------------------------------------------
 }
 
