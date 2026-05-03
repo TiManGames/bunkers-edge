@@ -1,0 +1,320 @@
+#include "interfaces/Area_Interface.hps"
+#include "player/Player_Types.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "helpers/helper_player.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
+{
+	//------------------------------------------------------------
+
+	void Init()
+	{
+		mbPlayerIsInside = false;
+		mbNeedsExitAfterGrab = false;
+		mfDebugTimer = 0.f;
+		mfGrabCooldown = 0.f;
+		m_idTopExitArea = tID_Invalid;
+		mBaseObj.SetAutoSleep(false);
+		mBaseObj.SetVariableUpdateRate(0.015f);
+	}
+
+	//------------------------------------------------------------
+
+	void SetupAfterLoad(cWorld @apWorld, cResourceVarsObject @apVars)
+	{
+		mbCanClimb = apVars.GetVarBool("CanClimb", true);
+		msTopExit = apVars.GetVarString("TopExit", "");
+		mbTopExitCrouch = apVars.GetVarBool("TopExitCrouch", false);
+		mfGrabRadius = apVars.GetVarFloat("GrabRadius", 0.9f);
+		mfMinApproachSpeed = apVars.GetVarFloat("MinApproachSpeed", 0.35f);
+		mfMinVerticalSpeed = apVars.GetVarFloat("MinVerticalSpeed", -9.0f);
+		mfAttachRadius = apVars.GetVarFloat("AttachRadius", 0.42f);
+		mfClimbSpeed = apVars.GetVarFloat("ClimbSpeed", 0.85f);
+		mfSlideSpeed = apVars.GetVarFloat("SlideSpeed", 1.85f);
+		mfTopOutTime = apVars.GetVarFloat("TopOutTime", 0.58f);
+		mfJumpTurnAngle = apVars.GetVarFloat("JumpTurnAngle", 130.f);
+	}
+
+	//------------------------------------------------------------
+
+	void OnAfterWorldLoad()
+	{
+		if (msTopExit == "") return;
+
+		iLuxEntity@ pArea = mBaseObj.GetMap().GetEntityByName(msTopExit, eLuxEntityType_Area);
+		if (pArea !is null)
+		{
+			m_idTopExitArea = pArea.GetID();
+
+			if (Parkour_GetDebug())
+				cLux_AddDebugMessage("[Parkour] Pole climb area '" + mBaseObj.GetName() + "' loaded. TopExit='" + msTopExit + "'.", true);
+		}
+		else
+		{
+			Error("Cannot find top exit area '" + msTopExit + "' for pole climb area '" + mBaseObj.GetName() + "'");
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void OnUpdate(float afTimeStep) {}
+	void OnPostUpdate(float afTimeStep) {}
+	void ResetProperties() {}
+	void BeforeEntityDestruction() {}
+
+	//------------------------------------------------------------
+
+	void OnVariableUpdate(float afTimeStep)
+	{
+		if (mfDebugTimer > 0.f)
+			mfDebugTimer -= afTimeStep;
+		if (mfGrabCooldown > 0.f)
+			mfGrabCooldown -= afTimeStep;
+
+		if (mbCanClimb == false) return;
+		if (Parkour_GetEnabled() == false) return;
+		if (cLux_GetPlayer().IsActive() == false) return;
+		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
+		int lMoveState = cLux_GetPlayer().GetCurrentMoveStateId();
+		if (lMoveState != eMoveState_Normal && lMoveState != eMoveState_ParkourWallRun) return;
+		if (Player_GetUnderwater()) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null) return;
+
+		bool bCollide = mBaseObj.CheckCharacterCollision(pBody, mBaseObj.GetMap());
+		if (bCollide && mbPlayerIsInside == false && Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Entered pole climb area '" + mBaseObj.GetName() + "'.", true);
+		else if (bCollide == false && mbPlayerIsInside && Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Left pole climb area '" + mBaseObj.GetName() + "'.", true);
+
+		mbPlayerIsInside = bCollide;
+		if (bCollide == false)
+		{
+			mbNeedsExitAfterGrab = false;
+			return;
+		}
+		if (mbNeedsExitAfterGrab) return;
+		if (mfGrabCooldown > 0.f) return;
+
+		if (pBody.IsOnGround())
+		{
+			DebugSkip("player is grounded");
+			return;
+		}
+
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
+		if (vFlatVel.Length() < mfMinApproachSpeed)
+		{
+			DebugSkip("approach speed too low. speed=" + vFlatVel.Length() + " min=" + mfMinApproachSpeed);
+			return;
+		}
+
+		if (pBody.GetForceVelocity().y < mfMinVerticalSpeed)
+		{
+			DebugSkip("vertical speed too low. velocity=" + pBody.GetForceVelocity().y + " min=" + mfMinVerticalSpeed);
+			return;
+		}
+
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null) return;
+
+		cVector3f vFaceDir = GetAreaFaceDir();
+		cVector3f vPoleCenter = mBaseObj.GetPosition();
+		float fMinY;
+		float fMaxY;
+		GetVerticalBounds(fMinY, fMaxY);
+
+		cVector3f vFeet = pBody.GetFeetPosition();
+		float fStartY = cMath_Clamp(vFeet.y, fMinY, fMaxY);
+		cVector3f vAttachFeet = vPoleCenter + vFaceDir * cMath_Max(0.05f, mfAttachRadius);
+		vAttachFeet.y = fStartY;
+
+		cVector3f vFlatToPole = vFeet - vPoleCenter;
+		vFlatToPole.y = 0.f;
+		float fGrabDistance = vFlatToPole.Length();
+		if (fGrabDistance > mfGrabRadius + cMath_Max(0.05f, mfAttachRadius))
+		{
+			DebugSkip("outside grab radius. distance=" + fGrabDistance);
+			return;
+		}
+
+		cVector3f vTopExitFeet = cVector3f_Zero;
+		cVector3f vTopExitForward = cVector3f_Forward;
+		bool bHasTopExit = false;
+		if (m_idTopExitArea != tID_Invalid)
+		{
+			vTopExitFeet = cLux_ID_Entity(m_idTopExitArea).GetPosition();
+			vTopExitForward = GetTopExitForward();
+			bHasTopExit = true;
+		}
+
+		Parkour_RegisterPoleClimbCandidate(vPoleCenter,
+										   vFaceDir,
+										   vAttachFeet,
+										   fMinY,
+										   fMaxY,
+										   vTopExitFeet,
+										   vTopExitForward,
+										   bHasTopExit,
+										   mbTopExitCrouch,
+										   mfGrabRadius,
+										   mfMinApproachSpeed,
+										   mfMinVerticalSpeed,
+										   mfAttachRadius,
+										   mfClimbSpeed,
+										   mfSlideSpeed,
+										   mfTopOutTime,
+										   mfJumpTurnAngle);
+
+		if (Parkour_TryStartPoleClimbCandidate(lMoveState == eMoveState_Normal))
+		{
+			mbPlayerIsInside = false;
+			mbNeedsExitAfterGrab = true;
+			mfGrabCooldown = 0.45f;
+		}
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetAreaFaceDir()
+	{
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null) return cVector3f_Forward;
+
+		cMatrixf mtxArea = cMath_MatrixInverse(pAreaBody.GetLocalMatrix());
+		cVector3f vFaceDir = mtxArea.GetForward();
+		vFaceDir.y = 0.f;
+		if (vFaceDir.SqrLength() > 0.001f)
+			vFaceDir.Normalize();
+		else
+			vFaceDir = cVector3f_Forward;
+
+		return vFaceDir;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetTopExitForward()
+	{
+		if (m_idTopExitArea == tID_Invalid) return cVector3f_Forward;
+
+		cLuxArea@ pArea = cLux_ID_Area(m_idTopExitArea);
+		if (pArea is null) return cVector3f_Forward;
+
+		iPhysicsBody@ pAreaBody = pArea.GetAreaBody();
+		if (pAreaBody is null) return cVector3f_Forward;
+
+		cMatrixf mtxArea = cMath_MatrixInverse(pAreaBody.GetLocalMatrix());
+		cVector3f vForward = mtxArea.GetForward();
+		vForward.y = 0.f;
+		if (vForward.SqrLength() > 0.001f)
+			vForward.Normalize();
+		else
+			vForward = cVector3f_Forward;
+
+		return vForward;
+	}
+
+	//------------------------------------------------------------
+
+	void GetVerticalBounds(float &out afMinY, float &out afMaxY)
+	{
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null)
+		{
+			afMinY = mBaseObj.GetPosition().y - 1.f;
+			afMaxY = mBaseObj.GetPosition().y + 1.f;
+			return;
+		}
+
+		float fHalfHeight = cMath_Max(0.1f, pAreaBody.GetShape().GetSize().y * 0.5f);
+		afMinY = pAreaBody.GetWorldPosition().y - fHalfHeight;
+		afMaxY = pAreaBody.GetWorldPosition().y + fHalfHeight;
+	}
+
+	//------------------------------------------------------------
+
+	void DebugSkip(const tString &in asReason)
+	{
+		if (Parkour_GetDebug() == false) return;
+		if (mfDebugTimer > 0.f) return;
+
+		cLux_AddDebugMessage("[Parkour] Pole climb ignored: " + asReason, true);
+		mfDebugTimer = 0.35f;
+	}
+
+	//------------------------------------------------------------
+
+	bool CanInteract(int alType, iPhysicsBody@ apBody)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	int GetInteractIconId(int alType, iPhysicsBody@ apBody)
+	{
+		return -1;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void OnEndCheckCollision(float afTimteStep) {}
+	void OnSetActive(bool abX) {}
+	void OnConnectionStateChange(iLuxEntity@ apEntity,int alState) { if (alState != 0) mbCanClimb = alState == 1; }
+
+	//------------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY)
+	{
+		return afStartY;
+	}
+
+	//------------------------------------------------------------
+
+	tString msTopExit = "";
+	tID m_idTopExitArea = tID_Invalid;
+	bool mbCanClimb = true;
+	bool mbTopExitCrouch = false;
+	bool mbPlayerIsInside = false;
+	bool mbNeedsExitAfterGrab = false;
+	float mfGrabRadius = 0.9f;
+	float mfMinApproachSpeed = 0.35f;
+	float mfMinVerticalSpeed = -9.0f;
+	float mfAttachRadius = 0.42f;
+	float mfClimbSpeed = 0.85f;
+	float mfSlideSpeed = 1.85f;
+	float mfTopOutTime = 0.58f;
+	float mfJumpTurnAngle = 130.f;
+	float mfDebugTimer = 0.f;
+	float mfGrabCooldown = 0.f;
+
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

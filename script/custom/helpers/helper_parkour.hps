@@ -31,6 +31,10 @@ const int geParkourFlowEvent_SlideStart = 15;
 const int geParkourFlowEvent_SlideJump = 16;
 const int geParkourFlowEvent_SlideComplete = 17;
 const int geParkourFlowEvent_SpeedVault = 18;
+const int geParkourFlowEvent_PoleClimbGrab = 19;
+const int geParkourFlowEvent_PoleClimbJump = 20;
+const int geParkourFlowEvent_PoleClimbTopOut = 21;
+const int geParkourFlowEvent_PoleClimbDrop = 22;
 
 //------------------------------------------------------------
 
@@ -333,6 +337,96 @@ bool Parkour_TryStartPoleSwingCandidate(bool abRequireNormalMoveState = true)
 {
 	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
 	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartPoleSwingCandidate");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartPoleClimb(const cVector3f &in avPoleCenter,
+							   const cVector3f &in avFaceDir,
+							   const cVector3f &in avAttachFeetPos,
+							   float afMinY,
+							   float afMaxY,
+							   const cVector3f &in avTopExitFeetPos,
+							   const cVector3f &in avTopExitForward,
+							   bool abHasTopExit,
+							   bool abTopExitCrouch,
+							   float afGrabRadius,
+							   float afMinApproachSpeed,
+							   float afMinVerticalSpeed,
+							   float afAttachRadius,
+							   float afClimbSpeed,
+							   float afSlideSpeed,
+							   float afTopOutTime,
+							   float afJumpTurnAngle)
+{
+	cScript_SetGlobalArgVector3f(0, avPoleCenter);
+	cScript_SetGlobalArgVector3f(1, avFaceDir);
+	cScript_SetGlobalArgVector3f(2, avAttachFeetPos);
+	cScript_SetGlobalArgFloat(3, afMinY);
+	cScript_SetGlobalArgFloat(4, afMaxY);
+	cScript_SetGlobalArgVector3f(5, avTopExitFeetPos);
+	cScript_SetGlobalArgVector3f(6, avTopExitForward);
+	cScript_SetGlobalArgBool(7, abHasTopExit);
+	cScript_SetGlobalArgBool(8, abTopExitCrouch);
+	cScript_SetGlobalArgFloat(9, afGrabRadius);
+	cScript_SetGlobalArgFloat(10, afMinApproachSpeed);
+	cScript_SetGlobalArgFloat(11, afMinVerticalSpeed);
+	cScript_SetGlobalArgFloat(12, afAttachRadius);
+	cScript_SetGlobalArgFloat(13, afClimbSpeed);
+	cScript_SetGlobalArgFloat(14, afSlideSpeed);
+	cScript_SetGlobalArgFloat(15, afTopOutTime);
+	cScript_SetGlobalArgFloat(16, afJumpTurnAngle);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartPoleClimb");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_RegisterPoleClimbCandidate(const cVector3f &in avPoleCenter,
+										const cVector3f &in avFaceDir,
+										const cVector3f &in avAttachFeetPos,
+										float afMinY,
+										float afMaxY,
+										const cVector3f &in avTopExitFeetPos,
+										const cVector3f &in avTopExitForward,
+										bool abHasTopExit,
+										bool abTopExitCrouch,
+										float afGrabRadius,
+										float afMinApproachSpeed,
+										float afMinVerticalSpeed,
+										float afAttachRadius,
+										float afClimbSpeed,
+										float afSlideSpeed,
+										float afTopOutTime,
+										float afJumpTurnAngle)
+{
+	cScript_SetGlobalArgVector3f(0, avPoleCenter);
+	cScript_SetGlobalArgVector3f(1, avFaceDir);
+	cScript_SetGlobalArgVector3f(2, avAttachFeetPos);
+	cScript_SetGlobalArgFloat(3, afMinY);
+	cScript_SetGlobalArgFloat(4, afMaxY);
+	cScript_SetGlobalArgVector3f(5, avTopExitFeetPos);
+	cScript_SetGlobalArgVector3f(6, avTopExitForward);
+	cScript_SetGlobalArgBool(7, abHasTopExit);
+	cScript_SetGlobalArgBool(8, abTopExitCrouch);
+	cScript_SetGlobalArgFloat(9, afGrabRadius);
+	cScript_SetGlobalArgFloat(10, afMinApproachSpeed);
+	cScript_SetGlobalArgFloat(11, afMinVerticalSpeed);
+	cScript_SetGlobalArgFloat(12, afAttachRadius);
+	cScript_SetGlobalArgFloat(13, afClimbSpeed);
+	cScript_SetGlobalArgFloat(14, afSlideSpeed);
+	cScript_SetGlobalArgFloat(15, afTopOutTime);
+	cScript_SetGlobalArgFloat(16, afJumpTurnAngle);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_RegisterPoleClimbCandidate");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartPoleClimbCandidate(bool abRequireNormalMoveState = true)
+{
+	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartPoleClimbCandidate");
 	return cScript_GetGlobalReturnBool();
 }
 

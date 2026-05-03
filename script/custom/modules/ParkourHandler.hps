@@ -13,6 +13,7 @@ const float gfParkour_RunSpeedMulMax = 2.55f;
 const float gfParkour_WallRunMaxAge = 1.1f;
 const float gfParkour_WallRunMinSpeed = 1.7f;
 const float gfParkour_FrontWallDot = -0.65f;
+const float gfParkour_WallScrambleAutoFrontDot = -0.88f;
 const float gfParkour_FrontWallUpSpeed = 1.7f;
 const float gfParkour_FrontWallOutSpeed = 0.85f;
 const float gfParkour_FrontWallForwardDamp = 1.92f;
@@ -33,6 +34,7 @@ const float gfParkour_WallScrambleSameWallRejectTime = 0.48f;
 const float gfParkour_WallScrambleSameWallDot = 0.65f;
 const float gfParkour_LedgeGrabMinRiseSpeed = 0.75f;
 const float gfParkour_PoleSwingCandidateTTL = 0.12f;
+const float gfParkour_PoleClimbCandidateTTL = 0.12f;
 const float gfParkour_AutoLedgeFaceRayLength = 0.95f;
 const float gfParkour_AutoLedgeTopRayUp = 2.60f;
 const float gfParkour_AutoLedgeTopRayLength = 3.10f;
@@ -47,13 +49,13 @@ const float gfParkour_AutoLedgeFinishUp = 0.03f;
 const float gfParkour_AutoLedgeAboveTolerance = 0.08f;
 const float gfParkour_SpeedVaultMinFlow = 0.12f;
 const float gfParkour_SpeedVaultMinSpeed = 1.05f;
-const float gfParkour_SpeedVaultFaceRayLength = 1.20f;
+const float gfParkour_SpeedVaultFaceRayLength = 1.50f;
 const float gfParkour_SpeedVaultTopRayUp = 1.35f;
 const float gfParkour_SpeedVaultTopRayLength = 1.65f;
-const float gfParkour_SpeedVaultLandRayUp = 0.85f;
-const float gfParkour_SpeedVaultLandRayLength = 2.10f;
+const float gfParkour_SpeedVaultLandRayUp = 0.95f;
+const float gfParkour_SpeedVaultLandRayLength = 2.15f;
 const float gfParkour_SpeedVaultMinHeight = 0.35f;
-const float gfParkour_SpeedVaultMaxHeight = 1.10f;
+const float gfParkour_SpeedVaultMaxHeight = 1.35f;
 const float gfParkour_SpeedVaultMaxFaceNormalY = 0.35f;
 const float gfParkour_SpeedVaultMinTopNormalY = 0.65f;
 const float gfParkour_SpeedVaultFaceFacingDot = -0.20f;
@@ -144,6 +146,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			if (mfPoleSwingCandidateTime <= 0.f)
 				ClearPoleSwingCandidate();
 		}
+		if (mfPoleClimbCandidateTime > 0.f)
+		{
+			mfPoleClimbCandidateTime -= afTimeStep;
+			if (mfPoleClimbCandidateTime <= 0.f)
+				ClearPoleClimbCandidate();
+		}
 
 		UpdateWallRunChain(afTimeStep);
 		UpdateAirFlow(afTimeStep);
@@ -165,6 +173,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfLedgeRequiredFacingDot = 0.35f;
 		mfLedgeMinFallSpeed = 0.5f;
 		mfLedgeMaxPlayerFeetY = 999999.f;
+		ClearPoleClimbCandidate();
 		ClearPoleSwingCandidate();
 		ResetWallRunChain();
 		ResetFlow();
@@ -307,6 +316,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			ChangeFlow(0.05f * fScale, "slide complete", true);
 		else if (alEventId == geParkourFlowEvent_SpeedVault)
 			ChangeFlow(0.08f * fScale, "speed vault", true);
+		else if (alEventId == geParkourFlowEvent_PoleClimbGrab)
+			ChangeFlow(0.05f * fScale, "pole climb grab", true);
+		else if (alEventId == geParkourFlowEvent_PoleClimbJump)
+			ChangeFlow(0.08f * fScale, "pole climb jump", true);
+		else if (alEventId == geParkourFlowEvent_PoleClimbTopOut)
+			ChangeFlow(0.10f * fScale, "pole climb top out", true);
+		else if (alEventId == geParkourFlowEvent_PoleClimbDrop)
+			ChangeFlow(-0.12f * fScale, "pole climb drop", true);
 	}
 
 	//------------------------------------------------------------
@@ -911,6 +928,17 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	bool IsDirectFrontWallForScramble(iCharacterBody@ apBody,
+									  const cVector3f &in avWallNormal)
+	{
+		cVector3f vTravelFwd = GetTravelForward2D(apBody);
+		if (vTravelFwd.SqrLength() <= 0.001f) return false;
+
+		return cMath_Vector3Dot(avWallNormal, vTravelFwd) <= gfParkour_WallScrambleAutoFrontDot;
+	}
+
+	//------------------------------------------------------------
+
 	void DoFrontWallScramble(iCharacterBody@ apBody,
 							 const cVector3f &in avWallNormal,
 							 float afDistance)
@@ -1120,7 +1148,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			return false;
 		}
 
-		if (IsFrontWall(pBody, vWallNormal) && abFromWallJumpChain == false)
+		if (IsDirectFrontWallForScramble(pBody, vWallNormal) && abFromWallJumpChain == false)
 		{
 			if (TryStartWallScramble(afRunJumpAge, false, afTimeStep, true))
 				return true;
@@ -1793,6 +1821,212 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	bool TryStartPoleClimb(const cVector3f &in avPoleCenter,
+						   const cVector3f &in avFaceDir,
+						   const cVector3f &in avAttachFeetPos,
+						   float afMinY,
+						   float afMaxY,
+						   const cVector3f &in avTopExitFeetPos,
+						   const cVector3f &in avTopExitForward,
+						   bool abHasTopExit,
+						   bool abTopExitCrouch,
+						   float afGrabRadius,
+						   float afMinApproachSpeed,
+						   float afMinVerticalSpeed,
+						   float afAttachRadius,
+						   float afClimbSpeed,
+						   float afSlideSpeed,
+						   float afTopOutTime,
+						   float afJumpTurnAngle,
+						   bool abRequireNormalMoveState = true)
+	{
+		if (PlayerCanUseParkour(abRequireNormalMoveState) == false)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: player cannot use parkour", true);
+			return false;
+		}
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: no player body", true);
+			return false;
+		}
+		if (pBody.IsOnGround())
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: player is grounded", true);
+			return false;
+		}
+
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody);
+		float fApproachSpeed = vFlatVel.Length();
+		if (fApproachSpeed < afMinApproachSpeed)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: approach speed too low. speed=" + fApproachSpeed + " min=" + afMinApproachSpeed, true);
+			return false;
+		}
+
+		float fVerticalVel = pBody.GetForceVelocity().y;
+		if (fVerticalVel < afMinVerticalSpeed)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: vertical speed too low. velocity=" + fVerticalVel + " min=" + afMinVerticalSpeed, true);
+			return false;
+		}
+
+		cVector3f vFaceDir = avFaceDir;
+		vFaceDir.y = 0.f;
+		if (vFaceDir.SqrLength() > 0.001f)
+			vFaceDir.Normalize();
+		else
+			vFaceDir = GetTravelForward2D(pBody);
+
+		cVector3f vTopExitForward = avTopExitForward;
+		vTopExitForward.y = 0.f;
+		if (vTopExitForward.SqrLength() > 0.001f)
+			vTopExitForward.Normalize();
+		else
+			vTopExitForward = vFaceDir;
+
+		float fAttachRadius = cMath_Max(0.05f, afAttachRadius);
+		float fGrabRadius = cMath_Max(0.05f, afGrabRadius);
+		cVector3f vFlatToPole = pBody.GetFeetPosition() - avPoleCenter;
+		vFlatToPole.y = 0.f;
+		float fDistance = vFlatToPole.Length();
+		if (fDistance > fGrabRadius + fAttachRadius)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: outside grab radius. distance=" + fDistance + " radius=" + fGrabRadius, true);
+			return false;
+		}
+
+		float fMinY = afMinY;
+		float fMaxY = afMaxY;
+		if (fMaxY < fMinY)
+		{
+			float fTemp = fMinY;
+			fMinY = fMaxY;
+			fMaxY = fTemp;
+		}
+
+		cVector3f vAttachFeetPos = avAttachFeetPos;
+		vAttachFeetPos.y = cMath_Clamp(vAttachFeetPos.y, fMinY, fMaxY);
+
+		cScript_SetGlobalArgVector3f(0, avPoleCenter);
+		cScript_SetGlobalArgVector3f(1, vFaceDir);
+		cScript_SetGlobalArgVector3f(2, vAttachFeetPos);
+		cScript_SetGlobalArgFloat(3, fMinY);
+		cScript_SetGlobalArgFloat(4, fMaxY);
+		cScript_SetGlobalArgVector3f(5, avTopExitFeetPos);
+		cScript_SetGlobalArgVector3f(6, vTopExitForward);
+		cScript_SetGlobalArgBool(7, abHasTopExit);
+		cScript_SetGlobalArgBool(8, abTopExitCrouch);
+		cScript_SetGlobalArgFloat(9, fAttachRadius);
+		cScript_SetGlobalArgFloat(10, cMath_Max(0.05f, afClimbSpeed));
+		cScript_SetGlobalArgFloat(11, cMath_Max(0.05f, afSlideSpeed));
+		cScript_SetGlobalArgFloat(12, cMath_Max(0.10f, afTopOutTime));
+		cScript_SetGlobalArgFloat(13, cMath_Clamp(afJumpTurnAngle, 15.f, 170.f));
+		cScript_RunGlobalFunc("State_ParkourPoleClimb", "", "SetupParkourPoleClimb");
+
+		ApplyFlowEvent(geParkourFlowEvent_PoleClimbGrab, 1.f);
+		if (mbDebug)
+			cLux_AddDebugMessage("[Parkour] Pole climb started. speed=" + fApproachSpeed + " flow=" + mfParkourFlow, true);
+
+		cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourPoleClimb);
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void RegisterPoleClimbCandidate(const cVector3f &in avPoleCenter,
+									const cVector3f &in avFaceDir,
+									const cVector3f &in avAttachFeetPos,
+									float afMinY,
+									float afMaxY,
+									const cVector3f &in avTopExitFeetPos,
+									const cVector3f &in avTopExitForward,
+									bool abHasTopExit,
+									bool abTopExitCrouch,
+									float afGrabRadius,
+									float afMinApproachSpeed,
+									float afMinVerticalSpeed,
+									float afAttachRadius,
+									float afClimbSpeed,
+									float afSlideSpeed,
+									float afTopOutTime,
+									float afJumpTurnAngle)
+	{
+		if (mbEnabled == false) return;
+
+		mvPoleClimbCandidateCenter = avPoleCenter;
+		mvPoleClimbCandidateFaceDir = avFaceDir;
+		mvPoleClimbCandidateAttachFeetPos = avAttachFeetPos;
+		mfPoleClimbCandidateMinY = afMinY;
+		mfPoleClimbCandidateMaxY = afMaxY;
+		mvPoleClimbCandidateTopExitFeetPos = avTopExitFeetPos;
+		mvPoleClimbCandidateTopExitForward = avTopExitForward;
+		mbPoleClimbCandidateHasTopExit = abHasTopExit;
+		mbPoleClimbCandidateTopExitCrouch = abTopExitCrouch;
+		mfPoleClimbCandidateGrabRadius = afGrabRadius;
+		mfPoleClimbCandidateMinApproachSpeed = afMinApproachSpeed;
+		mfPoleClimbCandidateMinVerticalSpeed = afMinVerticalSpeed;
+		mfPoleClimbCandidateAttachRadius = afAttachRadius;
+		mfPoleClimbCandidateClimbSpeed = afClimbSpeed;
+		mfPoleClimbCandidateSlideSpeed = afSlideSpeed;
+		mfPoleClimbCandidateTopOutTime = afTopOutTime;
+		mfPoleClimbCandidateJumpTurnAngle = afJumpTurnAngle;
+		mfPoleClimbCandidateTime = gfParkour_PoleClimbCandidateTTL;
+		mbPoleClimbCandidateActive = true;
+	}
+
+	//------------------------------------------------------------
+
+	bool TryStartPoleClimbCandidate(bool abRequireNormalMoveState = true)
+	{
+		if (mbPoleClimbCandidateActive == false || mfPoleClimbCandidateTime <= 0.f)
+			return false;
+
+		if (TryStartPoleClimb(mvPoleClimbCandidateCenter,
+							  mvPoleClimbCandidateFaceDir,
+							  mvPoleClimbCandidateAttachFeetPos,
+							  mfPoleClimbCandidateMinY,
+							  mfPoleClimbCandidateMaxY,
+							  mvPoleClimbCandidateTopExitFeetPos,
+							  mvPoleClimbCandidateTopExitForward,
+							  mbPoleClimbCandidateHasTopExit,
+							  mbPoleClimbCandidateTopExitCrouch,
+							  mfPoleClimbCandidateGrabRadius,
+							  mfPoleClimbCandidateMinApproachSpeed,
+							  mfPoleClimbCandidateMinVerticalSpeed,
+							  mfPoleClimbCandidateAttachRadius,
+							  mfPoleClimbCandidateClimbSpeed,
+							  mfPoleClimbCandidateSlideSpeed,
+							  mfPoleClimbCandidateTopOutTime,
+							  mfPoleClimbCandidateJumpTurnAngle,
+							  abRequireNormalMoveState))
+		{
+			ClearPoleClimbCandidate();
+			ClearPoleSwingCandidate();
+			return true;
+		}
+
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	void ClearPoleClimbCandidate()
+	{
+		mbPoleClimbCandidateActive = false;
+		mfPoleClimbCandidateTime = -1.f;
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_GetEnabled()
 	{
 		cScript_SetGlobalReturnBool(mbEnabled);
@@ -1973,6 +2207,59 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	void _Global_TryStartPoleClimb()
+	{
+		cScript_SetGlobalReturnBool(TryStartPoleClimb(cScript_GetGlobalArgVector3f(0),
+													  cScript_GetGlobalArgVector3f(1),
+													  cScript_GetGlobalArgVector3f(2),
+													  cScript_GetGlobalArgFloat(3),
+													  cScript_GetGlobalArgFloat(4),
+													  cScript_GetGlobalArgVector3f(5),
+													  cScript_GetGlobalArgVector3f(6),
+													  cScript_GetGlobalArgBool(7),
+													  cScript_GetGlobalArgBool(8),
+													  cScript_GetGlobalArgFloat(9),
+													  cScript_GetGlobalArgFloat(10),
+													  cScript_GetGlobalArgFloat(11),
+													  cScript_GetGlobalArgFloat(12),
+													  cScript_GetGlobalArgFloat(13),
+													  cScript_GetGlobalArgFloat(14),
+													  cScript_GetGlobalArgFloat(15),
+													  cScript_GetGlobalArgFloat(16)));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_RegisterPoleClimbCandidate()
+	{
+		RegisterPoleClimbCandidate(cScript_GetGlobalArgVector3f(0),
+								   cScript_GetGlobalArgVector3f(1),
+								   cScript_GetGlobalArgVector3f(2),
+								   cScript_GetGlobalArgFloat(3),
+								   cScript_GetGlobalArgFloat(4),
+								   cScript_GetGlobalArgVector3f(5),
+								   cScript_GetGlobalArgVector3f(6),
+								   cScript_GetGlobalArgBool(7),
+								   cScript_GetGlobalArgBool(8),
+								   cScript_GetGlobalArgFloat(9),
+								   cScript_GetGlobalArgFloat(10),
+								   cScript_GetGlobalArgFloat(11),
+								   cScript_GetGlobalArgFloat(12),
+								   cScript_GetGlobalArgFloat(13),
+								   cScript_GetGlobalArgFloat(14),
+								   cScript_GetGlobalArgFloat(15),
+								   cScript_GetGlobalArgFloat(16));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_TryStartPoleClimbCandidate()
+	{
+		cScript_SetGlobalReturnBool(TryStartPoleClimbCandidate(cScript_GetGlobalArgBool(0)));
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_RegisterLedgeCandidate()
 	{
 		if (mbEnabled == false) return;
@@ -2032,6 +2319,26 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	cVector3f mvPoleSwingCandidateAxis = cVector3f_Right;
 	cVector3f mvPoleSwingCandidateForward = cVector3f_Forward;
 	cVector3f mvPoleSwingCandidateLaunchTarget = cVector3f_Zero;
+
+	bool mbPoleClimbCandidateActive = false;
+	bool mbPoleClimbCandidateHasTopExit = false;
+	bool mbPoleClimbCandidateTopExitCrouch = false;
+	float mfPoleClimbCandidateTime = -1.f;
+	float mfPoleClimbCandidateMinY = 0.f;
+	float mfPoleClimbCandidateMaxY = 1.f;
+	float mfPoleClimbCandidateGrabRadius = 0.9f;
+	float mfPoleClimbCandidateMinApproachSpeed = 0.35f;
+	float mfPoleClimbCandidateMinVerticalSpeed = -9.0f;
+	float mfPoleClimbCandidateAttachRadius = 0.42f;
+	float mfPoleClimbCandidateClimbSpeed = 0.85f;
+	float mfPoleClimbCandidateSlideSpeed = 1.85f;
+	float mfPoleClimbCandidateTopOutTime = 0.58f;
+	float mfPoleClimbCandidateJumpTurnAngle = 130.f;
+	cVector3f mvPoleClimbCandidateCenter = cVector3f_Zero;
+	cVector3f mvPoleClimbCandidateFaceDir = cVector3f_Forward;
+	cVector3f mvPoleClimbCandidateAttachFeetPos = cVector3f_Zero;
+	cVector3f mvPoleClimbCandidateTopExitFeetPos = cVector3f_Zero;
+	cVector3f mvPoleClimbCandidateTopExitForward = cVector3f_Forward;
 
 	bool mbWallJumpChainActive = false;
 	bool mbWallScrambleJumpChainActive = false;
