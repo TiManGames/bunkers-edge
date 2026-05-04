@@ -1,0 +1,634 @@
+#include "interfaces/Area_Interface.hps"
+#include "player/Player_Types.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "helpers/helper_player.hps"
+#include "helpers/helper_physics.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
+{
+	//------------------------------------------------------------
+
+	void Init()
+	{
+		mbPlayerIsInside = false;
+		mbNeedsExitAfterGrab = false;
+		mbRopeCreated = false;
+		mfDebugTimer = 0.f;
+		mfGrabCooldown = 0.f;
+		m_idEndArea = tID_Invalid;
+		m_idAnchorBody = tID_Invalid;
+		m_idTrolleyBody = tID_Invalid;
+		m_idSliderJoint = tID_Invalid;
+		msRopeName = mBaseObj.GetName() + "_rope";
+		mBaseObj.SetAutoSleep(false);
+		mBaseObj.SetVariableUpdateRate(0.015f);
+	}
+
+	//------------------------------------------------------------
+
+	void SetupAfterLoad(cWorld @apWorld, cResourceVarsObject @apVars)
+	{
+		mbCanRide = apVars.GetVarBool("CanRide", true);
+		msEndArea = apVars.GetVarString("EndArea", "");
+		mfGrabRadius = apVars.GetVarFloat("GrabRadius", 0.85f);
+		mfMinApproachSpeed = apVars.GetVarFloat("MinApproachSpeed", 0.65f);
+		mfMinVerticalSpeed = apVars.GetVarFloat("MinVerticalSpeed", -10.0f);
+		mfHangOffset = apVars.GetVarFloat("HangOffset", 1.15f);
+		mfStartSpeed = apVars.GetVarFloat("StartSpeed", 2.6f);
+		mfMinSpeed = apVars.GetVarFloat("MinSpeed", 1.8f);
+		mfMaxSpeed = apVars.GetVarFloat("MaxSpeed", 9.0f);
+		mfGravityAccelMul = apVars.GetVarFloat("GravityAccelMul", 1.0f);
+		mfLinearDamping = apVars.GetVarFloat("LinearDamping", 0.08f);
+		mfDetachExitSpeedMul = apVars.GetVarFloat("DetachExitSpeedMul", 1.0f);
+		mfEndExitUpSpeed = apVars.GetVarFloat("EndExitUpSpeed", 0.35f);
+		mfCrouchDropDownSpeed = apVars.GetVarFloat("CrouchDropDownSpeed", -0.25f);
+		msRopeMaterial = apVars.GetVarString("RopeMaterial", "entities/arabic_fort/rope/ab_interior_tileable_rope_01.mat");
+		mfRopeRadius = apVars.GetVarFloat("RopeRadius", 0.05f);
+		mfRopeSegmentLength = apVars.GetVarFloat("RopeSegmentLength", 0.5f);
+		mfRopeDamping = apVars.GetVarFloat("RopeDamping", 0.05f);
+		mfRopeStrength = apVars.GetVarFloat("RopeStrength", 100.f);
+		mfRopeStiffness = apVars.GetVarFloat("RopeStiffness", 0.1f);
+		mbRopeCollideWorld = apVars.GetVarBool("RopeCollideWorld", false);
+		mbRopeCollideCharacter = apVars.GetVarBool("RopeCollideCharacter", false);
+	}
+
+	//------------------------------------------------------------
+
+	void OnAfterWorldLoad()
+	{
+		if (msEndArea == "")
+			msEndArea = mBaseObj.GetName() + "_End";
+
+		iLuxEntity@ pEnd = mBaseObj.GetMap().GetEntityByName(msEndArea, eLuxEntityType_Area);
+		if (pEnd is null)
+		{
+			Error("Cannot find end area '" + msEndArea + "' for zipline area '" + mBaseObj.GetName() + "'");
+			return;
+		}
+
+		m_idEndArea = pEnd.GetID();
+		UpdateLineData();
+		CreateZiplineRope();
+		CreateZiplinePhysics();
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Zipline area '" + mBaseObj.GetName() + "' loaded. EndArea='" + msEndArea + "'.", true);
+	}
+
+	//------------------------------------------------------------
+
+	void OnUpdate(float afTimeStep) {}
+	void OnPostUpdate(float afTimeStep) {}
+	void ResetProperties() {}
+
+	//------------------------------------------------------------
+
+	void BeforeEntityDestruction()
+	{
+		DestroyZiplinePhysics();
+		DestroyZiplineRope();
+	}
+
+	//------------------------------------------------------------
+
+	void OnVariableUpdate(float afTimeStep)
+	{
+		if (mfDebugTimer > 0.f)
+			mfDebugTimer -= afTimeStep;
+		if (mfGrabCooldown > 0.f)
+			mfGrabCooldown -= afTimeStep;
+
+		if (mbCanRide == false) return;
+		if (m_idEndArea == tID_Invalid) return;
+		if (m_idTrolleyBody == tID_Invalid || m_idSliderJoint == tID_Invalid) return;
+		if (Parkour_GetEnabled() == false) return;
+		if (cLux_GetPlayer().IsActive() == false) return;
+		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
+		int lMoveState = cLux_GetPlayer().GetCurrentMoveStateId();
+		if (lMoveState != eMoveState_Normal && lMoveState != eMoveState_ParkourWallRun) return;
+		if (Player_GetUnderwater()) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null) return;
+
+		bool bCollide = mBaseObj.CheckCharacterCollision(pBody, mBaseObj.GetMap());
+		if (bCollide && mbPlayerIsInside == false && Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Entered zipline area '" + mBaseObj.GetName() + "'.", true);
+		else if (bCollide == false && mbPlayerIsInside && Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Left zipline area '" + mBaseObj.GetName() + "'.", true);
+
+		mbPlayerIsInside = bCollide;
+		if (bCollide == false)
+		{
+			mbNeedsExitAfterGrab = false;
+			return;
+		}
+		if (mbNeedsExitAfterGrab) return;
+		if (mfGrabCooldown > 0.f) return;
+
+		if (pBody.IsOnGround())
+		{
+			DebugSkip("player is grounded");
+			return;
+		}
+
+		UpdateLineData();
+		if (mfLineLength <= 0.25f)
+		{
+			DebugSkip("zipline is too short");
+			return;
+		}
+
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
+		if (vFlatVel.Length() < mfMinApproachSpeed)
+		{
+			DebugSkip("approach speed too low. speed=" + vFlatVel.Length() + " min=" + mfMinApproachSpeed);
+			return;
+		}
+
+		if (pBody.GetForceVelocity().y < mfMinVerticalSpeed)
+		{
+			DebugSkip("vertical speed too low. velocity=" + pBody.GetForceVelocity().y + " min=" + mfMinVerticalSpeed);
+			return;
+		}
+
+		cVector3f vClosest;
+		cVector3f vGrabPos = pBody.GetFeetPosition() + cVector3f_Up * mfHangOffset;
+		float fProgress = GetClosestLineProgress(vGrabPos, vClosest);
+		float fGrabDistance = cMath_Vector3Dist(vGrabPos, vClosest);
+		if (fGrabDistance > mfGrabRadius)
+		{
+			DebugSkip("outside grab radius. distance=" + fGrabDistance + " radius=" + mfGrabRadius);
+			return;
+		}
+
+		if (ResetTrolleyAtProgress(fProgress) == false)
+		{
+			DebugSkip("could not reset trolley");
+			return;
+		}
+
+		Parkour_RegisterZiplineCandidate(mvHighPoint,
+										 mvLowPoint,
+										 m_idTrolleyBody,
+										 m_idSliderJoint,
+										 fProgress,
+										 mfGrabRadius,
+										 mfMinApproachSpeed,
+										 mfMinVerticalSpeed,
+										 mfHangOffset,
+										 mfStartSpeed,
+										 mfMinSpeed,
+										 mfMaxSpeed,
+										 mfGravityAccelMul,
+										 mfLinearDamping,
+										 mfDetachExitSpeedMul,
+										 mfEndExitUpSpeed,
+										 mfCrouchDropDownSpeed,
+										 msRopeName);
+
+		if (Parkour_TryStartZiplineCandidate(lMoveState == eMoveState_Normal))
+		{
+			mbPlayerIsInside = false;
+			mbNeedsExitAfterGrab = true;
+			mfGrabCooldown = 0.55f;
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateLineData()
+	{
+		cVector3f vStart = mBaseObj.GetPosition();
+		cVector3f vEnd = GetEndPoint();
+
+		if (vStart.y >= vEnd.y)
+		{
+			mvHighPoint = vStart;
+			mvLowPoint = vEnd;
+		}
+		else
+		{
+			mvHighPoint = vEnd;
+			mvLowPoint = vStart;
+		}
+
+		mvRideDir = mvLowPoint - mvHighPoint;
+		mfLineLength = mvRideDir.Length();
+		if (mfLineLength > 0.001f)
+			mvRideDir.Normalize();
+		else
+			mvRideDir = cVector3f_Forward;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetEndPoint()
+	{
+		if (m_idEndArea == tID_Invalid)
+			return mBaseObj.GetPosition();
+
+		iLuxEntity@ pEnd = cLux_ID_Entity(m_idEndArea);
+		if (pEnd is null)
+			return mBaseObj.GetPosition();
+
+		return pEnd.GetPosition();
+	}
+
+	//------------------------------------------------------------
+
+	void CreateZiplineRope()
+	{
+		if (mfLineLength <= 0.25f) return;
+
+		if (Rope_Exists(msRopeName) == false)
+		{
+			Rope_Create(msRopeName,
+						mBaseObj.GetPosition(),
+						GetEndPoint(),
+						cMath_Max(0.05f, mfRopeSegmentLength),
+						cMath_Max(0.f, mfRopeDamping),
+						cMath_Max(1.f, mfRopeStrength),
+						cMath_Max(0.f, mfRopeStiffness),
+						mbRopeCollideWorld,
+						false);
+			Rope_SetTotalLength(msRopeName, mfLineLength);
+			Rope_AttachStart(msRopeName, mBaseObj.GetName());
+			Rope_AttachEnd(msRopeName, msEndArea);
+			Rope_SetCollide(msRopeName, mbRopeCollideWorld, false, mbRopeCollideCharacter, false);
+			mbRopeCreated = true;
+		}
+
+		if (mBaseObj.GetMap().GetWorld().GetRopeEntity(msRopeName + "Gfx") is null)
+			Rope_CreateGfx(msRopeName, msRopeMaterial, cMath_Max(0.005f, mfRopeRadius));
+	}
+
+	//------------------------------------------------------------
+
+	void DestroyZiplineRope()
+	{
+		cWorld@ pWorld = mBaseObj.GetMap().GetWorld();
+		iPhysicsWorld@ pPhysicsWorld = mBaseObj.GetMap().GetPhysicsWorld();
+
+		iRopeEntity@ pRopeGfx = pWorld.GetRopeEntity(msRopeName + "Gfx");
+		if (pRopeGfx !is null)
+			pWorld.DestroyRopeEntity(pRopeGfx);
+
+		if (mbRopeCreated)
+		{
+			iPhysicsRope@ pRope = pPhysicsWorld.GetRope(msRopeName);
+			if (pRope !is null)
+				pPhysicsWorld.DestroyRope(pRope);
+		}
+
+		mbRopeCreated = false;
+	}
+
+	//------------------------------------------------------------
+
+	void CreateZiplinePhysics()
+	{
+		if (mfLineLength <= 0.25f) return;
+
+		DestroyZiplinePhysics();
+
+		iPhysicsWorld@ pWorld = mBaseObj.GetMap().GetPhysicsWorld();
+		@mpAnchorShape = pWorld.CreateSphereShape(0.05f, cMatrixf_Identity);
+		@mpTrolleyShape = pWorld.CreateSphereShape(0.10f, cMatrixf_Identity);
+
+		iPhysicsBody@ pAnchor = pWorld.CreateBody(mBaseObj.GetName() + "_ZiplineAnchor_Body", mpAnchorShape, 0.f);
+		iPhysicsBody@ pTrolley = pWorld.CreateBody(mBaseObj.GetName() + "_ZiplineTrolley_Body", mpTrolleyShape, 1.f);
+		if (pAnchor is null || pTrolley is null) return;
+
+		pAnchor.SetPosition(mvHighPoint);
+		pAnchor.SetCollide(false);
+		pAnchor.SetCollideCharacter(false);
+		pAnchor.SetAutoDisable(false);
+		pAnchor.SetGravity(false);
+
+		pTrolley.SetPosition(mvHighPoint);
+		pTrolley.SetCollide(false);
+		pTrolley.SetCollideCharacter(false);
+		pTrolley.SetAutoDisable(false);
+		pTrolley.SetGravity(false);
+		pTrolley.SetLinearDamping(cMath_Max(0.f, mfLinearDamping));
+		pTrolley.SetAngularDamping(2.f);
+		pTrolley.SetMaxLinearSpeed(cMath_Max(1.f, mfMaxSpeed * 1.5f));
+		pTrolley.SetActive(true);
+
+		iPhysicsJointSlider@ pJoint = pWorld.CreateJointSlider(mBaseObj.GetName() + "_ZiplineTrolley_Joint",
+															   mvHighPoint,
+															   mvRideDir,
+															   pAnchor,
+															   pTrolley);
+		if (pJoint is null) return;
+
+		pJoint.SetMinDistance(0.f);
+		pJoint.SetMaxDistance(mfLineLength);
+		pJoint.SetLimitAutoSleep(false);
+		pJoint.SetStickyMinLimit(false);
+		pJoint.SetStickyMaxLimit(false);
+		pJoint.SetCollideBodies(false);
+
+		m_idAnchorBody = pAnchor.GetID();
+		m_idTrolleyBody = pTrolley.GetID();
+		m_idSliderJoint = pJoint.GetID();
+	}
+
+	//------------------------------------------------------------
+
+	void DestroyZiplinePhysics()
+	{
+		iPhysicsWorld@ pWorld = mBaseObj.GetMap().GetPhysicsWorld();
+
+		if (m_idSliderJoint != tID_Invalid)
+		{
+			iPhysicsJoint@ pJoint = pWorld.GetPhysicsJointFromID(m_idSliderJoint);
+			if (pJoint !is null)
+				pWorld.DestroyJoint(pJoint);
+			m_idSliderJoint = tID_Invalid;
+		}
+
+		if (m_idTrolleyBody != tID_Invalid)
+		{
+			iPhysicsBody@ pBody = cLux_ID_Body(m_idTrolleyBody);
+			if (pBody !is null)
+				pWorld.DestroyBody(pBody);
+			m_idTrolleyBody = tID_Invalid;
+		}
+
+		if (m_idAnchorBody != tID_Invalid)
+		{
+			iPhysicsBody@ pBody = cLux_ID_Body(m_idAnchorBody);
+			if (pBody !is null)
+				pWorld.DestroyBody(pBody);
+			m_idAnchorBody = tID_Invalid;
+		}
+
+		if (mpTrolleyShape !is null)
+		{
+			pWorld.DestroyShape(mpTrolleyShape);
+			@mpTrolleyShape = null;
+		}
+		if (mpAnchorShape !is null)
+		{
+			pWorld.DestroyShape(mpAnchorShape);
+			@mpAnchorShape = null;
+		}
+	}
+
+	//------------------------------------------------------------
+
+	iPhysicsBody@ GetTrolleyBody()
+	{
+		if (m_idTrolleyBody == tID_Invalid) return null;
+		return cLux_ID_Body(m_idTrolleyBody);
+	}
+
+	//------------------------------------------------------------
+
+	bool ResetTrolleyAtProgress(float afProgress)
+	{
+		iPhysicsBody@ pTrolley = GetTrolleyBody();
+		if (pTrolley is null) return false;
+
+		float fProgress = cMath_Clamp(afProgress, 0.f, 1.f);
+		cVector3f vPos = mvHighPoint + mvRideDir * (mfLineLength * fProgress);
+		pTrolley.SetPosition(vPos);
+		pTrolley.SetLinearVelocity(cVector3f_Zero);
+		pTrolley.SetAngularVelocity(cVector3f_Zero);
+		pTrolley.Enable();
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	float GetClosestLineProgress(const cVector3f &in avPoint, cVector3f &out avClosest)
+	{
+		float fRopeProgress;
+		if (TryGetClosestRopeProgress(avPoint, avClosest, fRopeProgress))
+			return fRopeProgress;
+
+		cVector3f vLine = mvLowPoint - mvHighPoint;
+		float fLineLenSqr = vLine.SqrLength();
+		if (fLineLenSqr <= 0.001f)
+		{
+			avClosest = mvHighPoint;
+			return 0.f;
+		}
+
+		float fProgress = cMath_Vector3Dot(avPoint - mvHighPoint, vLine) / fLineLenSqr;
+		fProgress = cMath_Clamp(fProgress, 0.f, 1.f);
+		avClosest = mvHighPoint + vLine * fProgress;
+		return fProgress;
+	}
+
+	//------------------------------------------------------------
+
+	bool TryGetClosestRopeProgress(const cVector3f &in avPoint, cVector3f &out avClosest, float &out afProgress)
+	{
+		iPhysicsRope@ pRope = GetZiplineRope();
+		if (pRope is null) return false;
+
+		int lNum = pRope.GetParticleNum();
+		if (lNum < 2) return false;
+
+		bool bForward = RopeParticlesRunHighToLow(pRope);
+		float fTotalLength = GetRopeArcLength(pRope, bForward);
+		if (fTotalLength <= 0.001f) return false;
+
+		float fBestDistSqr = 999999999.f;
+		float fBestProgress = 0.f;
+		float fTravelled = 0.f;
+		int lStep = bForward ? 1 : -1;
+		int lIndex = bForward ? 0 : lNum - 1;
+		cVector3f vPrev = pRope.GetParticle(lIndex).GetPosition();
+		avClosest = vPrev;
+
+		for (int i = 1; i < lNum; ++i)
+		{
+			int lNext = lIndex + lStep;
+			cVector3f vNext = pRope.GetParticle(lNext).GetPosition();
+			cVector3f vSegment = vNext - vPrev;
+			float fSegLen = vSegment.Length();
+			if (fSegLen > 0.001f)
+			{
+				float fSegT = cMath_Clamp(cMath_Vector3Dot(avPoint - vPrev, vSegment) / (fSegLen * fSegLen), 0.f, 1.f);
+				cVector3f vCandidate = vPrev + vSegment * fSegT;
+				float fDistSqr = cMath_Vector3DistSqr(avPoint, vCandidate);
+				if (fDistSqr < fBestDistSqr)
+				{
+					fBestDistSqr = fDistSqr;
+					avClosest = vCandidate;
+					fBestProgress = (fTravelled + fSegLen * fSegT) / fTotalLength;
+				}
+
+				fTravelled += fSegLen;
+			}
+
+			vPrev = vNext;
+			lIndex = lNext;
+		}
+
+		afProgress = cMath_Clamp(fBestProgress, 0.f, 1.f);
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	float GetRopeArcLength(iPhysicsRope@ apRope, bool abForward)
+	{
+		if (apRope is null) return mfLineLength;
+
+		int lNum = apRope.GetParticleNum();
+		if (lNum < 2) return mfLineLength;
+
+		float fLength = 0.f;
+		int lStep = abForward ? 1 : -1;
+		int lIndex = abForward ? 0 : lNum - 1;
+		cVector3f vPrev = apRope.GetParticle(lIndex).GetPosition();
+
+		for (int i = 1; i < lNum; ++i)
+		{
+			int lNext = lIndex + lStep;
+			cVector3f vNext = apRope.GetParticle(lNext).GetPosition();
+			fLength += cMath_Vector3Dist(vPrev, vNext);
+			vPrev = vNext;
+			lIndex = lNext;
+		}
+
+		return fLength;
+	}
+
+	//------------------------------------------------------------
+
+	bool RopeParticlesRunHighToLow(iPhysicsRope@ apRope)
+	{
+		if (apRope is null) return true;
+		int lNum = apRope.GetParticleNum();
+		if (lNum < 2) return true;
+
+		cVector3f vFirst = apRope.GetParticle(0).GetPosition();
+		cVector3f vLast = apRope.GetParticle(lNum - 1).GetPosition();
+		return cMath_Vector3DistSqr(vFirst, mvHighPoint) <= cMath_Vector3DistSqr(vLast, mvHighPoint);
+	}
+
+	//------------------------------------------------------------
+
+	iPhysicsRope@ GetZiplineRope()
+	{
+		if (msRopeName == "") return null;
+		return mBaseObj.GetMap().GetPhysicsWorld().GetRope(msRopeName);
+	}
+
+	//------------------------------------------------------------
+
+	void DebugSkip(const tString &in asReason)
+	{
+		if (Parkour_GetDebug() == false) return;
+		if (mfDebugTimer > 0.f) return;
+
+		cLux_AddDebugMessage("[Parkour] Zipline ignored: " + asReason, true);
+		mfDebugTimer = 0.35f;
+	}
+
+	//------------------------------------------------------------
+
+	bool CanInteract(int alType, iPhysicsBody@ apBody)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	int GetInteractIconId(int alType, iPhysicsBody@ apBody)
+	{
+		return -1;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void OnEndCheckCollision(float afTimteStep) {}
+	void OnSetActive(bool abX) {}
+	void OnConnectionStateChange(iLuxEntity@ apEntity,int alState) { if (alState != 0) mbCanRide = alState == 1; }
+
+	//------------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet@ apSet,iFontData@ apFont,float afStartY)
+	{
+		return afStartY;
+	}
+
+	//------------------------------------------------------------
+
+	bool mbCanRide = true;
+	bool mbPlayerIsInside = false;
+	bool mbNeedsExitAfterGrab = false;
+	bool mbRopeCreated = false;
+	bool mbRopeCollideWorld = false;
+	bool mbRopeCollideCharacter = false;
+
+	float mfDebugTimer = 0.f;
+	float mfGrabCooldown = 0.f;
+	float mfGrabRadius = 0.85f;
+	float mfMinApproachSpeed = 0.65f;
+	float mfMinVerticalSpeed = -10.0f;
+	float mfHangOffset = 1.15f;
+	float mfStartSpeed = 2.6f;
+	float mfMinSpeed = 1.8f;
+	float mfMaxSpeed = 9.0f;
+	float mfGravityAccelMul = 1.0f;
+	float mfLinearDamping = 0.08f;
+	float mfDetachExitSpeedMul = 1.0f;
+	float mfEndExitUpSpeed = 0.35f;
+	float mfCrouchDropDownSpeed = -0.25f;
+	float mfLineLength = 0.f;
+	float mfRopeRadius = 0.05f;
+	float mfRopeSegmentLength = 0.5f;
+	float mfRopeDamping = 0.05f;
+	float mfRopeStrength = 100.f;
+	float mfRopeStiffness = 0.1f;
+
+	tString msEndArea = "";
+	tString msRopeName = "";
+	tString msRopeMaterial = "entities/arabic_fort/rope/ab_interior_tileable_rope_01.mat";
+	tID m_idEndArea = tID_Invalid;
+	tID m_idAnchorBody = tID_Invalid;
+	tID m_idTrolleyBody = tID_Invalid;
+	tID m_idSliderJoint = tID_Invalid;
+
+	cVector3f mvHighPoint = cVector3f_Zero;
+	cVector3f mvLowPoint = cVector3f_Zero;
+	cVector3f mvRideDir = cVector3f_Forward;
+
+	iCollideShape@ mpAnchorShape = null;
+	iCollideShape@ mpTrolleyShape = null;
+
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

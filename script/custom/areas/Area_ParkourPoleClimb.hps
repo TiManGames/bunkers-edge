@@ -6,6 +6,10 @@
 
 //------------------------------------------------------------
 
+const float gfParkourPoleClimb_TopEntryBlockMargin = 0.12f;
+
+//------------------------------------------------------------
+
 class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 {
 	//------------------------------------------------------------
@@ -129,6 +133,12 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 		GetVerticalBounds(fMinY, fMaxY);
 
 		cVector3f vFeet = pBody.GetFeetPosition();
+		if (vFeet.y >= fMaxY - gfParkourPoleClimb_TopEntryBlockMargin)
+		{
+			DebugSkip("player entered from pole top. feetY=" + vFeet.y + " maxY=" + fMaxY);
+			return;
+		}
+
 		float fStartY = cMath_Clamp(vFeet.y, fMinY, fMaxY);
 		cVector3f vAttachFeet = vPoleCenter + vFaceDir * cMath_Max(0.05f, mfAttachRadius);
 		vAttachFeet.y = fStartY;

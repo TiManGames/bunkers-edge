@@ -12,9 +12,9 @@
 
 const float gfParkourPoleClimb_SnapTime = 0.14f;
 const float gfParkourPoleClimb_TurnTime = 0.24f;
-const float gfParkourPoleClimb_JumpOutImpulse = 255.f;
-const float gfParkourPoleClimb_JumpUpImpulse = 235.f;
-const float gfParkourPoleClimb_JumpForwardImpulse = 120.f;
+const float gfParkourPoleClimb_JumpOutImpulse = 125.f;
+const float gfParkourPoleClimb_JumpUpImpulse = 305.f;
+const float gfParkourPoleClimb_JumpForwardImpulse = 305.f;
 const float gfParkourPoleClimb_DropOutSpeed = 0.35f;
 const float gfParkourPoleClimb_DropDownSpeed = -0.15f;
 const float gfParkourPoleClimb_TopArcHeight = 0.18f;
@@ -24,11 +24,11 @@ const float gfParkourPoleClimb_TopArcHeight = 0.18f;
 class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interface
 {
 	//------------------------------------------------------------
-	
+
 	void OnAttachBodyToStickyArea() {}
-	
+
 	//------------------------------------------------------------
-	
+
 	void Init() {}
 	void LoadUserConfig() {}
 	void SaveUserConfig() {}
@@ -39,9 +39,9 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 	void Reset() {}
 	void PostUpdate(float afTimeStep) {}
 	bool OnExitPressed() { return true; }
-	
+
 	//------------------------------------------------------------
-	
+
 	void SetupParkourPoleClimb()
 	{
 		mvPoleCenter = cScript_GetGlobalArgVector3f(0);
@@ -59,9 +59,9 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		mfTopOutTime = cScript_GetGlobalArgFloat(12);
 		mfJumpTurnAngleDeg = cScript_GetGlobalArgFloat(13);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void OnEnterState(int alPrevStateId)
 	{
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
@@ -70,9 +70,10 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 			return;
 		}
-		
+
 		NormalizeSetup();
-		
+		Player_ResetCameraLimits();
+
 		mlState = 0;
 		mbFinished = false;
 		mbTurning = false;
@@ -83,42 +84,42 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		mfTopOutTimer = 0.f;
 		mfBobTimer = 0.f;
 		mfPowerMul = cMath_Clamp(Parkour_GetWallRunPowerMul(), 0.1f, 1.15f);
-		
+
 		mvStartFeetPos = pBody.GetFeetPosition();
 		mfClimbY = cMath_Clamp(mvAttachFeetPos.y, mfMinY, mfMaxY);
 		mvAttachFeetPos = GetFeetPositionAtY(mfClimbY);
 		mfAttachStartYaw = pBody.GetYaw();
-		mfAttachTargetYaw = GetYawFromDir(mvFaceDir * -1.f);
+		mfAttachTargetYaw = GetYawFromDir(GetPoleOutDir() * -1.f);
 		mfAttachStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
-		
+
 		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
 		pBody.SetGravityActive(false);
 		pBody.SetTestCollision(false);
 		pBody.SetPhysicsBodyActive(false);
 		pBody.StopMovement();
 		pBody.ResetClimbing();
-		
+
 		Player_SetDisableCrawling(true);
 		Player_SetCrouching(false);
 		Player_SetCrouchDisabled(true);
 		Player_SetCrouchActionDisabled(true);
 		Player_SetLeanDisabled(true);
 		Player_CancelJump();
-		
+
 		PlayerBody_SetVisible(false);
-		
+
 		Item_PutAway(eItemHandlerHand_Left);
 		Item_PutAway(eItemHandlerHand_Right);
-		
+
 		cLux_PlayGuiSoundData("player/climb_ledge/low", eSoundEntryType_WorldClean, 0.55f, true);
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, -0.05f, 0.06f), 10.f, 6.f, 0.08f);
-		
+
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Pole climb state entered.", true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void OnLeaveState(int alNextStateId)
 	{
 		RestoreBody();
@@ -130,20 +131,20 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void Update(float afTimeStep)
 	{
 		if (mbFinished) return;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 			return;
 		}
-		
+
 		if (mlState == 0)
 			UpdateAttach(pBody, afTimeStep);
 		else if (mlState == 1)
@@ -151,13 +152,13 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		else if (mlState == 2)
 			UpdateTopOut(pBody, afTimeStep);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool OnAction(int alAction, bool abPressed)
 	{
 		if (abPressed == false) return false;
-		
+
 		if (alAction == eAction_LeanLeft)
 		{
 			StartLeanTurn(-1);
@@ -181,19 +182,27 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		}
 		if (alAction == eAction_Interact)
 			return false;
-		
+
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
 	{
 		if (alAnalogId == eAnalogType_Look)
 		{
-			return mlState == 1 && mbTurning == false;
+			if (mlState == 1 && mbTurning == false)
+			{
+				if (cMath_Abs(avAmount.x) > 0.001f)
+					mbHasForcedJumpDir = false;
+
+				return true;
+			}
+
+			return false;
 		}
-		
+
 		if (alAnalogId == eAnalogType_Move || alAnalogId == eAnalogType_GamepadMove)
 		{
 			if (mlState == 1)
@@ -203,37 +212,37 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 				else if (avAmount.y < -0.1f)
 					mfInputMoveMul -= 1.f;
 			}
-			
+
 			return false;
 		}
-		
+
 		if (alAnalogId == eAnalogType_Lean)
 			return false;
-		
+
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	bool AllowBuoyancy(iPhysicsBody @apBody)
 	{
 		return true;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
 	void CharBody_HitGround(iCharacterBody@ apCharBody, const cVector3f &in avVel) {}
-	
+
 	//------------------------------------------------------------
-	
+
 	float DrawDebugOutput(cGuiSet @apSet, iFontData @apFont, float afStartY)
 	{
 		return afStartY;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void NormalizeSetup()
 	{
 		mvFaceDir.y = 0.f;
@@ -241,50 +250,51 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			mvFaceDir.Normalize();
 		else
 			mvFaceDir = cVector3f_Forward;
-		
+
 		mvTopExitForward.y = 0.f;
 		if (mvTopExitForward.SqrLength() > 0.001f)
 			mvTopExitForward.Normalize();
 		else
 			mvTopExitForward = mvFaceDir;
-		
+
 		if (mfMaxY < mfMinY)
 		{
 			float fTemp = mfMinY;
 			mfMinY = mfMaxY;
 			mfMaxY = fTemp;
 		}
-		
+
 		mfAttachRadius = cMath_Max(0.05f, mfAttachRadius);
 		mfClimbSpeed = cMath_Max(0.05f, mfClimbSpeed);
 		mfSlideSpeed = cMath_Max(0.05f, mfSlideSpeed);
 		mfTopOutTime = cMath_Max(0.10f, mfTopOutTime);
 		mfJumpTurnAngleDeg = cMath_Clamp(mfJumpTurnAngleDeg, 15.f, 170.f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateAttach(iCharacterBody@ apBody, float afTimeStep)
 	{
 		mfSnapTimer += afTimeStep;
 		float fT = cMath_Clamp(mfSnapTimer / gfParkourPoleClimb_SnapTime, 0.f, 1.f);
 		fT = cMath_Easing(eEasing_QuadOut, fT);
-		
+
 		apBody.SetFeetPosition(LerpVector(mvStartFeetPos, mvAttachFeetPos, fT), true);
 		float fYaw = mfAttachStartYaw + cMath_GetAngleDistanceRad(mfAttachStartYaw, mfAttachTargetYaw) * fT;
 		apBody.SetYaw(fYaw);
 		cLux_GetPlayer().GetCamera().SetYaw(fYaw);
 		cLux_GetPlayer().GetCamera().SetPitch(mfAttachStartPitch * (1.f - fT));
-		
+
 		if (fT >= 1.f)
 		{
 			mlState = 1;
 			mfInputMoveMul = 0.f;
+			ClampCameraToPole();
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateClimb(iCharacterBody@ apBody, float afTimeStep)
 	{
 		float fMove = 0.f;
@@ -294,12 +304,12 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			fMove -= 1.f;
 		fMove = cMath_Clamp(fMove + mfInputMoveMul, -1.f, 1.f);
 		mfInputMoveMul = 0.f;
-		
+
 		if (fMove > 0.f)
 			mfClimbY += mfClimbSpeed * afTimeStep;
 		else if (fMove < 0.f)
 			mfClimbY -= mfSlideSpeed * afTimeStep;
-		
+
 		if (mfClimbY >= mfMaxY)
 		{
 			mfClimbY = mfMaxY;
@@ -313,92 +323,88 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		{
 			mfClimbY = mfMinY;
 		}
-		
+
 		apBody.SetFeetPosition(GetFeetPositionAtY(mfClimbY), true);
 		UpdateLeanTurn(apBody, afTimeStep);
+		ClampCameraToPole();
 		UpdateCameraMotion(fMove, afTimeStep);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateCameraMotion(float afMove, float afTimeStep)
 	{
 		float fMoveAbs = cMath_Abs(afMove);
 		if (fMoveAbs > 0.001f)
-			mfBobTimer += afTimeStep * (afMove > 0.f ? 10.5f : 7.0f);
-		
+			mfBobTimer += afTimeStep * (afMove > 0.f ? 6.2f : 4.4f);
+
 		float fRollAmount = 0.f;
-		float fBobY = -0.04f;
-		float fBobZ = 0.06f;
+		float fBobY = -0.035f;
+		float fBobZ = 0.055f;
 		if (afMove > 0.f)
 		{
-			fRollAmount = cMath_Sin(mfBobTimer) * 3.0f;
-			fBobY += cMath_Sin(mfBobTimer * 1.7f) * 0.025f;
-			fBobZ += 0.02f;
+			fRollAmount = cMath_Sin(mfBobTimer) * 1.25f;
+			fBobY += cMath_Sin(mfBobTimer * 1.25f) * 0.010f;
+			fBobZ += 0.012f;
 		}
 		else if (afMove < 0.f)
 		{
-			fRollAmount = cMath_Sin(mfBobTimer) * 1.2f;
-			fBobY -= 0.035f;
-			fBobZ -= 0.01f;
+			fRollAmount = cMath_Sin(mfBobTimer) * 0.55f;
+			fBobY -= 0.018f;
+			fBobZ -= 0.006f;
 		}
-		
+
 		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, cMath_ToRad(fRollAmount));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
 										  cVector3f(0.f, fBobY, fBobZ),
-										  10.f,
 										  6.f,
-										  0.06f);
+										  4.f,
+										  0.10f);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void StartLeanTurn(int alDir)
 	{
 		if (mlState != 1) return;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null) return;
-		
+
 		mlTurnDir = alDir >= 0 ? 1 : -1;
-		mvForcedJumpDir = Rotate2D(mvFaceDir * -1.f, cMath_ToRad(mfJumpTurnAngleDeg) * float(mlTurnDir));
-		mvForcedJumpDir.y = 0.f;
-		if (mvForcedJumpDir.SqrLength() > 0.001f)
-			mvForcedJumpDir.Normalize();
-		else
-			mvForcedJumpDir = mvFaceDir;
-		
+		mvForcedJumpDir = SanitizeJumpDir(Rotate2D(GetPoleOutDir() * -1.f, cMath_ToRad(mfJumpTurnAngleDeg) * float(mlTurnDir)));
+
 		mfTurnStartYaw = pBody.GetYaw();
 		mfTurnTargetYaw = GetYawFromDir(mvForcedJumpDir);
 		mfTurnTimer = 0.f;
 		mbTurning = true;
 		mbHasForcedJumpDir = true;
 		Effect_Shake_Start(0.035f, 0.08f, 0.f, 0.08f, cVector3f(1, 1, 1), 14);
-		
+
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Pole climb quick turn.", true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateLeanTurn(iCharacterBody@ apBody, float afTimeStep)
 	{
 		if (mbTurning == false) return;
-		
+
 		mfTurnTimer += afTimeStep;
 		float fT = cMath_Clamp(mfTurnTimer / gfParkourPoleClimb_TurnTime, 0.f, 1.f);
 		fT = cMath_Easing(eEasing_SineInOut, fT);
-		
+
 		float fTargetYaw = mfTurnStartYaw + cMath_GetAngleDistanceRad(mfTurnStartYaw, mfTurnTargetYaw) * fT;
 		apBody.SetYaw(fTargetYaw);
 		cLux_GetPlayer().GetCamera().SetYaw(fTargetYaw);
-		
+
 		if (fT >= 1.f)
 			mbTurning = false;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void StartTopOut(iCharacterBody@ apBody)
 	{
 		mlState = 2;
@@ -410,31 +416,31 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		mbTopCrouchCompleted = false;
 		cLux_PlayGuiSoundData("player/climb_ledge/high", eSoundEntryType_WorldClean, 0.65f, true);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void UpdateTopOut(iCharacterBody@ apBody, float afTimeStep)
 	{
 		mfTopOutTimer += afTimeStep;
 		float fT = cMath_Clamp(mfTopOutTimer / mfTopOutTime, 0.f, 1.f);
 		float fMoveT = cMath_Easing(eEasing_QuadInOut, fT);
-		
+
 		cVector3f vPos = LerpVector(mvTopOutStartFeet, mvTopOutEndFeet, fMoveT);
 		vPos.y += cMath_Sin(fMoveT * cMath_Pi) * gfParkourPoleClimb_TopArcHeight;
 		apBody.SetFeetPosition(vPos, true);
-		
+
 		float fYaw = mfTopOutStartYaw + cMath_GetAngleDistanceRad(mfTopOutStartYaw, mfTopOutEndYaw) * fMoveT;
 		apBody.SetYaw(fYaw);
 		cLux_GetPlayer().GetCamera().SetYaw(fYaw);
 		cLux_GetPlayer().GetCamera().SetPitch(cLux_GetPlayer().GetCamera().GetPitch() * (1.f - fMoveT));
 		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, cMath_ToRad(cMath_Sin(fMoveT * cMath_Pi) * 5.f));
-		
+
 		if (mbTopExitCrouch && mbTopCrouchCompleted == false && fT > 0.65f)
 		{
 			Player_SetCrouching(true);
 			mbTopCrouchCompleted = true;
 		}
-		
+
 		if (fT >= 1.f)
 		{
 			mbFinished = true;
@@ -442,95 +448,205 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void JumpOut()
 	{
 		if (mbFinished) return;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 			return;
 		}
-		
+
 		cVector3f vJumpDir = GetJumpOutDir();
-		cVector3f vImpulse = mvFaceDir * gfParkourPoleClimb_JumpOutImpulse * mfPowerMul;
+		cVector3f vImpulse = GetPoleOutDir() * gfParkourPoleClimb_JumpOutImpulse * mfPowerMul;
 		vImpulse += cVector3f_Up * gfParkourPoleClimb_JumpUpImpulse * mfPowerMul;
 		vImpulse += vJumpDir * gfParkourPoleClimb_JumpForwardImpulse * mfPowerMul;
-		
+		float fJumpYaw = GetYawFromDir(vJumpDir);
+
 		mbFinished = true;
 		RestoreBody();
+		Player_ResetCameraLimits();
+		pBody.SetYaw(fJumpYaw);
 		pBody.SetForceVelocity(cVector3f_Zero);
 		pBody.AddImpulse(vImpulse);
 		Parkour_NotifyFlowEvent(geParkourFlowEvent_PoleClimbJump, 1.f);
 		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
 		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void DropFromPole()
 	{
 		if (mbFinished) return;
-		
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 			return;
 		}
-		
+
 		mbFinished = true;
 		RestoreBody();
-		pBody.SetForceVelocity(mvFaceDir * gfParkourPoleClimb_DropOutSpeed +
+		pBody.SetForceVelocity(GetPoleOutDir() * gfParkourPoleClimb_DropOutSpeed +
 							   cVector3f(0.f, gfParkourPoleClimb_DropDownSpeed, 0.f));
 		Parkour_NotifyFlowEvent(geParkourFlowEvent_PoleClimbDrop, 1.f);
-		
+
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Pole climb dropped.", true);
-		
+
 		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 	}
-	
+
 	//------------------------------------------------------------
-	
+
+	cVector3f GetPoleOutDir()
+	{
+		cVector3f vOut = cVector3f_Zero;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			vOut = pBody.GetFeetPosition() - mvPoleCenter;
+			vOut.y = 0.f;
+			if (vOut.SqrLength() > 0.001f)
+			{
+				vOut.Normalize();
+				return vOut;
+			}
+		}
+
+		vOut = mvAttachFeetPos - mvPoleCenter;
+		vOut.y = 0.f;
+		if (vOut.SqrLength() > 0.001f)
+		{
+			vOut.Normalize();
+			return vOut;
+		}
+
+		vOut = mvFaceDir;
+		vOut.y = 0.f;
+		if (vOut.SqrLength() > 0.001f)
+			vOut.Normalize();
+		else
+			vOut = cVector3f_Forward;
+
+		return vOut;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f SanitizeJumpDir(const cVector3f &in avDir)
+	{
+		cVector3f vOutDir = GetPoleOutDir();
+		cVector3f vDir = avDir;
+		vDir.y = 0.f;
+		if (vDir.SqrLength() > 0.001f)
+			vDir.Normalize();
+		else
+			vDir = vOutDir;
+
+		float fOutDot = cMath_Vector3Dot(vDir, vOutDir);
+		if (fOutDot < 0.f)
+			vDir -= vOutDir * fOutDot;
+
+		if (vDir.SqrLength() > 0.001f)
+			vDir.Normalize();
+		else
+			vDir = vOutDir;
+
+		return vDir;
+	}
+
+	//------------------------------------------------------------
+
 	cVector3f GetJumpOutDir()
 	{
 		if (mbHasForcedJumpDir && mvForcedJumpDir.SqrLength() > 0.001f)
-			return mvForcedJumpDir;
-		
-		cVector3f vBaseDir = mvFaceDir * -1.f;
+			return SanitizeJumpDir(mvForcedJumpDir);
+
+		cVector3f vOutDir = GetPoleOutDir();
+		cVector3f vBaseDir = vOutDir * -1.f;
 		if (vBaseDir.SqrLength() <= 0.001f)
 			vBaseDir = cVector3f_Forward;
 		vBaseDir.Normalize();
-		
-		cVector3f vCamDir = cLux_GetPlayer().GetCamera().GetForward();
-		vCamDir.y = 0.f;
-		if (vCamDir.SqrLength() <= 0.001f)
-			return vBaseDir;
-		vCamDir.Normalize();
-		
+
+		cVector3f vLookDir = GetBodyLookDir();
+		if (vLookDir.SqrLength() <= 0.001f)
+			return vOutDir;
+
 		float fBaseYaw = GetYawFromDir(vBaseDir);
-		float fCamYaw = GetYawFromDir(vCamDir);
+		float fLookYaw = GetYawFromDir(vLookDir);
 		float fMaxTurn = cMath_ToRad(mfJumpTurnAngleDeg);
-		float fDelta = cMath_Clamp(cMath_GetAngleDistanceRad(fBaseYaw, fCamYaw), -fMaxTurn, fMaxTurn);
-		return Rotate2D(vBaseDir, fDelta);
+		float fDelta = cMath_Clamp(cMath_GetAngleDistanceRad(fBaseYaw, fLookYaw), -fMaxTurn, fMaxTurn);
+		cVector3f vTurnDir = RotateAimYawDelta2D(vBaseDir, fDelta);
+		cVector3f vJumpDir = SanitizeJumpDir(vTurnDir);
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Pole climb manual jump. baseYaw=" + cMath_ToDeg(fBaseYaw) + " lookYaw=" + cMath_ToDeg(fLookYaw) + " delta=" + cMath_ToDeg(fDelta) + " dir=" + vJumpDir, true);
+
+		return vJumpDir;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
+	cVector3f RotateAimYawDelta2D(const cVector3f &in avBaseDir, float afDeltaYaw)
+	{
+		// HPL body yaw deltas run opposite to this local XZ rotation helper.
+		return Rotate2D(avBaseDir, -afDeltaYaw);
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetBodyLookDir()
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null) return cVector3f_Zero;
+
+		cVector3f vDir = pBody.GetForward();
+		vDir.y = 0.f;
+		if (vDir.SqrLength() > 0.001f)
+			vDir.Normalize();
+		else
+			vDir = cVector3f_Zero;
+
+		return vDir;
+	}
+
+	//------------------------------------------------------------
+
+	void ClampCameraToPole()
+	{
+		if (mlState != 1) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		cCamera@ pCam = cLux_GetPlayer().GetCamera();
+		if (pBody is null || pCam is null) return;
+
+		float fBaseYaw = GetYawFromDir(GetPoleOutDir() * -1.f);
+		float fMaxTurn = cMath_ToRad(mfJumpTurnAngleDeg);
+		float fDeltaYaw = cMath_Clamp(cMath_GetAngleDistanceRad(fBaseYaw, pBody.GetYaw()), -fMaxTurn, fMaxTurn);
+		pBody.SetYaw(fBaseYaw + fDeltaYaw);
+		pCam.SetPitch(cMath_Clamp(pCam.GetPitch(), cMath_ToRad(-65.f), cMath_ToRad(70.f)));
+	}
+
+	//------------------------------------------------------------
+
 	cVector3f GetFeetPositionAtY(float afY)
 	{
-		cVector3f vPos = mvPoleCenter + mvFaceDir * mfAttachRadius;
+		cVector3f vPos = mvPoleCenter + GetPoleOutDir() * mfAttachRadius;
 		vPos.y = afY;
 		return vPos;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	float GetYawFromDir(const cVector3f &in avDir)
 	{
 		cVector3f vDir = avDir;
@@ -539,17 +655,17 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			vDir.Normalize();
 		else
 			vDir = cVector3f_Forward;
-		
+
 		return cMath_GetAngleFromPoints3D(cVector3f_Zero, vDir).y;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	cVector3f Rotate2D(const cVector3f &in avDir, float afYaw)
 	{
 		float fSin = cMath_Sin(afYaw);
 		float fCos = cMath_Cos(afYaw);
-		cVector3f vOut;
+		cVector3f vOut = cVector3f_Zero;
 		vOut.x = avDir.x * fCos - avDir.z * fSin;
 		vOut.y = 0.f;
 		vOut.z = avDir.x * fSin + avDir.z * fCos;
@@ -559,9 +675,9 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			vOut = cVector3f_Forward;
 		return vOut;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	void RestoreBody()
 	{
 		PlayerBody_SetVisible(true);
@@ -573,16 +689,16 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 			pBody.SetPhysicsBodyActive(true);
 		}
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	cVector3f LerpVector(const cVector3f &in avA, const cVector3f &in avB, float afT)
 	{
 		return avA * (1.f - afT) + avB * afT;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
 	cVector3f mvPoleCenter = cVector3f_Zero;
 	cVector3f mvFaceDir = cVector3f_Forward;
 	cVector3f mvAttachFeetPos = cVector3f_Zero;
@@ -592,14 +708,14 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 	cVector3f mvForcedJumpDir = cVector3f_Forward;
 	cVector3f mvTopOutStartFeet = cVector3f_Zero;
 	cVector3f mvTopOutEndFeet = cVector3f_Zero;
-	
+
 	bool mbHasTopExit = false;
 	bool mbTopExitCrouch = false;
 	bool mbFinished = false;
 	bool mbTurning = false;
 	bool mbHasForcedJumpDir = false;
 	bool mbTopCrouchCompleted = false;
-	
+
 	float mfMinY = 0.f;
 	float mfMaxY = 1.f;
 	float mfAttachRadius = 0.42f;
@@ -621,10 +737,10 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 	float mfTurnTargetYaw = 0.f;
 	float mfTopOutStartYaw = 0.f;
 	float mfTopOutEndYaw = 0.f;
-	
+
 	int mlState = 0;
 	int mlTurnDir = 1;
-	
+
 	//------------------------------------------------------------
 }
 

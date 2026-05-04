@@ -1,0 +1,594 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+
+#include "helpers/helper_player.hps"
+#include "helpers/helper_items.hps"
+#include "helpers/helper_modules.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourZipline_SnapTime = 0.12f;
+const float gfParkourZipline_BaseGravityAccel = 9.8f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+	
+	void OnAttachBodyToStickyArea() {}
+	
+	//------------------------------------------------------------
+	
+	void Init() {}
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void OnMapLeave(cLuxMap @apMap) {}
+	void CreateWorldEntities(cLuxMap @apMap) {}
+	void DestroyWorldEntities(cLuxMap @apMap) {}
+	void Reset() {}
+	void PostUpdate(float afTimeStep) {}
+	bool OnExitPressed() { return true; }
+	
+	//------------------------------------------------------------
+
+	void SetupParkourZipline()
+	{
+		mvHighPoint = cScript_GetGlobalArgVector3f(0);
+		mvLowPoint = cScript_GetGlobalArgVector3f(1);
+		m_idTrolleyBody = cScript_GetGlobalArgID(2);
+		m_idSliderJoint = cScript_GetGlobalArgID(3);
+		mfRideProgress = cScript_GetGlobalArgFloat(4);
+		mfHangOffset = cScript_GetGlobalArgFloat(5);
+		mfStartSpeed = cScript_GetGlobalArgFloat(6);
+		mfMinSpeed = cScript_GetGlobalArgFloat(7);
+		mfMaxSpeed = cScript_GetGlobalArgFloat(8);
+		mfGravityAccelMul = cScript_GetGlobalArgFloat(9);
+		mfLinearDamping = cScript_GetGlobalArgFloat(10);
+		mfDetachExitSpeedMul = cScript_GetGlobalArgFloat(11);
+		mfEndExitUpSpeed = cScript_GetGlobalArgFloat(12);
+		mfCrouchDropDownSpeed = cScript_GetGlobalArgFloat(13);
+		msRopeName = cScript_GetGlobalArgString(14);
+	}
+
+	//------------------------------------------------------------
+
+	void OnEnterState(int alPrevStateId)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		NormalizeSetup();
+
+		iPhysicsBody@ pTrolley = GetTrolleyBody();
+		iPhysicsJointSlider@ pSlider = GetSliderJoint();
+		if (pTrolley is null || pSlider is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		mbFinished = false;
+		mfTimer = 0.f;
+		mvStartFeetPos = pBody.GetFeetPosition();
+		mfStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
+		mfRideProgress = cMath_Clamp(mfRideProgress, 0.f, 1.f);
+		mfRideSpeed = GetInitialRideSpeed(pBody);
+		SetTrolleyAtProgress(pTrolley, mfRideProgress, mfRideSpeed);
+
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+		pBody.SetGravityActive(false);
+		pBody.SetTestCollision(false);
+		pBody.SetPhysicsBodyActive(false);
+		pBody.StopMovement();
+
+		Player_SetDisableCrawling(true);
+		Player_SetCrouching(false);
+		Player_SetCrouchDisabled(true);
+		Player_SetCrouchActionDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_CancelJump();
+
+		PlayerBody_SetVisible(false);
+
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+
+		cLux_PlayGuiSoundData("player/climb_ledge/low", eSoundEntryType_WorldClean, 0.55f, true);
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, -0.16f, 0.10f), 10.f, 6.f, 0.08f);
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Zipline state entered. speed=" + mfRideSpeed + " progress=" + mfRideProgress, true);
+	}
+
+	//------------------------------------------------------------
+
+	void OnLeaveState(int alNextStateId)
+	{
+		iPhysicsBody@ pTrolley = GetTrolleyBody();
+		if (pTrolley !is null)
+			pTrolley.SetLinearVelocity(cVector3f_Zero);
+
+		RestoreBody();
+		Player_ResetCameraLimits();
+		Player_SetDisableCrawling(false);
+		Player_SetCrouchDisabled(false);
+		Player_SetCrouchActionDisabled(false);
+		Player_SetLeanDisabled(false);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+	}
+
+	//------------------------------------------------------------
+
+	void Update(float afTimeStep)
+	{
+		if (mbFinished) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		iPhysicsBody@ pTrolley = GetTrolleyBody();
+		iPhysicsJointSlider@ pSlider = GetSliderJoint();
+		if (pTrolley is null || pSlider is null)
+		{
+			CompleteZipline(false);
+			return;
+		}
+
+		mfTimer += afTimeStep;
+		UpdateRidePhysics(afTimeStep);
+
+		float fPathLength = GetRidePathLength();
+		mfRideProgress += (mfRideSpeed * afTimeStep) / fPathLength;
+		if (mfRideProgress >= 1.f)
+			mfRideProgress = 1.f;
+
+		SetTrolleyAtProgress(pTrolley, mfRideProgress, mfRideSpeed);
+
+		cVector3f vPathTangent;
+		cVector3f vTargetFeet = GetFeetAtProgress(mfRideProgress, vPathTangent);
+		mvCurrentPathTangent = vPathTangent;
+		cVector3f vFeet = vTargetFeet;
+		if (mfTimer < gfParkourZipline_SnapTime)
+		{
+			float fSnapT = cMath_Clamp(mfTimer / gfParkourZipline_SnapTime, 0.f, 1.f);
+			fSnapT = cMath_Easing(eEasing_QuadOut, fSnapT);
+			vFeet = LerpVector(mvStartFeetPos, vTargetFeet, fSnapT);
+		}
+
+		pBody.SetFeetPosition(cVector3f(vFeet.x ,vFeet.y - 1, vFeet.z) , true);
+		float fYaw = GetYawFromDir(mvCurrentPathTangent);
+		pBody.SetYaw(fYaw);
+		cLux_GetPlayer().GetCamera().SetYaw(fYaw);
+		UpdateCameraMotion(afTimeStep);
+
+		if (mfRideProgress >= 0.995f)
+			CompleteZipline(true);
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAction(int alAction, bool abPressed)
+	{
+		if (abPressed == false) return false;
+
+		if (alAction == eAction_Crouch)
+		{
+			DropFromZipline();
+			return false;
+		}
+
+		if (alAction == eAction_Jump || alAction == eAction_Interact)
+			return false;
+
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (alAnalogId == eAnalogType_Look ||
+			alAnalogId == eAnalogType_Move ||
+			alAnalogId == eAnalogType_GamepadMove ||
+			alAnalogId == eAnalogType_Lean)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	bool AllowBuoyancy(iPhysicsBody @apBody)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody, const cVector3f &in avVel) {}
+
+	//------------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet @apSet, iFontData @apFont, float afStartY)
+	{
+		return afStartY;
+	}
+
+	//------------------------------------------------------------
+
+	void NormalizeSetup()
+	{
+		if (mvHighPoint.y < mvLowPoint.y)
+		{
+			cVector3f vTemp = mvHighPoint;
+			mvHighPoint = mvLowPoint;
+			mvLowPoint = vTemp;
+		}
+
+		mvRideDir = mvLowPoint - mvHighPoint;
+		mfLineLength = mvRideDir.Length();
+		if (mfLineLength > 0.001f)
+			mvRideDir.Normalize();
+		else
+		{
+			mfLineLength = 0.001f;
+			mvRideDir = cVector3f_Forward;
+		}
+
+		mvFlatRideDir = mvRideDir;
+		mvFlatRideDir.y = 0.f;
+		if (mvFlatRideDir.SqrLength() > 0.001f)
+			mvFlatRideDir.Normalize();
+		else
+			mvFlatRideDir = cVector3f_Forward;
+		mvCurrentPathTangent = mvRideDir;
+
+		mfHangOffset = cMath_Max(0.1f, mfHangOffset);
+		mfMinSpeed = cMath_Max(0.1f, mfMinSpeed);
+		mfMaxSpeed = cMath_Max(mfMinSpeed, mfMaxSpeed);
+		mfStartSpeed = cMath_Clamp(cMath_Max(mfStartSpeed, mfMinSpeed), mfMinSpeed, mfMaxSpeed);
+		mfGravityAccelMul = cMath_Max(0.f, mfGravityAccelMul);
+		mfLinearDamping = cMath_Max(0.f, mfLinearDamping);
+		mfDetachExitSpeedMul = cMath_Max(0.f, mfDetachExitSpeedMul);
+	}
+
+	//------------------------------------------------------------
+
+	float GetInitialRideSpeed(iCharacterBody@ apBody)
+	{
+		float fSpeed = mfStartSpeed;
+		if (apBody !is null)
+		{
+			cVector3f vVel = apBody.GetForceVelocity();
+			cVector3f vInitialTangent;
+			GetCablePointAtProgress(mfRideProgress, vInitialTangent);
+			float fAlongSpeed = cMath_Vector3Dot(vVel, vInitialTangent);
+			if (fAlongSpeed > fSpeed)
+				fSpeed = fAlongSpeed;
+		}
+
+		return cMath_Clamp(fSpeed, mfMinSpeed, mfMaxSpeed);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateRidePhysics(float afTimeStep)
+	{
+		cVector3f vPathTangent;
+		GetCablePointAtProgress(mfRideProgress, vPathTangent);
+		float fSlopeAccel = cMath_Max(0.f, -vPathTangent.y) * gfParkourZipline_BaseGravityAccel * mfGravityAccelMul;
+		float fDampingAccel = mfRideSpeed * mfLinearDamping;
+		mfRideSpeed += (fSlopeAccel - fDampingAccel) * afTimeStep;
+		mfRideSpeed = cMath_Clamp(mfRideSpeed, mfMinSpeed, mfMaxSpeed);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateCameraMotion(float afTimeStep)
+	{
+		float fSpeedT = cMath_Clamp((mfRideSpeed - mfMinSpeed) / cMath_Max(0.001f, mfMaxSpeed - mfMinSpeed), 0.f, 1.f);
+		float fSlopeT = cMath_Clamp(-mvCurrentPathTangent.y, 0.f, 1.f);
+		float fPitchGoal = cMath_ToRad(-3.f - fSlopeT * 8.f);
+		float fPitchT = cMath_Clamp(mfTimer / 0.25f, 0.f, 1.f);
+		cLux_GetPlayer().GetCamera().SetPitch(cMath_InterpolateLinear(mfStartPitch, fPitchGoal, fPitchT));
+		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, cMath_ToRad(cMath_Sin(mfTimer * 9.0f) * fSpeedT * 1.6f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
+										  cVector3f(0.f, -0.16f - fSpeedT * 0.04f, 0.10f + fSpeedT * 0.04f),
+										  10.f,
+										  6.f,
+										  0.06f);
+	}
+
+	//------------------------------------------------------------
+
+	void SetTrolleyAtProgress(iPhysicsBody@ apTrolley, float afProgress, float afSpeed)
+	{
+		if (apTrolley is null) return;
+
+		float fProgress = cMath_Clamp(afProgress, 0.f, 1.f);
+		apTrolley.SetPosition(mvHighPoint + mvRideDir * (mfLineLength * fProgress));
+		apTrolley.SetLinearVelocity(mvRideDir * afSpeed);
+		apTrolley.SetAngularVelocity(cVector3f_Zero);
+		apTrolley.Enable();
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetFeetAtProgress(float afProgress, cVector3f &out avTangent)
+	{
+		return GetCablePointAtProgress(afProgress, avTangent) - cVector3f_Up * mfHangOffset;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f GetCablePointAtProgress(float afProgress, cVector3f &out avTangent)
+	{
+		float fProgress = cMath_Clamp(afProgress, 0.f, 1.f);
+		avTangent = mvRideDir;
+
+		iPhysicsRope@ pRope = GetZiplineRope();
+		if (pRope is null) return mvHighPoint + mvRideDir * (mfLineLength * fProgress);
+
+		int lNum = pRope.GetParticleNum();
+		if (lNum < 2) return mvHighPoint + mvRideDir * (mfLineLength * fProgress);
+
+		bool bForward = RopeParticlesRunHighToLow(pRope);
+		float fTotalLength = GetRopeArcLength(pRope, bForward);
+		if (fTotalLength <= 0.001f) return mvHighPoint + mvRideDir * (mfLineLength * fProgress);
+
+		float fTargetLength = fTotalLength * fProgress;
+		float fTravelled = 0.f;
+		int lStep = bForward ? 1 : -1;
+		int lIndex = bForward ? 0 : lNum - 1;
+		cVector3f vPrev = pRope.GetParticle(lIndex).GetPosition();
+
+		for (int i = 1; i < lNum; ++i)
+		{
+			int lNext = lIndex + lStep;
+			cVector3f vNext = pRope.GetParticle(lNext).GetPosition();
+			cVector3f vSegment = vNext - vPrev;
+			float fSegmentLength = vSegment.Length();
+
+			if (fSegmentLength > 0.001f)
+			{
+				if (fTravelled + fSegmentLength >= fTargetLength)
+				{
+					avTangent = vSegment;
+					avTangent.Normalize();
+					float fSegmentT = cMath_Clamp((fTargetLength - fTravelled) / fSegmentLength, 0.f, 1.f);
+					return LerpVector(vPrev, vNext, fSegmentT);
+				}
+
+				fTravelled += fSegmentLength;
+				avTangent = vSegment;
+				avTangent.Normalize();
+			}
+
+			vPrev = vNext;
+			lIndex = lNext;
+		}
+
+		return vPrev;
+	}
+
+	//------------------------------------------------------------
+
+	float GetRidePathLength()
+	{
+		iPhysicsRope@ pRope = GetZiplineRope();
+		if (pRope is null) return mfLineLength;
+		if (pRope.GetParticleNum() < 2) return mfLineLength;
+
+		float fLength = GetRopeArcLength(pRope, RopeParticlesRunHighToLow(pRope));
+		return cMath_Max(0.001f, fLength);
+	}
+
+	//------------------------------------------------------------
+
+	float GetRopeArcLength(iPhysicsRope@ apRope, bool abForward)
+	{
+		if (apRope is null) return mfLineLength;
+
+		int lNum = apRope.GetParticleNum();
+		if (lNum < 2) return mfLineLength;
+
+		float fLength = 0.f;
+		int lStep = abForward ? 1 : -1;
+		int lIndex = abForward ? 0 : lNum - 1;
+		cVector3f vPrev = apRope.GetParticle(lIndex).GetPosition();
+
+		for (int i = 1; i < lNum; ++i)
+		{
+			int lNext = lIndex + lStep;
+			cVector3f vNext = apRope.GetParticle(lNext).GetPosition();
+			fLength += cMath_Vector3Dist(vPrev, vNext);
+			vPrev = vNext;
+			lIndex = lNext;
+		}
+
+		return fLength;
+	}
+
+	//------------------------------------------------------------
+
+	bool RopeParticlesRunHighToLow(iPhysicsRope@ apRope)
+	{
+		if (apRope is null) return true;
+		int lNum = apRope.GetParticleNum();
+		if (lNum < 2) return true;
+
+		cVector3f vFirst = apRope.GetParticle(0).GetPosition();
+		cVector3f vLast = apRope.GetParticle(lNum - 1).GetPosition();
+		return cMath_Vector3DistSqr(vFirst, mvHighPoint) <= cMath_Vector3DistSqr(vLast, mvHighPoint);
+	}
+
+	//------------------------------------------------------------
+
+	iPhysicsRope@ GetZiplineRope()
+	{
+		if (msRopeName == "") return null;
+		return cLux_GetCurrentMap().GetPhysicsWorld().GetRope(msRopeName);
+	}
+
+	//------------------------------------------------------------
+
+	void CompleteZipline(bool abReachedEnd)
+	{
+		if (mbFinished) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		mbFinished = true;
+		RestoreBody();
+
+		cVector3f vExitVel = mvCurrentPathTangent * (mfRideSpeed * mfDetachExitSpeedMul);
+		if (abReachedEnd && vExitVel.y < mfEndExitUpSpeed)
+			vExitVel.y = mfEndExitUpSpeed;
+		pBody.SetForceVelocity(vExitVel);
+
+		if (abReachedEnd)
+			Parkour_NotifyFlowEvent(geParkourFlowEvent_ZiplineComplete, 1.f);
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Zipline completed. reachedEnd=" + abReachedEnd + " speed=" + mfRideSpeed, true);
+
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+
+	//------------------------------------------------------------
+
+	void DropFromZipline()
+	{
+		if (mbFinished) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		mbFinished = true;
+		RestoreBody();
+
+		cVector3f vExitVel = mvCurrentPathTangent * (mfRideSpeed * mfDetachExitSpeedMul);
+		vExitVel.y = cMath_Min(vExitVel.y, mfCrouchDropDownSpeed);
+		pBody.SetForceVelocity(vExitVel);
+		Parkour_NotifyFlowEvent(geParkourFlowEvent_ZiplineDrop, 1.f);
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Zipline dropped. speed=" + mfRideSpeed, true);
+
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+
+	//------------------------------------------------------------
+
+	void RestoreBody()
+	{
+		PlayerBody_SetVisible(true);
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			pBody.SetGravityActive(true);
+			pBody.SetTestCollision(true);
+			pBody.SetPhysicsBodyActive(true);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	iPhysicsBody@ GetTrolleyBody()
+	{
+		if (m_idTrolleyBody == tID_Invalid) return null;
+		return cLux_ID_Body(m_idTrolleyBody);
+	}
+
+	//------------------------------------------------------------
+
+	iPhysicsJointSlider@ GetSliderJoint()
+	{
+		if (m_idSliderJoint == tID_Invalid) return null;
+
+		iPhysicsJoint@ pJoint = cLux_GetCurrentMap().GetPhysicsWorld().GetPhysicsJointFromID(m_idSliderJoint);
+		if (pJoint is null) return null;
+
+		return cPhysics_ToJointSlider(pJoint);
+	}
+
+	//------------------------------------------------------------
+
+	float GetYawFromDir(const cVector3f &in avDir)
+	{
+		cVector3f vDir = avDir;
+		vDir.y = 0.f;
+		if (vDir.SqrLength() > 0.001f)
+			vDir.Normalize();
+		else
+			vDir = cVector3f_Forward;
+
+		return cMath_GetAngleFromPoints3D(cVector3f_Zero, vDir).y;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f LerpVector(const cVector3f &in avA, const cVector3f &in avB, float afT)
+	{
+		return avA * (1.f - afT) + avB * afT;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f mvHighPoint = cVector3f_Zero;
+	cVector3f mvLowPoint = cVector3f_Zero;
+	cVector3f mvRideDir = cVector3f_Forward;
+	cVector3f mvFlatRideDir = cVector3f_Forward;
+	cVector3f mvCurrentPathTangent = cVector3f_Forward;
+	cVector3f mvStartFeetPos = cVector3f_Zero;
+
+	tID m_idTrolleyBody = tID_Invalid;
+	tID m_idSliderJoint = tID_Invalid;
+	tString msRopeName = "";
+
+	bool mbFinished = false;
+
+	float mfLineLength = 0.001f;
+	float mfRideProgress = 0.f;
+	float mfRideSpeed = 2.6f;
+	float mfHangOffset = 1.15f;
+	float mfStartSpeed = 2.6f;
+	float mfMinSpeed = 1.8f;
+	float mfMaxSpeed = 9.0f;
+	float mfGravityAccelMul = 1.0f;
+	float mfLinearDamping = 0.08f;
+	float mfDetachExitSpeedMul = 1.0f;
+	float mfEndExitUpSpeed = 0.35f;
+	float mfCrouchDropDownSpeed = -0.25f;
+	float mfTimer = 0.f;
+	float mfStartPitch = 0.f;
+
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

@@ -35,6 +35,9 @@ const int geParkourFlowEvent_PoleClimbGrab = 19;
 const int geParkourFlowEvent_PoleClimbJump = 20;
 const int geParkourFlowEvent_PoleClimbTopOut = 21;
 const int geParkourFlowEvent_PoleClimbDrop = 22;
+const int geParkourFlowEvent_ZiplineGrab = 23;
+const int geParkourFlowEvent_ZiplineComplete = 24;
+const int geParkourFlowEvent_ZiplineDrop = 25;
 
 //------------------------------------------------------------
 
@@ -427,6 +430,100 @@ bool Parkour_TryStartPoleClimbCandidate(bool abRequireNormalMoveState = true)
 {
 	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
 	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartPoleClimbCandidate");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartZipline(const cVector3f &in avHighPoint,
+							 const cVector3f &in avLowPoint,
+							 tID a_idTrolleyBody,
+							 tID a_idSliderJoint,
+							 float afEntryProgress,
+							 float afGrabRadius,
+							 float afMinApproachSpeed,
+							 float afMinVerticalSpeed,
+							 float afHangOffset,
+							 float afStartSpeed,
+							 float afMinSpeed,
+							 float afMaxSpeed,
+							 float afGravityAccelMul,
+							 float afLinearDamping,
+							 float afDetachExitSpeedMul,
+							 float afEndExitUpSpeed,
+							 float afCrouchDropDownSpeed,
+							 const tString &in asRopeName)
+{
+	cScript_SetGlobalArgVector3f(0, avHighPoint);
+	cScript_SetGlobalArgVector3f(1, avLowPoint);
+	cScript_SetGlobalArgID(2, a_idTrolleyBody);
+	cScript_SetGlobalArgID(3, a_idSliderJoint);
+	cScript_SetGlobalArgFloat(4, afEntryProgress);
+	cScript_SetGlobalArgFloat(5, afGrabRadius);
+	cScript_SetGlobalArgFloat(6, afMinApproachSpeed);
+	cScript_SetGlobalArgFloat(7, afMinVerticalSpeed);
+	cScript_SetGlobalArgFloat(8, afHangOffset);
+	cScript_SetGlobalArgFloat(9, afStartSpeed);
+	cScript_SetGlobalArgFloat(10, afMinSpeed);
+	cScript_SetGlobalArgFloat(11, afMaxSpeed);
+	cScript_SetGlobalArgFloat(12, afGravityAccelMul);
+	cScript_SetGlobalArgFloat(13, afLinearDamping);
+	cScript_SetGlobalArgFloat(14, afDetachExitSpeedMul);
+	cScript_SetGlobalArgFloat(15, afEndExitUpSpeed);
+	cScript_SetGlobalArgFloat(16, afCrouchDropDownSpeed);
+	cScript_SetGlobalArgString(17, asRopeName);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartZipline");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_RegisterZiplineCandidate(const cVector3f &in avHighPoint,
+									  const cVector3f &in avLowPoint,
+									  tID a_idTrolleyBody,
+									  tID a_idSliderJoint,
+									  float afEntryProgress,
+									  float afGrabRadius,
+									  float afMinApproachSpeed,
+									  float afMinVerticalSpeed,
+									  float afHangOffset,
+									  float afStartSpeed,
+									  float afMinSpeed,
+									  float afMaxSpeed,
+									  float afGravityAccelMul,
+									  float afLinearDamping,
+									  float afDetachExitSpeedMul,
+									  float afEndExitUpSpeed,
+									  float afCrouchDropDownSpeed,
+									  const tString &in asRopeName)
+{
+	cScript_SetGlobalArgVector3f(0, avHighPoint);
+	cScript_SetGlobalArgVector3f(1, avLowPoint);
+	cScript_SetGlobalArgID(2, a_idTrolleyBody);
+	cScript_SetGlobalArgID(3, a_idSliderJoint);
+	cScript_SetGlobalArgFloat(4, afEntryProgress);
+	cScript_SetGlobalArgFloat(5, afGrabRadius);
+	cScript_SetGlobalArgFloat(6, afMinApproachSpeed);
+	cScript_SetGlobalArgFloat(7, afMinVerticalSpeed);
+	cScript_SetGlobalArgFloat(8, afHangOffset);
+	cScript_SetGlobalArgFloat(9, afStartSpeed);
+	cScript_SetGlobalArgFloat(10, afMinSpeed);
+	cScript_SetGlobalArgFloat(11, afMaxSpeed);
+	cScript_SetGlobalArgFloat(12, afGravityAccelMul);
+	cScript_SetGlobalArgFloat(13, afLinearDamping);
+	cScript_SetGlobalArgFloat(14, afDetachExitSpeedMul);
+	cScript_SetGlobalArgFloat(15, afEndExitUpSpeed);
+	cScript_SetGlobalArgFloat(16, afCrouchDropDownSpeed);
+	cScript_SetGlobalArgString(17, asRopeName);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_RegisterZiplineCandidate");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartZiplineCandidate(bool abRequireNormalMoveState = true)
+{
+	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartZiplineCandidate");
 	return cScript_GetGlobalReturnBool();
 }
 

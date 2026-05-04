@@ -35,6 +35,8 @@ const float gfParkour_WallScrambleSameWallDot = 0.65f;
 const float gfParkour_LedgeGrabMinRiseSpeed = 0.75f;
 const float gfParkour_PoleSwingCandidateTTL = 0.12f;
 const float gfParkour_PoleClimbCandidateTTL = 0.12f;
+const float gfParkour_ZiplineCandidateTTL = 0.12f;
+const float gfParkour_PoleClimbTopEntryBlockMargin = 0.12f;
 const float gfParkour_AutoLedgeFaceRayLength = 0.95f;
 const float gfParkour_AutoLedgeTopRayUp = 2.60f;
 const float gfParkour_AutoLedgeTopRayLength = 3.10f;
@@ -152,6 +154,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			if (mfPoleClimbCandidateTime <= 0.f)
 				ClearPoleClimbCandidate();
 		}
+		if (mfZiplineCandidateTime > 0.f)
+		{
+			mfZiplineCandidateTime -= afTimeStep;
+			if (mfZiplineCandidateTime <= 0.f)
+				ClearZiplineCandidate();
+		}
 
 		UpdateWallRunChain(afTimeStep);
 		UpdateAirFlow(afTimeStep);
@@ -175,6 +183,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfLedgeMaxPlayerFeetY = 999999.f;
 		ClearPoleClimbCandidate();
 		ClearPoleSwingCandidate();
+		ClearZiplineCandidate();
 		ResetWallRunChain();
 		ResetFlow();
 		mfHealthRegenDelay = 0.f;
@@ -324,6 +333,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			ChangeFlow(0.10f * fScale, "pole climb top out", true);
 		else if (alEventId == geParkourFlowEvent_PoleClimbDrop)
 			ChangeFlow(-0.12f * fScale, "pole climb drop", true);
+		else if (alEventId == geParkourFlowEvent_ZiplineGrab)
+			ChangeFlow(0.04f * fScale, "zipline grab", true);
+		else if (alEventId == geParkourFlowEvent_ZiplineComplete)
+			ChangeFlow(0.08f * fScale, "zipline complete", true);
+		else if (alEventId == geParkourFlowEvent_ZiplineDrop)
+			ChangeFlow(-0.08f * fScale, "zipline drop", true);
 	}
 
 	//------------------------------------------------------------
@@ -1913,6 +1928,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			fMaxY = fTemp;
 		}
 
+		float fFeetY = pBody.GetFeetPosition().y;
+		if (fFeetY >= fMaxY - gfParkour_PoleClimbTopEntryBlockMargin)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Pole climb failed: player entered from pole top. feetY=" + fFeetY + " maxY=" + fMaxY, true);
+			return false;
+		}
+
 		cVector3f vAttachFeetPos = avAttachFeetPos;
 		vAttachFeetPos.y = cMath_Clamp(vAttachFeetPos.y, fMinY, fMaxY);
 
@@ -2023,6 +2046,217 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	{
 		mbPoleClimbCandidateActive = false;
 		mfPoleClimbCandidateTime = -1.f;
+	}
+
+	//------------------------------------------------------------
+
+	bool TryStartZipline(const cVector3f &in avHighPoint,
+						 const cVector3f &in avLowPoint,
+						 tID a_idTrolleyBody,
+						 tID a_idSliderJoint,
+						 float afEntryProgress,
+						 float afGrabRadius,
+						 float afMinApproachSpeed,
+						 float afMinVerticalSpeed,
+						 float afHangOffset,
+						 float afStartSpeed,
+						 float afMinSpeed,
+						 float afMaxSpeed,
+						 float afGravityAccelMul,
+						 float afLinearDamping,
+						 float afDetachExitSpeedMul,
+						 float afEndExitUpSpeed,
+						 float afCrouchDropDownSpeed,
+						 const tString &in asRopeName,
+						 bool abRequireNormalMoveState = true)
+	{
+		if (PlayerCanUseParkour(abRequireNormalMoveState) == false)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: player cannot use parkour", true);
+			return false;
+		}
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: no player body", true);
+			return false;
+		}
+		if (pBody.IsOnGround())
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: player is grounded", true);
+			return false;
+		}
+
+		cVector3f vLine = avLowPoint - avHighPoint;
+		float fLineLength = vLine.Length();
+		if (fLineLength <= 0.25f)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: line too short", true);
+			return false;
+		}
+
+		iPhysicsBody@ pTrolley = cLux_ID_Body(a_idTrolleyBody);
+		if (pTrolley is null)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: missing trolley body", true);
+			return false;
+		}
+
+		iPhysicsJointSlider@ pSlider = GetZiplineSlider(a_idSliderJoint);
+		if (pSlider is null)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: missing slider joint", true);
+			return false;
+		}
+
+		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody);
+		float fApproachSpeed = vFlatVel.Length();
+		if (fApproachSpeed < afMinApproachSpeed)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: approach speed too low. speed=" + fApproachSpeed + " min=" + afMinApproachSpeed, true);
+			return false;
+		}
+
+		float fVerticalVel = pBody.GetForceVelocity().y;
+		if (fVerticalVel < afMinVerticalSpeed)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Zipline failed: vertical speed too low. velocity=" + fVerticalVel + " min=" + afMinVerticalSpeed, true);
+			return false;
+		}
+
+		cScript_SetGlobalArgVector3f(0, avHighPoint);
+		cScript_SetGlobalArgVector3f(1, avLowPoint);
+		cScript_SetGlobalArgID(2, a_idTrolleyBody);
+		cScript_SetGlobalArgID(3, a_idSliderJoint);
+		cScript_SetGlobalArgFloat(4, cMath_Clamp(afEntryProgress, 0.f, 1.f));
+		cScript_SetGlobalArgFloat(5, cMath_Max(0.1f, afHangOffset));
+		cScript_SetGlobalArgFloat(6, cMath_Max(0.1f, afStartSpeed));
+		cScript_SetGlobalArgFloat(7, cMath_Max(0.1f, afMinSpeed));
+		cScript_SetGlobalArgFloat(8, cMath_Max(0.1f, afMaxSpeed));
+		cScript_SetGlobalArgFloat(9, cMath_Max(0.f, afGravityAccelMul));
+		cScript_SetGlobalArgFloat(10, cMath_Max(0.f, afLinearDamping));
+		cScript_SetGlobalArgFloat(11, cMath_Max(0.f, afDetachExitSpeedMul));
+		cScript_SetGlobalArgFloat(12, afEndExitUpSpeed);
+		cScript_SetGlobalArgFloat(13, afCrouchDropDownSpeed);
+		cScript_SetGlobalArgString(14, asRopeName);
+		cScript_RunGlobalFunc("State_ParkourZipline", "", "SetupParkourZipline");
+
+		ApplyFlowEvent(geParkourFlowEvent_ZiplineGrab, 1.f);
+		if (mbDebug)
+			cLux_AddDebugMessage("[Parkour] Zipline started. speed=" + fApproachSpeed + " progress=" + afEntryProgress + " flow=" + mfParkourFlow, true);
+
+		cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourZipline);
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void RegisterZiplineCandidate(const cVector3f &in avHighPoint,
+								  const cVector3f &in avLowPoint,
+								  tID a_idTrolleyBody,
+								  tID a_idSliderJoint,
+								  float afEntryProgress,
+								  float afGrabRadius,
+								  float afMinApproachSpeed,
+								  float afMinVerticalSpeed,
+								  float afHangOffset,
+								  float afStartSpeed,
+								  float afMinSpeed,
+								  float afMaxSpeed,
+								  float afGravityAccelMul,
+								  float afLinearDamping,
+								  float afDetachExitSpeedMul,
+								  float afEndExitUpSpeed,
+								  float afCrouchDropDownSpeed,
+								  const tString &in asRopeName)
+	{
+		if (mbEnabled == false) return;
+
+		mvZiplineCandidateHighPoint = avHighPoint;
+		mvZiplineCandidateLowPoint = avLowPoint;
+		m_idZiplineCandidateTrolleyBody = a_idTrolleyBody;
+		m_idZiplineCandidateSliderJoint = a_idSliderJoint;
+		mfZiplineCandidateEntryProgress = afEntryProgress;
+		mfZiplineCandidateGrabRadius = afGrabRadius;
+		mfZiplineCandidateMinApproachSpeed = afMinApproachSpeed;
+		mfZiplineCandidateMinVerticalSpeed = afMinVerticalSpeed;
+		mfZiplineCandidateHangOffset = afHangOffset;
+		mfZiplineCandidateStartSpeed = afStartSpeed;
+		mfZiplineCandidateMinSpeed = afMinSpeed;
+		mfZiplineCandidateMaxSpeed = afMaxSpeed;
+		mfZiplineCandidateGravityAccelMul = afGravityAccelMul;
+		mfZiplineCandidateLinearDamping = afLinearDamping;
+		mfZiplineCandidateDetachExitSpeedMul = afDetachExitSpeedMul;
+		mfZiplineCandidateEndExitUpSpeed = afEndExitUpSpeed;
+		mfZiplineCandidateCrouchDropDownSpeed = afCrouchDropDownSpeed;
+		msZiplineCandidateRopeName = asRopeName;
+		mfZiplineCandidateTime = gfParkour_ZiplineCandidateTTL;
+		mbZiplineCandidateActive = true;
+	}
+
+	//------------------------------------------------------------
+
+	bool TryStartZiplineCandidate(bool abRequireNormalMoveState = true)
+	{
+		if (mbZiplineCandidateActive == false || mfZiplineCandidateTime <= 0.f)
+			return false;
+
+		if (TryStartZipline(mvZiplineCandidateHighPoint,
+							mvZiplineCandidateLowPoint,
+							m_idZiplineCandidateTrolleyBody,
+							m_idZiplineCandidateSliderJoint,
+							mfZiplineCandidateEntryProgress,
+							mfZiplineCandidateGrabRadius,
+							mfZiplineCandidateMinApproachSpeed,
+							mfZiplineCandidateMinVerticalSpeed,
+							mfZiplineCandidateHangOffset,
+							mfZiplineCandidateStartSpeed,
+							mfZiplineCandidateMinSpeed,
+							mfZiplineCandidateMaxSpeed,
+							mfZiplineCandidateGravityAccelMul,
+							mfZiplineCandidateLinearDamping,
+							mfZiplineCandidateDetachExitSpeedMul,
+							mfZiplineCandidateEndExitUpSpeed,
+							mfZiplineCandidateCrouchDropDownSpeed,
+							msZiplineCandidateRopeName,
+							abRequireNormalMoveState))
+		{
+			ClearZiplineCandidate();
+			ClearPoleClimbCandidate();
+			ClearPoleSwingCandidate();
+			return true;
+		}
+
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	void ClearZiplineCandidate()
+	{
+		mbZiplineCandidateActive = false;
+		mfZiplineCandidateTime = -1.f;
+	}
+
+	//------------------------------------------------------------
+
+	iPhysicsJointSlider@ GetZiplineSlider(tID a_idSliderJoint)
+	{
+		if (a_idSliderJoint == tID_Invalid) return null;
+
+		iPhysicsJoint@ pJoint = cLux_GetCurrentMap().GetPhysicsWorld().GetPhysicsJointFromID(a_idSliderJoint);
+		if (pJoint is null) return null;
+
+		return cPhysics_ToJointSlider(pJoint);
 	}
 
 	//------------------------------------------------------------
@@ -2260,6 +2494,61 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	void _Global_TryStartZipline()
+	{
+		cScript_SetGlobalReturnBool(TryStartZipline(cScript_GetGlobalArgVector3f(0),
+													cScript_GetGlobalArgVector3f(1),
+													cScript_GetGlobalArgID(2),
+													cScript_GetGlobalArgID(3),
+													cScript_GetGlobalArgFloat(4),
+													cScript_GetGlobalArgFloat(5),
+													cScript_GetGlobalArgFloat(6),
+													cScript_GetGlobalArgFloat(7),
+													cScript_GetGlobalArgFloat(8),
+													cScript_GetGlobalArgFloat(9),
+													cScript_GetGlobalArgFloat(10),
+													cScript_GetGlobalArgFloat(11),
+													cScript_GetGlobalArgFloat(12),
+													cScript_GetGlobalArgFloat(13),
+													cScript_GetGlobalArgFloat(14),
+													cScript_GetGlobalArgFloat(15),
+													cScript_GetGlobalArgFloat(16),
+													cScript_GetGlobalArgString(17)));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_RegisterZiplineCandidate()
+	{
+		RegisterZiplineCandidate(cScript_GetGlobalArgVector3f(0),
+								 cScript_GetGlobalArgVector3f(1),
+								 cScript_GetGlobalArgID(2),
+								 cScript_GetGlobalArgID(3),
+								 cScript_GetGlobalArgFloat(4),
+								 cScript_GetGlobalArgFloat(5),
+								 cScript_GetGlobalArgFloat(6),
+								 cScript_GetGlobalArgFloat(7),
+								 cScript_GetGlobalArgFloat(8),
+								 cScript_GetGlobalArgFloat(9),
+								 cScript_GetGlobalArgFloat(10),
+								 cScript_GetGlobalArgFloat(11),
+								 cScript_GetGlobalArgFloat(12),
+								 cScript_GetGlobalArgFloat(13),
+								 cScript_GetGlobalArgFloat(14),
+								 cScript_GetGlobalArgFloat(15),
+								 cScript_GetGlobalArgFloat(16),
+								 cScript_GetGlobalArgString(17));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_TryStartZiplineCandidate()
+	{
+		cScript_SetGlobalReturnBool(TryStartZiplineCandidate(cScript_GetGlobalArgBool(0)));
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_RegisterLedgeCandidate()
 	{
 		if (mbEnabled == false) return;
@@ -2339,6 +2628,27 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	cVector3f mvPoleClimbCandidateAttachFeetPos = cVector3f_Zero;
 	cVector3f mvPoleClimbCandidateTopExitFeetPos = cVector3f_Zero;
 	cVector3f mvPoleClimbCandidateTopExitForward = cVector3f_Forward;
+
+	bool mbZiplineCandidateActive = false;
+	float mfZiplineCandidateTime = -1.f;
+	float mfZiplineCandidateEntryProgress = 0.f;
+	float mfZiplineCandidateGrabRadius = 0.85f;
+	float mfZiplineCandidateMinApproachSpeed = 0.65f;
+	float mfZiplineCandidateMinVerticalSpeed = -10.0f;
+	float mfZiplineCandidateHangOffset = 1.15f;
+	float mfZiplineCandidateStartSpeed = 2.6f;
+	float mfZiplineCandidateMinSpeed = 1.8f;
+	float mfZiplineCandidateMaxSpeed = 9.0f;
+	float mfZiplineCandidateGravityAccelMul = 1.0f;
+	float mfZiplineCandidateLinearDamping = 0.08f;
+	float mfZiplineCandidateDetachExitSpeedMul = 1.0f;
+	float mfZiplineCandidateEndExitUpSpeed = 0.35f;
+	float mfZiplineCandidateCrouchDropDownSpeed = -0.25f;
+	tString msZiplineCandidateRopeName = "";
+	tID m_idZiplineCandidateTrolleyBody = tID_Invalid;
+	tID m_idZiplineCandidateSliderJoint = tID_Invalid;
+	cVector3f mvZiplineCandidateHighPoint = cVector3f_Zero;
+	cVector3f mvZiplineCandidateLowPoint = cVector3f_Zero;
 
 	bool mbWallJumpChainActive = false;
 	bool mbWallScrambleJumpChainActive = false;

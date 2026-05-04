@@ -11,6 +11,7 @@
 #include "helpers/helper_modules.hps"
 #include "helpers/helper_ai.hps"
 #include "helpers/helper_player.hps"
+#include "helpers/helper_physics.hps"
 
 #include "helpers/helper_agent.hps"
 #include "helpers/helper_gun.hps"
@@ -71,7 +72,7 @@ class cScrMap : iScrMap
 	void OnStart()
 	{
 		// Any general setup of script / entities
-		
+
 		/////////////////////////
 		// Debug
 		if (cLux_ScriptDebugOn())
@@ -93,7 +94,6 @@ class cScrMap : iScrMap
 			PlayerBody_SetModel("player_bunker.ent");
 			Parkour_SetEnabled(true);
 			Parkour_SetDebug(true);
-			// Inventory_SetActive(false)
 		}
 
 		Player_SetGravity(cVector3f(0,-18,0));
@@ -145,10 +145,6 @@ class cScrMap : iScrMap
 	//-------------------------------------------------------
  
 	/*Put any variables that are used in more than one scene here.*/
- 
-	//-------------------------------------------------------
- 
-	/*Put any functions that are used in more than one scene here.*/
  
 	//-------------------------------------------------------
  
