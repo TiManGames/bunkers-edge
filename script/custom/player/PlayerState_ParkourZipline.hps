@@ -5,12 +5,23 @@
 #include "helpers/helper_player.hps"
 #include "helpers/helper_items.hps"
 #include "helpers/helper_modules.hps"
+#include "helpers/helper_effects.hps"
 #include "custom/helpers/helper_parkour.hps"
 
 //------------------------------------------------------------
 
 const float gfParkourZipline_SnapTime = 0.12f;
 const float gfParkourZipline_BaseGravityAccel = 9.8f;
+const float gfParkourZipline_HeadLowerOffset = 1.2f;
+const float gfParkourZipline_CameraForwardOffset = 0.10f;
+const float gfParkourZipline_CameraEntryBlendTime = 0.55f;
+const float gfParkourZipline_PitchSmoothSpeed = 3.2f;
+const float gfParkourZipline_RollSmoothSpeed = 3.0f;
+const float gfParkourZipline_RollFrequency = 4.3f;
+const float gfParkourZipline_ShakeRampTime = 3.0f;
+const float gfParkourZipline_ShakePulseInterval = 0.16f;
+const float gfParkourZipline_ShakeBaseAmount = 0.015f;
+const float gfParkourZipline_ShakeMaxAmount = 0.12f;
 
 //------------------------------------------------------------
 
@@ -77,8 +88,12 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 
 		mbFinished = false;
 		mfTimer = 0.f;
+		mfShakePulseTimer = 0.f;
+		mlRideShakeId = -1;
 		mvStartFeetPos = pBody.GetFeetPosition();
 		mfStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
+		mfSmoothedPitch = mfStartPitch;
+		mfSmoothedRoll = 0.f;
 		mfRideProgress = cMath_Clamp(mfRideProgress, 0.f, 1.f);
 		mfRideSpeed = GetInitialRideSpeed(pBody);
 		SetTrolleyAtProgress(pTrolley, mfRideProgress, mfRideSpeed);
@@ -102,7 +117,7 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 		Item_PutAway(eItemHandlerHand_Right);
 
 		cLux_PlayGuiSoundData("player/climb_ledge/low", eSoundEntryType_WorldClean, 0.55f, true);
-		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, -0.16f, 0.10f), 10.f, 6.f, 0.08f);
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 4.f, 3.f, 0.16f);
 
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Zipline state entered. speed=" + mfRideSpeed + " progress=" + mfRideProgress, true);
@@ -116,6 +131,7 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 		if (pTrolley !is null)
 			pTrolley.SetLinearVelocity(cVector3f_Zero);
 
+		StopZiplineShake(0.12f);
 		RestoreBody();
 		Player_ResetCameraLimits();
 		Player_SetDisableCrawling(false);
@@ -168,11 +184,12 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 			vFeet = LerpVector(mvStartFeetPos, vTargetFeet, fSnapT);
 		}
 
-		pBody.SetFeetPosition(cVector3f(vFeet.x ,vFeet.y - 1, vFeet.z) , true);
+		pBody.SetFeetPosition(vFeet, true);
 		float fYaw = GetYawFromDir(mvCurrentPathTangent);
 		pBody.SetYaw(fYaw);
 		cLux_GetPlayer().GetCamera().SetYaw(fYaw);
 		UpdateCameraMotion(afTimeStep);
+		UpdateRideShake(afTimeStep);
 
 		if (mfRideProgress >= 0.995f)
 			CompleteZipline(true);
@@ -304,15 +321,59 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 	{
 		float fSpeedT = cMath_Clamp((mfRideSpeed - mfMinSpeed) / cMath_Max(0.001f, mfMaxSpeed - mfMinSpeed), 0.f, 1.f);
 		float fSlopeT = cMath_Clamp(-mvCurrentPathTangent.y, 0.f, 1.f);
-		float fPitchGoal = cMath_ToRad(-3.f - fSlopeT * 8.f);
-		float fPitchT = cMath_Clamp(mfTimer / 0.25f, 0.f, 1.f);
-		cLux_GetPlayer().GetCamera().SetPitch(cMath_InterpolateLinear(mfStartPitch, fPitchGoal, fPitchT));
-		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, cMath_ToRad(cMath_Sin(mfTimer * 9.0f) * fSpeedT * 1.6f));
+		float fEntryT = cMath_Easing(eEasing_SineInOut, cMath_Clamp(mfTimer / gfParkourZipline_CameraEntryBlendTime, 0.f, 1.f));
+		float fPitchGoal = cMath_ToRad(-3.0f - fSlopeT * 5.5f);
+		float fPitchStep = cMath_Clamp(afTimeStep * gfParkourZipline_PitchSmoothSpeed, 0.f, 1.f);
+		mfSmoothedPitch = cMath_InterpolateLinear(mfSmoothedPitch, fPitchGoal, fPitchStep);
+		cLux_GetPlayer().GetCamera().SetPitch(cMath_InterpolateLinear(mfStartPitch, mfSmoothedPitch, fEntryT));
+
+		float fRollGoal = cMath_ToRad(cMath_Sin(mfTimer * gfParkourZipline_RollFrequency) * fSpeedT * 1.15f);
+		float fRollStep = cMath_Clamp(afTimeStep * gfParkourZipline_RollSmoothSpeed, 0.f, 1.f);
+		mfSmoothedRoll = cMath_InterpolateLinear(mfSmoothedRoll, fRollGoal, fRollStep);
+		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, mfSmoothedRoll * fEntryT);
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
-										  cVector3f(0.f, -0.16f - fSpeedT * 0.04f, 0.10f + fSpeedT * 0.04f),
-										  10.f,
-										  6.f,
-										  0.06f);
+										  cVector3f(0.f,
+													(-gfParkourZipline_HeadLowerOffset - fSpeedT * 0.04f) * fEntryT,
+													(gfParkourZipline_CameraForwardOffset + fSpeedT * 0.03f) * fEntryT),
+										  5.f,
+										  4.f,
+										  0.14f);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateRideShake(float afTimeStep)
+	{
+		mfShakePulseTimer -= afTimeStep;
+		if (mfShakePulseTimer > 0.f) return;
+
+		if (mlRideShakeId >= 0)
+			Effect_Shake_FadeOut(mlRideShakeId, 0.05f);
+
+		float fRideT = cMath_Clamp(mfTimer / gfParkourZipline_ShakeRampTime, 0.f, 1.f);
+		fRideT = cMath_Easing(eEasing_QuadIn, fRideT);
+		float fSpeedT = cMath_Clamp((mfRideSpeed - mfMinSpeed) / cMath_Max(0.001f, mfMaxSpeed - mfMinSpeed), 0.f, 1.f);
+		float fShakeT = cMath_Clamp(fRideT * 0.82f + fSpeedT * 0.18f, 0.f, 1.f);
+		float fAmount = cMath_InterpolateLinear(gfParkourZipline_ShakeBaseAmount, gfParkourZipline_ShakeMaxAmount, fShakeT);
+
+		mlRideShakeId = Effect_Shake_Start(fAmount,
+										   gfParkourZipline_ShakePulseInterval,
+										   0.025f,
+										   0.10f,
+										   cVector3f(0.85f, 0.70f, 0.35f),
+										   18.f);
+		mfShakePulseTimer = gfParkourZipline_ShakePulseInterval;
+	}
+
+	//------------------------------------------------------------
+
+	void StopZiplineShake(float afFadeOutTime)
+	{
+		if (mlRideShakeId < 0) return;
+
+		Effect_Shake_FadeOut(mlRideShakeId, afFadeOutTime);
+		mlRideShakeId = -1;
+		mfShakePulseTimer = 0.f;
 	}
 
 	//------------------------------------------------------------
@@ -587,6 +648,10 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 	float mfCrouchDropDownSpeed = -0.25f;
 	float mfTimer = 0.f;
 	float mfStartPitch = 0.f;
+	float mfSmoothedPitch = 0.f;
+	float mfSmoothedRoll = 0.f;
+	float mfShakePulseTimer = 0.f;
+	int mlRideShakeId = -1;
 
 	//------------------------------------------------------------
 }
