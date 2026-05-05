@@ -10,15 +10,15 @@
 //------------------------------------------------------------
 
 const float gfParkourWallRun_MaxTime = 1.3f;
-const float gfParkourWallRun_Speed = 5.4f;
+const float gfParkourWallRun_Speed = 5.8f;
 const float gfParkourWallRun_MinVerticalVel = -14.65f;
 const float gfParkourWallRun_AntiGravityMul = 0.65f;
 const float gfParkourWallRun_LostWallGrace = 0.15f;
 const float gfParkourWallRun_EntryExitGrace = 0.22f;
 const float gfParkourWallRun_ForwardReleaseGrace = 0.28f;
 const float gfParkourWallRun_GroundExitGrace = 0.18f;
-const float gfParkourWallJump_SideImpulse = 255.f;
-const float gfParkourWallJump_UpImpulse = 245.f;
+const float gfParkourWallJump_SideImpulse = 240.f;
+const float gfParkourWallJump_UpImpulse = 350.f;
 const float gfParkourWallJump_ForwardImpulse = 125.f;
 const float gfParkourWallRun_CameraBobEntryTime = 0.18f;
 const float gfParkourWallRun_CameraBobFrequency = 12.0f;
@@ -26,6 +26,11 @@ const float gfParkourWallRun_CameraBobVertical = 0.075f;
 const float gfParkourWallRun_CameraBobSide = 0.055f;
 const float gfParkourWallRun_CameraBobForward = 0.145f;
 const float gfParkourWallRun_CameraBobRoll = 2.8f;
+const float gfParkourWallRun_CameraOrganicFrequency = 1.85f;
+const float gfParkourWallRun_CameraOrganicSide = 0.018f;
+const float gfParkourWallRun_CameraOrganicVertical = 0.014f;
+const float gfParkourWallRun_CameraOrganicForward = 0.020f;
+const float gfParkourWallRun_CameraOrganicRoll = 0.85f;
 
 //------------------------------------------------------------
 
@@ -47,6 +52,10 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		mfGroundTimer = gfParkourWallRun_GroundExitGrace;
 		mfCameraBobTimer = 0.f;
 		mfCameraBobRoll = 0.f;
+		mfCameraOrganicSeedX = cMath_RandRectf(-100.f, 100.f);
+		mfCameraOrganicSeedY = cMath_RandRectf(-100.f, 100.f);
+		mfCameraOrganicSeedZ = cMath_RandRectf(-100.f, 100.f);
+		mfCameraOrganicSeedRoll = cMath_RandRectf(-100.f, 100.f);
 		mvCameraBobOffset = cVector3f_Zero;
 		msLastWallRefreshFail = "";
 		mvWallNormal = cScript_GetGlobalVarVector3f("Parkour_WallRun_Normal");
@@ -373,21 +382,30 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		float fEntryT = cMath_Easing(eEasing_SineInOut, cMath_Clamp(mfTimer / gfParkourWallRun_CameraBobEntryTime, 0.f, 1.f));
 		float fRideT = cMath_Clamp(mfTimer / gfParkourWallRun_MaxTime, 0.f, 1.f);
 		float fAmount = fEntryT * (0.65f + 0.35f * fRideT) * cMath_Clamp(0.65f + 0.35f * fSpeedT, 0.f, 1.25f) * mfPowerMul;
+		float fOrganicAmount = fEntryT * cMath_Clamp(0.55f + 0.45f * fSpeedT, 0.f, 1.15f) * mfPowerMul;
 		
 		mfCameraBobTimer += afTimeStep * gfParkourWallRun_CameraBobFrequency * cMath_Max(0.75f, fSpeedT);
 		
 		float fStep = cMath_Sin(mfCameraBobTimer);
 		float fStepAbs = cMath_Abs(fStep);
 		float fSide = cMath_Sin(mfCameraBobTimer * 0.5f + cMath_ToRad(45.f));
+		float fOrganicTime = mfTimer * gfParkourWallRun_CameraOrganicFrequency;
+		float fOrganicX = cMath_Clamp(cGenerate_GetNoisePerlin1D(mfCameraOrganicSeedX + fOrganicTime), -1.f, 1.f);
+		float fOrganicY = cMath_Clamp(cGenerate_GetNoisePerlin1D(mfCameraOrganicSeedY + fOrganicTime * 1.17f), -1.f, 1.f);
+		float fOrganicZ = cMath_Clamp(cGenerate_GetNoisePerlin1D(mfCameraOrganicSeedZ + fOrganicTime * 0.83f), -1.f, 1.f);
+		float fOrganicRoll = cMath_Clamp(cGenerate_GetNoisePerlin1D(mfCameraOrganicSeedRoll + fOrganicTime * 1.31f), -1.f, 1.f);
 		
 		cVector3f vTargetOffset;
 		vTargetOffset.x = fSide * gfParkourWallRun_CameraBobSide * fAmount * float(mlWallSide);
 		vTargetOffset.y = ((fStepAbs * gfParkourWallRun_CameraBobVertical) - (gfParkourWallRun_CameraBobVertical * 0.5f)) * fAmount;
 		vTargetOffset.z = -fStepAbs * gfParkourWallRun_CameraBobForward * fAmount;
+		vTargetOffset.x += fOrganicX * gfParkourWallRun_CameraOrganicSide * fOrganicAmount;
+		vTargetOffset.y += fOrganicY * gfParkourWallRun_CameraOrganicVertical * fOrganicAmount;
+		vTargetOffset.z += fOrganicZ * gfParkourWallRun_CameraOrganicForward * fOrganicAmount;
 		
 		float fBlend = cMath_Clamp(afTimeStep * 14.f, 0.f, 1.f);
 		mvCameraBobOffset = mvCameraBobOffset * (1.f - fBlend) + vTargetOffset * fBlend;
-		mfCameraBobRoll = mfCameraBobRoll * (1.f - fBlend) + (fSide * gfParkourWallRun_CameraBobRoll * fAmount * float(mlWallSide)) * fBlend;
+		mfCameraBobRoll = mfCameraBobRoll * (1.f - fBlend) + ((fSide * gfParkourWallRun_CameraBobRoll * fAmount * float(mlWallSide)) + (fOrganicRoll * gfParkourWallRun_CameraOrganicRoll * fOrganicAmount)) * fBlend;
 		
 		cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, mvCameraBobOffset);
 	}
@@ -410,6 +428,10 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	float mfPowerMul = 1.f;
 	float mfCameraBobTimer = 0.f;
 	float mfCameraBobRoll = 0.f;
+	float mfCameraOrganicSeedX = 0.f;
+	float mfCameraOrganicSeedY = 0.f;
+	float mfCameraOrganicSeedZ = 0.f;
+	float mfCameraOrganicSeedRoll = 0.f;
 	int mlWallSide = 0;
 	tString msLastWallRefreshFail = "";
 	cVector3f mvWallNormal = cVector3f_Forward;

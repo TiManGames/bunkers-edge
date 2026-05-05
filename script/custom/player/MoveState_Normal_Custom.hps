@@ -22,6 +22,8 @@ const float gfParkourMove_RollEndSpeed = 0.65f;
 const float gfParkourMove_RollCameraDip = 0.24f;
 const float gfParkourMove_WallRunMinArmFlow = 0.08f;
 const float gfParkourMove_WallRunMinArmSpeed = 1.20f;
+const float gfParkourMove_WallJumpLedgeGrabMinAge = 0.06f;
+const float gfParkourMove_WallJumpLedgeGrabPriorityTime = 0.22f;
 const float gfParkourMove_JumpVerticalMul = 1.22f;
 const float gfParkourMove_JumpSideAirMul = 0.04f;
 const float gfParkourMove_SideJumpVerticalMul = 0.92f;
@@ -540,6 +542,11 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 			return;
 		}
 
+		float fWallJumpChainAge = Parkour_GetWallJumpChainAge();
+		float fWallScrambleChainAge = Parkour_GetWallScrambleJumpChainAge();
+		if (ShouldTryParkourWallChainLedgeGrab(fWallJumpChainAge, fWallScrambleChainAge) && Parkour_TryStartLedgeGrab(true, false))
+			return;
+
 		if (Parkour_TryStartZiplineCandidate())
 			return;
 
@@ -549,12 +556,13 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (Parkour_TryStartPoleSwingCandidate())
 			return;
 
-		float fWallScrambleChainAge = Parkour_GetWallScrambleJumpChainAge();
-		if (fWallScrambleChainAge >= 0.f && Parkour_TryStartWallScrambleChain(fWallScrambleChainAge, afTimeStep))
+		if (ShouldHoldParkourWallChainForLedge(fWallJumpChainAge, fWallScrambleChainAge))
 			return;
 
-		float fWallJumpChainAge = Parkour_GetWallJumpChainAge();
-		if (fWallJumpChainAge >= 0.f && Parkour_TryStartWallRunChain(fWallJumpChainAge, afTimeStep))
+		if (fWallScrambleChainAge >= gfParkourMove_WallJumpLedgeGrabMinAge && Parkour_TryStartWallScrambleChain(fWallScrambleChainAge, afTimeStep))
+			return;
+
+		if (fWallJumpChainAge >= gfParkourMove_WallJumpLedgeGrabMinAge && Parkour_TryStartWallRunChain(fWallJumpChainAge, afTimeStep))
 			return;
 
 		if (mfParkourRunJumpGrace >= 0.f && Parkour_TryStartWallRun(mfParkourRunJumpGrace, afTimeStep))
@@ -783,6 +791,40 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		float fSpeed = cMath_Max(vFlatVel.Length(), mfParkourJumpStartSpeed);
 		return Parkour_GetFlow() >= gfParkourMove_WallRunMinArmFlow ||
 			   fSpeed >= gfParkourMove_WallRunMinArmSpeed;
+	}
+
+	//------------------------------------------------------------
+
+	bool IsParkourWallChainActive(float afChainAge)
+	{
+		return afChainAge >= 0.f;
+	}
+
+	//------------------------------------------------------------
+
+	bool IsParkourWallChainReadyForLedge(float afChainAge)
+	{
+		return afChainAge >= gfParkourMove_WallJumpLedgeGrabMinAge;
+	}
+
+	//------------------------------------------------------------
+
+	bool ShouldTryParkourWallChainLedgeGrab(float afWallJumpChainAge,
+											float afWallScrambleChainAge)
+	{
+		if (Parkour_GetEnabled() == false) return false;
+		return IsParkourWallChainReadyForLedge(afWallJumpChainAge) ||
+			   IsParkourWallChainReadyForLedge(afWallScrambleChainAge);
+	}
+
+	//------------------------------------------------------------
+
+	bool ShouldHoldParkourWallChainForLedge(float afWallJumpChainAge,
+											float afWallScrambleChainAge)
+	{
+		if (Parkour_GetEnabled() == false) return false;
+		return (IsParkourWallChainActive(afWallJumpChainAge) && afWallJumpChainAge < gfParkourMove_WallJumpLedgeGrabPriorityTime) ||
+			   (IsParkourWallChainActive(afWallScrambleChainAge) && afWallScrambleChainAge < gfParkourMove_WallJumpLedgeGrabPriorityTime);
 	}
 
 	//------------------------------------------------------------

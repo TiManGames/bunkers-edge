@@ -521,12 +521,15 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	void ArmWallJumpChain(const cVector3f &in avWallNormal)
 	{
 		mbWallJumpChainActive = true;
+		mbWallScrambleJumpChainActive = false;
 		mfWallJumpChainAge = 0.f;
+		mfWallScrambleJumpChainAge = -1.f;
 		mfWallRunChainResetTimer = gfParkour_WallRunChainResetTime;
 		mvWallJumpLastNormal = avWallNormal;
 		mvWallJumpLastNormal.y = 0.f;
 		if (mvWallJumpLastNormal.SqrLength() > 0.001f)
 			mvWallJumpLastNormal.Normalize();
+		mvWallScrambleJumpLastNormal = cVector3f_Zero;
 
 		if (mbDebug)
 			cLux_AddDebugMessage("[Parkour] Wall jump chain armed. power=" + GetWallRunPowerMul() + " flow=" + mfParkourFlow + " chain=" + mlWallRunChainCount, true);
@@ -536,9 +539,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	void ArmWallScrambleJumpChain(const cVector3f &in avWallNormal)
 	{
+		mbWallJumpChainActive = false;
 		mbWallScrambleJumpChainActive = true;
+		mfWallJumpChainAge = -1.f;
 		mfWallScrambleJumpChainAge = 0.f;
 		mfWallRunChainResetTimer = gfParkour_WallRunChainResetTime;
+		mvWallJumpLastNormal = cVector3f_Zero;
 		mvWallScrambleJumpLastNormal = avWallNormal;
 		mvWallScrambleJumpLastNormal.y = 0.f;
 		if (mvWallScrambleJumpLastNormal.SqrLength() > 0.001f)
@@ -818,6 +824,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourClimbLedge);
 		mbLedgeCandidateActive = false;
 		mfLedgeCandidateTime = -1.f;
+		ResetWallRunChain();
 		ApplyFlowEvent(geParkourFlowEvent_LedgeSuccess, 1.f);
 
 		if (abAutomatic)
