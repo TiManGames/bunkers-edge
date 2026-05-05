@@ -9,17 +9,23 @@
 
 //------------------------------------------------------------
 
-const float gfParkourWallRun_MaxTime = 1.5f;
-const float gfParkourWallRun_Speed = 4.1f;
-const float gfParkourWallRun_MinVerticalVel = -0.65f;
-const float gfParkourWallRun_AntiGravityMul = 0.72f;
+const float gfParkourWallRun_MaxTime = 1.3f;
+const float gfParkourWallRun_Speed = 5.4f;
+const float gfParkourWallRun_MinVerticalVel = -14.65f;
+const float gfParkourWallRun_AntiGravityMul = 0.65f;
 const float gfParkourWallRun_LostWallGrace = 0.15f;
 const float gfParkourWallRun_EntryExitGrace = 0.22f;
 const float gfParkourWallRun_ForwardReleaseGrace = 0.28f;
 const float gfParkourWallRun_GroundExitGrace = 0.18f;
 const float gfParkourWallJump_SideImpulse = 255.f;
-const float gfParkourWallJump_UpImpulse = 235.f;
-const float gfParkourWallJump_ForwardImpulse = 120.f;
+const float gfParkourWallJump_UpImpulse = 245.f;
+const float gfParkourWallJump_ForwardImpulse = 125.f;
+const float gfParkourWallRun_CameraBobEntryTime = 0.18f;
+const float gfParkourWallRun_CameraBobFrequency = 12.0f;
+const float gfParkourWallRun_CameraBobVertical = 0.075f;
+const float gfParkourWallRun_CameraBobSide = 0.055f;
+const float gfParkourWallRun_CameraBobForward = 0.145f;
+const float gfParkourWallRun_CameraBobRoll = 2.8f;
 
 //------------------------------------------------------------
 
@@ -39,6 +45,9 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		mfLostWallTimer = gfParkourWallRun_LostWallGrace;
 		mfForwardReleaseTimer = gfParkourWallRun_ForwardReleaseGrace;
 		mfGroundTimer = gfParkourWallRun_GroundExitGrace;
+		mfCameraBobTimer = 0.f;
+		mfCameraBobRoll = 0.f;
+		mvCameraBobOffset = cVector3f_Zero;
 		msLastWallRefreshFail = "";
 		mvWallNormal = cScript_GetGlobalVarVector3f("Parkour_WallRun_Normal");
 		mvWallForward = cScript_GetGlobalVarVector3f("Parkour_WallRun_Forward");
@@ -65,7 +74,8 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 			pBody.SetForceVelocity(vVel);
 		}
 		
-		UpdateCameraRoll();
+		cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, cVector3f_Zero);
+		UpdateCameraRoll(0.f);
 	}
 	
 	//------------------------------------------------------------
@@ -76,6 +86,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		Player_SetCrouchDisabled(false);
 		Player_SetCrouchActionDisabled(false);
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 7.f, cMath_ToRad(140.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
 	}
 	
 	//------------------------------------------------------------
@@ -160,7 +171,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		cVector3f vGravity = pBody.GetCustomGravityActive() ? pBody.GetCustomGravity() : pPhysicsWorld.GetGravity();
 		pBody.AddForce(cVector3f(0.f, -vGravity.y * pBody.GetMass() * gfParkourWallRun_AntiGravityMul, 0.f));
 		
-		UpdateCameraRoll();
+		UpdateCameraMotion(afTimeStep, pBody);
 	}
 	
 	//------------------------------------------------------------
@@ -347,9 +358,45 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	
 	//------------------------------------------------------------
 	
-	void UpdateCameraRoll()
+	void UpdateCameraMotion(float afTimeStep, iCharacterBody@ apBody)
 	{
-		float fRoll = -12.f * float(mlWallSide);
+		UpdateCameraBob(afTimeStep, apBody);
+		UpdateCameraRoll(mfCameraBobRoll);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateCameraBob(float afTimeStep, iCharacterBody@ apBody)
+	{
+		float fSpeed = Parkour_GetFlatVelocity(apBody, afTimeStep).Length();
+		float fSpeedT = cMath_Clamp(fSpeed / cMath_Max(0.001f, gfParkourWallRun_Speed * mfPowerMul), 0.f, 1.35f);
+		float fEntryT = cMath_Easing(eEasing_SineInOut, cMath_Clamp(mfTimer / gfParkourWallRun_CameraBobEntryTime, 0.f, 1.f));
+		float fRideT = cMath_Clamp(mfTimer / gfParkourWallRun_MaxTime, 0.f, 1.f);
+		float fAmount = fEntryT * (0.65f + 0.35f * fRideT) * cMath_Clamp(0.65f + 0.35f * fSpeedT, 0.f, 1.25f) * mfPowerMul;
+		
+		mfCameraBobTimer += afTimeStep * gfParkourWallRun_CameraBobFrequency * cMath_Max(0.75f, fSpeedT);
+		
+		float fStep = cMath_Sin(mfCameraBobTimer);
+		float fStepAbs = cMath_Abs(fStep);
+		float fSide = cMath_Sin(mfCameraBobTimer * 0.5f + cMath_ToRad(45.f));
+		
+		cVector3f vTargetOffset;
+		vTargetOffset.x = fSide * gfParkourWallRun_CameraBobSide * fAmount * float(mlWallSide);
+		vTargetOffset.y = ((fStepAbs * gfParkourWallRun_CameraBobVertical) - (gfParkourWallRun_CameraBobVertical * 0.5f)) * fAmount;
+		vTargetOffset.z = -fStepAbs * gfParkourWallRun_CameraBobForward * fAmount;
+		
+		float fBlend = cMath_Clamp(afTimeStep * 14.f, 0.f, 1.f);
+		mvCameraBobOffset = mvCameraBobOffset * (1.f - fBlend) + vTargetOffset * fBlend;
+		mfCameraBobRoll = mfCameraBobRoll * (1.f - fBlend) + (fSide * gfParkourWallRun_CameraBobRoll * fAmount * float(mlWallSide)) * fBlend;
+		
+		cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, mvCameraBobOffset);
+	}
+	
+	//------------------------------------------------------------
+	
+	void UpdateCameraRoll(float afBobRoll)
+	{
+		float fRoll = -12.f * float(mlWallSide) + afBobRoll;
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, cMath_ToRad(fRoll), 7.f, cMath_ToRad(140.f));
 	}
 	
@@ -361,10 +408,13 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	float mfForwardReleaseTimer = 0.f;
 	float mfGroundTimer = 0.f;
 	float mfPowerMul = 1.f;
+	float mfCameraBobTimer = 0.f;
+	float mfCameraBobRoll = 0.f;
 	int mlWallSide = 0;
 	tString msLastWallRefreshFail = "";
 	cVector3f mvWallNormal = cVector3f_Forward;
 	cVector3f mvWallForward = cVector3f_Forward;
+	cVector3f mvCameraBobOffset = cVector3f_Zero;
 	
 	//------------------------------------------------------------
 }
