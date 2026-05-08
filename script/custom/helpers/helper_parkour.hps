@@ -38,6 +38,9 @@ const int geParkourFlowEvent_PoleClimbDrop = 22;
 const int geParkourFlowEvent_ZiplineGrab = 23;
 const int geParkourFlowEvent_ZiplineComplete = 24;
 const int geParkourFlowEvent_ZiplineDrop = 25;
+const int geParkourFlowEvent_BeamWalkStart = 26;
+const int geParkourFlowEvent_BeamWalkComplete = 27;
+const int geParkourFlowEvent_BeamWalkFall = 28;
 
 //------------------------------------------------------------
 
@@ -524,6 +527,84 @@ bool Parkour_TryStartZiplineCandidate(bool abRequireNormalMoveState = true)
 {
 	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
 	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartZiplineCandidate");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartBeamWalk(const cVector3f &in avStartPoint,
+							  const cVector3f &in avEndPoint,
+							  const cVector3f &in avForward,
+							  const cVector3f &in avRight,
+							  float afEntryProgress,
+							  float afWalkSpeed,
+							  float afAutoDrift,
+							  float afCorrectionStrength,
+							  float afBalanceDamping,
+							  float afFallGrace,
+							  float afMaxCameraRoll,
+							  float afFallSideSpeed,
+							  float afFallDownSpeed,
+							  float afExitSpeed)
+{
+	cScript_SetGlobalArgVector3f(0, avStartPoint);
+	cScript_SetGlobalArgVector3f(1, avEndPoint);
+	cScript_SetGlobalArgVector3f(2, avForward);
+	cScript_SetGlobalArgVector3f(3, avRight);
+	cScript_SetGlobalArgFloat(4, afEntryProgress);
+	cScript_SetGlobalArgFloat(5, afWalkSpeed);
+	cScript_SetGlobalArgFloat(6, afAutoDrift);
+	cScript_SetGlobalArgFloat(7, afCorrectionStrength);
+	cScript_SetGlobalArgFloat(8, afBalanceDamping);
+	cScript_SetGlobalArgFloat(9, afFallGrace);
+	cScript_SetGlobalArgFloat(10, afMaxCameraRoll);
+	cScript_SetGlobalArgFloat(11, afFallSideSpeed);
+	cScript_SetGlobalArgFloat(12, afFallDownSpeed);
+	cScript_SetGlobalArgFloat(13, afExitSpeed);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartBeamWalk");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_RegisterBeamWalkCandidate(const cVector3f &in avStartPoint,
+									   const cVector3f &in avEndPoint,
+									   const cVector3f &in avForward,
+									   const cVector3f &in avRight,
+									   float afEntryProgress,
+									   float afWalkSpeed,
+									   float afAutoDrift,
+									   float afCorrectionStrength,
+									   float afBalanceDamping,
+									   float afFallGrace,
+									   float afMaxCameraRoll,
+									   float afFallSideSpeed,
+									   float afFallDownSpeed,
+									   float afExitSpeed)
+{
+	cScript_SetGlobalArgVector3f(0, avStartPoint);
+	cScript_SetGlobalArgVector3f(1, avEndPoint);
+	cScript_SetGlobalArgVector3f(2, avForward);
+	cScript_SetGlobalArgVector3f(3, avRight);
+	cScript_SetGlobalArgFloat(4, afEntryProgress);
+	cScript_SetGlobalArgFloat(5, afWalkSpeed);
+	cScript_SetGlobalArgFloat(6, afAutoDrift);
+	cScript_SetGlobalArgFloat(7, afCorrectionStrength);
+	cScript_SetGlobalArgFloat(8, afBalanceDamping);
+	cScript_SetGlobalArgFloat(9, afFallGrace);
+	cScript_SetGlobalArgFloat(10, afMaxCameraRoll);
+	cScript_SetGlobalArgFloat(11, afFallSideSpeed);
+	cScript_SetGlobalArgFloat(12, afFallDownSpeed);
+	cScript_SetGlobalArgFloat(13, afExitSpeed);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_RegisterBeamWalkCandidate");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_TryStartBeamWalkCandidate(bool abRequireNormalMoveState = true)
+{
+	cScript_SetGlobalArgBool(0, abRequireNormalMoveState);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_TryStartBeamWalkCandidate");
 	return cScript_GetGlobalReturnBool();
 }
 

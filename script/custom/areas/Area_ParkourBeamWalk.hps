@@ -1,0 +1,292 @@
+#include "interfaces/Area_Interface.hps"
+#include "player/Player_Types.hps"
+#include "custom/player/PlayerTypes_Custom.hps"
+#include "helpers/helper_player.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+class cScrAreaParkourBeamWalk : iScrArea, iScrArea_Interface
+{
+	//------------------------------------------------------------
+
+	void Init()
+	{
+		mbPlayerIsInside = false;
+		mbNeedsExitAfterWalk = false;
+		mfDebugTimer = 0.f;
+		mfStartCooldown = 0.f;
+		mBaseObj.SetAutoSleep(false);
+		mBaseObj.SetVariableUpdateRate(0.015f);
+	}
+
+	//------------------------------------------------------------
+
+	void SetupAfterLoad(cWorld @apWorld, cResourceVarsObject @apVars)
+	{
+		mbCanWalk = apVars.GetVarBool("CanWalk", true);
+		mfWalkSpeed = apVars.GetVarFloat("WalkSpeed", 1.35f);
+		mfAutoDrift = apVars.GetVarFloat("AutoDrift", 0.85f);
+		mfCorrectionStrength = apVars.GetVarFloat("CorrectionStrength", 1.35f);
+		mfBalanceDamping = apVars.GetVarFloat("BalanceDamping", 1.10f);
+		mfFallGrace = apVars.GetVarFloat("FallGrace", 0.18f);
+		mfMaxCameraRoll = apVars.GetVarFloat("MaxCameraRoll", 16.f);
+		mfFallSideSpeed = apVars.GetVarFloat("FallSideSpeed", 1.8f);
+		mfFallDownSpeed = apVars.GetVarFloat("FallDownSpeed", -0.75f);
+		mfExitSpeed = apVars.GetVarFloat("ExitSpeed", 1.25f);
+	}
+
+	//------------------------------------------------------------
+
+	void OnAfterWorldLoad() {}
+	void OnUpdate(float afTimeStep) {}
+	void OnPostUpdate(float afTimeStep) {}
+	void ResetProperties() {}
+	void BeforeEntityDestruction() {}
+
+	//------------------------------------------------------------
+
+	void OnVariableUpdate(float afTimeStep)
+	{
+		if (mfDebugTimer > 0.f)
+			mfDebugTimer -= afTimeStep;
+		if (mfStartCooldown > 0.f)
+			mfStartCooldown -= afTimeStep;
+
+		if (mbCanWalk == false) return;
+		if (Parkour_GetEnabled() == false) return;
+		if (cLux_GetPlayer().IsActive() == false) return;
+		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
+		if (cLux_GetPlayer().GetCurrentMoveStateId() != eMoveState_Normal) return;
+		if (Player_GetUnderwater()) return;
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null) return;
+
+		bool bCollide = mBaseObj.CheckCharacterCollision(pBody, mBaseObj.GetMap());
+		if (bCollide && mbPlayerIsInside == false && Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Entered beam walk area '" + mBaseObj.GetName() + "'.", true);
+		else if (bCollide == false && mbPlayerIsInside && Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Left beam walk area '" + mBaseObj.GetName() + "'.", true);
+
+		mbPlayerIsInside = bCollide;
+		if (bCollide == false)
+		{
+			mbNeedsExitAfterWalk = false;
+			return;
+		}
+		if (mbNeedsExitAfterWalk) return;
+		if (mfStartCooldown > 0.f) return;
+
+		if (pBody.IsOnGround() == false)
+		{
+			DebugSkip("player is not grounded");
+			return;
+		}
+
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null) return;
+
+		cVector3f vForward;
+		cVector3f vRight;
+		GetAreaBasis(vForward, vRight);
+
+		cVector3f vStart;
+		cVector3f vEnd;
+		float fLength;
+		GetBeamLine(vForward, vStart, vEnd, fLength);
+		if (fLength <= 0.25f)
+		{
+			DebugSkip("beam is too short");
+			return;
+		}
+
+		cVector3f vFeet = pBody.GetFeetPosition();
+		vStart.y = vFeet.y;
+		vEnd.y = vFeet.y;
+		float fProgress = GetClosestProgress(vFeet, vStart, vForward, fLength);
+		if (fProgress > 0.5f)
+		{
+			cVector3f vOldStart = vStart;
+			vStart = vEnd;
+			vEnd = vOldStart;
+			vForward *= -1.f;
+			vRight *= -1.f;
+			fProgress = 1.f - fProgress;
+		}
+
+		Parkour_RegisterBeamWalkCandidate(vStart,
+										  vEnd,
+										  vForward,
+										  vRight,
+										  fProgress,
+										  mfWalkSpeed,
+										  mfAutoDrift,
+										  mfCorrectionStrength,
+										  mfBalanceDamping,
+										  mfFallGrace,
+										  mfMaxCameraRoll,
+										  mfFallSideSpeed,
+										  mfFallDownSpeed,
+										  mfExitSpeed);
+
+		if (Parkour_TryStartBeamWalkCandidate(true))
+		{
+			mbPlayerIsInside = false;
+			mbNeedsExitAfterWalk = true;
+			mfStartCooldown = 0.12f;
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void GetAreaBasis(cVector3f &out avForward, cVector3f &out avRight)
+	{
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null)
+		{
+			avForward = cVector3f_Forward;
+			avRight = cVector3f_Right;
+			return;
+		}
+
+		cMatrixf mtxArea = cMath_MatrixInverse(pAreaBody.GetLocalMatrix());
+		avForward = mtxArea.GetForward();
+		avRight = mtxArea.GetRight();
+		avForward.y = 0.f;
+		avRight.y = 0.f;
+
+		if (avForward.SqrLength() > 0.001f)
+			avForward.Normalize();
+		else
+			avForward = cVector3f_Forward;
+
+		if (avRight.SqrLength() > 0.001f)
+			avRight.Normalize();
+		else
+			avRight = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, avForward));
+
+		if (avRight.SqrLength() <= 0.001f || cMath_Abs(cMath_Vector3Dot(avForward, avRight)) > 0.20f)
+			avRight = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, avForward));
+
+		if (avRight.SqrLength() <= 0.001f)
+			avRight = cVector3f_Right;
+	}
+
+	//------------------------------------------------------------
+
+	void GetBeamLine(const cVector3f &in avForward,
+					 cVector3f &out avStart,
+					 cVector3f &out avEnd,
+					 float &out afLength)
+	{
+		iPhysicsBody@ pAreaBody = mBaseObj.GetAreaBody();
+		if (pAreaBody is null)
+		{
+			avStart = mBaseObj.GetPosition();
+			avEnd = avStart + avForward;
+			afLength = 1.f;
+			return;
+		}
+
+		float fHalfLength = cMath_Max(0.1f, pAreaBody.GetShape().GetSize().z * 0.5f);
+		cVector3f vCenter = pAreaBody.GetWorldPosition();
+		avStart = vCenter - avForward * fHalfLength;
+		avEnd = vCenter + avForward * fHalfLength;
+		afLength = cMath_Vector3Dist(avStart, avEnd);
+	}
+
+	//------------------------------------------------------------
+
+	float GetClosestProgress(const cVector3f &in avFeet,
+							 const cVector3f &in avStart,
+							 const cVector3f &in avForward,
+							 float afLength)
+	{
+		if (afLength <= 0.001f) return 0.f;
+
+		cVector3f vToFeet = avFeet - avStart;
+		vToFeet.y = 0.f;
+		return cMath_Clamp(cMath_Vector3Dot(vToFeet, avForward) / afLength, 0.f, 1.f);
+	}
+
+	//------------------------------------------------------------
+
+	void DebugSkip(const tString &in asReason)
+	{
+		if (Parkour_GetDebug() == false) return;
+		if (mfDebugTimer > 0.f) return;
+
+		cLux_AddDebugMessage("[Parkour] Beam walk ignored: " + asReason, true);
+		mfDebugTimer = 0.35f;
+	}
+
+	//------------------------------------------------------------
+
+	bool CanInteract(int alType, iPhysicsBody@ apBody)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	int GetInteractIconId(int alType, iPhysicsBody@ apBody)
+	{
+		return -1;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void OnEndCheckCollision(float afTimteStep) {}
+	void OnSetActive(bool abX) {}
+	void OnConnectionStateChange(iLuxEntity@ apEntity,int alState) { if (alState != 0) mbCanWalk = alState == 1; }
+
+	//------------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet @apSet,iFontData @apFont,float afStartY)
+	{
+		return afStartY;
+	}
+
+	//------------------------------------------------------------
+
+	bool mbCanWalk = true;
+	bool mbPlayerIsInside = false;
+	bool mbNeedsExitAfterWalk = false;
+	float mfWalkSpeed = 1.35f;
+	float mfAutoDrift = 0.85f;
+	float mfCorrectionStrength = 1.35f;
+	float mfBalanceDamping = 1.10f;
+	float mfFallGrace = 0.18f;
+	float mfMaxCameraRoll = 16.f;
+	float mfFallSideSpeed = 1.8f;
+	float mfFallDownSpeed = -0.75f;
+	float mfExitSpeed = 1.25f;
+	float mfDebugTimer = 0.f;
+	float mfStartCooldown = 0.f;
+
+	//------------------------------------------------------------
+}
+
+//------------------------------------------------------------

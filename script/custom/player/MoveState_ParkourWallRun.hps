@@ -17,6 +17,9 @@ const float gfParkourWallRun_LostWallGrace = 0.15f;
 const float gfParkourWallRun_EntryExitGrace = 0.22f;
 const float gfParkourWallRun_ForwardReleaseGrace = 0.28f;
 const float gfParkourWallRun_GroundExitGrace = 0.18f;
+const float gfParkourWallRun_OutwardLookAngle = cMath_ToRad(70.f);
+const float gfParkourWallRun_OutwardLookSpeed = 10.f;
+const float gfParkourWallRun_OutwardLookDeadZone = 0.20f;
 const float gfParkourWallJump_SideImpulse = 240.f;
 const float gfParkourWallJump_UpImpulse = 350.f;
 const float gfParkourWallJump_ForwardImpulse = 125.f;
@@ -50,6 +53,10 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		mfLostWallTimer = gfParkourWallRun_LostWallGrace;
 		mfForwardReleaseTimer = gfParkourWallRun_ForwardReleaseGrace;
 		mfGroundTimer = gfParkourWallRun_GroundExitGrace;
+		mfOutwardLookYawOffset = 0.f;
+		mfOutwardLookTargetYawOffset = 0.f;
+		mbOutwardLookLeanInputHeld = false;
+		cScript_SetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease", 0);
 		mfCameraBobTimer = 0.f;
 		mfCameraBobRoll = 0.f;
 		mfCameraOrganicSeedX = cMath_RandRectf(-100.f, 100.f);
@@ -70,6 +77,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		Player_SetCrouching(false, false, true);
 		Player_SetCrouchDisabled(true);
 		Player_SetCrouchActionDisabled(true);
+		Player_SetLeanDisabled(true);
 		Player_CancelJump();
 		
 		Item_PutAway(eItemHandlerHand_Left);
@@ -94,6 +102,8 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		Player_SetDisableCrawling(false);
 		Player_SetCrouchDisabled(false);
 		Player_SetCrouchActionDisabled(false);
+		Player_SetLeanDisabled(false);
+		ResetOutwardLookYaw();
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 7.f, cMath_ToRad(140.f));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
 	}
@@ -181,14 +191,43 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		pBody.AddForce(cVector3f(0.f, -vGravity.y * pBody.GetMass() * gfParkourWallRun_AntiGravityMul, 0.f));
 		
 		UpdateCameraMotion(afTimeStep, pBody);
+		UpdateOutwardLookYaw(afTimeStep, pBody);
 	}
 	
 	//------------------------------------------------------------
 	
 	bool OnAction(int alAction, bool abPressed)
 	{
+		if (alAction == eAction_LeanLeft || alAction == eAction_LeanRight)
+		{
+			int lYawDir = alAction == eAction_LeanRight ? -1 : 1;
+			mbOutwardLookLeanInputHeld = abPressed ||
+										 cInput_IsTriggered(eAction_LeanLeft) ||
+										 cInput_IsTriggered(eAction_LeanRight) ||
+										 cInput_IsTriggered(eAction_AnalogLean);
+			if (abPressed)
+				SetOutwardLookFromYawDir(lYawDir);
+			else if (cMath_Sign(mfOutwardLookTargetYawOffset) == float(lYawDir))
+				mfOutwardLookTargetYawOffset = 0.f;
+
+			return false;
+		}
+
+		if (alAction == eAction_AnalogLean)
+		{
+			mbOutwardLookLeanInputHeld = abPressed ||
+										 cInput_IsTriggered(eAction_LeanLeft) ||
+										 cInput_IsTriggered(eAction_LeanRight);
+			if (abPressed == false)
+				mfOutwardLookTargetYawOffset = 0.f;
+
+			return false;
+		}
+
 		if (alAction == eAction_Jump && abPressed)
 		{
+			CancelOutwardLookForWallJump();
+
 			if (Parkour_TryStartLedgeGrab(false))
 				return false;
 
@@ -209,6 +248,24 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	
 	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
 	{
+		if (alAnalogId == eAnalogType_Lean)
+		{
+			mbOutwardLookLeanInputHeld = cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone;
+
+			if (cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone)
+			{
+				int lYawDir = avAmount.x > 0.f ? -1 : 1;
+				if (IsOutwardLookYawDir(lYawDir))
+					SetOutwardLookFromYawDir(lYawDir);
+				else
+					mfOutwardLookTargetYawOffset = 0.f;
+			}
+			else
+				mfOutwardLookTargetYawOffset = 0.f;
+
+			return false;
+		}
+
 		return true;
 	}
 	
@@ -315,6 +372,100 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 			mvWallForward *= -1.f;
 	}
 	
+	//------------------------------------------------------------
+
+	bool IsOutwardLookYawDir(int alYawDir)
+	{
+		if (mvWallNormal.SqrLength() <= 0.001f) return false;
+
+		cVector3f vLookDir = RotateBodyYawDelta2D(mvWallForward, gfParkourWallRun_OutwardLookAngle * float(alYawDir));
+		return cMath_Vector3Dot(vLookDir, mvWallNormal) > 0.f;
+	}
+
+	//------------------------------------------------------------
+
+	void SetOutwardLookFromYawDir(int alYawDir)
+	{
+		if (IsOutwardLookYawDir(alYawDir) == false) return;
+
+		mfOutwardLookTargetYawOffset = gfParkourWallRun_OutwardLookAngle * float(alYawDir);
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f RotateBodyYawDelta2D(const cVector3f &in avBaseDir, float afDeltaYaw)
+	{
+		// HPL body yaw deltas run opposite to this local XZ rotation helper.
+		return Rotate2D(avBaseDir, -afDeltaYaw);
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f Rotate2D(const cVector3f &in avDir, float afYaw)
+	{
+		float fSin = cMath_Sin(afYaw);
+		float fCos = cMath_Cos(afYaw);
+		cVector3f vOut = cVector3f_Zero;
+		vOut.x = avDir.x * fCos - avDir.z * fSin;
+		vOut.y = 0.f;
+		vOut.z = avDir.x * fSin + avDir.z * fCos;
+		if (vOut.SqrLength() > 0.001f)
+			vOut.Normalize();
+		else
+			vOut = cVector3f_Forward;
+		return vOut;
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateOutwardLookYaw(float afTimeStep, iCharacterBody@ apBody)
+	{
+		if (apBody is null) return;
+
+		float fBlend = cMath_Clamp(afTimeStep * gfParkourWallRun_OutwardLookSpeed, 0.f, 1.f);
+		float fPrevOffset = mfOutwardLookYawOffset;
+		mfOutwardLookYawOffset += (mfOutwardLookTargetYawOffset - mfOutwardLookYawOffset) * fBlend;
+		apBody.AddYaw(mfOutwardLookYawOffset - fPrevOffset);
+
+		if (cMath_Abs(mfOutwardLookYawOffset) < 0.001f &&
+			cMath_Abs(mfOutwardLookTargetYawOffset) < 0.001f)
+		{
+			mfOutwardLookYawOffset = 0.f;
+			return;
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void ResetOutwardLookYaw()
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+			pBody.AddYaw(-mfOutwardLookYawOffset);
+
+		mfOutwardLookYawOffset = 0.f;
+		mfOutwardLookTargetYawOffset = 0.f;
+	}
+
+	//------------------------------------------------------------
+
+	void CancelOutwardLookForWallJump()
+	{
+		bool bLeanHeld = cInput_IsTriggered(eAction_LeanLeft) ||
+						 cInput_IsTriggered(eAction_LeanRight) ||
+						 cInput_IsTriggered(eAction_AnalogLean) ||
+						 mbOutwardLookLeanInputHeld;
+		bool bLookActive = cMath_Abs(mfOutwardLookYawOffset) > 0.001f ||
+						   cMath_Abs(mfOutwardLookTargetYawOffset) > 0.001f;
+
+		if (bLeanHeld || bLookActive)
+			cScript_SetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease", 1);
+
+		mfOutwardLookYawOffset = 0.f;
+		mfOutwardLookTargetYawOffset = 0.f;
+		mbOutwardLookLeanInputHeld = false;
+	}
+
 	//------------------------------------------------------------
 	
 	void WallJump()
@@ -426,6 +577,8 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	float mfForwardReleaseTimer = 0.f;
 	float mfGroundTimer = 0.f;
 	float mfPowerMul = 1.f;
+	float mfOutwardLookYawOffset = 0.f;
+	float mfOutwardLookTargetYawOffset = 0.f;
 	float mfCameraBobTimer = 0.f;
 	float mfCameraBobRoll = 0.f;
 	float mfCameraOrganicSeedX = 0.f;
@@ -433,6 +586,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	float mfCameraOrganicSeedZ = 0.f;
 	float mfCameraOrganicSeedRoll = 0.f;
 	int mlWallSide = 0;
+	bool mbOutwardLookLeanInputHeld = false;
 	tString msLastWallRefreshFail = "";
 	cVector3f mvWallNormal = cVector3f_Forward;
 	cVector3f mvWallForward = cVector3f_Forward;

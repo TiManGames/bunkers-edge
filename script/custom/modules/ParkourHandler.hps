@@ -36,6 +36,7 @@ const float gfParkour_LedgeGrabMinRiseSpeed = 0.75f;
 const float gfParkour_PoleSwingCandidateTTL = 0.12f;
 const float gfParkour_PoleClimbCandidateTTL = 0.12f;
 const float gfParkour_ZiplineCandidateTTL = 0.12f;
+const float gfParkour_BeamWalkCandidateTTL = 0.12f;
 const float gfParkour_PoleClimbTopEntryBlockMargin = 0.12f;
 const float gfParkour_AutoLedgeFaceRayLength = 0.95f;
 const float gfParkour_AutoLedgeTopRayUp = 2.60f;
@@ -160,6 +161,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			if (mfZiplineCandidateTime <= 0.f)
 				ClearZiplineCandidate();
 		}
+		if (mfBeamWalkCandidateTime > 0.f)
+		{
+			mfBeamWalkCandidateTime -= afTimeStep;
+			if (mfBeamWalkCandidateTime <= 0.f)
+				ClearBeamWalkCandidate();
+		}
 
 		UpdateWallRunChain(afTimeStep);
 		UpdateAirFlow(afTimeStep);
@@ -184,6 +191,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		ClearPoleClimbCandidate();
 		ClearPoleSwingCandidate();
 		ClearZiplineCandidate();
+		ClearBeamWalkCandidate();
 		ResetWallRunChain();
 		ResetFlow();
 		mfHealthRegenDelay = 0.f;
@@ -339,6 +347,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			ChangeFlow(0.08f * fScale, "zipline complete", true);
 		else if (alEventId == geParkourFlowEvent_ZiplineDrop)
 			ChangeFlow(-0.08f * fScale, "zipline drop", true);
+		else if (alEventId == geParkourFlowEvent_BeamWalkStart)
+			ChangeFlow(0.03f * fScale, "beam walk start", true);
+		else if (alEventId == geParkourFlowEvent_BeamWalkComplete)
+			ChangeFlow(0.06f * fScale, "beam walk complete", true);
+		else if (alEventId == geParkourFlowEvent_BeamWalkFall)
+			ChangeFlow(-0.12f * fScale, "beam walk fall", true);
 	}
 
 	//------------------------------------------------------------
@@ -2256,6 +2270,176 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	bool TryStartBeamWalk(const cVector3f &in avStartPoint,
+						  const cVector3f &in avEndPoint,
+						  const cVector3f &in avForward,
+						  const cVector3f &in avRight,
+						  float afEntryProgress,
+						  float afWalkSpeed,
+						  float afAutoDrift,
+						  float afCorrectionStrength,
+						  float afBalanceDamping,
+						  float afFallGrace,
+						  float afMaxCameraRoll,
+						  float afFallSideSpeed,
+						  float afFallDownSpeed,
+						  float afExitSpeed,
+						  bool abRequireNormalMoveState = true)
+	{
+		if (PlayerCanUseParkour(abRequireNormalMoveState) == false)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Beam walk failed: player cannot use parkour", true);
+			return false;
+		}
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Beam walk failed: no player body", true);
+			return false;
+		}
+		if (pBody.IsOnGround() == false)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Beam walk failed: player is not grounded", true);
+			return false;
+		}
+
+		cVector3f vStart = avStartPoint;
+		cVector3f vEnd = avEndPoint;
+		cVector3f vLine = vEnd - vStart;
+		vLine.y = 0.f;
+		float fLineLength = vLine.Length();
+		if (fLineLength <= 0.25f)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Beam walk failed: beam is too short", true);
+			return false;
+		}
+
+		cVector3f vForward = avForward;
+		vForward.y = 0.f;
+		if (vForward.SqrLength() > 0.001f)
+			vForward.Normalize();
+		else
+			vForward = vLine * (1.f / fLineLength);
+
+		cVector3f vRight = avRight;
+		vRight.y = 0.f;
+		if (vRight.SqrLength() > 0.001f)
+			vRight.Normalize();
+		else
+			vRight = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, vForward));
+		if (vRight.SqrLength() <= 0.001f)
+			vRight = cVector3f_Right;
+		if (cMath_Abs(cMath_Vector3Dot(vRight, vForward)) > 0.20f)
+			vRight = cMath_Vector3Normalize(cMath_Vector3Cross(cVector3f_Up, vForward));
+
+		cScript_SetGlobalVarVector3f("Parkour_BeamWalk_Start", vStart);
+		cScript_SetGlobalVarVector3f("Parkour_BeamWalk_End", vEnd);
+		cScript_SetGlobalVarVector3f("Parkour_BeamWalk_Forward", vForward);
+		cScript_SetGlobalVarVector3f("Parkour_BeamWalk_Right", vRight);
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_EntryProgress", cMath_Clamp(afEntryProgress, 0.f, 1.f));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_WalkSpeed", cMath_Max(0.1f, afWalkSpeed));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_AutoDrift", cMath_Max(0.f, afAutoDrift));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_CorrectionStrength", cMath_Max(0.f, afCorrectionStrength));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_BalanceDamping", cMath_Max(0.f, afBalanceDamping));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_FallGrace", cMath_Max(0.f, afFallGrace));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_MaxCameraRoll", cMath_Max(0.f, afMaxCameraRoll));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_FallSideSpeed", cMath_Max(0.f, afFallSideSpeed));
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_FallDownSpeed", afFallDownSpeed);
+		cScript_SetGlobalVarFloat("Parkour_BeamWalk_ExitSpeed", cMath_Max(0.f, afExitSpeed));
+
+		ApplyFlowEvent(geParkourFlowEvent_BeamWalkStart, 1.f);
+		if (mbDebug)
+			cLux_AddDebugMessage("[Parkour] Beam walk started. progress=" + afEntryProgress + " length=" + fLineLength + " flow=" + mfParkourFlow, true);
+
+		cLux_GetPlayer().ChangeMoveState(eMoveState_ParkourBeamWalk);
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void RegisterBeamWalkCandidate(const cVector3f &in avStartPoint,
+								   const cVector3f &in avEndPoint,
+								   const cVector3f &in avForward,
+								   const cVector3f &in avRight,
+								   float afEntryProgress,
+								   float afWalkSpeed,
+								   float afAutoDrift,
+								   float afCorrectionStrength,
+								   float afBalanceDamping,
+								   float afFallGrace,
+								   float afMaxCameraRoll,
+								   float afFallSideSpeed,
+								   float afFallDownSpeed,
+								   float afExitSpeed)
+	{
+		if (mbEnabled == false) return;
+
+		mvBeamWalkCandidateStart = avStartPoint;
+		mvBeamWalkCandidateEnd = avEndPoint;
+		mvBeamWalkCandidateForward = avForward;
+		mvBeamWalkCandidateRight = avRight;
+		mfBeamWalkCandidateEntryProgress = afEntryProgress;
+		mfBeamWalkCandidateWalkSpeed = afWalkSpeed;
+		mfBeamWalkCandidateAutoDrift = afAutoDrift;
+		mfBeamWalkCandidateCorrectionStrength = afCorrectionStrength;
+		mfBeamWalkCandidateBalanceDamping = afBalanceDamping;
+		mfBeamWalkCandidateFallGrace = afFallGrace;
+		mfBeamWalkCandidateMaxCameraRoll = afMaxCameraRoll;
+		mfBeamWalkCandidateFallSideSpeed = afFallSideSpeed;
+		mfBeamWalkCandidateFallDownSpeed = afFallDownSpeed;
+		mfBeamWalkCandidateExitSpeed = afExitSpeed;
+		mfBeamWalkCandidateTime = gfParkour_BeamWalkCandidateTTL;
+		mbBeamWalkCandidateActive = true;
+	}
+
+	//------------------------------------------------------------
+
+	bool TryStartBeamWalkCandidate(bool abRequireNormalMoveState = true)
+	{
+		if (mbBeamWalkCandidateActive == false || mfBeamWalkCandidateTime <= 0.f)
+			return false;
+
+		if (TryStartBeamWalk(mvBeamWalkCandidateStart,
+							 mvBeamWalkCandidateEnd,
+							 mvBeamWalkCandidateForward,
+							 mvBeamWalkCandidateRight,
+							 mfBeamWalkCandidateEntryProgress,
+							 mfBeamWalkCandidateWalkSpeed,
+							 mfBeamWalkCandidateAutoDrift,
+							 mfBeamWalkCandidateCorrectionStrength,
+							 mfBeamWalkCandidateBalanceDamping,
+							 mfBeamWalkCandidateFallGrace,
+							 mfBeamWalkCandidateMaxCameraRoll,
+							 mfBeamWalkCandidateFallSideSpeed,
+							 mfBeamWalkCandidateFallDownSpeed,
+							 mfBeamWalkCandidateExitSpeed,
+							 abRequireNormalMoveState))
+		{
+			ClearBeamWalkCandidate();
+			ClearPoleClimbCandidate();
+			ClearPoleSwingCandidate();
+			ClearZiplineCandidate();
+			return true;
+		}
+
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	void ClearBeamWalkCandidate()
+	{
+		mbBeamWalkCandidateActive = false;
+		mfBeamWalkCandidateTime = -1.f;
+	}
+
+	//------------------------------------------------------------
+
 	iPhysicsJointSlider@ GetZiplineSlider(tID a_idSliderJoint)
 	{
 		if (a_idSliderJoint == tID_Invalid) return null;
@@ -2556,6 +2740,53 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	void _Global_TryStartBeamWalk()
+	{
+		cScript_SetGlobalReturnBool(TryStartBeamWalk(cScript_GetGlobalArgVector3f(0),
+													 cScript_GetGlobalArgVector3f(1),
+													 cScript_GetGlobalArgVector3f(2),
+													 cScript_GetGlobalArgVector3f(3),
+													 cScript_GetGlobalArgFloat(4),
+													 cScript_GetGlobalArgFloat(5),
+													 cScript_GetGlobalArgFloat(6),
+													 cScript_GetGlobalArgFloat(7),
+													 cScript_GetGlobalArgFloat(8),
+													 cScript_GetGlobalArgFloat(9),
+													 cScript_GetGlobalArgFloat(10),
+													 cScript_GetGlobalArgFloat(11),
+													 cScript_GetGlobalArgFloat(12),
+													 cScript_GetGlobalArgFloat(13)));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_RegisterBeamWalkCandidate()
+	{
+		RegisterBeamWalkCandidate(cScript_GetGlobalArgVector3f(0),
+								  cScript_GetGlobalArgVector3f(1),
+								  cScript_GetGlobalArgVector3f(2),
+								  cScript_GetGlobalArgVector3f(3),
+								  cScript_GetGlobalArgFloat(4),
+								  cScript_GetGlobalArgFloat(5),
+								  cScript_GetGlobalArgFloat(6),
+								  cScript_GetGlobalArgFloat(7),
+								  cScript_GetGlobalArgFloat(8),
+								  cScript_GetGlobalArgFloat(9),
+								  cScript_GetGlobalArgFloat(10),
+								  cScript_GetGlobalArgFloat(11),
+								  cScript_GetGlobalArgFloat(12),
+								  cScript_GetGlobalArgFloat(13));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_TryStartBeamWalkCandidate()
+	{
+		cScript_SetGlobalReturnBool(TryStartBeamWalkCandidate(cScript_GetGlobalArgBool(0)));
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_RegisterLedgeCandidate()
 	{
 		if (mbEnabled == false) return;
@@ -2656,6 +2887,23 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	tID m_idZiplineCandidateSliderJoint = tID_Invalid;
 	cVector3f mvZiplineCandidateHighPoint = cVector3f_Zero;
 	cVector3f mvZiplineCandidateLowPoint = cVector3f_Zero;
+
+	bool mbBeamWalkCandidateActive = false;
+	float mfBeamWalkCandidateTime = -1.f;
+	float mfBeamWalkCandidateEntryProgress = 0.f;
+	float mfBeamWalkCandidateWalkSpeed = 1.35f;
+	float mfBeamWalkCandidateAutoDrift = 0.85f;
+	float mfBeamWalkCandidateCorrectionStrength = 1.35f;
+	float mfBeamWalkCandidateBalanceDamping = 1.10f;
+	float mfBeamWalkCandidateFallGrace = 0.18f;
+	float mfBeamWalkCandidateMaxCameraRoll = 16.f;
+	float mfBeamWalkCandidateFallSideSpeed = 1.8f;
+	float mfBeamWalkCandidateFallDownSpeed = -0.75f;
+	float mfBeamWalkCandidateExitSpeed = 1.25f;
+	cVector3f mvBeamWalkCandidateStart = cVector3f_Zero;
+	cVector3f mvBeamWalkCandidateEnd = cVector3f_Forward;
+	cVector3f mvBeamWalkCandidateForward = cVector3f_Forward;
+	cVector3f mvBeamWalkCandidateRight = cVector3f_Right;
 
 	bool mbWallJumpChainActive = false;
 	bool mbWallScrambleJumpChainActive = false;

@@ -41,6 +41,9 @@ const float gfParkourMove_JumpBasisMinSpeed = 0.25f;
 const float gfParkourMove_RunJumpCameraBumpDuration = 0.22f;
 const float gfParkourMove_RunJumpCameraPitchDegMin = -0.65f;
 const float gfParkourMove_RunJumpCameraPitchDegMax = -1.30f;
+const float gfParkourMove_LeanTurnTime = 0.30f;
+const float gfParkourMove_LeanTurnDeadZone = 0.20f;
+const float gfParkourMove_WallRunLeanSuppressGrace = 0.12f;
 const float gfParkourMove_HardLandingMediumDamage = 0.10f;
 const float gfParkourMove_HardLandingBigDamage = 0.25f;
 const float gfParkourMove_HardLandingMinFallSpeed = 6.50f;
@@ -94,6 +97,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		// Call base
 		cScrMoveState_Normal::Update(afTimeStep);
 		StripVanillaRunBoost();
+		UpdateWallRunLeanTurnSuppress(afTimeStep);
+		UpdateLeanTurn(afTimeStep, pCharBody);
 		UpdateParkour(afTimeStep, pCharBody);
 
 		////////////////////////
@@ -129,12 +134,46 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		ResetParkourRollFallDistances();
 		ResetParkourAirborneState();
 		mfParkourHardLandingPenaltyTime = 0.f;
+		mbLeanTurning = false;
+		mbLeanTurnAnalogHeld = false;
+		mfLeanTurnTimer = -1.f;
+		mfWallRunLeanTurnSuppressTimer = -1.f;
 	}
 
 	//------------------------------------------------------------
 
 	bool OnAction(int alAction, bool abPressed) override
 	{
+		if (alAction == eAction_LeanLeft || alAction == eAction_LeanRight)
+		{
+			if (ShouldHandleLeanTurnInput() == false)
+				return true;
+
+			if (ConsumeWallRunLeanTurnSuppress(false))
+				return false;
+
+			if (abPressed)
+				StartLeanTurn(alAction == eAction_LeanRight ? -1 : 1);
+			else
+				mbLeanTurnAnalogHeld = false;
+
+			return false;
+		}
+
+		if (alAction == eAction_AnalogLean)
+		{
+			if (ShouldHandleLeanTurnInput() == false)
+				return true;
+
+			if (ConsumeWallRunLeanTurnSuppress(false))
+				return false;
+
+			if (abPressed == false)
+				mbLeanTurnAnalogHeld = false;
+
+			return false;
+		}
+
 		if (mbParkourLandRollActive)
 		{
 			if (alAction == eAction_Jump ||
@@ -234,6 +273,160 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		ResetParkourPendingSideJump();
 
 		return bResult;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount) override
+	{
+		if (alAnalogId == eAnalogType_Lean)
+		{
+			if (ShouldHandleLeanTurnInput() == false)
+				return true;
+
+			if (ConsumeWallRunLeanTurnSuppress(cMath_Abs(avAmount.x) > gfParkourMove_LeanTurnDeadZone))
+				return false;
+
+			if (cMath_Abs(avAmount.x) > gfParkourMove_LeanTurnDeadZone)
+			{
+				if (mbLeanTurnAnalogHeld == false)
+				{
+					mbLeanTurnAnalogHeld = true;
+					StartLeanTurn(avAmount.x > 0.f ? -1 : 1);
+				}
+			}
+			else
+			{
+				mbLeanTurnAnalogHeld = false;
+			}
+
+			return false;
+		}
+
+		if ((alAnalogId == eAnalogType_Move || alAnalogId == eAnalogType_GamepadMove) &&
+			cInput_IsTriggered(eAction_AnalogLean))
+		{
+			if (ShouldHandleLeanTurnInput() == false)
+				return cScrMoveState_Normal::OnAnalogInput(alAnalogId, avAmount);
+
+			if (ConsumeWallRunLeanTurnSuppress(cMath_Abs(avAmount.x) > gfParkourMove_LeanTurnDeadZone))
+				return false;
+
+			if (cMath_Abs(avAmount.x) > gfParkourMove_LeanTurnDeadZone)
+			{
+				if (mbLeanTurnAnalogHeld == false)
+				{
+					mbLeanTurnAnalogHeld = true;
+					StartLeanTurn(avAmount.x > 0.f ? -1 : 1);
+				}
+			}
+			else
+			{
+				mbLeanTurnAnalogHeld = false;
+			}
+
+			return false;
+		}
+
+		return cScrMoveState_Normal::OnAnalogInput(alAnalogId, avAmount);
+	}
+
+	//------------------------------------------------------------
+
+	bool ShouldHandleLeanTurnInput()
+	{
+		return mBaseObj.mpPlayer.GetCurrentStateId() == ePlayerState_Normal &&
+			   mBaseObj.mpPlayer.GetCurrentMoveStateId() == eMoveState_Normal;
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateWallRunLeanTurnSuppress(float afTimeStep)
+	{
+		if (cScript_GetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease") != 0)
+		{
+			if (mfWallRunLeanTurnSuppressTimer < 0.f)
+				mfWallRunLeanTurnSuppressTimer = gfParkourMove_WallRunLeanSuppressGrace;
+			else if (mfWallRunLeanTurnSuppressTimer > 0.f)
+				mfWallRunLeanTurnSuppressTimer = cMath_Max(0.f, mfWallRunLeanTurnSuppressTimer - afTimeStep);
+		}
+
+		ConsumeWallRunLeanTurnSuppress(false);
+	}
+
+	//------------------------------------------------------------
+
+	bool ConsumeWallRunLeanTurnSuppress(bool abAnalogLeanHeld)
+	{
+		if (cScript_GetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease") == 0)
+			return false;
+
+		mbLeanTurning = false;
+		mfLeanTurnTimer = -1.f;
+
+		bool bLeanHeld = abAnalogLeanHeld ||
+						 cInput_IsTriggered(eAction_LeanLeft) ||
+						 cInput_IsTriggered(eAction_LeanRight) ||
+						 cInput_IsTriggered(eAction_AnalogLean);
+
+		if (bLeanHeld || mfWallRunLeanTurnSuppressTimer > 0.f)
+		{
+			mbLeanTurnAnalogHeld = true;
+			return true;
+		}
+
+		mbLeanTurnAnalogHeld = false;
+		mfWallRunLeanTurnSuppressTimer = -1.f;
+		cScript_SetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease", 0);
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	void StartLeanTurn(int alDir)
+	{
+		if (mbLeanTurning) return;
+
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		if (pBody is null) return;
+		if (mBaseObj.mpPlayer.GetCurrentStateId() != ePlayerState_Normal) return;
+		if (mBaseObj.mpPlayer.GetCurrentMoveStateId() != eMoveState_Normal) return;
+		if (Player_GetUnderwater()) return;
+		if (Player_IsInteracting()) return;
+		if (mbParkourLandRollActive) return;
+
+		mlLeanTurnDir = alDir >= 0 ? 1 : -1;
+		mfLeanTurnStartYaw = pBody.GetYaw();
+		mfLeanTurnTimer = 0.f;
+		mbLeanTurning = true;
+		Effect_Shake_Start(0.025f, 0.07f, 0.f, 0.07f, cVector3f(1, 1, 1), 12);
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Normal quick turn.", true);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateLeanTurn(float afTimeStep, iCharacterBody@ apCharBody)
+	{
+		if (mbLeanTurning == false) return;
+
+		if (apCharBody is null)
+		{
+			mbLeanTurning = false;
+			return;
+		}
+
+		mfLeanTurnTimer += afTimeStep;
+		float fT = cMath_Clamp(mfLeanTurnTimer / gfParkourMove_LeanTurnTime, 0.f, 1.f);
+		fT = cMath_Easing(eEasing_SineInOut, fT);
+
+		float fTargetYaw = mfLeanTurnStartYaw + cMath_Pi * float(mlLeanTurnDir) * fT;
+		float fDiff = cMath_GetAngleDistanceRad(apCharBody.GetYaw(), fTargetYaw);
+		apCharBody.AddYaw(fDiff);
+
+		if (fT >= 1.f)
+			mbLeanTurning = false;
 	}
 
 	//------------------------------------------------------------
@@ -1330,6 +1523,9 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	float mfLandingVelocityY = -1;
 	float mfRunMeter = 0.f;
 	float mfCarelessRunCount = 0.f;
+	float mfLeanTurnTimer = -1.f;
+	float mfLeanTurnStartYaw = 0.f;
+	float mfWallRunLeanTurnSuppressTimer = -1.f;
 	float mfParkourRunJumpGrace = -1.f;
 	float mfParkourRunJumpCameraBumpTime = -1.f;
 	float mfParkourRunJumpCameraBumpPower = 0.f;
@@ -1343,6 +1539,9 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	float mfParkourAirLastFeetY = 0.f;
 	cVector3f mvParkourJumpDir = cVector3f_Forward;
 	cVector3f mvParkourAirLockRight = cVector3f_Right;
+	int mlLeanTurnDir = 1;
+	bool mbLeanTurning = false;
+	bool mbLeanTurnAnalogHeld = false;
 	bool mbParkourJumpAirControlActive = false;
 	bool mbParkourAirborneMetricsActive = false;
 	bool mbParkourAirLegalLanding = false;
