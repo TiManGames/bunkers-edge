@@ -60,6 +60,7 @@ const float gfParkour_SpeedVaultLandRayLength = 2.15f;
 const float gfParkour_SpeedVaultMinHeight = 0.35f;
 const float gfParkour_SpeedVaultMaxHeight = 1.35f;
 const float gfParkour_SpeedVaultMaxFaceNormalY = 0.35f;
+const float gfParkour_SpeedVaultMaxFallbackFaceNormalY = 0.75f;
 const float gfParkour_SpeedVaultMinTopNormalY = 0.65f;
 const float gfParkour_SpeedVaultFaceFacingDot = -0.20f;
 const float gfParkour_SpeedVaultTopProbeInset = 0.18f;
@@ -1394,7 +1395,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 						continue;
 
 					bAnyHit = true;
-					if (cMath_Abs(vNormal.y) > gfParkour_SpeedVaultMaxFaceNormalY)
+					float fNormalY = cMath_Abs(vNormal.y);
+					if (fNormalY > gfParkour_SpeedVaultMaxFallbackFaceNormalY)
 					{
 						bAnyInvalid = true;
 						asFailReason = "invalid obstacle face normal. normalY=" + vNormal.y;
@@ -1419,7 +1421,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 						continue;
 					}
 
-					float fScore = fDistance + cMath_Abs(vSideOffsets[j]) * 0.35f + cMath_Abs(vForwardOffsets[k]) * 0.25f;
+					float fSlopePenalty = fNormalY > gfParkour_SpeedVaultMaxFaceNormalY ? 0.45f + fNormalY * 0.35f : 0.f;
+					float fScore = fDistance + cMath_Abs(vSideOffsets[j]) * 0.35f + cMath_Abs(vForwardOffsets[k]) * 0.25f + fSlopePenalty;
 					if (fScore < fBestScore)
 					{
 						fBestScore = fScore;
