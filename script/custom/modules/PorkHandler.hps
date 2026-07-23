@@ -1,0 +1,325 @@
+#include "interfaces/UserModule_Interface.hps"
+
+//------------------------------------------------------------
+
+const tString gsPorkMaterial = "textures/pork/those_who_pork.mat";
+const float gfPorkRescanInterval = 0.5f;
+
+//------------------------------------------------------------
+
+class cPorkMaterialRecord
+{
+	tID m_idSubMesh;
+	cMaterial@ mpOriginalCustomMaterial;
+}
+
+//------------------------------------------------------------
+
+class cScrPorkHandler : iScrUserModule, iScrUserModule_Interface
+{
+	//------------------------------------------------------------
+
+	void Init()
+	{
+		Reset();
+		Log("[PorkHandler] Init completed.\n");
+	}
+
+	//------------------------------------------------------------
+
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+
+	void OnMapEnter(cLuxMap@ apMap)
+	{
+		@mpCurrentMap = apMap;
+		mlSecretKeyIndex = 0;
+		mfRescanTimer = 0.0f;
+		mvMaterialRecords.resize(0);
+
+		EnsureReplacementMaterial();
+		if (mpReplacementMaterial is null)
+			Debug("Entered map '" + apMap.GetName() + "', but the replacement material failed to load.");
+		else
+			Debug("Entered map '" + apMap.GetName() + "'. Module ready; type PORK.");
+
+		if (mbPorkActive)
+		{
+			int lChanged = ApplyReplacementToWorld();
+			Debug("Reapplied active mode to " + lChanged + " submeshes after map entry.");
+		}
+	}
+
+	void OnMapLeave(cLuxMap@ apMap)
+	{
+		mlSecretKeyIndex = 0;
+		mfRescanTimer = 0.0f;
+		mvMaterialRecords.resize(0);
+		@mpCurrentMap = null;
+	}
+
+	void PreloadData(cLuxMap@ apMap)
+	{
+		apMap.PreloadMaterial(gsPorkMaterial);
+	}
+
+	void CreateWorldEntities(cLuxMap@ apMap) {}
+	void DestroyWorldEntities(cLuxMap@ apMap) {}
+	void OnEnterContainer(const tString&in asOldContainer) {}
+	void OnLeaveContainer(const tString&in asNewContainer) {}
+	void PostUpdate(float afTimeStep) {}
+	void VariableUpdate(float afDeltaTime) {}
+	void OnGui(float afFrameTime) {}
+	void OnDraw(float afFrameTime) {}
+	void OnPostRender(float afFrameTime) {}
+	void OnAction(int alAction, bool abPressed) {}
+	void OnAnalogInput(int alAnalogId, const cVector3f&in avAmount) {}
+	void OnExitPressed() {}
+	void AppGotInputFocus() {}
+	void AppLostInputFocus() {}
+
+	//------------------------------------------------------------
+
+	void Reset()
+	{
+		mbPorkActive = false;
+		mlSecretKeyIndex = 0;
+		mfRescanTimer = 0.0f;
+		mvMaterialRecords.resize(0);
+		@mpCurrentMap = null;
+		@mpReplacementMaterial = null;
+	}
+
+	//------------------------------------------------------------
+
+	void Update(float afTimeStep)
+	{
+		if (mpCurrentMap is null)
+			return;
+
+		if (cLux_GetGamePaused())
+		{
+			mlSecretKeyIndex = 0;
+			return;
+		}
+
+		UpdateSecretSequence();
+
+		if (mbPorkActive == false)
+			return;
+
+		mfRescanTimer -= afTimeStep;
+		if (mfRescanTimer <= 0.0f)
+		{
+			int lChanged = ApplyReplacementToDynamicMeshes();
+			if (lChanged > 0)
+				Debug("Applied material to " + lChanged + " new dynamic submeshes.");
+			mfRescanTimer = gfPorkRescanInterval;
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateSecretSequence()
+	{
+		tString sKeyPressed = cLux_GetInputHandler().GetLatestKeyPressed();
+		if (sKeyPressed.length() == 0)
+			return;
+
+		bool bPressedP = sKeyPressed == "Keyboard.P" || sKeyPressed == "P";
+		bool bPressedO = sKeyPressed == "Keyboard.O" || sKeyPressed == "O";
+		bool bPressedR = sKeyPressed == "Keyboard.R" || sKeyPressed == "R";
+		bool bPressedK = sKeyPressed == "Keyboard.K" || sKeyPressed == "K";
+
+		if ((mlSecretKeyIndex == 0 && bPressedP) ||
+			(mlSecretKeyIndex == 1 && bPressedO) ||
+			(mlSecretKeyIndex == 2 && bPressedR) ||
+			(mlSecretKeyIndex == 3 && bPressedK))
+		{
+			mlSecretKeyIndex++;
+		}
+		else
+		{
+			mlSecretKeyIndex = bPressedP ? 1 : 0;
+		}
+
+		Debug("Captured raw input '" + sKeyPressed + "'; PORK progress " + mlSecretKeyIndex + "/4.");
+
+		if (mlSecretKeyIndex < 4)
+			return;
+
+		mlSecretKeyIndex = 0;
+		TogglePorkMode();
+	}
+
+	//------------------------------------------------------------
+
+	void TogglePorkMode()
+	{
+		mbPorkActive = !mbPorkActive;
+		mfRescanTimer = 0.0f;
+
+		if (mbPorkActive)
+		{
+			EnsureReplacementMaterial();
+			int lChanged = ApplyReplacementToWorld();
+			Debug("Those who pork mode ENABLED; changed " + lChanged + " submeshes.");
+		}
+		else
+		{
+			int lRestored = RestoreOriginalMaterials();
+			Debug("Those who pork mode DISABLED; restored " + lRestored + " submeshes.");
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void Debug(const tString&in asMessage)
+	{
+		tString sMessage = "[PorkHandler] " + asMessage;
+		Log(sMessage + "\n");
+		cLux_AddDebugMessage(sMessage, false);
+	}
+
+	//------------------------------------------------------------
+
+	void EnsureReplacementMaterial()
+	{
+		if (mpReplacementMaterial is null)
+			@mpReplacementMaterial = cResources_CreateMaterial(gsPorkMaterial);
+	}
+
+	//------------------------------------------------------------
+
+	int ApplyReplacementToWorld()
+	{
+		if (mpCurrentMap is null)
+			return 0;
+
+		EnsureReplacementMaterial();
+		if (mpReplacementMaterial is null)
+		{
+			Debug("Could not load material '" + gsPorkMaterial + "'.");
+			return 0;
+		}
+
+		cWorld@ pWorld = mpCurrentMap.GetWorld();
+		if (pWorld is null)
+			return 0;
+
+		int lChanged = ApplyReplacementToIterator(pWorld.GetStaticMeshEntityIterator(), false);
+		lChanged += ApplyReplacementToIterator(pWorld.GetDynamicMeshEntityIterator(), false);
+		return lChanged;
+	}
+
+	//------------------------------------------------------------
+
+	int ApplyReplacementToDynamicMeshes()
+	{
+		if (mpCurrentMap is null || mpReplacementMaterial is null)
+			return 0;
+
+		cWorld@ pWorld = mpCurrentMap.GetWorld();
+		if (pWorld is null)
+			return 0;
+
+		return ApplyReplacementToIterator(pWorld.GetDynamicMeshEntityIterator(), true);
+	}
+
+	//------------------------------------------------------------
+
+	int ApplyReplacementToIterator(cMeshEntityIterator@ apIterator, bool abCheckTracked)
+	{
+		if (apIterator is null)
+			return 0;
+
+		int lChanged = 0;
+
+		while (apIterator.HasNext())
+		{
+			cMeshEntity@ pMeshEntity = apIterator.Next();
+			if (pMeshEntity is null)
+				continue;
+
+			for (int i = 0; i < pMeshEntity.GetSubMeshEntityNum(); ++i)
+			{
+				cSubMeshEntity@ pSubMesh = pMeshEntity.GetSubMeshEntity(i);
+				if (pSubMesh is null || pSubMesh.GetCustomMaterial() is mpReplacementMaterial)
+					continue;
+
+				if (abCheckTracked && IsSubMeshTracked(pSubMesh.GetID()))
+				{
+					pSubMesh.SetCustomMaterial(mpReplacementMaterial, false);
+					lChanged++;
+					continue;
+				}
+
+				cPorkMaterialRecord@ pRecord = cPorkMaterialRecord();
+				pRecord.m_idSubMesh = pSubMesh.GetID();
+				@pRecord.mpOriginalCustomMaterial = pSubMesh.GetCustomMaterial();
+				mvMaterialRecords.push_back(pRecord);
+
+				pSubMesh.SetCustomMaterial(mpReplacementMaterial, false);
+				lChanged++;
+			}
+		}
+
+		return lChanged;
+	}
+
+	//------------------------------------------------------------
+
+	bool IsSubMeshTracked(tID a_idSubMesh)
+	{
+		for (uint i = 0; i < mvMaterialRecords.length(); ++i)
+		{
+			if (mvMaterialRecords[i].m_idSubMesh == a_idSubMesh)
+				return true;
+		}
+
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	int RestoreOriginalMaterials()
+	{
+		if (mpCurrentMap is null)
+		{
+			mvMaterialRecords.resize(0);
+			return 0;
+		}
+
+		cWorld@ pWorld = mpCurrentMap.GetWorld();
+		if (pWorld is null)
+		{
+			mvMaterialRecords.resize(0);
+			return 0;
+		}
+
+		int lRestored = 0;
+
+		for (uint i = 0; i < mvMaterialRecords.length(); ++i)
+		{
+			cPorkMaterialRecord@ pRecord = mvMaterialRecords[i];
+			cSubMeshEntity@ pSubMesh = pWorld.GetSubMeshEntityFromID(pRecord.m_idSubMesh);
+			if (pSubMesh is null)
+				continue;
+
+			pSubMesh.SetCustomMaterial(pRecord.mpOriginalCustomMaterial, false);
+			lRestored++;
+		}
+
+		mvMaterialRecords.resize(0);
+		return lRestored;
+	}
+
+	//------------------------------------------------------------
+
+	[nosave] cLuxMap@ mpCurrentMap;
+	[nosave] cMaterial@ mpReplacementMaterial;
+	[nosave] array<cPorkMaterialRecord@> mvMaterialRecords;
+	[nosave] bool mbPorkActive;
+	[nosave] int mlSecretKeyIndex;
+	[nosave] float mfRescanTimer;
+}
