@@ -14,9 +14,9 @@
 #include "helpers/helper_physics.hps"
 
 #include "helpers/helper_agent.hps"
-#include "helpers/helper_gun.hps"
 #include "helpers/helper_props_custom.hps"
 #include "custom/helpers/helper_parkour.hps"
+#include "custom/helpers/helper_player_custom.hps"
 
 
 //--------------------------------------------------
@@ -43,9 +43,22 @@ class cScrMap : iScrMap
 	void Setup()
 	{
 		// Put display name entry in english.lang / Levels
-		GetBase().SetDisplayNameEntry("xx-xx-dummy-level");
+		GetBase().SetDisplayNameEntry("parkour-level");
 		
-		// Set up color grading etc.
+		// etc.
+		Map_SetSkyboxRotation(cVector3f(0, cMath_ToRad(45), 0));
+
+		Light_FadeTo("Light_Box_45", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_46", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_52", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_55", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_56", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_23", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_21", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_42", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_43", cColor(0,0,0,0), -1, 1.0f);
+		Light_FadeTo("Light_Box_49", cColor(0,0,0,0), -1, 1.0f);
 	}
 	
 	//-------------------------------------------------------
@@ -86,6 +99,11 @@ class cScrMap : iScrMap
 	// Run when entering map
 	void OnEnter()
 	{	
+		Entity_SetActive("stalker", false);
+		cScript_SetGlobalArgBool(0, false);
+		cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_SetLampsFlicker");
+
+
 		///////////////////////
 		// Setup player body
 		if (PlayerBody_IsActive() == false)
@@ -99,6 +117,8 @@ class cScrMap : iScrMap
 
 		Player_SetGravity(cVector3f(0,-18,0));
 		Sketchbook_SetInventoryEnabled(false);
+
+		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
 	}
 
 	//-------------------------------------------------------
@@ -111,18 +131,25 @@ class cScrMap : iScrMap
 	
 	//-------------------------------------------------------
 
+	int jumpArea = 1;
+
 	////////////////////////////
 	// To get when player makes input (mostly used for debug)
 	void OnAction(int alAction, bool abPressed) 
 	{
 		if (abPressed == false) return;
 		
-		if (alAction == eAction_Test1)
+		if (alAction == eAction_Test0)
 		{
+			
+			Stalker_Jump("stalker", "Jump_interior_Target_" + jumpArea);
+			jumpArea++;
 		}
 	}
 
 	//-------------------------------------------------------
+
+
 
 	////////////////////////////
 	// This only used for pure debug purposes when info needs to printed.
@@ -145,10 +172,86 @@ class cScrMap : iScrMap
  
 	//-------------------------------------------------------
  
-	/*Put any variables that are used in more than one scene here.*/
+	bool Trigger_RunnerObjectLight(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		tString lights = Entity_GetVarString(asParent, "");
+		float fBrightness;
+
+		if (alState == 1)
+		{
+			fBrightness = 1.0f;
+
+			if (cString_GetFirstStringPos(lights, "Light_RunnerObject_Helper_6") >= 0 
+			|| cString_GetFirstStringPos(lights, "Light_RunnerObject_Helper_5") >= 0) 
+			{
+				fBrightness = 3.0f;
+			}
+		}
+		else
+		{
+			fBrightness = 0.0f;
+		}
+
+		Light_FadeBrightnessTo(lights, fBrightness, 0.5f);
+
+		return true;
+	}
  
 	//-------------------------------------------------------
- 
+
+	bool IndoorLightingArea_DoorWay(const tString &in asArea, const tString &in asEntity, int alState)
+	{
+		if (alState == 1)
+		{
+			Effect_ToneMapping_FadeWorldGrading("grading_parkour_interior.dds", 2.0f);
+			Light_FadeTo("Light_Box_45", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_47", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_46", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_52", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_55", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_56", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_23", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_21", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_42", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_43", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_49", cColor_White, -1, 1.0f);
+
+		}
+		else
+		{
+			Effect_ToneMapping_FadeWorldGrading("grading_parkour_new.dds", 2.0f);
+			Light_FadeTo("Light_Box_45", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_46", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_52", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_55", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_56", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_23", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_21", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_42", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_43", cColor(0,0,0,0), -1, 1.0f);
+			Light_FadeTo("Light_Box_49", cColor(0,0,0,0), -1, 1.0f);
+		}
+
+		return true;
+	}
+
+	//-------------------------------------------------------
+
+	void Stalker_Jump(const tString&in asStalkerName, const tString&in asTarget)
+	{
+		cScript_SetGlobalArgVector3f(0, Entity_GetPosition(asTarget));
+		cScript_RunGlobalFunc(asStalkerName, "cScrAgentStalker", "_Global_SetClosestJumpPos");
+
+		cScript_SetGlobalArgVector3f(0, Entity_GetPosition(asTarget));
+		cScript_SetGlobalArgBool(1, true);
+		cScript_SetGlobalArgBool(2, false);
+		cScript_SetGlobalArgBool(3, false);
+		cScript_RunGlobalFunc(asStalkerName, "cScrAgentStalker", "_Global_Jump");
+	}
+
+	//-------------------------------------------------------
+	
 	//} END MAIN FUNCTIONS
  
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -162,32 +265,313 @@ class cScrMap : iScrMap
 		//{//////////////////////////////////////
 		 
 		//-------------------------------------------------------
-	 
-		/*Put any variables that are used by many events in Scene X here.*/
-	 
-		//-------------------------------------------------------
-	 
-		/*Put any functions that are used in more than one event in Scene X here.*/
-	 
-		//-------------------------------------------------------
-		
-		//} END General	
-	 
-		/////////////////////////////////////////
-		// Event *Name Of Event*
-		//{//////////////////////////////////////
+
+		tString msPlayerFloorLevel = "lower";
+		tString msBeastFloorLevel = "upper";
+		tString msCurrentPlayerFloorSide = "right";
+		tString msCurrentBeastFloorSide = "left";
+		bool mbBeastActivated = false;
+		bool mbBeastTraversalActive = false;
+		float mfBeastTraversalTime = 0.0f;
+		tString msBeastTraversalStage = "";
+		tString msBeastTraversalLaunchNode = "";
+		tString msBeastTraversalJumpTarget = "";
+		tString msBeastTraversalTargetFloor = "";
+		tString msBeastTraversalTargetSide = "";
 
 		//-------------------------------------------------------
 
-		/*Put any variables that are only used in Scene X, Event X here.*/
+		void SetBeastBossFightBehaviour(int alBehaviour)
+		{
+			cScript_SetGlobalArgInt(0, alBehaviour);
+			cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_UpdateBehaviour");
+		}
 
 		//-------------------------------------------------------
 
-		/*Put any functions that are only used in Scene X, Event X here.*/
+		void SetBeastExternalTraversal(bool abActive)
+		{
+			cScript_SetGlobalArgBool(0, abActive);
+			cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_SetExternalTraversalActive");
+		}
 
 		//-------------------------------------------------------
 
-		//} END Event *Name Of Event*
+		void SetBeastAlwaysChase(bool abActive)
+		{
+			cScript_SetGlobalArgBool(0, abActive);
+			cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_SetAlwaysChase");
+		}
+
+		//-------------------------------------------------------
+
+		void RefreshBeastLocation(const cVector3f &in avPosition)
+		{
+			msBeastFloorLevel = avPosition.y < -5.25f ? "lower" : "upper";
+			msCurrentBeastFloorSide = avPosition.z < -45.5f ? "right" : "left";
+		}
+
+		//-------------------------------------------------------
+
+		void RefreshPlayerLocation(const cVector3f &in avPosition)
+		{
+			msPlayerFloorLevel = avPosition.y < -5.25f ? "lower" : "upper";
+			msCurrentPlayerFloorSide = avPosition.z < -45.5f ? "right" : "left";
+		}
+
+		//-------------------------------------------------------
+
+		void BeginBeastTraversal(const tString &in asTargetFloor, const tString &in asTargetSide)
+		{
+			if (mbBeastActivated == false || mbBeastTraversalActive) return;
+
+			if (msBeastFloorLevel == "lower" && asTargetFloor == "upper")
+			{
+				msBeastTraversalLaunchNode = "PathNode_lower_" + asTargetSide;
+				msBeastTraversalJumpTarget = "Jump_interior_target_upper_" + asTargetSide;
+			}
+			else if (msBeastFloorLevel == "upper" && asTargetFloor == "lower")
+			{
+				msBeastTraversalLaunchNode = "PathNode_upper_" + msCurrentBeastFloorSide;
+				msBeastTraversalJumpTarget = "Jump_interior_target_lower_" + msCurrentBeastFloorSide;
+			}
+			else if (msBeastFloorLevel == "upper" && asTargetFloor == "upper" &&
+					 msCurrentBeastFloorSide != asTargetSide)
+			{
+				msBeastTraversalLaunchNode = "PathNode_upper_" + msCurrentBeastFloorSide;
+				// Bridge targets are named after the side the jump starts from.
+				msBeastTraversalJumpTarget = "Jump_interior_target_upper_" + msCurrentBeastFloorSide + "_bridge";
+			}
+			else
+			{
+				return;
+			}
+
+			msBeastTraversalTargetFloor = asTargetFloor;
+			msBeastTraversalTargetSide = asTargetFloor == "lower" ? msCurrentBeastFloorSide : asTargetSide;
+			msBeastTraversalStage = "moving";
+			mfBeastTraversalTime = 0.0f;
+			mbBeastTraversalActive = true;
+
+			Debug_Log("Stalker traversal: " + msBeastFloorLevel + "/" + msCurrentBeastFloorSide +
+					  " -> " + msBeastTraversalTargetFloor + "/" + msBeastTraversalTargetSide, false);
+
+			// Keep boss behaviour in Default chase mode, but temporarily let the
+			// map own the pathfinder so the chase loop cannot overwrite this route.
+			SetBeastBossFightBehaviour(0);
+			SetBeastExternalTraversal(true);
+			Pathfinder_MoveToNode("stalker", msBeastTraversalLaunchNode, "BeastReachedTraversalLaunch");
+			Map_AddTimer("BeastTraversalWatchdog", 0.1f, "UpdateBeastTraversal");
+		}
+
+		//-------------------------------------------------------
+
+		void BeastReachedTraversalLaunch(const tString &in asEntityName, bool abReachedEnd)
+		{
+			if (mbBeastTraversalActive == false || msBeastTraversalStage != "moving") return;
+			if (abReachedEnd == false) return;
+
+			msBeastTraversalStage = "jumping";
+			mfBeastTraversalTime = 0.0f;
+			Stalker_Jump(asEntityName, msBeastTraversalJumpTarget);
+		}
+
+		//-------------------------------------------------------
+
+		void EvaluateBeastTraversal()
+		{
+			if (mbBeastActivated == false || mbBeastTraversalActive) return;
+
+			RefreshBeastLocation(Entity_GetPosition("stalker"));
+			RefreshPlayerLocation(Player_GetFeetPosition());
+
+			if (msPlayerFloorLevel != msBeastFloorLevel)
+			{
+				if (msBeastFloorLevel == "lower")
+					BeginBeastTraversal("upper", msCurrentPlayerFloorSide);
+				else
+					BeginBeastTraversal("lower", msCurrentBeastFloorSide);
+			}
+			else if (msPlayerFloorLevel == "upper" &&
+					 msCurrentPlayerFloorSide != msCurrentBeastFloorSide)
+			{
+				BeginBeastTraversal("upper", msCurrentPlayerFloorSide);
+			}
+		}
+
+		//-------------------------------------------------------
+
+		void AbortBeastTraversal(const tString &in asReason)
+		{
+			Debug_Log("Stalker traversal aborted: " + asReason, false);
+			mbBeastTraversalActive = false;
+			msBeastTraversalStage = "";
+			SetBeastExternalTraversal(false);
+			SetBeastBossFightBehaviour(0);
+			Map_AddTimer("ReevaluateBeastTraversal", 0.5f, "ReevaluateBeastTraversal");
+		}
+
+		//-------------------------------------------------------
+
+		void FinishBeastTraversal(const tString &in asTimer)
+		{
+			if (mbBeastTraversalActive == false) return;
+
+			msBeastFloorLevel = msBeastTraversalTargetFloor;
+			msCurrentBeastFloorSide = msBeastTraversalTargetSide;
+			mbBeastTraversalActive = false;
+			msBeastTraversalStage = "";
+
+			// Hand the pathfinder back to Default boss chase after the jump.
+			SetBeastExternalTraversal(false);
+			SetBeastBossFightBehaviour(0);
+			Map_AddTimer("ReevaluateBeastTraversal", 0.1f, "ReevaluateBeastTraversal");
+		}
+
+		//-------------------------------------------------------
+
+		void ReevaluateBeastTraversal(const tString &in asTimer)
+		{
+			EvaluateBeastTraversal();
+		}
+
+		//-------------------------------------------------------
+
+		void UpdateBeastTraversal(const tString &in asTimer)
+		{
+			if (mbBeastTraversalActive == false) return;
+
+			mfBeastTraversalTime += 0.1f;
+
+			if (msBeastTraversalStage == "moving")
+			{
+				cVector3f vToLaunch = Entity_GetPosition(msBeastTraversalLaunchNode) - Entity_GetPosition("stalker");
+				if (vToLaunch.SqrLength() <= 1.25f * 1.25f)
+				{
+					BeastReachedTraversalLaunch("stalker", true);
+				}
+				else if (mfBeastTraversalTime >= 12.0f)
+				{
+					AbortBeastTraversal("timed out while moving to " + msBeastTraversalLaunchNode);
+					return;
+				}
+			}
+			else if (msBeastTraversalStage == "jumping" && mfBeastTraversalTime >= 2.5f)
+			{
+				// Fallback for a landing trigger missed by cutscene movement.
+				FinishBeastTraversal("");
+				return;
+			}
+
+			Map_AddTimer("BeastTraversalWatchdog", 0.1f, "UpdateBeastTraversal");
+		}
+
+		//-------------------------------------------------------
+
+		void OnStalkerMoveTo(int alBehaviour, const cVector3f &in avGoalPos)
+		{
+			// The stock boss state calls this before every chase request. Evaluate
+			// actual positions here so missed trigger callbacks cannot leave stale
+			// floor/side state and strand the Stalker on another node graph.
+			RefreshBeastLocation(Entity_GetPosition("stalker"));
+			RefreshPlayerLocation(Player_GetFeetPosition());
+			EvaluateBeastTraversal();
+		}
+
+		//-------------------------------------------------------
+	 
+		bool Collide_PlayerOnUpperFloor(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState != 1) return true;
+
+			if (asChild == "Player")
+			{
+				msCurrentPlayerFloorSide = Entity_GetVarString(asParent, "");
+				msPlayerFloorLevel = "upper";
+			}
+				
+
+			if (asChild == "stalker")
+			{
+				msCurrentBeastFloorSide = Entity_GetVarString(asParent, "");
+				msBeastFloorLevel = "upper";
+
+				if (mbBeastTraversalActive && msBeastTraversalStage == "jumping" &&
+					msBeastTraversalTargetFloor == "upper" &&
+					msBeastTraversalTargetSide == msCurrentBeastFloorSide)
+				{
+					msBeastTraversalStage = "landing";
+					Map_AddTimer("FinishBeastTraversal", 0.5f, "FinishBeastTraversal");
+				}
+			}
+
+			EvaluateBeastTraversal();
+
+			return true;
+		}
+
+		bool Collide_PlayerOnLowerFloor(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState != 1) return true;
+
+			if (asChild == "Player")
+			{
+				msCurrentPlayerFloorSide = Entity_GetVarString(asParent, "");
+				msPlayerFloorLevel = "lower";
+			}
+				
+
+			if (asChild == "stalker")
+			{
+				msCurrentBeastFloorSide = Entity_GetVarString(asParent, "");
+				msBeastFloorLevel = "lower";
+
+				if (mbBeastTraversalActive && msBeastTraversalStage == "jumping" &&
+					msBeastTraversalTargetFloor == "lower" &&
+					msBeastTraversalTargetSide == msCurrentBeastFloorSide)
+				{
+					msBeastTraversalStage = "landing";
+					Map_AddTimer("FinishBeastTraversal", 0.5f, "FinishBeastTraversal");
+				}
+			}
+
+			EvaluateBeastTraversal();
+
+			return true;
+		}
+	 
+		//-------------------------------------------------------
+	 
+		bool ActivateBeast(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState == 1)
+			{
+				Entity_SetActive("stalker", true);
+				cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_Enter");
+
+				mbBeastActivated = true;
+				msBeastFloorLevel = "upper";
+				msCurrentBeastFloorSide = "left";
+
+				// The Stalker already spawns at the upper-left launch position. Keep
+				// the original direct activation jump and let the traversal controller
+				// track the landing before returning control to the chase AI.
+				mbBeastTraversalActive = true;
+				msBeastTraversalStage = "jumping";
+				msBeastTraversalTargetFloor = "lower";
+				msBeastTraversalTargetSide = "left";
+				mfBeastTraversalTime = 0.0f;
+				SetBeastAlwaysChase(true);
+				Stalker_Jump("stalker", "Jump_interior_target_lower_left");
+				Stalker_SetMode("stalker", eStalkerMode_Active);
+				SetBeastExternalTraversal(true);
+				Map_AddTimer("BeastTraversalWatchdog", 0.1f, "UpdateBeastTraversal");
+			}
+
+			return false;
+		}
+	 
+		//-------------------------------------------------------
 	 
 	//} END SCENE X 
 }
