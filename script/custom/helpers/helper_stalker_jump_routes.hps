@@ -1,0 +1,438 @@
+//--------------------------------------------------
+// Generic, map-authored Stalker jump routing.
+//
+// Regions are logical navigation islands made from one or more Trigger areas.
+// Routes are directed jump edges between those islands. Registration order is
+// preserved so breadth-first path selection has a deterministic tie-breaker.
+//--------------------------------------------------
+
+class cStalkerJumpRegion
+{
+	cStalkerJumpRegion() {}
+
+	cStalkerJumpRegion(const tString &in asId)
+	{
+		msId = asId;
+	}
+
+	tString msId = "";
+	array<tString> mvAreaNames;
+}
+
+//--------------------------------------------------
+
+class cStalkerJumpRoute
+{
+	cStalkerJumpRoute() {}
+
+	cStalkerJumpRoute(const tString &in asId,
+					  const tString &in asSourceRegionId,
+					  const tString &in asDestinationRegionId,
+					  const tString &in asLaunchNodeName,
+					  const tString &in asLandingAreaName)
+	{
+		msId = asId;
+		msSourceRegionId = asSourceRegionId;
+		msDestinationRegionId = asDestinationRegionId;
+		msLaunchNodeName = asLaunchNodeName;
+		msLandingAreaName = asLandingAreaName;
+	}
+
+	tString msId = "";
+	tString msSourceRegionId = "";
+	tString msDestinationRegionId = "";
+	tString msLaunchNodeName = "";
+	tString msLandingAreaName = "";
+}
+
+//--------------------------------------------------
+
+class cStalkerJumpNetwork
+{
+	//--------------------------------------------------
+
+	void Clear()
+	{
+		mvRegions.resize(0);
+		mvRoutes.resize(0);
+	}
+
+	//--------------------------------------------------
+
+	int GetRegionCount()
+	{
+		return mvRegions.size();
+	}
+
+	//--------------------------------------------------
+
+	int GetRouteCount()
+	{
+		return mvRoutes.size();
+	}
+
+	//--------------------------------------------------
+
+	int GetSameRegionRouteCount()
+	{
+		int lCount = 0;
+
+		for (int i = 0; i < mvRoutes.size(); ++i)
+		{
+			if (mvRoutes[i].msSourceRegionId == mvRoutes[i].msDestinationRegionId)
+				++lCount;
+		}
+
+		return lCount;
+	}
+
+	//--------------------------------------------------
+
+	cStalkerJumpRegion@ GetRegion(const tString &in asRegionId)
+	{
+		for (int i = 0; i < mvRegions.size(); ++i)
+		{
+			cStalkerJumpRegion@ pRegion = mvRegions[i];
+			if (pRegion.msId == asRegionId)
+				return pRegion;
+		}
+
+		return null;
+	}
+
+	//--------------------------------------------------
+
+	cStalkerJumpRoute@ GetRoute(const tString &in asRouteId)
+	{
+		for (int i = 0; i < mvRoutes.size(); ++i)
+		{
+			cStalkerJumpRoute@ pRoute = mvRoutes[i];
+			if (pRoute.msId == asRouteId)
+				return pRoute;
+		}
+
+		return null;
+	}
+
+	//--------------------------------------------------
+
+	bool AddRegionArea(const tString &in asRegionId, const tString &in asAreaName)
+	{
+		if (asRegionId == "" || asAreaName == "")
+		{
+			Error("Stalker jump region registration requires a region ID and area name.");
+			return false;
+		}
+
+		for (int i = 0; i < mvRegions.size(); ++i)
+		{
+			cStalkerJumpRegion@ pExistingRegion = mvRegions[i];
+			for (int j = 0; j < pExistingRegion.mvAreaNames.size(); ++j)
+			{
+				if (pExistingRegion.mvAreaNames[j] != asAreaName) continue;
+
+				Error("Stalker jump region area '" + asAreaName + "' was registered more than once.");
+				return false;
+			}
+		}
+
+		cStalkerJumpRegion@ pRegion = GetRegion(asRegionId);
+		if (pRegion is null)
+		{
+			mvRegions.push_back(cStalkerJumpRegion(asRegionId));
+			@pRegion = mvRegions[mvRegions.size() - 1];
+		}
+
+		pRegion.mvAreaNames.push_back(asAreaName);
+		return true;
+	}
+
+	//--------------------------------------------------
+
+	bool AddRoute(const tString &in asRouteId,
+				  const tString &in asSourceRegionId,
+				  const tString &in asDestinationRegionId,
+				  const tString &in asLaunchNodeName,
+				  const tString &in asLandingAreaName)
+	{
+		if (asRouteId == "" || asSourceRegionId == "" || asDestinationRegionId == "" ||
+			asLaunchNodeName == "" || asLandingAreaName == "")
+		{
+			Error("Stalker jump route registration requires all five values.");
+			return false;
+		}
+
+		if (GetRoute(asRouteId) !is null)
+		{
+			Error("Stalker jump route ID '" + asRouteId + "' was registered more than once.");
+			return false;
+		}
+
+		mvRoutes.push_back(cStalkerJumpRoute(asRouteId,
+										  asSourceRegionId,
+										  asDestinationRegionId,
+										  asLaunchNodeName,
+										  asLandingAreaName));
+		return true;
+	}
+
+	//--------------------------------------------------
+
+	tString ResolvePlayerRegion(const tString &in asPreviousRegionId)
+	{
+		cStalkerJumpRegion@ pPreviousRegion = GetRegion(asPreviousRegionId);
+		if (pPreviousRegion !is null && IsPlayerInsideRegion(pPreviousRegion))
+			return pPreviousRegion.msId;
+
+		for (int i = 0; i < mvRegions.size(); ++i)
+		{
+			cStalkerJumpRegion@ pRegion = mvRegions[i];
+			if (IsPlayerInsideRegion(pRegion))
+				return pRegion.msId;
+		}
+
+		return "";
+	}
+
+	//--------------------------------------------------
+
+	tString ResolveAgentRegion(const tString &in asAgentName, const tString &in asPreviousRegionId)
+	{
+		iLuxEntity@ pEntity = Map_GetEntity(asAgentName, eLuxEntityType_Agent);
+		if (pEntity is null) return "";
+
+		cLuxAgent@ pAgent = cLux_ToAgent(pEntity);
+		if (pAgent is null || pAgent.GetCharBody() is null) return "";
+
+		cStalkerJumpRegion@ pPreviousRegion = GetRegion(asPreviousRegionId);
+		if (pPreviousRegion !is null && IsCharacterInsideRegion(pAgent.GetCharBody(), pPreviousRegion))
+			return pPreviousRegion.msId;
+
+		for (int i = 0; i < mvRegions.size(); ++i)
+		{
+			cStalkerJumpRegion@ pRegion = mvRegions[i];
+			if (IsCharacterInsideRegion(pAgent.GetCharBody(), pRegion))
+				return pRegion.msId;
+		}
+
+		return "";
+	}
+
+	//--------------------------------------------------
+
+	bool IsAgentInsideRegion(const tString &in asAgentName, const tString &in asRegionId)
+	{
+		iLuxEntity@ pEntity = Map_GetEntity(asAgentName, eLuxEntityType_Agent);
+		if (pEntity is null) return false;
+
+		cLuxAgent@ pAgent = cLux_ToAgent(pEntity);
+		cStalkerJumpRegion@ pRegion = GetRegion(asRegionId);
+		if (pAgent is null || pAgent.GetCharBody() is null || pRegion is null) return false;
+
+		return IsCharacterInsideRegion(pAgent.GetCharBody(), pRegion);
+	}
+
+	//--------------------------------------------------
+
+	cStalkerJumpRoute@ GetFirstRoute(const tString &in asSourceRegionId,
+									 const tString &in asDestinationRegionId)
+	{
+		if (asSourceRegionId == asDestinationRegionId) return null;
+		if (GetRegion(asSourceRegionId) is null || GetRegion(asDestinationRegionId) is null) return null;
+
+		array<tString> vRegionQueue;
+		array<int> vFirstRouteIndices;
+		vRegionQueue.push_back(asSourceRegionId);
+		vFirstRouteIndices.push_back(-1);
+
+		for (int lQueueIndex = 0; lQueueIndex < vRegionQueue.size(); ++lQueueIndex)
+		{
+			tString sCurrentRegionId = vRegionQueue[lQueueIndex];
+
+			for (int i = 0; i < mvRoutes.size(); ++i)
+			{
+				cStalkerJumpRoute@ pRoute = mvRoutes[i];
+				if (pRoute.msSourceRegionId != sCurrentRegionId) continue;
+				if (vRegionQueue.find(pRoute.msDestinationRegionId) != -1) continue;
+
+				int lFirstRouteIndex = vFirstRouteIndices[lQueueIndex] >= 0 ?
+					vFirstRouteIndices[lQueueIndex] : i;
+
+				if (pRoute.msDestinationRegionId == asDestinationRegionId)
+					return mvRoutes[lFirstRouteIndex];
+
+				vRegionQueue.push_back(pRoute.msDestinationRegionId);
+				vFirstRouteIndices.push_back(lFirstRouteIndex);
+			}
+		}
+
+		return null;
+	}
+
+	//--------------------------------------------------
+
+	bool Validate(const tString &in asAgentName)
+	{
+		bool bValid = true;
+		int lSameRegionRouteCount = GetSameRegionRouteCount();
+
+		if (mvRegions.size() == 0)
+		{
+			Error("No Stalker jump regions were registered.");
+			bValid = false;
+		}
+
+		for (int i = 0; i < mvRegions.size(); ++i)
+		{
+			cStalkerJumpRegion@ pRegion = mvRegions[i];
+			if (pRegion.mvAreaNames.size() == 0)
+			{
+				Error("Stalker jump region '" + pRegion.msId + "' has no Trigger areas.");
+				bValid = false;
+				continue;
+			}
+
+			for (int j = 0; j < pRegion.mvAreaNames.size(); ++j)
+			{
+				if (ValidateTriggerArea(pRegion.mvAreaNames[j], "region '" + pRegion.msId + "'") == false)
+					bValid = false;
+			}
+		}
+
+		if (lSameRegionRouteCount > 0)
+		{
+			Error("Found " + lSameRegionRouteCount +
+				  " Stalker jump route(s) whose source and destination use the same region ID.");
+			bValid = false;
+		}
+
+		cLuxPathfinder@ pPathfinder = cast<cLuxPathfinder@>(
+			cLux_GetCurrentMap().GetEntityComponent(eLuxEntityComponentType_Pathfinder, asAgentName));
+		if (pPathfinder is null)
+		{
+			Error("Could not find the Stalker pathfinder for jump-route validation on '" + asAgentName + "'.");
+			bValid = false;
+		}
+
+		for (int i = 0; i < mvRoutes.size(); ++i)
+		{
+			cStalkerJumpRoute@ pRoute = mvRoutes[i];
+
+			if (pRoute.msSourceRegionId == pRoute.msDestinationRegionId)
+			{
+				Error("Stalker jump route '" + pRoute.msId + "' points both ends at region '" +
+					  pRoute.msSourceRegionId + "'. Use two logical region IDs for a traversable jump.");
+			}
+
+			if (GetRegion(pRoute.msSourceRegionId) is null)
+			{
+				Error("Stalker jump route '" + pRoute.msId + "' references missing source region '" +
+					  pRoute.msSourceRegionId + "'.");
+				bValid = false;
+			}
+
+			if (GetRegion(pRoute.msDestinationRegionId) is null)
+			{
+				Error("Stalker jump route '" + pRoute.msId + "' references missing destination region '" +
+					  pRoute.msDestinationRegionId + "'.");
+				bValid = false;
+			}
+
+			if (ValidateTriggerArea(pRoute.msLandingAreaName, "route '" + pRoute.msId + "' landing") == false)
+				bValid = false;
+
+			if (pPathfinder !is null && pPathfinder.GetNodeFromName(pRoute.msLaunchNodeName) is null)
+			{
+				Error("Stalker jump route '" + pRoute.msId + "' cannot find launch PathNode '" +
+					  pRoute.msLaunchNodeName + "' in the Stalker node container.");
+				bValid = false;
+			}
+		}
+
+		for (int i = 0; i < mvRegions.size(); ++i)
+		{
+			for (int j = 0; j < mvRegions.size(); ++j)
+			{
+				if (i == j) continue;
+				if (GetFirstRoute(mvRegions[i].msId, mvRegions[j].msId) !is null) continue;
+
+				Error("No directed Stalker jump route connects region '" + mvRegions[i].msId +
+					  "' to region '" + mvRegions[j].msId + "'.");
+				bValid = false;
+			}
+		}
+
+		return bValid;
+	}
+
+	//--------------------------------------------------
+
+	bool ValidateTriggerArea(const tString &in asAreaName, const tString &in asOwnerDescription)
+	{
+		array<iLuxEntity@> vEntities;
+		cLux_GetCurrentMap().GetEntityArray(asAreaName, eLuxEntityType_LastEnum, "", vEntities);
+
+		if (vEntities.size() != 1)
+		{
+			Error("Stalker jump " + asOwnerDescription + " requires exactly one entity named '" +
+				  asAreaName + "'; found " + vEntities.size() + ".");
+			return false;
+		}
+
+		if (vEntities[0].GetEntityType() != eLuxEntityType_Area ||
+			vEntities[0].GetClassName() != "cScrAreaTrigger")
+		{
+			Error("Stalker jump " + asOwnerDescription + " entity '" + asAreaName +
+				  "' must be a Trigger area.");
+			return false;
+		}
+
+		return true;
+	}
+
+	//--------------------------------------------------
+
+	cLuxArea@ GetTriggerArea(const tString &in asAreaName)
+	{
+		iLuxEntity@ pEntity = Map_GetEntity(asAreaName, eLuxEntityType_Area);
+		if (pEntity is null || pEntity.GetClassName() != "cScrAreaTrigger") return null;
+		return cLux_ToArea(pEntity);
+	}
+
+	//--------------------------------------------------
+
+	bool IsPlayerInsideRegion(cStalkerJumpRegion@ apRegion)
+	{
+		if (apRegion is null) return false;
+
+		for (int i = 0; i < apRegion.mvAreaNames.size(); ++i)
+		{
+			cLuxArea@ pArea = GetTriggerArea(apRegion.mvAreaNames[i]);
+			if (pArea !is null && pArea.CollidesWithPlayer())
+				return true;
+		}
+
+		return false;
+	}
+
+	//--------------------------------------------------
+
+	bool IsCharacterInsideRegion(iCharacterBody@ apCharacterBody, cStalkerJumpRegion@ apRegion)
+	{
+		if (apCharacterBody is null || apRegion is null) return false;
+
+		for (int i = 0; i < apRegion.mvAreaNames.size(); ++i)
+		{
+			cLuxArea@ pArea = GetTriggerArea(apRegion.mvAreaNames[i]);
+			if (pArea !is null && pArea.CheckCharacterCollision(apCharacterBody, cLux_GetCurrentMap()))
+				return true;
+		}
+
+		return false;
+	}
+
+	//--------------------------------------------------
+
+	array<cStalkerJumpRegion> mvRegions;
+	array<cStalkerJumpRoute> mvRoutes;
+}

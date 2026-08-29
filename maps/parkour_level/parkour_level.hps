@@ -17,6 +17,7 @@
 #include "helpers/helper_props_custom.hps"
 #include "custom/helpers/helper_parkour.hps"
 #include "custom/helpers/helper_player_custom.hps"
+#include "custom/helpers/helper_stalker_jump_routes.hps"
 
 
 //--------------------------------------------------
@@ -85,6 +86,7 @@ class cScrMap : iScrMap
 	void OnStart()
 	{
 		// Any general setup of script / entities
+		SetupStalkerJumpNetwork();
 
 		/////////////////////////
 		// Debug
@@ -220,7 +222,7 @@ class cScrMap : iScrMap
 		else
 		{
 			Effect_ToneMapping_FadeWorldGrading("grading_parkour_new.dds", 2.0f);
-			Light_FadeTo("Light_Box_45", cColor_White, -1, 1.0f);
+			Light_FadeTo("Light_Box_45", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_46", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_52", cColor(0,0,0,0), -1, 1.0f);
@@ -266,18 +268,138 @@ class cScrMap : iScrMap
 		 
 		//-------------------------------------------------------
 
-		tString msPlayerFloorLevel = "lower";
-		tString msBeastFloorLevel = "upper";
-		tString msCurrentPlayerFloorSide = "right";
-		tString msCurrentBeastFloorSide = "left";
+		cStalkerJumpNetwork mStalkerJumpNetwork;
+		tString msPlayerStalkerRegion = "";
+		tString msBeastStalkerRegion = "";
 		bool mbBeastActivated = false;
 		bool mbBeastTraversalActive = false;
+		bool mbBeastExternalTraversalActive = false;
+		bool mbBeastTraversalRetryBlocked = false;
 		float mfBeastTraversalTime = 0.0f;
 		tString msBeastTraversalStage = "";
+		tString msBeastTraversalRouteId = "";
 		tString msBeastTraversalLaunchNode = "";
 		tString msBeastTraversalJumpTarget = "";
-		tString msBeastTraversalTargetFloor = "";
-		tString msBeastTraversalTargetSide = "";
+		tString msBeastTraversalTargetRegion = "";
+		tString msBeastLastRouteWarning = "";
+
+		//-------------------------------------------------------
+
+		void RegisterStalkerRegionArea(const tString &in asRegionId, const tString &in asAreaName)
+		{
+			mStalkerJumpNetwork.AddRegionArea(asRegionId, asAreaName);
+		}
+
+		//-------------------------------------------------------
+
+		void RegisterStalkerJumpRoute(const tString &in asRouteId,
+								  const tString &in asSourceRegionId,
+								  const tString &in asDestinationRegionId,
+								  const tString &in asLaunchNodeName,
+								  const tString &in asLandingAreaName)
+		{
+			mStalkerJumpNetwork.AddRoute(asRouteId,
+								 asSourceRegionId,
+								 asDestinationRegionId,
+								 asLaunchNodeName,
+								 asLandingAreaName);
+		}
+
+		//-------------------------------------------------------
+
+		void SetupStalkerJumpNetwork()
+		{
+			mStalkerJumpNetwork.Clear();
+
+			RegisterStalkerRegionArea("interior_lower", "Collide_PlayerOnLowerFloor_Left");
+			RegisterStalkerRegionArea("interior_lower", "Collide_PlayerOnLowerFloor_Right");
+			RegisterStalkerRegionArea("interior_upper_left", "Collide_PlayerOnUpperFloor_Left");
+			RegisterStalkerRegionArea("interior_upper_right", "Collide_PlayerOnUpperFloor_Right");
+			RegisterStalkerRegionArea("exterior_roof_1", "Collide_RoofVentJump");
+			RegisterStalkerRegionArea("exterior_roof_2", "Collide_RoofFenceJump");
+			RegisterStalkerRegionArea("exterior_roof_3", "Collide_RoofFenceJump_2");
+			RegisterStalkerRegionArea("exterior_roof_4", "Collide_RoofFenceJump_3");
+			RegisterStalkerRegionArea("exterior_roof_5", "Collide_RoofFenceJump_4");
+			RegisterStalkerRegionArea("exterior_roof_6", "Collide_RoofFenceJump_5");
+			RegisterStalkerRegionArea("exterior_roof_7", "Collide_RoofFenceJump_6");
+			RegisterStalkerRegionArea("exterior_roof_8", "Collide_RoofFenceJump_7");
+
+			RegisterStalkerJumpRoute("interior_lower_to_upper_left",
+				"interior_lower", "interior_upper_left",
+				"PathNode_lower_left", "Jump_interior_target_upper_left");
+			RegisterStalkerJumpRoute("interior_lower_to_upper_right",
+				"interior_lower", "interior_upper_right",
+				"PathNode_lower_right", "Jump_interior_target_upper_right");
+			RegisterStalkerJumpRoute("interior_upper_left_to_lower",
+				"interior_upper_left", "interior_lower",
+				"PathNode_upper_left", "Jump_interior_target_lower_left");
+			RegisterStalkerJumpRoute("interior_upper_right_to_lower",
+				"interior_upper_right", "interior_lower",
+				"PathNode_upper_right", "Jump_interior_target_lower_right");
+			RegisterStalkerJumpRoute("interior_upper_left_to_upper_right",
+				"interior_upper_left", "interior_upper_right",
+				"PathNode_upper_left", "Jump_interior_target_upper_left_bridge");
+			RegisterStalkerJumpRoute("interior_upper_right_to_upper_left",
+				"interior_upper_right", "interior_upper_left",
+				"PathNode_upper_right", "Jump_interior_target_upper_right_bridge");
+			RegisterStalkerJumpRoute("exterior_roof_vent",
+			"exterior_roof_1",
+			"exterior_roof_2",
+			"PathNode_308",
+			"Trigger_16");
+			RegisterStalkerJumpRoute("exterior_roof_vent_2",
+			"exterior_roof_2",
+			"exterior_roof_1",
+			"PathNode_309",
+			"Trigger_15");
+			RegisterStalkerJumpRoute("exterior_roof_vent_3",
+			"exterior_roof_2",
+			"exterior_roof_3",
+			"PathNode_223",
+			"Trigger_17");
+			RegisterStalkerJumpRoute("exterior_roof_vent_4",
+			"exterior_roof_3",
+			"exterior_roof_2",
+			"PathNode_145",
+			"Trigger_19");
+			RegisterStalkerJumpRoute("exterior_roof_vent_5",
+			"exterior_roof_4",
+			"exterior_roof_4",
+			"PathNode_230",
+			"Trigger_26");
+			RegisterStalkerJumpRoute("exterior_roof_vent_6",
+			"exterior_roof_5",
+			"exterior_roof_5",
+			"PathNode_240",
+			"Trigger_25");
+			RegisterStalkerJumpRoute("exterior_roof_vent_7",
+			"exterior_roof_6",
+			"exterior_roof_6",
+			"PathNode_245",
+			"Trigger_24");
+			RegisterStalkerJumpRoute("exterior_roof_vent_8",
+			"exterior_roof_7",
+			"exterior_roof_8",
+			"PathNode_255",
+			"Trigger_20");
+			RegisterStalkerJumpRoute("exterior_roof_vent_9",
+			"exterior_roof_8",
+			"exterior_roof_1",
+			"PathNode_260",
+			"Trigger_18");
+
+
+			if (mStalkerJumpNetwork.Validate("stalker") == false)
+				Debug_Log("Stalker jump-route registration has validation errors.", false);
+		}
+
+		//-------------------------------------------------------
+
+		void EnsureStalkerJumpNetworkSetup()
+		{
+			if (mStalkerJumpNetwork.GetRegionCount() == 0)
+				SetupStalkerJumpNetwork();
+		}
 
 		//-------------------------------------------------------
 
@@ -291,6 +413,9 @@ class cScrMap : iScrMap
 
 		void SetBeastExternalTraversal(bool abActive)
 		{
+			if (mbBeastExternalTraversalActive == abActive) return;
+
+			mbBeastExternalTraversalActive = abActive;
 			cScript_SetGlobalArgBool(0, abActive);
 			cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_SetExternalTraversalActive");
 		}
@@ -305,63 +430,90 @@ class cScrMap : iScrMap
 
 		//-------------------------------------------------------
 
-		void RefreshBeastLocation(const cVector3f &in avPosition)
+		void RefreshStalkerRegions()
 		{
-			msBeastFloorLevel = avPosition.y < -5.25f ? "lower" : "upper";
-			msCurrentBeastFloorSide = avPosition.z < -45.5f ? "right" : "left";
+			msPlayerStalkerRegion = mStalkerJumpNetwork.ResolvePlayerRegion(msPlayerStalkerRegion);
+			msBeastStalkerRegion = mStalkerJumpNetwork.ResolveAgentRegion("stalker", msBeastStalkerRegion);
 		}
 
 		//-------------------------------------------------------
 
-		void RefreshPlayerLocation(const cVector3f &in avPosition)
+		void LogBeastRouteWarning(const tString &in asWarning)
 		{
-			msPlayerFloorLevel = avPosition.y < -5.25f ? "lower" : "upper";
-			msCurrentPlayerFloorSide = avPosition.z < -45.5f ? "right" : "left";
+			if (msBeastLastRouteWarning == asWarning) return;
+
+			msBeastLastRouteWarning = asWarning;
+			Debug_Log("Stalker jump router: " + asWarning, false);
 		}
 
 		//-------------------------------------------------------
 
-		void BeginBeastTraversal(const tString &in asTargetFloor, const tString &in asTargetSide)
+		void ClearBeastRouteWarning()
 		{
-			if (mbBeastActivated == false || mbBeastTraversalActive) return;
+			msBeastLastRouteWarning = "";
+		}
 
-			if (msBeastFloorLevel == "lower" && asTargetFloor == "upper")
+		//-------------------------------------------------------
+
+		void ReleaseBeastTraversalControl()
+		{
+			if (mbBeastExternalTraversalActive == false) return;
+
+			SetBeastExternalTraversal(false);
+			SetBeastBossFightBehaviour(0);
+		}
+
+		//-------------------------------------------------------
+
+		bool BeginBeastTraversal(const tString &in asRouteId, bool abForceSourceRegion = false)
+		{
+			if (mbBeastActivated == false || mbBeastTraversalActive) return false;
+
+			cStalkerJumpRoute@ pRoute = mStalkerJumpNetwork.GetRoute(asRouteId);
+			if (pRoute is null)
 			{
-				msBeastTraversalLaunchNode = "PathNode_lower_" + asTargetSide;
-				msBeastTraversalJumpTarget = "Jump_interior_target_upper_" + asTargetSide;
-			}
-			else if (msBeastFloorLevel == "upper" && asTargetFloor == "lower")
-			{
-				msBeastTraversalLaunchNode = "PathNode_upper_" + msCurrentBeastFloorSide;
-				msBeastTraversalJumpTarget = "Jump_interior_target_lower_" + msCurrentBeastFloorSide;
-			}
-			else if (msBeastFloorLevel == "upper" && asTargetFloor == "upper" &&
-					 msCurrentBeastFloorSide != asTargetSide)
-			{
-				msBeastTraversalLaunchNode = "PathNode_upper_" + msCurrentBeastFloorSide;
-				// Bridge targets are named after the side the jump starts from.
-				msBeastTraversalJumpTarget = "Jump_interior_target_upper_" + msCurrentBeastFloorSide + "_bridge";
-			}
-			else
-			{
-				return;
+				LogBeastRouteWarning("unknown route '" + asRouteId + "'.");
+				ReleaseBeastTraversalControl();
+				return false;
 			}
 
-			msBeastTraversalTargetFloor = asTargetFloor;
-			msBeastTraversalTargetSide = asTargetFloor == "lower" ? msCurrentBeastFloorSide : asTargetSide;
+			if (abForceSourceRegion)
+				msBeastStalkerRegion = pRoute.msSourceRegionId;
+			else if (msBeastStalkerRegion != pRoute.msSourceRegionId)
+			{
+				LogBeastRouteWarning("route '" + asRouteId + "' expects source region '" +
+					pRoute.msSourceRegionId + "', but the Stalker is in '" + msBeastStalkerRegion + "'.");
+				ReleaseBeastTraversalControl();
+				return false;
+			}
+
+			ClearBeastRouteWarning();
+			msBeastTraversalRouteId = pRoute.msId;
+			msBeastTraversalLaunchNode = pRoute.msLaunchNodeName;
+			msBeastTraversalJumpTarget = pRoute.msLandingAreaName;
+			msBeastTraversalTargetRegion = pRoute.msDestinationRegionId;
 			msBeastTraversalStage = "moving";
 			mfBeastTraversalTime = 0.0f;
 			mbBeastTraversalActive = true;
+			mbBeastTraversalRetryBlocked = false;
 
-			Debug_Log("Stalker traversal: " + msBeastFloorLevel + "/" + msCurrentBeastFloorSide +
-					  " -> " + msBeastTraversalTargetFloor + "/" + msBeastTraversalTargetSide, false);
+			Debug_Log("Stalker traversal route '" + pRoute.msId + "': " +
+				pRoute.msSourceRegionId + " -> " + pRoute.msDestinationRegionId, false);
 
 			// Keep boss behaviour in Default chase mode, but temporarily let the
 			// map own the pathfinder so the chase loop cannot overwrite this route.
 			SetBeastBossFightBehaviour(0);
 			SetBeastExternalTraversal(true);
-			Pathfinder_MoveToNode("stalker", msBeastTraversalLaunchNode, "BeastReachedTraversalLaunch");
+
+			cVector3f vToLaunch = Entity_GetPosition(msBeastTraversalLaunchNode) - Entity_GetPosition("stalker");
+			if (vToLaunch.SqrLength() <= 1.25f * 1.25f)
+				BeastReachedTraversalLaunch("stalker", true);
+			else
+				Pathfinder_MoveToNode("stalker", msBeastTraversalLaunchNode, "BeastReachedTraversalLaunch");
+
+			Map_RemoveTimer("BeastTraversalWatchdog");
 			Map_AddTimer("BeastTraversalWatchdog", 0.1f, "UpdateBeastTraversal");
+			return true;
 		}
 
 		//-------------------------------------------------------
@@ -369,7 +521,11 @@ class cScrMap : iScrMap
 		void BeastReachedTraversalLaunch(const tString &in asEntityName, bool abReachedEnd)
 		{
 			if (mbBeastTraversalActive == false || msBeastTraversalStage != "moving") return;
-			if (abReachedEnd == false) return;
+			if (abReachedEnd == false)
+			{
+				AbortBeastTraversal("could not reach launch PathNode '" + msBeastTraversalLaunchNode + "'");
+				return;
+			}
 
 			msBeastTraversalStage = "jumping";
 			mfBeastTraversalTime = 0.0f;
@@ -380,23 +536,38 @@ class cScrMap : iScrMap
 
 		void EvaluateBeastTraversal()
 		{
-			if (mbBeastActivated == false || mbBeastTraversalActive) return;
+			if (mbBeastActivated == false || mbBeastTraversalActive || mbBeastTraversalRetryBlocked) return;
 
-			RefreshBeastLocation(Entity_GetPosition("stalker"));
-			RefreshPlayerLocation(Player_GetFeetPosition());
+			EnsureStalkerJumpNetworkSetup();
+			RefreshStalkerRegions();
 
-			if (msPlayerFloorLevel != msBeastFloorLevel)
+			if (msPlayerStalkerRegion == "" || msBeastStalkerRegion == "")
 			{
-				if (msBeastFloorLevel == "lower")
-					BeginBeastTraversal("upper", msCurrentPlayerFloorSide);
-				else
-					BeginBeastTraversal("lower", msCurrentBeastFloorSide);
+				ReleaseBeastTraversalControl();
+				LogBeastRouteWarning("cannot resolve registered regions (Stalker='" +
+					msBeastStalkerRegion + "', player='" + msPlayerStalkerRegion + "').");
+				return;
 			}
-			else if (msPlayerFloorLevel == "upper" &&
-					 msCurrentPlayerFloorSide != msCurrentBeastFloorSide)
+
+			if (msPlayerStalkerRegion == msBeastStalkerRegion)
 			{
-				BeginBeastTraversal("upper", msCurrentPlayerFloorSide);
+				ClearBeastRouteWarning();
+				ReleaseBeastTraversalControl();
+				return;
 			}
+
+			cStalkerJumpRoute@ pRoute = mStalkerJumpNetwork.GetFirstRoute(msBeastStalkerRegion,
+				msPlayerStalkerRegion);
+			if (pRoute is null)
+			{
+				ReleaseBeastTraversalControl();
+				LogBeastRouteWarning("no directed route from '" + msBeastStalkerRegion +
+					"' to '" + msPlayerStalkerRegion + "'.");
+				return;
+			}
+
+			ClearBeastRouteWarning();
+			BeginBeastTraversal(pRoute.msId);
 		}
 
 		//-------------------------------------------------------
@@ -404,10 +575,24 @@ class cScrMap : iScrMap
 		void AbortBeastTraversal(const tString &in asReason)
 		{
 			Debug_Log("Stalker traversal aborted: " + asReason, false);
+
+			bool bWasMoving = msBeastTraversalStage == "moving";
+			Map_RemoveTimer("BeastTraversalWatchdog");
+			if (bWasMoving)
+				Pathfinder_Stop("stalker");
+
 			mbBeastTraversalActive = false;
 			msBeastTraversalStage = "";
+			msBeastTraversalRouteId = "";
+			msBeastTraversalLaunchNode = "";
+			msBeastTraversalJumpTarget = "";
+			msBeastTraversalTargetRegion = "";
+			mfBeastTraversalTime = 0.0f;
+			mbBeastTraversalRetryBlocked = true;
+
 			SetBeastExternalTraversal(false);
 			SetBeastBossFightBehaviour(0);
+			Map_RemoveTimer("ReevaluateBeastTraversal");
 			Map_AddTimer("ReevaluateBeastTraversal", 0.5f, "ReevaluateBeastTraversal");
 		}
 
@@ -417,14 +602,23 @@ class cScrMap : iScrMap
 		{
 			if (mbBeastTraversalActive == false) return;
 
-			msBeastFloorLevel = msBeastTraversalTargetFloor;
-			msCurrentBeastFloorSide = msBeastTraversalTargetSide;
+			tString sDestinationRegion = msBeastTraversalTargetRegion;
+			Map_RemoveTimer("BeastTraversalWatchdog");
+
+			msBeastStalkerRegion = sDestinationRegion;
 			mbBeastTraversalActive = false;
 			msBeastTraversalStage = "";
+			msBeastTraversalRouteId = "";
+			msBeastTraversalLaunchNode = "";
+			msBeastTraversalJumpTarget = "";
+			msBeastTraversalTargetRegion = "";
+			mfBeastTraversalTime = 0.0f;
+			mbBeastTraversalRetryBlocked = false;
 
 			// Hand the pathfinder back to Default boss chase after the jump.
 			SetBeastExternalTraversal(false);
 			SetBeastBossFightBehaviour(0);
+			Map_RemoveTimer("ReevaluateBeastTraversal");
 			Map_AddTimer("ReevaluateBeastTraversal", 0.1f, "ReevaluateBeastTraversal");
 		}
 
@@ -432,7 +626,41 @@ class cScrMap : iScrMap
 
 		void ReevaluateBeastTraversal(const tString &in asTimer)
 		{
+			mbBeastTraversalRetryBlocked = false;
 			EvaluateBeastTraversal();
+		}
+
+		//-------------------------------------------------------
+
+		void StartBeastRouteEvaluator()
+		{
+			Map_RemoveTimer("BeastRouteEvaluator");
+			Map_AddTimer("BeastRouteEvaluator", 0.25f, "UpdateBeastRouteEvaluator");
+		}
+
+		//-------------------------------------------------------
+
+		void UpdateBeastRouteEvaluator(const tString &in asTimer)
+		{
+			if (mbBeastActivated == false) return;
+
+			EnsureStalkerJumpNetworkSetup();
+			RefreshStalkerRegions();
+			if (mbBeastTraversalActive == false && mbBeastTraversalRetryBlocked == false)
+				EvaluateBeastTraversal();
+
+			Map_AddTimer("BeastRouteEvaluator", 0.25f, "UpdateBeastRouteEvaluator");
+		}
+
+		//-------------------------------------------------------
+
+		void BeginBeastLandingHandoff()
+		{
+			if (mbBeastTraversalActive == false || msBeastTraversalStage != "jumping") return;
+
+			msBeastStalkerRegion = msBeastTraversalTargetRegion;
+			msBeastTraversalStage = "landing";
+			mfBeastTraversalTime = 0.0f;
 		}
 
 		//-------------------------------------------------------
@@ -450,15 +678,34 @@ class cScrMap : iScrMap
 				{
 					BeastReachedTraversalLaunch("stalker", true);
 				}
-				else if (mfBeastTraversalTime >= 12.0f)
+				else if (mfBeastTraversalTime >= 30.0f)
 				{
 					AbortBeastTraversal("timed out while moving to " + msBeastTraversalLaunchNode);
 					return;
 				}
 			}
-			else if (msBeastTraversalStage == "jumping" && mfBeastTraversalTime >= 2.5f)
+			else if (msBeastTraversalStage == "jumping")
 			{
-				// Fallback for a landing trigger missed by cutscene movement.
+				if (mStalkerJumpNetwork.IsAgentInsideRegion("stalker", msBeastTraversalTargetRegion))
+				{
+					BeginBeastLandingHandoff();
+				}
+				else if (mfBeastTraversalTime >= 6.5f)
+				{
+					// The agent's six-second AlwaysChase jump failsafe has now had time
+					// to run. Rescan once, then either hand off or retry the edge.
+					if (mStalkerJumpNetwork.IsAgentInsideRegion("stalker", msBeastTraversalTargetRegion))
+						BeginBeastLandingHandoff();
+					else
+					{
+						AbortBeastTraversal("jump route '" + msBeastTraversalRouteId +
+							"' did not reach region '" + msBeastTraversalTargetRegion + "'");
+						return;
+					}
+				}
+			}
+			else if (msBeastTraversalStage == "landing" && mfBeastTraversalTime >= 0.5f)
+			{
 				FinishBeastTraversal("");
 				return;
 			}
@@ -470,102 +717,32 @@ class cScrMap : iScrMap
 
 		void OnStalkerMoveTo(int alBehaviour, const cVector3f &in avGoalPos)
 		{
-			// The stock boss state calls this before every chase request. Evaluate
-			// actual positions here so missed trigger callbacks cannot leave stale
-			// floor/side state and strand the Stalker on another node graph.
-			RefreshBeastLocation(Entity_GetPosition("stalker"));
-			RefreshPlayerLocation(Player_GetFeetPosition());
+			// The stock boss state calls this before every chase request. Keep it as
+			// an immediate routing hook in addition to the independent 0.25s scan.
+			RefreshStalkerRegions();
 			EvaluateBeastTraversal();
 		}
 
-		//-------------------------------------------------------
-	 
-		bool Collide_PlayerOnUpperFloor(const tString &in asParent, const tString &in asChild, int alState)
-		{
-			if (alState != 1) return true;
-
-			if (asChild == "Player")
-			{
-				msCurrentPlayerFloorSide = Entity_GetVarString(asParent, "");
-				msPlayerFloorLevel = "upper";
-			}
-				
-
-			if (asChild == "stalker")
-			{
-				msCurrentBeastFloorSide = Entity_GetVarString(asParent, "");
-				msBeastFloorLevel = "upper";
-
-				if (mbBeastTraversalActive && msBeastTraversalStage == "jumping" &&
-					msBeastTraversalTargetFloor == "upper" &&
-					msBeastTraversalTargetSide == msCurrentBeastFloorSide)
-				{
-					msBeastTraversalStage = "landing";
-					Map_AddTimer("FinishBeastTraversal", 0.5f, "FinishBeastTraversal");
-				}
-			}
-
-			EvaluateBeastTraversal();
-
-			return true;
-		}
-
-		bool Collide_PlayerOnLowerFloor(const tString &in asParent, const tString &in asChild, int alState)
-		{
-			if (alState != 1) return true;
-
-			if (asChild == "Player")
-			{
-				msCurrentPlayerFloorSide = Entity_GetVarString(asParent, "");
-				msPlayerFloorLevel = "lower";
-			}
-				
-
-			if (asChild == "stalker")
-			{
-				msCurrentBeastFloorSide = Entity_GetVarString(asParent, "");
-				msBeastFloorLevel = "lower";
-
-				if (mbBeastTraversalActive && msBeastTraversalStage == "jumping" &&
-					msBeastTraversalTargetFloor == "lower" &&
-					msBeastTraversalTargetSide == msCurrentBeastFloorSide)
-				{
-					msBeastTraversalStage = "landing";
-					Map_AddTimer("FinishBeastTraversal", 0.5f, "FinishBeastTraversal");
-				}
-			}
-
-			EvaluateBeastTraversal();
-
-			return true;
-		}
-	 
 		//-------------------------------------------------------
 	 
 		bool ActivateBeast(const tString &in asParent, const tString &in asChild, int alState)
 		{
-			if (alState == 1)
+			if (alState == 1 && mbBeastActivated == false)
 			{
+				EnsureStalkerJumpNetworkSetup();
 				Entity_SetActive("stalker", true);
 				cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_Enter");
 
 				mbBeastActivated = true;
-				msBeastFloorLevel = "upper";
-				msCurrentBeastFloorSide = "left";
-
-				// The Stalker already spawns at the upper-left launch position. Keep
-				// the original direct activation jump and let the traversal controller
-				// track the landing before returning control to the chase AI.
-				mbBeastTraversalActive = true;
-				msBeastTraversalStage = "jumping";
-				msBeastTraversalTargetFloor = "lower";
-				msBeastTraversalTargetSide = "left";
-				mfBeastTraversalTime = 0.0f;
 				SetBeastAlwaysChase(true);
-				Stalker_Jump("stalker", "Jump_interior_target_lower_left");
 				Stalker_SetMode("stalker", eStalkerMode_Active);
-				SetBeastExternalTraversal(true);
-				Map_AddTimer("BeastTraversalWatchdog", 0.1f, "UpdateBeastTraversal");
+
+				RefreshStalkerRegions();
+				StartBeastRouteEvaluator();
+
+				// The Stalker spawns at the upper-left launch position. Preserve the
+				// staged opening, but run it through the same registered route state.
+				BeginBeastTraversal("interior_upper_left_to_lower", true);
 			}
 
 			return false;
