@@ -274,6 +274,7 @@ class cScrMap : iScrMap
 		bool mbBeastActivated = false;
 		bool mbBeastTraversalActive = false;
 		bool mbBeastExternalTraversalActive = false;
+		bool mbBeastNodePathChaseActive = false;
 		bool mbBeastTraversalRetryBlocked = false;
 		float mfBeastTraversalTime = 0.0f;
 		tString msBeastTraversalStage = "";
@@ -323,6 +324,7 @@ class cScrMap : iScrMap
 			RegisterStalkerRegionArea("exterior_roof_6", "Collide_RoofFenceJump_5");
 			RegisterStalkerRegionArea("exterior_roof_7", "Collide_RoofFenceJump_6");
 			RegisterStalkerRegionArea("exterior_roof_8", "Collide_RoofFenceJump_7");
+			RegisterStalkerRegionArea("exterior_roof_9", "Collide_RoofFenceJump_9");
 
 			RegisterStalkerJumpRoute("interior_lower_to_upper_left",
 				"interior_lower", "interior_upper_left",
@@ -387,6 +389,36 @@ class cScrMap : iScrMap
 			"exterior_roof_1",
 			"PathNode_260",
 			"Trigger_18");
+			RegisterStalkerJumpRoute("exterior_roof_vent_10",
+			"exterior_roof_7",
+			"exterior_roof_9",
+			"PathNode_255",
+			"Trigger_21");
+			RegisterStalkerJumpRoute("exterior_roof_vent_11",
+			"exterior_roof_3",
+			"exterior_roof_4",
+			"PathNode_123",
+			"Trigger_26");
+			RegisterStalkerJumpRoute("exterior_roof_vent_12",
+			"exterior_roof_3",
+			"exterior_roof_9",
+			"PathNode_255",
+			"Trigger_21");
+			RegisterStalkerJumpRoute("exterior_roof_vent_13",
+			"exterior_roof_4",
+			"exterior_roof_9",
+			"PathNode_255",
+			"Trigger_21");
+			RegisterStalkerJumpRoute("exterior_roof_vent_14",
+			"exterior_roof_5",
+			"exterior_roof_9",
+			"PathNode_255",
+			"Trigger_21");
+			RegisterStalkerJumpRoute("exterior_roof_vent_15",
+			"exterior_roof_9",
+			"exterior_roof_8",
+			"PathNode_255",
+			"Trigger_20");
 
 
 			if (mStalkerJumpNetwork.Validate("stalker") == false)
@@ -465,6 +497,20 @@ class cScrMap : iScrMap
 
 		//-------------------------------------------------------
 
+		void EnableBeastNodePathChase()
+		{
+			// BossFightDefault resolves the PathNode nearest the player and moves
+			// to that node every 0.1 seconds while external traversal is disabled.
+			ReleaseBeastTraversalControl();
+			if (mbBeastNodePathChaseActive) return;
+
+			mbBeastNodePathChaseActive = true;
+			SetBeastAlwaysChase(true);
+			SetBeastBossFightBehaviour(0);
+		}
+
+		//-------------------------------------------------------
+
 		bool BeginBeastTraversal(const tString &in asRouteId, bool abForceSourceRegion = false)
 		{
 			if (mbBeastActivated == false || mbBeastTraversalActive) return false;
@@ -495,6 +541,7 @@ class cScrMap : iScrMap
 			msBeastTraversalStage = "moving";
 			mfBeastTraversalTime = 0.0f;
 			mbBeastTraversalActive = true;
+			mbBeastNodePathChaseActive = false;
 			mbBeastTraversalRetryBlocked = false;
 
 			Debug_Log("Stalker traversal route '" + pRoute.msId + "': " +
@@ -543,16 +590,17 @@ class cScrMap : iScrMap
 
 			if (msPlayerStalkerRegion == "" || msBeastStalkerRegion == "")
 			{
-				ReleaseBeastTraversalControl();
-				LogBeastRouteWarning("cannot resolve registered regions (Stalker='" +
-					msBeastStalkerRegion + "', player='" + msPlayerStalkerRegion + "').");
+				EnableBeastNodePathChase();
+				LogBeastRouteWarning("actor outside registered regions (Stalker='" +
+					msBeastStalkerRegion + "', player='" + msPlayerStalkerRegion +
+					"'); using strict Stalker PathNode chase.");
 				return;
 			}
 
 			if (msPlayerStalkerRegion == msBeastStalkerRegion)
 			{
 				ClearBeastRouteWarning();
-				ReleaseBeastTraversalControl();
+				EnableBeastNodePathChase();
 				return;
 			}
 
@@ -560,9 +608,9 @@ class cScrMap : iScrMap
 				msPlayerStalkerRegion);
 			if (pRoute is null)
 			{
-				ReleaseBeastTraversalControl();
+				EnableBeastNodePathChase();
 				LogBeastRouteWarning("no directed route from '" + msBeastStalkerRegion +
-					"' to '" + msPlayerStalkerRegion + "'.");
+					"' to '" + msPlayerStalkerRegion + "'; using strict Stalker PathNode chase.");
 				return;
 			}
 
