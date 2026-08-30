@@ -1,0 +1,58 @@
+#include "interfaces/Area_Interface.hps"
+
+//------------------------------------------------------------
+// Editor-authored navigation island used by the Stalker jump router.
+//------------------------------------------------------------
+
+class cScrAreaStalkerJumpRegion : iScrArea, iScrArea_Interface
+{
+	//------------------------------------------------------------
+
+	void Init() {}
+
+	//------------------------------------------------------------
+
+	void SetupAfterLoad(cWorld@ apWorld, cResourceVarsObject@ apVars)
+	{
+		msStalkerName = apVars.GetVarString("StalkerName", "stalker");
+		msRegionGroup = apVars.GetVarString("RegionGroup", "");
+		mBaseObj.SetCheckCollision(false);
+	}
+
+	//------------------------------------------------------------
+
+	// Returns the agent name assigned in the editor.
+	void _Global_GetStalkerName()
+	{
+		cScript_SetGlobalReturnString(msStalkerName);
+	}
+
+	//------------------------------------------------------------
+
+	// Returns the logical navigation-island ID; empty means the area name.
+	void _Global_GetRegionGroup()
+	{
+		cScript_SetGlobalReturnString(msRegionGroup);
+	}
+
+	//------------------------------------------------------------
+
+	void ResetProperties() {}
+	void BeforeEntityDestruction() {}
+	bool CanInteract(int alType, iPhysicsBody@ apBody) { return false; }
+	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData) { return false; }
+	int GetInteractIconId(int alType, iPhysicsBody@ apBody) { return -1; }
+	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck) { return false; }
+	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity) { return true; }
+	void OnEndCheckCollision(float afTimeStep) {}
+	void OnSetActive(bool abX) {}
+	void OnConnectionStateChange(iLuxEntity@ apEntity, int alState) {}
+	float DrawDebugOutput(cGuiSet@ apSet, iFontData@ apFont, float afStartY) { return afStartY; }
+
+	//------------------------------------------------------------
+
+	tString msStalkerName = "stalker";
+	tString msRegionGroup = "";
+}
+
+//------------------------------------------------------------

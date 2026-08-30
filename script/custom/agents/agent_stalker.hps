@@ -284,6 +284,9 @@ const float gfStalker_JumpHangOnLedgeAnimDistOffset = 8.650f;
 const float gfStalker_JumpExtraLongHangOnLedgeAnimDistOffset = 13.206f;
 const float gfStalker_JumpShortAnimDistOffset = 4.331f;
 const float gfStalker_SecondJumpMaxRelT = 0.9f;
+const float gfStalker_JumpHighExtraArcHeight = 4.0f;
+const float gfStalker_JumpHighAnimSpeed = 0.72f;
+const cVector3f gvStalker_NarrowSectionBodySize = cVector3f(0.75f, 1.92f, 0.75f);
 const float gfStalker_HangOnLedgeAnimMinAllowFallRelTimePos = 0.18f;
 const float gfStalker_HangOnLedgeLongAnimMinAllowFallRelTimePos = 0.231f;
 const float gfStalker_BossFightMaxHurtByGunDistance = 35.f;
@@ -516,6 +519,9 @@ class cScrAgentStalker : cScrAgentHumanoid
 {
 	//===========================================================
 
+	int mlNarrowSectionBodySizeIndex = -1;
+	bool mbNarrowSectionBodyRequested = false;
+
 	/////////////////////////////////////////
 	//=======================================
 	// MAIN FUNCTIONS
@@ -568,6 +574,7 @@ class cScrAgentStalker : cScrAgentHumanoid
 		pCharBody.SetCollideCharacter(false);		
 		pCharBody.SetupSafePositions(0.25f, 5.f);
 		pCharBody.AddExtraSize(cVector3f(0.1f, 1.92f, 0.1f));
+		mlNarrowSectionBodySizeIndex = pCharBody.AddExtraSize(gvStalker_NarrowSectionBodySize);
 	}
 
 	//------------------------------------------------------------
@@ -2175,13 +2182,18 @@ class cScrAgentStalker : cScrAgentHumanoid
 		{
 			cAnimationState@ pState = mBaseObj.GetMeshEntity().GetAnimationStateFromName(msBossFightJump_JumpAnim);
 			if (pState !is null && pState.GetRelativeTimePosition() < gfStalker_SecondJumpMaxRelT)
+			{
+				mbBossFightJump_NextHighJump = false;
 				return;
+			}
 		}
 				
 		mvBossFightJump_GoalPos = cScript_GetGlobalArgVector3f(0);
 		mbBossFightJump_JumpingToPlatform = cScript_GetGlobalArgBool(1);
 		mbBossFightJump_TurnAround = cScript_GetGlobalArgBool(2);
 		mbBossFightJump_PlayerBrokeBridge = cScript_GetGlobalArgBool(3);
+		mbBossFightJump_HighJump = mbBossFightJump_NextHighJump;
+		mbBossFightJump_NextHighJump = false;
 		
 		if (bJumping)
 		{
@@ -2340,6 +2352,58 @@ class cScrAgentStalker : cScrAgentHumanoid
 			mpStateMachine.StopTimer("Move");
 			mpStateMachine.AddTimer("Move", 0.0f);
 		}
+	}
+	
+	//------------------------------------------------------------
+
+	void _Global_BossFight_SetNextJumpHigh()
+	{
+		mbBossFightJump_NextHighJump = cScript_GetGlobalArgBool(0);
+	}
+	
+	//------------------------------------------------------------
+
+	void SetNarrowSectionBodyRequested(bool abActive)
+	{
+		mbNarrowSectionBodyRequested = abActive;
+
+		iCharacterBody@ pCharBody = mBaseObj.GetCharBody();
+		if (pCharBody is null || mlNarrowSectionBodySizeIndex < 0)
+			return;
+
+		// The Hurt state temporarily owns body size 1. Its Leave callback restores
+		// either this narrow body or the normal body afterward.
+		if (mpStateMachine.GetCurrentState() == eStalkerState_Hurt)
+			return;
+
+		if (abActive)
+		{
+			if (pCharBody.GetActiveSize() != mlNarrowSectionBodySizeIndex)
+			{
+				pCharBody.SetActiveSize(mlNarrowSectionBodySizeIndex);
+				cLux_AddAIDebugMessage("(" + mBaseObj.GetName() +
+					") Narrow-section character body enabled.", false, true);
+			}
+			return;
+		}
+
+		if (pCharBody.GetActiveSize() == mlNarrowSectionBodySizeIndex)
+		{
+			cVector3f vPushBack;
+			if (pCharBody.CheckCharacterFits(pCharBody.GetFeetPosition(), true, 0, vPushBack))
+			{
+				pCharBody.SetActiveSize(0);
+				cLux_AddAIDebugMessage("(" + mBaseObj.GetName() +
+					") Normal character body restored.", false, true);
+			}
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_SetNarrowSectionBodyActive()
+	{
+		SetNarrowSectionBodyRequested(cScript_GetGlobalArgBool(0));
 	}
 	
 	//------------------------------------------------------------
@@ -15472,7 +15536,19 @@ class cScrAgentStalker : cScrAgentHumanoid
 		}
 		
 		mpMover.SetUseMoveStateAnimations(true);
-		mBaseObj.GetCharBody().SetActiveSize(0);
+		iCharacterBody@ pCharBody = mBaseObj.GetCharBody();
+		if (mbNarrowSectionBodyRequested && mlNarrowSectionBodySizeIndex >= 0)
+		{
+			pCharBody.SetActiveSize(mlNarrowSectionBodySizeIndex);
+		}
+		else
+		{
+			cVector3f vPushBack;
+			if (pCharBody.CheckCharacterFits(pCharBody.GetFeetPosition(), true, 0, vPushBack))
+				pCharBody.SetActiveSize(0);
+			else if (mlNarrowSectionBodySizeIndex >= 0)
+				pCharBody.SetActiveSize(mlNarrowSectionBodySizeIndex);
+		}
 	}
 
 	//------------------------------------------------------------
@@ -19547,8 +19623,12 @@ class cScrAgentStalker : cScrAgentHumanoid
 	bool mbBossFightJump_TurnAround = false;
 	bool mbBossFightJump_IncreasedHurtCount = false;
 	bool mbBossFightJump_PlayerBrokeBridge = false;
+	bool mbBossFightJump_HighJump = false;
+	bool mbBossFightJump_NextHighJump = false;
 	float mfBossFightJump_Angle = 0.f;
 	float mfBossFightJump_AnimDistOffset = -1.f;
+	float mfBossFightJump_ExtraArcHeight = 0.f;
+	float mfBossFightJump_AnimSpeed = 1.f;
 	int mlBossFightJump_HurtWhileHangingCount = 0;
 	int mlBossFightJump_JumpCount = 0;
 	cVector3f mvBossFightJump_StartPos(0.f);
@@ -19605,6 +19685,8 @@ class cScrAgentStalker : cScrAgentHumanoid
 		mbBossFightJump_HangOnLedge = false;
 		mbBossFightJump_JumpingToPlatform = false;
 		mbBossFightJump_TurnAround = false;
+		mbBossFightJump_HighJump = false;
+		mbBossFightJump_NextHighJump = false;
 		
 		mBaseObj.GetCharBody().SetTestCollision(true);		
 		mpMover.SetUseMoveStateAnimations(true);
@@ -19667,6 +19749,7 @@ class cScrAgentStalker : cScrAgentHumanoid
 			
 			float fT = cMath_Clamp((fTimePos - fMinT) / (fMaxT - fMinT), 0.f, 1.f);
 			vPos = mvBossFightJump_StartPos * (1.f - fT) + mvBossFightJump_GoalPos * fT;
+			vPos.y += mfBossFightJump_ExtraArcHeight * (4.f * fT * (1.f - fT));
 			
 			cVector3f vOffsetDir = mvBossFightJump_GoalPos - mvBossFightJump_StartPos;
 			vOffsetDir.y = 0.f;
@@ -19815,7 +19898,7 @@ class cScrAgentStalker : cScrAgentHumanoid
 				cAnimationState@ pAnim = mBaseObj.GetMeshEntity().GetAnimationStateFromName(msBossFightJump_JumpAnim);
 				if (pAnim is null) return true;
 				
-				pAnim.FadeSpeed(1.2f, 1.f);
+				pAnim.FadeSpeed(1.2f * mfBossFightJump_AnimSpeed, 1.f);
 			}
 		}
 		
@@ -19881,7 +19964,9 @@ class cScrAgentStalker : cScrAgentHumanoid
 	}
 	
 	//------------------------------------------------------------
-	
+
+	//------------------------------------------------------------
+
 	void BossFightJump_Setup(bool abSecondJump)
 	{
 		/////////////////////
@@ -19937,6 +20022,13 @@ class cScrAgentStalker : cScrAgentHumanoid
 		{
 			mvBossFightJump_GoalPos = vGoalRayStart + cVector3f_Down * fDist;
 		}
+
+		mfBossFightJump_ExtraArcHeight = mbBossFightJump_HighJump ?
+			gfStalker_JumpHighExtraArcHeight : 0.f;
+		mfBossFightJump_AnimSpeed = mbBossFightJump_HighJump ?
+			gfStalker_JumpHighAnimSpeed : 1.f;
+		cLux_AddAIDebugMessage("(" + mBaseObj.GetName() + ") Authored jump: HighJump=" +
+			mbBossFightJump_HighJump + ", extra arc " + mfBossFightJump_ExtraArcHeight, false, true);
 		
 		vToGoal = mvBossFightJump_GoalPos - mvBossFightJump_StartPos;		
 		mfBossFightJump_Angle = cMath_GetAngleFromPoints3D(0.f, cMath_Vector3Normalize(vToGoal)).y;
@@ -19994,7 +20086,8 @@ class cScrAgentStalker : cScrAgentHumanoid
 		}	
 		
 		float fFadeTime = abSecondJump ? 0.f : 0.3f;
-		PlayCutsceneAnimation(msBossFightJump_JumpAnim, false, fFadeTime, "", 1.f, 0.f, true, mvBossFightJump_StartPos, mfBossFightJump_Angle, false, true, bStayInAnim);
+		PlayCutsceneAnimation(msBossFightJump_JumpAnim, false, fFadeTime, "", mfBossFightJump_AnimSpeed,
+			0.f, true, mvBossFightJump_StartPos, mfBossFightJump_Angle, false, true, bStayInAnim);
 	}
 	
 	//------------------------------------------------------------

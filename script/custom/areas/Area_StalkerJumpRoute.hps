@@ -1,0 +1,79 @@
+#include "interfaces/Area_Interface.hps"
+
+//------------------------------------------------------------
+// Editor-authored directed Stalker jump endpoint.
+// An empty TargetJumpArea makes this a landing-only endpoint.
+//------------------------------------------------------------
+
+class cScrAreaStalkerJumpRoute : iScrArea, iScrArea_Interface
+{
+	//------------------------------------------------------------
+
+	void Init() {}
+
+	//------------------------------------------------------------
+
+	void SetupAfterLoad(cWorld@ apWorld, cResourceVarsObject@ apVars)
+	{
+		msTargetJumpArea = apVars.GetVarString("TargetJumpArea", "");
+		mbHighJump = apVars.GetVarBool("HighJump", false);
+		msLaunchNodeOverride = apVars.GetVarString("LaunchNodeOverride", "");
+		mbStartOnActivation = apVars.GetVarBool("StartOnActivation", false);
+		mBaseObj.SetCheckCollision(false);
+	}
+
+	//------------------------------------------------------------
+
+	// Returns the directed landing endpoint, or empty for landing-only areas.
+	void _Global_GetTargetJumpArea()
+	{
+		cScript_SetGlobalReturnString(msTargetJumpArea);
+	}
+
+	//------------------------------------------------------------
+
+	// Returns whether this route opts into the fixed high parabola.
+	void _Global_GetHighJump()
+	{
+		cScript_SetGlobalReturnBool(mbHighJump);
+	}
+
+	//------------------------------------------------------------
+
+	// Returns the optional authored PathNode override.
+	void _Global_GetLaunchNodeOverride()
+	{
+		cScript_SetGlobalReturnString(msLaunchNodeOverride);
+	}
+
+	//------------------------------------------------------------
+
+	// Returns whether this is the staged activation route.
+	void _Global_GetStartOnActivation()
+	{
+		cScript_SetGlobalReturnBool(mbStartOnActivation);
+	}
+
+	//------------------------------------------------------------
+
+	void ResetProperties() {}
+	void BeforeEntityDestruction() {}
+	bool CanInteract(int alType, iPhysicsBody@ apBody) { return false; }
+	bool OnInteract(int alType, iPhysicsBody@ apBody, const cVector3f &in avFocusPos, const tString&in asData) { return false; }
+	int GetInteractIconId(int alType, iPhysicsBody@ apBody) { return -1; }
+	bool OnStartCheckCollision(float afTimeStep, float afTimeSinceCheck) { return false; }
+	bool OnCheckCollision(iPhysicsBody@ apBody, iLuxEntity@ apEntity) { return true; }
+	void OnEndCheckCollision(float afTimeStep) {}
+	void OnSetActive(bool abX) {}
+	void OnConnectionStateChange(iLuxEntity@ apEntity, int alState) {}
+	float DrawDebugOutput(cGuiSet@ apSet, iFontData@ apFont, float afStartY) { return afStartY; }
+
+	//------------------------------------------------------------
+
+	tString msTargetJumpArea = "";
+	bool mbHighJump = false;
+	tString msLaunchNodeOverride = "";
+	bool mbStartOnActivation = false;
+}
+
+//------------------------------------------------------------
