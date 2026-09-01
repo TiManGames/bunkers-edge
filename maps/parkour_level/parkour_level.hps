@@ -130,6 +130,7 @@ class cScrMap : iScrMap
 		Sketchbook_SetInventoryEnabled(false);
 
 		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
+
 	}
 
 	//-------------------------------------------------------
@@ -183,7 +184,141 @@ class cScrMap : iScrMap
 	//{///////////////////////////////////////////////////////////////////////////////////////
  
 	//-------------------------------------------------------
- 
+
+	bool Trigger_AutoSave(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		Game_AutoSave(true);
+
+		return true;
+	}
+	
+	//-------------------------------------------------------
+
+	bool mbDeathSequenceActive = false;
+
+	//-------------------------------------------------------
+
+	bool Trigger_Death(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		if (alState != 1 || mbDeathSequenceActive)
+			return false;
+
+		mbDeathSequenceActive = true;
+		Entity_SetActive(asParent, false);
+
+		// Cancel parkour/interactions while keeping the character body active so
+		// gravity can carry the player through the last part of the fall.
+		cLux_GetPlayer().ChangeState(ePlayerState_Null);
+		Player_FadeMoveSpeedMulTo(0.0f, 0.15f, ePlayerMoveSpeedMulType_PlayerState);
+		Player_FadeRunSpeedMulTo(0.0f, 0.15f);
+		Player_FadeLookSpeedMulTo(0.0f, 0.15f);
+		Player_SetJumpDisabled(true);
+		Player_SetCrouchDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_SetCanEquipItems(false);
+		Sketchbook_SetCanOpen(false);
+		Player_ShowCrossHairIcons(false, true);
+
+		// Fade into increasingly violent camera movement as the ground approaches.
+		Effect_Shake_Start(0.075f, 0.1f, 1.0f, 0.1f,
+			cVector3f(0.7f, 1.0f, 0.7f), 28.0f);
+		Effect_FOV_Shake_Start(0.045f, 0.1f, 1.0f, 0.1f,
+			18.0f, true, 0.15f, 4.0f, true);
+		Effect_Roll_Shake_Start(2.5f, 0.1f, 1.0f, 0.1f,
+			18.0f, true, 0.15f, 4.0f);
+		Effect_Rumble_Start(0.7f, 0.1f, 1.0f, 0.1f);
+
+		Map_RemoveTimer("DeathSequence_Impact");
+		Map_AddTimer("DeathSequence_Impact", 1.05f, "OnTimer_DeathSequenceImpact");
+
+		return false;
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_DeathSequenceImpact(const tString &in asTimer)
+	{
+		if (mbDeathSequenceActive == false)
+			return;
+
+		Map_RemoveTimer("BeastRouteEvaluator");
+		Map_RemoveTimer("BeastTraversalWatchdog");
+		Map_RemoveTimer("ReevaluateBeastTraversal");
+		Entity_SetActive("stalker", false);
+		Music_StopAll(0.2f);
+
+		Sound_PlayGui("player/foley/damage/player_fall_damage" +
+			Player_GetReactionSoundSuffix(), 1.0f, eSoundEntryType_GuiWorld);
+		Sound_PlayGui("player/vocalisations/hurt/player_death" +
+			Player_GetReactionSoundSuffix(), 1.0f);
+
+		Effect_Shake_Start(0.5f, 0.08f, 0.0f, 0.25f,
+			cVector3f(1.0f), 64.0f);
+		Effect_FOV_Shake_Start(0.1f, 0.08f, 0.0f, 0.25f, 32.0f);
+		Effect_Roll_Shake_Start(6.0f, 0.08f, 0.0f, 0.25f, 32.0f);
+		Effect_Rumble_Start(1.0f, 0.15f, 0.0f, 0.2f);
+
+		Sound_PlayGui("death.ogg", 0.5f, eSoundEntryType_Gui);
+
+		// The stock death handler supplies the falling state and fade to black.
+		// Its custom callback lets this sequence reload without showing a prompt.
+		Death_SetCustomDeathBehaviour(true);
+		Death_Start("Fall");
+	}
+
+	//-------------------------------------------------------
+
+	void OnCustomDeath(const tString &in asSource)
+	{
+		if (mbDeathSequenceActive == false)
+		{
+			GameOver_Start(asSource);
+			return;
+		}
+
+		Sound_Stop("falling", 0);
+
+		Map_RemoveTimer("DeathSequence_Reload");
+		Map_AddTimer("DeathSequence_Reload", 1.0f, "OnTimer_DeathSequenceReload");
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_DeathSequenceReload(const tString &in asTimer)
+	{
+		
+		cLux_LoadScreenSetBarPosAndSize(0.0f, 0.0f);
+		SaveRoom_LoadLastSave();
+	}
+
+	//-------------------------------------------------------
+
+	bool Trigger_ShowParkourHint(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		if (alState != 1) return true;
+
+		tString sHintEntry = Entity_GetVarString(asParent, "");
+		bool bPause = false;
+		if (sHintEntry == "")
+		{
+			if (Parkour_GetDebug())
+				cLux_AddDebugMessage("[Parkour] Hint trigger '" + asParent + "' has no UserVar entry.", true);
+			return true;
+		}
+
+		if (sHintEntry == "HintBELedge" || sHintEntry == "HintBEBeam" || sHintEntry == "HintBEWallJump" || sHintEntry == "HintBERoll")
+		{
+			bPause = true;
+		}
+
+		Parkour_ShowTutorialHint(sHintEntry, bPause);
+
+		Game_AutoSave(true);
+		return true;
+	}
+
+	//-------------------------------------------------------
+
 	bool Trigger_RunnerObjectLight(const tString &in asParent, const tString &in asChild, int alState)
 	{
 		tString lights = Entity_GetVarString(asParent, "");

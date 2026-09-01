@@ -45,6 +45,9 @@ const float gfParkourMoveTilt_MaxRollDeg = 5.15f;
 const float gfParkourMoveTilt_YawSpeedForMax = 2.80f;
 const float gfParkourMoveTilt_TargetFadeSpeed = 8.0f;
 const float gfParkourMoveTilt_RollEaseSpeed = 15.0f;
+const float gfFallingWooshDelay = 0.35f;
+const tString gsFallingWooshName = "falling";
+const tString gsFallingWooshEvent = "monke/Player/falling_woosh/falling_aaaah_woosh";
 
 const float gfVertigoMinDist = 15.f;
 const float gfVertigoFovAdd = 0.2f;
@@ -163,6 +166,7 @@ class cScrPlayerCustom : cScrPlayer
 		Entity_Preload("medkit_cutscene.ent");
 		Entity_Preload("bandage_cutscene.ent");
 		Entity_Preload("gas_mask_cutscene.ent");
+		Sound_PreloadEvent(gsFallingWooshEvent);
 		
 	    ImGui_PreloadImage(gsPlayer_BleedingIcon, eImGuiGfx_Texture);
 	    ImGui_PreloadImage(gsPlayer_BleedingStoppedIcon, eImGuiGfx_Texture);
@@ -201,6 +205,9 @@ class cScrPlayerCustom : cScrPlayer
 		mfParkourMoveTiltTargetDeg = 0.f;
 		mfParkourMoveTiltPrevYaw = 0.f;
 		mbParkourMoveTiltHasYaw = false;
+		mbParkourSuppressInjuredHintForFall = false;
+		mfFallingWooshTime = 0.f;
+		mbFallingWooshStarted = false;
 	}
 	
 	//------------------------------------------------------------
@@ -344,6 +351,7 @@ class cScrPlayerCustom : cScrPlayer
 	
 	void OnMapLeave(cLuxMap @apMap)
 	{
+		ResetFallingWoosh();
 		cScrPlayer::OnMapLeave(apMap);
 		
 		// Make sure player lights are considered off
@@ -387,6 +395,7 @@ class cScrPlayerCustom : cScrPlayer
 	{
 		//UpdateOnSandCheck();
 		cScrPlayer::Update(afTimeStep);
+		UpdateFallingWoosh(afTimeStep);
 		UpdateParkourMoveTilt(afTimeStep);
 		//UpdateVertigo(afTimeStep);	
 		//UpdateSliding(afTimeStep);
@@ -423,7 +432,60 @@ class cScrPlayerCustom : cScrPlayer
 		UpdateEarRingingEffect(afTimeStep);
 		UpdateAimAssist(afTimeStep);
 	}
-	
+
+	//------------------------------------------------------------
+
+	float mfFallingWooshTime = 0.f;
+	bool mbFallingWooshStarted = false;
+
+	void UpdateFallingWoosh(float afTimeStep)
+	{
+		iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+		bool bFalling = mBaseObj.IsDead() == false &&
+						pBody !is null &&
+						pBody.IsActive() &&
+						pBody.GravityIsActive() &&
+						pBody.GetTestCollision() &&
+						pBody.IsOnGround() == false &&
+						pBody.GetForceVelocity().y < 0.f &&
+						cScript_GetGlobalVarBool("PlayerUnderwater") == false;
+
+		if (bFalling == false)
+		{
+			ResetFallingWoosh();
+			return;
+		}
+
+		mfFallingWooshTime += afTimeStep;
+		if (mbFallingWooshStarted || mfFallingWooshTime <= gfFallingWooshDelay)
+			return;
+
+		// A loaded mid-fall save can already contain the saved sound entity.
+		if (Sound_Exists(gsFallingWooshName) == false)
+		{
+			Sound_CreateAtEntity(gsFallingWooshName, gsFallingWooshEvent, "player",
+				0.5f, true, 0.5f, -1.f, -1.f);
+		}
+
+		mbFallingWooshStarted = true;
+	}
+
+	//------------------------------------------------------------
+
+	void ResetFallingWoosh()
+	{
+		mfFallingWooshTime = 0.f;
+		if (mbFallingWooshStarted &&
+			cLux_GetCurrentMap() !is null &&
+			Sound_Exists(gsFallingWooshName))
+		{
+			// Use an immediate stop so FMOD events with sustain points are safe.
+			Sound_Stop(gsFallingWooshName, 0.25f);
+		}
+
+		mbFallingWooshStarted = false;
+	}
+
 	//------------------------------------------------------------
 
 	void UpdateParkourMoveTilt(float afTimeStep)
@@ -1186,7 +1248,9 @@ class cScrPlayerCustom : cScrPlayer
 					if (bHardCoreHealthSystemActive)
 						sHint = (Hint_IsGiven("Hints", "HintInjuredAlt") || Hint_IsGiven("Hints", "HintInjuredAlt_Toggle")) ? "HintInjuredCreaturesAltOne" : "HintInjuredCreaturesAltTwo";					
 					
-					if (Hint_IsGiven("Hints", sHint) == false && mBaseObj.GetCurrentStateId() == ePlayerState_Normal)
+					if (mbParkourSuppressInjuredHintForFall == false &&
+						Hint_IsGiven("Hints", sHint) == false &&
+						mBaseObj.GetCurrentStateId() == ePlayerState_Normal)
 					{
 						tID idStalker = Blackboard_GetClosestAgent(mBaseObj.GetCharacterBody().GetPosition());
 						cLuxAgent@ pStalker = cLux_ID_Agent(idStalker);
@@ -1573,6 +1637,7 @@ class cScrPlayerCustom : cScrPlayer
 	int mlDamageSwayImgTrail = -1;
 	float mfPlayedHurtAnimCount = 0.f;
 	bool mbDamageAnimPlaying = false;
+	bool mbParkourSuppressInjuredHintForFall = false;
 	tString msDamageAnimEquipItemL = "";
 	tString msDamageAnimEquipItemR = "";
 	array<tString> mvHurtAnims;
@@ -1604,6 +1669,11 @@ class cScrPlayerCustom : cScrPlayer
 		
 		tString sSource = "";
 		bool bDead = Player_IsDead();
+		bool bParkourFallDamage = Parkour_GetEnabled() &&
+								  (aType == eDamageType_Fall || aType == eDamageType_FallBig);
+		bool bParkourSuccessfulRollDamage = bParkourFallDamage && Parkour_GetRollLandingArmed();
+		bool bParkourFailedRollDamage = bParkourFallDamage && bParkourSuccessfulRollDamage == false;
+		mbParkourSuppressInjuredHintForFall = bParkourFailedRollDamage;
 		
 		msDamageAnimEquipItemL = Item_GetHeldType(eItemHandlerHand_Left);
 		msDamageAnimEquipItemR = Item_GetHeldType(eItemHandlerHand_Right);
@@ -1618,7 +1688,10 @@ class cScrPlayerCustom : cScrPlayer
 			sSource = "Fall";
 			
 			if (bDead == false)
-			{				
+			{
+				if (bParkourFailedRollDamage)
+					Parkour_ShowFailedRollHint();
+
 				if (PlayerBody_IsActive() && aType == eDamageType_FallBig)
 				{
 					mbDamageAnimPlaying = true;

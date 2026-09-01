@@ -126,6 +126,38 @@ float Parkour_GetFlow()
 
 //------------------------------------------------------------
 
+void Parkour_SetRollLandingArmed(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_SetRollLandingArmed");
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetRollLandingArmed()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_GetRollLandingArmed");
+	return cScript_GetGlobalReturnBool();
+}
+
+//------------------------------------------------------------
+
+void Parkour_ShowTutorialHint(const tString &in asEntry, bool abPause = false)
+{
+	cScript_SetGlobalArgString(0, asEntry);
+	cScript_SetGlobalArgBool(1, abPause);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_ShowTutorialHint");
+}
+
+//------------------------------------------------------------
+
+void Parkour_ShowFailedRollHint()
+{
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_ShowFailedRollHint");
+}
+
+//------------------------------------------------------------
+
 void Parkour_UpdateGroundFlow(float afTimeStep,
 							  bool abRunning,
 							  bool abForwardIntent,

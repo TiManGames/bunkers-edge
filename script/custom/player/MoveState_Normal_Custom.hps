@@ -131,6 +131,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		cScrMoveState_Normal::OnLeaveState(alNextStateId);
 		StopParkourLandRoll(false);
 		StopParkourRunJumpCameraBump(true);
+		Parkour_SetRollLandingArmed(false);
 		ResetParkourRollFallDistances();
 		ResetParkourAirborneState();
 		mfParkourHardLandingPenaltyTime = 0.f;
@@ -1290,7 +1291,11 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (fFallSpeed < gfParkourMove_RollMinFallSpeed) return;
 		if (mfParkourRollInputGrace <= 0.f) return;
 
-		mbParkourRollArmed = true;
+		if (mbParkourRollArmed == false)
+		{
+			mbParkourRollArmed = true;
+			Parkour_SetRollLandingArmed(true);
+		}
 		if (mbParkourRollFallDistancesActive == false)
 		{
 			Player_SetFallDistances(gfParkourMove_RollSmallFallDistance,
@@ -1479,6 +1484,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	{
 		ResetParkourRollFallDistances();
 		mbParkourRollArmed = false;
+		Parkour_SetRollLandingArmed(false);
 		mfParkourRollInputGrace = -1.f;
 	}
 

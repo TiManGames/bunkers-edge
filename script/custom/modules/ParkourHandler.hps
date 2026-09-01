@@ -4,6 +4,7 @@
 #include "custom/player/PlayerTypes_Custom.hps"
 #include "helpers/helper_player.hps"
 #include "helper_effects.hps"
+#include "helpers/helper_modules.hps"
 #include "custom/helpers/helper_parkour.hps"
 
 //------------------------------------------------------------
@@ -88,6 +89,23 @@ const float gfParkour_FlowWallPowerMin = 0.86f;
 const float gfParkour_FlowWallPowerMax = 1.10f;
 const float gfParkour_HealthRegenDelay = 1.50f;
 const float gfParkour_HealthRegenRate = 0.10f;
+const float gfParkour_TutorialMomentumLearnFlow = 0.35f;
+
+const tString gsParkour_TutorialHintCategory = "BunkersEdgeHints";
+const tString gsParkour_TutorialHintShownSuffix = "_Shown";
+const tString gsParkour_TutorialHintPausedSuffix = "_Paused";
+const tString gsParkour_TutorialHintMomentum = "HintBEMomentum";
+const tString gsParkour_TutorialHintVault = "HintBEVault";
+const tString gsParkour_TutorialHintLedge = "HintBELedge";
+const tString gsParkour_TutorialHintSlide = "HintBESlide";
+const tString gsParkour_TutorialHintRoll = "HintBERoll";
+const tString gsParkour_TutorialHintWallRun = "HintBEWallRun";
+const tString gsParkour_TutorialHintWallScramble = "HintBEWallScramble";
+const tString gsParkour_TutorialHintWallJump = "HintBEWallJump";
+const tString gsParkour_TutorialHintBeam = "HintBEBeam";
+const tString gsParkour_TutorialHintPoleClimb = "HintBEPoleClimb";
+const tString gsParkour_TutorialHintPoleSwing = "HintBEPoleSwing";
+const tString gsParkour_TutorialHintZipline = "HintBEZipline";
 
 //------------------------------------------------------------
 
@@ -178,6 +196,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	void ResetMapData()
 	{
+		mbRollLandingArmed = false;
 		mbLedgeCandidateActive = false;
 		mfLedgeCandidateTime = -1.f;
 		mfLedgeDebugTimer = 0.f;
@@ -281,6 +300,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfParkourFlow = cMath_Clamp(mfParkourFlow + afAmount, 0.f, 1.f);
 		float fChange = mfParkourFlow - fOldFlow;
 
+		if (fOldFlow < gfParkour_TutorialMomentumLearnFlow &&
+			mfParkourFlow >= gfParkour_TutorialMomentumLearnFlow)
+		{
+			MarkTutorialHintLearned(gsParkour_TutorialHintMomentum);
+		}
+
 		if (abDebug && mbDebug && cMath_Abs(fChange) > 0.001f)
 		{
 			tString sSign = "";
@@ -354,6 +379,140 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			ChangeFlow(0.06f * fScale, "beam walk complete", true);
 		else if (alEventId == geParkourFlowEvent_BeamWalkFall)
 			ChangeFlow(-0.12f * fScale, "beam walk fall", true);
+
+		MarkTutorialHintLearnedFromFlowEvent(alEventId);
+	}
+
+	//------------------------------------------------------------
+
+	bool IsParkourTutorialHint(const tString &in asEntry)
+	{
+		return asEntry == gsParkour_TutorialHintMomentum ||
+			   asEntry == gsParkour_TutorialHintVault ||
+			   asEntry == gsParkour_TutorialHintLedge ||
+			   asEntry == gsParkour_TutorialHintSlide ||
+			   asEntry == gsParkour_TutorialHintRoll ||
+			   asEntry == gsParkour_TutorialHintWallRun ||
+			   asEntry == gsParkour_TutorialHintWallScramble ||
+			   asEntry == gsParkour_TutorialHintWallJump ||
+			   asEntry == gsParkour_TutorialHintBeam ||
+			   asEntry == gsParkour_TutorialHintPoleClimb ||
+			   asEntry == gsParkour_TutorialHintPoleSwing ||
+			   asEntry == gsParkour_TutorialHintZipline;
+	}
+
+	//------------------------------------------------------------
+
+	void ReplaceCurrentParkourTutorialHint(const tString &in asNextEntry)
+	{
+		tString sCurrentEntry = Hint_GetCurrentEntry();
+		if (sCurrentEntry == "" || sCurrentEntry == asNextEntry) return;
+		if (IsParkourTutorialHint(sCurrentEntry) == false) return;
+		if (cLux_GetGamePaused()) return;
+
+		// Resetting the handler clears the current live-gameplay display immediately
+		// without erasing learned/given hint state. Never reset it while paused.
+		iScrUserModule_Interface@ pHintHandler = cast<iScrUserModule_Interface>(cLux_GetUserModuleFromID(eModuleType_HintHandler));
+		if (pHintHandler !is null)
+			pHintHandler.Reset();
+	}
+
+	//------------------------------------------------------------
+
+	void ShowTutorialHint(const tString &in asEntry, bool abForce = false, bool abPause = false)
+	{
+		if (asEntry == "") return;
+		if (cLux_HasTranslation(gsParkour_TutorialHintCategory, asEntry) == false)
+		{
+			if (mbDebug)
+				cLux_AddDebugMessage("[Parkour] Missing tutorial hint entry '" + asEntry + "'.", true);
+			return;
+		}
+
+		tString sShownEntry = asEntry + gsParkour_TutorialHintShownSuffix;
+		tString sPausedEntry = asEntry + gsParkour_TutorialHintPausedSuffix;
+		bool bLearned = Hint_IsGiven(gsParkour_TutorialHintCategory, asEntry);
+		bool bShown = Hint_IsGiven(gsParkour_TutorialHintCategory, sShownEntry);
+		bool bPaused = Hint_IsGiven(gsParkour_TutorialHintCategory, sPausedEntry);
+		bool bPausingHintsEnabled = cLux_GetUserConfig().GetBool("Gameplay", "GamePausingHints", true);
+		bool bPauseThisTime = abPause && bPausingHintsEnabled && bPaused == false;
+		if (abForce == false && bLearned && bShown && bPauseThisTime == false) return;
+
+		// A completed move normally blocks the stock hint before it can be queued.
+		// Lift that block for the first encounter, then restore completion state.
+		if (bLearned)
+			Hint_RemoveFromGiven(gsParkour_TutorialHintCategory, asEntry);
+
+		Hint_ReleaseAll();
+		ReplaceCurrentParkourTutorialHint(asEntry);
+
+		// Stock HintHandler disables pausing while Script Debug is active. Disable
+		// that flag only while this designated hint is synchronously started, then
+		// restore it so the rest of the development session is unaffected.
+		if (bPauseThisTime)
+			Hint_RemoveFromPauseOnce(gsParkour_TutorialHintCategory, asEntry);
+		bool bRestoreScriptDebug = bPauseThisTime && cLux_ScriptDebugOn();
+		if (bRestoreScriptDebug)
+			cLux_SetScriptDebugOn(false);
+
+		int lHintId = Hint_ShowHint_Hold(gsParkour_TutorialHintCategory,
+									 asEntry,
+									 true,
+									 1.5f,
+									 false,
+									 -1.f,
+									 bPauseThisTime,
+									 bPauseThisTime);
+
+		if (bRestoreScriptDebug)
+			cLux_SetScriptDebugOn(true);
+
+		if (bLearned)
+			Hint_AddAsGiven(gsParkour_TutorialHintCategory, asEntry);
+
+		if (lHintId >= 0 || Hint_GetCurrentEntry() == asEntry)
+			Hint_AddAsGiven(gsParkour_TutorialHintCategory, sShownEntry);
+		if (bPauseThisTime && Hint_GetCurrentEntry() == asEntry)
+			Hint_AddAsGiven(gsParkour_TutorialHintCategory, sPausedEntry);
+	}
+
+	//------------------------------------------------------------
+
+	void MarkTutorialHintLearned(const tString &in asEntry)
+	{
+		if (asEntry == "") return;
+		Hint_AddAsGiven(gsParkour_TutorialHintCategory, asEntry);
+	}
+
+	//------------------------------------------------------------
+
+	void MarkTutorialHintLearnedFromFlowEvent(int alEventId)
+	{
+		if (alEventId == geParkourFlowEvent_WallJump)
+		{
+			MarkTutorialHintLearned(gsParkour_TutorialHintWallRun);
+			MarkTutorialHintLearned(gsParkour_TutorialHintWallJump);
+		}
+		else if (alEventId == geParkourFlowEvent_WallScrambleJump)
+			MarkTutorialHintLearned(gsParkour_TutorialHintWallScramble);
+		else if (alEventId == geParkourFlowEvent_RollSuccess)
+			MarkTutorialHintLearned(gsParkour_TutorialHintRoll);
+		else if (alEventId == geParkourFlowEvent_LedgeSuccess)
+			MarkTutorialHintLearned(gsParkour_TutorialHintLedge);
+		else if (alEventId == geParkourFlowEvent_PoleSwingGoodRelease)
+			MarkTutorialHintLearned(gsParkour_TutorialHintPoleSwing);
+		else if (alEventId == geParkourFlowEvent_SlideJump ||
+				 alEventId == geParkourFlowEvent_SlideComplete)
+			MarkTutorialHintLearned(gsParkour_TutorialHintSlide);
+		else if (alEventId == geParkourFlowEvent_SpeedVault)
+			MarkTutorialHintLearned(gsParkour_TutorialHintVault);
+		else if (alEventId == geParkourFlowEvent_PoleClimbJump ||
+				 alEventId == geParkourFlowEvent_PoleClimbTopOut)
+			MarkTutorialHintLearned(gsParkour_TutorialHintPoleClimb);
+		else if (alEventId == geParkourFlowEvent_ZiplineComplete)
+			MarkTutorialHintLearned(gsParkour_TutorialHintZipline);
+		else if (alEventId == geParkourFlowEvent_BeamWalkComplete)
+			MarkTutorialHintLearned(gsParkour_TutorialHintBeam);
 	}
 
 	//------------------------------------------------------------
@@ -2466,7 +2625,10 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	{
 		mbEnabled = cScript_GetGlobalArgBool(0);
 		if (mbEnabled == false)
+		{
+			mbRollLandingArmed = false;
 			ResetFlow();
+		}
 	}
 
 	//------------------------------------------------------------
@@ -2495,6 +2657,34 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	void _Global_GetFlow()
 	{
 		cScript_SetGlobalReturnFloat(mfParkourFlow);
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_SetRollLandingArmed()
+	{
+		mbRollLandingArmed = cScript_GetGlobalArgBool(0);
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_GetRollLandingArmed()
+	{
+		cScript_SetGlobalReturnBool(mbRollLandingArmed);
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_ShowTutorialHint()
+	{
+		ShowTutorialHint(cScript_GetGlobalArgString(0), false, cScript_GetGlobalArgBool(1));
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_ShowFailedRollHint()
+	{
+		ShowTutorialHint(gsParkour_TutorialHintRoll, true);
 	}
 
 	//------------------------------------------------------------
@@ -2810,6 +3000,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	bool mbEnabled = true;
 	bool mbDebug = false;
+	bool mbRollLandingArmed = false;
 
 	float mfParkourFlow = 0.f;
 	float mfFlowSharpTurnCooldown = 0.f;
