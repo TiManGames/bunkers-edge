@@ -93,6 +93,8 @@ class cScrMap : iScrMap
 		SetupStalkerJumpNetwork();
 		SetupStalkerNarrowBodySections();
 
+		Music_PlayExt("amb.ogg", true, 0.6f, 1.0f, 1.0f, 0.0f, eMusicPrio_AgentAmb, true);
+
 		/////////////////////////
 		// Debug
 		if (cLux_ScriptDebugOn())
@@ -880,7 +882,7 @@ class cScrMap : iScrMap
 					EvaluateBeastTraversal();
 				}
 
-				Music_PlayExt("chase_1.ogg", true, 0.7f, 1.0f, 0.0f, 0.0f, eMusicPrio_AgentHunt, true);
+				Music_PlayExt("chase_1.ogg", true, 0.6f, 1.0f, 0.0f, 0.0f, eMusicPrio_AgentHunt, true);
 
 			}
 
@@ -894,7 +896,7 @@ class cScrMap : iScrMap
 			
 			tString sMusicPart = Entity_GetVarString(asParent, "");
 			
-			Music_PlayExt("chase_" + sMusicPart + ".ogg", true, 0.7f, 1.0f, 1.0f, 0.5f, eMusicPrio_AgentHunt, true);
+			Music_PlayExt("chase_" + sMusicPart + ".ogg", true, 0.6f, 1.0f, 1.0f, 0.5f, eMusicPrio_AgentHunt, true);
 
 			return true;
 		}
