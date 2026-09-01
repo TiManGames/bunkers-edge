@@ -879,12 +879,25 @@ class cScrMap : iScrMap
 					LogBeastRouteWarning("no StartOnActivation route was discovered; starting normal pursuit.");
 					EvaluateBeastTraversal();
 				}
+
+				Music_PlayExt("chase_1.ogg", true, 0.7f, 1.0f, 0.0f, 0.0f, eMusicPrio_AgentHunt, true);
+
 			}
 
 			return false;
 		}
 	 
 		//-------------------------------------------------------
+
+		bool Trigger_UpdateChaseMusic(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			
+			tString sMusicPart = Entity_GetVarString(asParent, "");
+			
+			Music_PlayExt("chase_" + sMusicPart + ".ogg", true, 0.7f, 1.0f, 1.0f, 0.5f, eMusicPrio_AgentHunt, true);
+
+			return true;
+		}
 	 
 	//} END SCENE X 
 }
