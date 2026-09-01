@@ -1,0 +1,354 @@
+#include "interfaces/Map_Interface.hps"
+#include "base/Inputhandler_Types.hps"
+
+#include "helpers/helper_map.hps"
+#include "helpers/helper_props.hps"
+#include "helpers/helper_effects.hps"
+#include "helpers/helper_audio.hps"
+#include "helpers/helper_sequences.hps"
+#include "helpers/helper_game.hps"
+#include "helpers/helper_modules.hps"
+#include "helpers/helper_player.hps"
+#include "helpers/helper_ai.hps"
+#include "helpers/helper_agent.hps"
+
+#include "custom/helpers/helper_parkour.hps"
+#include "custom/helpers/helper_player_custom.hps"
+
+const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
+const tString gsParkourMap = "parkour_level.hpm";
+const tString gsParkourStart = "Start_Begin";
+
+class cScrMap : iScrMap
+{
+	bool mbPlayerPushingTunnelRock = false;
+	bool mbExitSequenceStarted = false;
+	bool mbRiftTransferStarted = false;
+	bool mbStalkerChaseStarted = false;
+
+	void Setup()
+	{
+		GetBase().SetDisplayNameEntry("intro");
+
+		Map_Preset_SetupFog("Inside", true, 1.f, 40.f, 1.f, cColor(0.047f,0.057f,0.054f,1), 1.f, false, false, false);
+		Map_Preset_SetupDirLight("Inside", true, cColor(0,0,0,1), 0.02f, cVector3f(-0.495f, 0.867f, 0.05f), cColor(0.023f,0.033f,0.03f,1), cColor(0.137f,0.193f,0.185f,1));
+		Map_Preset_SetupSkybox("Inside", cColor(0.684f,0.989f,1,1), 1.f);
+
+		Map_Preset_SetupFog("Outside", true, 0.f, 75.f, 0.25f, cColor(0.002f,0.002f,0.002f,1), 1.f, false, false, false);
+		Map_Preset_SetupDirLight("Outside", true, cColor(0.91f,1,0.722f,1), 0.4f, cVector3f(-0.383f, -0.594f, -0.707f), cColor(0.336f,0.369f,0.268f,1), cColor(0,0,0,1));
+		Map_Preset_SetupSkybox("Outside", cColor(0.684f,0.989f,1,1), 1.f);
+
+		Map_SetEnvironmentParticlesActive(false);
+	}
+
+	void PreloadData()
+	{
+		ParticleSystem_Preload("rift_vortex_01_4s.ps");
+		ParticleSystem_Preload("dust_impact_large_oneshot.ps");
+	}
+
+	void OnStart()
+	{
+		Entity_SetActive("Stalker_1", false);
+		Entity_SetActive("Stalker_EndingCutscene", false);
+	}
+
+	void OnEnter()
+	{
+		if (PlayerBody_IsActive() == false)
+		{
+			PlayerBody_SetActive(true);
+			PlayerBody_SetModel("player_bunker.ent");
+			Parkour_SetEnabled(true);
+			Parkour_SetDebug(true);
+		}
+
+		Player_SetActive(true);
+		Player_SetFallDamageActive(true);
+		Player_SetGravity(cVector3f(0,-18,0));
+		Parkour_SetEnabled(false);
+		Player_SetAmbientLight_None();
+		Sketchbook_SetInventoryEnabled(false);
+
+		Entity_SetActive("Stalker_1", true);
+		Entity_SetActive("Stalker_EndingCutscene", false);
+		Map_RemoveTimer("Timer_StartIntroStalkerChase");
+		Map_AddTimer("Timer_StartIntroStalkerChase", 0.15f, "OnTimer_StartIntroStalkerChase");
+		cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
+		Map_Preload(gsParkourMap);
+		Game_SetupAfterMapChange();
+		Game_AutoSave();
+	}
+
+	void OnLeave()
+	{
+		StopIntroStalkerChase();
+		Push_SetCanLeaveState(true);
+		Map_RemoveTimer("Timer_PushSmallTunnelRocks");
+		Map_RemoveTimer("Timer_PushTunnelRock");
+	}
+
+	void Update(float afTimeStep)
+	{
+		if (mbPlayerPushingTunnelRock == false) return;
+
+		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
+		if (pCharBody is null) return;
+
+		if (pCharBody.GetMoveSpeed(eCharDir_Forward) < 0.001f)
+			pCharBody.AddForceVelocity(cVector3f(0.f, 0.f, 10.f) * afTimeStep);
+
+		pCharBody.Move(eCharDir_Forward, 0.15f);
+		Push_SimulateMovement(cVector3f(0.f, 0.15f, 0.f));
+	}
+
+	void OnAction(int alAction, bool abPressed)
+	{
+	}
+
+	float DrawDebugOutput(cGuiSet@ apSet, iFontData@ apFont, float afY)
+	{
+		return afY;
+	}
+
+	void OnTimer_StartIntroStalkerChase(const tString &in asTimer)
+	{
+		if (mbStalkerChaseStarted) return;
+		mbStalkerChaseStarted = true;
+
+		Entity_SetActive("Stalker_1", true);
+		Agent_SetSensesActive("Stalker_1", true);
+		Stalker_SetMode("Stalker_1", eStalkerMode_Active, true);
+
+		cScript_SetGlobalArgBool(0, true);
+		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysChase");
+		cScript_SetGlobalArgBool(0, true);
+		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysRun");
+		cScript_SetGlobalArgBool(0, true);
+		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetIsDesperate");
+		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_Enter");
+
+		Music_Play("Bunker_Arena_Hunt.ogg", 0.4f, true, eMusicPrio_BgAmb);
+	}
+
+	void StopIntroStalkerChase()
+	{
+		if (Entity_IsActive("Stalker_1") == false) return;
+
+		cScript_SetGlobalArgBool(0, false);
+		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysChase");
+		cScript_SetGlobalArgBool(0, false);
+		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysRun");
+		Agent_SetSensesActive("Stalker_1", false);
+		Entity_SetActive("Stalker_1", false);
+	}
+
+	bool OnTrigger_Player_ActivateOutsidePreset(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		if (alState == 1) return true;
+
+		if (Entity_PlayerIsInFront(asParent))
+			Map_Preset_Fade("Outside", 0.3f);
+		else
+			Map_Preset_Fade("Inside", 0.3f);
+
+		return true;
+	}
+
+	void OnInteract_TunnelRock(const tString &in asEntity)
+	{
+		if (mbExitSequenceStarted || mbRiftTransferStarted) return;
+
+		Push_SetCanLeaveState(false);
+		mbPlayerPushingTunnelRock = true;
+		Prop_SetStaticPhysics("TunnelRock_*", false);
+
+		for (int i = 2; i < 6; ++i)
+		{
+			cLuxProp@ pProp = cLux_ToProp(Map_GetEntity("TunnelRock_" + i, eLuxEntityType_Prop));
+			if (pProp is null || pProp.GetMainBody() is null) continue;
+
+			pProp.GetMainBody().SetMass(0.1f);
+		}
+
+		Map_AddTimer("Timer_DisableSmallRockCollision", 1.f, "OnTimer_DisableSmallRockCollision");
+		Map_AddTimer("Timer_PushSmallTunnelRocks", 0.1f, "OnTimer_PushSmallTunnelRocks");
+	}
+
+	void OnTimer_DisableSmallRockCollision(const tString &in asTimer)
+	{
+		uint lFlag = mBaseObj.GetCollideFlag("-bigrock");
+
+		for (int i = 3; i < 6; ++i)
+		{
+			cLuxProp@ pProp = cLux_ToProp(Map_GetEntity("TunnelRock_" + i, eLuxEntityType_Prop));
+			if (pProp is null || pProp.GetMainBody() is null) continue;
+
+			pProp.GetMainBody().SetCollideFlags(lFlag);
+		}
+	}
+
+	void OnTimer_PushSmallTunnelRocks(const tString &in asTimer)
+	{
+		if (mbPlayerPushingTunnelRock == false) return;
+
+		for (int i = 2; i < 6; ++i)
+			Entity_AddImpulse("TunnelRock_" + i, cVector3f(0.f, 0.f, 0.25f), false, false);
+
+		Map_AddTimer("Timer_PushSmallTunnelRocks", 0.1f, "OnTimer_PushSmallTunnelRocks");
+	}
+
+	bool OnTrigger_Player_StartEndingCutscene(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		if (alState != 1) return true;
+		if (mbExitSequenceStarted || mbRiftTransferStarted) return false;
+
+		mbExitSequenceStarted = true;
+		mbPlayerPushingTunnelRock = false;
+		StopIntroStalkerChase();
+		Push_SetCanLeaveState(true);
+		Player_ChangeStateToNormal();
+		Map_RemoveTimer("Timer_PushSmallTunnelRocks");
+		Music_StopAll(3.f);
+
+		StartExitSequence();
+		return false;
+	}
+
+	void StartExitSequence()
+	{
+		Player_SetCrouching(false, true);
+		Player_SetFallDamageActive(false);
+		PlayerBody_PlayCutsceneAtEntity("player_end_tumble_into_trench_no_stalker", "Area_ExitBunkerCutscene", false, 0.5f);
+		Entity_SetAnimationMessageEventCallback(PlayerBody_GetEntityName(), "OnAnimMessage_Player", false);
+		PlayerBody_SetCutsceneMaxPitch(0.f);
+		PlayerBody_SetCutsceneMaxYaw(0.f);
+
+		Entity_SetActive("severed_arm", true);
+		Entity_PlayAnimation("severed_arm", "severed_arn_end_tumble_no_stalker", 0.f);
+
+		Map_Preset_Fade("Outside", 0.1f);
+		Billboard_SetVisible("billboard_exit_*", false);
+		Light_SetVisible("light_exit_*", false);
+		Map_SetEnvironmentParticlesActive(true);
+
+		Map_AddTimer("Timer_PushTunnelRock", 0.1f, "OnTimer_PushTunnelRock");
+		Map_AddTimer("Timer_DeactivateTunnelRock", 5.f, "OnTimer_DeactivateTunnelRock");
+		Map_AddTimer("Timer_SpawnEndingDust", 1.5f, "OnTimer_SpawnEndingDust");
+		Map_AddTimer("Timer_SpawnEndingDust", 3.f, "OnTimer_SpawnEndingDust");
+		Map_AddTimer("Timer_SpawnEndingDust", 5.f, "OnTimer_SpawnEndingDust");
+		Map_AddTimer("Timer_ShowIntroRift", 0.9f, "OnTimer_ShowIntroRift");
+		Map_AddTimer("Timer_EnterIntroRift", 1.4f, "OnTimer_EnterIntroRift");
+	}
+
+	void OnTimer_PushTunnelRock(const tString &in asTimer)
+	{
+		Entity_AddImpulse("TunnelRock_*", cVector3f(0.f, 0.f, 1.f), false, false);
+		Map_AddTimer("Timer_PushTunnelRock", 0.1f, "OnTimer_PushTunnelRock");
+	}
+
+	void OnTimer_DeactivateTunnelRock(const tString &in asTimer)
+	{
+		Map_RemoveTimer("Timer_PushTunnelRock");
+		Entity_SetActive("TunnelRock_*", false);
+		Entity_SetActive("TunnelRockWater", true);
+	}
+
+	void OnTimer_SpawnEndingDust(const tString &in asTimer)
+	{
+		cParticleSystem@ pPS = ParticleSystem_CreateAtEntity("PS_IntroExitDust", "dust_impact_large_oneshot.ps", "Camera", false);
+		if (pPS is null) return;
+
+		pPS.SetColor(cColor(0.541f,0.457f,0.387f,1));
+		pPS.SetBrightness(3.5f);
+		pPS.SetFadeAtDistance(false);
+	}
+
+	void OnTimer_ShowIntroRift(const tString &in asTimer)
+	{
+		if (mbRiftTransferStarted) return;
+
+		ParticleSystem_CreateAtEntity("PS_IntroEscapeRift", "rift_vortex_01_4s.ps", "Area_ArmSplash", false);
+		Sound_CreateAtEntity("Sound_IntroEscapeRift", "dw_tunnel/amb/energy_high", "Area_ArmSplash", 0.15f, false, 0.65f, 2.f, 35.f);
+		Effect_Shake_Start(0.015f, 2.2f, 0.2f, 0.5f);
+		Effect_Rumble_Start(0.08f, 2.2f, 0.2f, 0.5f);
+	}
+
+	void OnTimer_EnterIntroRift(const tString &in asTimer)
+	{
+		BeginRiftTransfer();
+	}
+
+	bool OnTrigger_FallIntoRift(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		if (alState != 1) return true;
+
+		BeginRiftTransfer();
+		return false;
+	}
+
+	void BeginRiftTransfer()
+	{
+		if (mbRiftTransferStarted) return;
+		mbRiftTransferStarted = true;
+		mbPlayerPushingTunnelRock = false;
+		StopIntroStalkerChase();
+
+		Map_RemoveTimer("Timer_PushSmallTunnelRocks");
+		Map_RemoveTimer("Timer_PushTunnelRock");
+		Map_RemoveTimer("Timer_ShowIntroRift");
+		Map_RemoveTimer("Timer_EnterIntroRift");
+		Sound_Stop("Sound_IntroEscapeRift", 0.3f);
+		Music_StopAll(0.3f);
+
+		Effect_Flash_Start(0.08f, 0.18f, 0.18f, 1.f);
+		Effect_Shake_Start(0.035f, 0.65f, 0.05f, 0.35f);
+		Effect_Rumble_Start(0.35f, 0.65f, 0.05f, 0.35f);
+		Sound_PlayGui("DW_tunnel/level/portal_death", 1.f, eSoundEntryType_Gui);
+
+		cScript_SetGlobalVarBool(gsIntroArrivalGlobal, true);
+		Map_AddTimer("Timer_FadeIntroRift", 0.2f, "OnTimer_FadeIntroRift");
+		Map_AddTimer("Timer_ChangeToParkour", 0.65f, "OnTimer_ChangeToParkour");
+	}
+
+	void OnTimer_FadeIntroRift(const tString &in asTimer)
+	{
+		Effect_Fade_Out(0.35f);
+	}
+
+	void OnTimer_ChangeToParkour(const tString &in asTimer)
+	{
+		// The exit tumble owns the camera through PlayerBodyHandler, not through
+		// CameraAnimation. Release that ownership and return the player to a
+		// neutral state while the screen is black, before changing maps.
+		PlayerBody_StopAnimation("player_end_tumble_into_trench_no_stalker", 0.f);
+		PlayerBody_StopAnimationLayer(ePlayerBodyAnimationLayer_FullBody, 0.f);
+		PlayerBody_SetAnimationControlledCamera(false);
+		CameraAnimation_End();
+		Player_StopLookAt(0);
+		PlayerBody_ResetCutscenePitchYawLimits();
+		PlayerBody_ResetYaw();
+		Player_ChangeStateToNormal();
+		Player_SetActive(true);
+
+		// Give the camera-mode and player-state changes one update to settle
+		// before map teardown serializes the shared player-body handler.
+		Map_RemoveTimer("Timer_CommitParkourMapChange");
+		Map_AddTimer("Timer_CommitParkourMapChange", 0.05f, "OnTimer_CommitParkourMapChange");
+	}
+
+	void OnTimer_CommitParkourMapChange(const tString &in asTimer)
+	{
+		PlayerBody_SetAnimationControlledCamera(false);
+		Player_ChangeStateToNormal();
+		Map_ChangeMap(gsParkourMap, gsParkourStart, "", "", true);
+	}
+
+	void OnAnimMessage_Player(const tString &in asEntityName, const tString &in asAnimName, int alMessageEventID)
+	{
+		if (alMessageEventID == 2 || alMessageEventID == 4)
+			Effect_Rumble_Start(0.5f, 0.8f);
+		else
+			Effect_Rumble_Start(0.5f, 0.25f);
+	}
+}

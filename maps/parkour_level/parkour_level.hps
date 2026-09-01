@@ -22,6 +22,7 @@
 
 const float gfBeastTraversalApproachFallDistance = 1.25f;
 const int glBeastTraversalMaxLaunchRecoveries = 1;
+const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
 
 
 //--------------------------------------------------
@@ -93,8 +94,6 @@ class cScrMap : iScrMap
 		SetupStalkerJumpNetwork();
 		SetupStalkerNarrowBodySections();
 
-		Music_PlayExt("amb.ogg", true, 0.6f, 1.0f, 1.0f, 0.0f, eMusicPrio_AgentAmb, true);
-
 		/////////////////////////
 		// Debug
 		if (cLux_ScriptDebugOn())
@@ -121,16 +120,28 @@ class cScrMap : iScrMap
 		{
 			PlayerBody_SetActive(true);
 			PlayerBody_SetModel("player_bunker.ent");
-			Parkour_SetEnabled(true);
 			Parkour_SetDebug(true);
-			Player_SetAmbientLight_None();
 		}
 
+		Player_SetActive(true);
+		Player_SetFallDamageActive(true);
+		Parkour_SetEnabled(true);
+		Player_SetAmbientLight_None();
 		Player_SetGravity(cVector3f(0,-18,0));
+		Player_SetVertigoActive(true);
 		Sketchbook_SetInventoryEnabled(false);
 
-		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
+		PlayerBody_ResetCutscenePitchYawLimits();
+		PlayerBody_ResetYaw();
 
+		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
+		Game_SetupAfterMapChange();
+
+		if (cScript_GetGlobalVarBool(gsIntroArrivalGlobal))
+		{
+			mbIntroArrivalActive = false;
+			BeginIntroArrival();
+		}
 	}
 
 	//-------------------------------------------------------
@@ -183,6 +194,94 @@ class cScrMap : iScrMap
 	// ==============
 	//{///////////////////////////////////////////////////////////////////////////////////////
  
+	//-------------------------------------------------------
+
+	bool mbIntroArrivalActive = false;
+
+	//-------------------------------------------------------
+
+	void BeginIntroArrival()
+	{
+		if (mbIntroArrivalActive) return;
+		mbIntroArrivalActive = true;
+
+		PlayerBody_SetActive(false);
+		Player_SetActive(false);
+
+		Effect_Fade_Out(0);
+
+		Player_SetFallDamageActive(false);
+		Player_ChangeStateToNormal();
+		Map_RemoveTimer("Timer_BeginIntroArrival");
+		Map_AddTimer("Timer_BeginIntroArrival", 0.1f, "OnTimer_BeginIntroArrival");
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_BeginIntroArrival(const tString &in asTimer)
+	{
+		if (mbIntroArrivalActive == false) return;
+
+		CameraAnimation_Begin("IntroFall", "", true);
+		Sound_CreateAtEntity("Sound_IntroFallWind", "monke/Player/falling_woosh/falling_aaaah_woosh", "player", 0.15f, false, 0.45f);
+		Effect_Shake_Start(0.012f, 4.f, 0.35f, 0.5f);
+		Effect_Rumble_Start(0.06f, 4.f, 0.35f, 0.5f);
+		Effect_Fade_In(0.6f);
+	}
+
+	//-------------------------------------------------------
+
+	bool OnIntroFallCameraNode(const tString &in asEntity, int alDir)
+	{
+		if (alDir < 0) return true;
+
+		CameraAnimation_End();
+
+		Effect_Fade_Out(0);
+		Sound_CreateAtEntity("Boom", "player/foley/damage/player_fall_death", "Player");
+		Player_Teleport("Start_Begin");
+
+		Sound_Stop("Sound_IntroFallWind", 0.15f);
+		Map_RemoveTimer("Timer_PlayIntroLanding");
+		Map_AddTimer("Timer_PlayIntroLanding", 3.0f, "OnTimer_PlayIntroLanding");
+		return true;
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_PlayIntroLanding(const tString &in asTimer)
+	{
+		if (mbIntroArrivalActive == false) return;
+
+		Effect_Fade_In(3.0f);
+
+		PlayerBody_SetActive(true);
+		Music_Play("intro.ogg", 1.0f, false, eMusicPrio_BigEvent);
+		PlayerBody_PlayCutsceneAnimation("wake_up_from_death_1b", false, 0.0f, "OnAnimEnd_IntroLanding", 0.8f);
+		Sound_CreateAtEntity("WakeUp", "officer_hub/cutscene/wakeup/wake_foley", "Player");
+
+		Map_AddTimer("PlayAmb", 18.0f, "Timer_PlayAmb");
+	}
+
+	void Timer_PlayAmb(const tString &in asTimer)
+	{
+		Music_PlayExt("amb.ogg", true, 0.6f, 1.0f, 1.0f, 0.0f, eMusicPrio_AgentAmb, true);
+	}
+
+	//-------------------------------------------------------
+
+	void OnAnimEnd_IntroLanding(const tString &in asAnim)
+	{
+		mbIntroArrivalActive = false;
+		cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
+		Player_SetActive(true);
+		
+		Player_ChangeStateToNormal();
+		Player_SetFallDamageActive(true);
+		Parkour_SetEnabled(true);
+		Game_AutoSave(true);
+	}
+
 	//-------------------------------------------------------
 
 	bool Trigger_AutoSave(const tString &in asParent, const tString &in asChild, int alState)

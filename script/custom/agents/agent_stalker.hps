@@ -2416,6 +2416,28 @@ class cScrAgentStalker : cScrAgentHumanoid
 		if (mbBossFight_AlwaysChase && mBossFight_Behaviour == eStalkerBossFightBehaviour_Pace)
 			BossFight_UpdateBehaviour(eStalkerBossFightBehaviour_Default);
 	}
+
+	//------------------------------------------------------------
+
+	void _Global_BossFight_SetAlwaysRun()
+	{
+		mbBossFight_AlwaysRun = cScript_GetGlobalArgBool(0);
+
+		if (mbBossFight_AlwaysRun &&
+			mpStateMachine.GetCurrentState() == eStalkerState_BossFight_Default)
+		{
+			mBaseObj.RevealPlayerPos();
+			SetAlertState(eStalkerAlertState_Detected);
+			SetSpeedState(eStalkerSpeed_Run);
+			mpMover.SetSpeedMul(1.f);
+
+			mpStateMachine.StopTimer("Roar");
+			mpStateMachine.StopTimer("UpdateMoveSpeed");
+			if (mpStateMachine.TimerExists("Move") == false)
+				mpStateMachine.AddTimer("Move", 0.f);
+			mpStateMachine.AddTimer("UpdateMoveSpeed", 0.f);
+		}
+	}
 	
 	//------------------------------------------------------------
 	
@@ -18883,6 +18905,7 @@ class cScrAgentStalker : cScrAgentHumanoid
 	bool mbBossFight_Active = false;
 	bool mbBossFight_ExternalTraversalActive = false;
 	bool mbBossFight_AlwaysChase = false;
+	bool mbBossFight_AlwaysRun = false;
 	bool mbBossFight_Desperate = false;
 	bool mbBossFight_UpdateDesperate = false;
 	int mlBossFight_EnterCount = 0;
@@ -18899,13 +18922,21 @@ class cScrAgentStalker : cScrAgentHumanoid
 	{
 		cLux_AddAIDebugMessage("(" + mBaseObj.GetName() + ") ------ ENTER STATE: BossFightDefault ------");
 		
-		SetSpeedState(eStalkerSpeed_Walk);
+		SetSpeedState(mbBossFight_AlwaysRun ? eStalkerSpeed_Run : eStalkerSpeed_Walk);
 		
 		mbBossFight_Active = true;
 		mbPresencePaused = true;
 		
 		++mlBossFight_EnterCount;
-		if (mlBossFight_EnterCount == 1)
+		if (mbBossFight_AlwaysRun)
+		{
+			mBaseObj.RevealPlayerPos();
+			SetAlertState(eStalkerAlertState_Detected);
+			mpStateMachine.AddTimer("Move", 0.f);
+			mpStateMachine.AddTimer("UpdateMoveSpeed", 0.f);
+			mpStateMachine.AddTimer("UpdateDesperate", 0.f);
+		}
+		else if (mlBossFight_EnterCount == 1)
 		{
 			SetAlertState(eStalkerAlertState_None);			
 			mpStateMachine.AddTimer("Roar", 0.25f);
@@ -18932,10 +18963,17 @@ class cScrAgentStalker : cScrAgentHumanoid
 	//------------------------------------------------------------
 	
 	void State_BossFightDefault_Update(float afTimeStep) 
-	{				
+	{			
 		///////////////////
-		// Always know where player is (if player is in front)
-		if (mBaseObj.GetPointIsInFront(mBaseObj.GetPlayerPos()))
+		// Constant chase keeps the player revealed and the Beast running.
+		if (mbBossFight_AlwaysRun)
+		{
+			mBaseObj.RevealPlayerPos();
+			if (mpMover.GetSpeedState() != eStalkerSpeed_Run)
+				SetSpeedState(eStalkerSpeed_Run);
+		}
+		// Normal boss behavior only knows where the player is while in front.
+		else if (mBaseObj.GetPointIsInFront(mBaseObj.GetPlayerPos()))
 		{
 			mBaseObj.RevealPlayerPos();
 		}
@@ -18955,7 +18993,8 @@ class cScrAgentStalker : cScrAgentHumanoid
 		///////////////////
 		// Update speed
 		float fSpeedMul = 1.f;		
-		if (BossFight_GetAllowSlowdown() &&
+		if (mbBossFight_AlwaysRun == false &&
+			BossFight_GetAllowSlowdown() &&
 			mBaseObj.CheckIsOnScreen(false) == false &&			
 			mpStateMachine.TimerExists("ForceRun") == false)
 		{
@@ -19069,8 +19108,9 @@ class cScrAgentStalker : cScrAgentHumanoid
 			int lSpeedState = eStalkerSpeed_Walk;
 			
 			bool bPlayerInFront = mBaseObj.GetPointIsInFront(mBaseObj.GetPlayerPos());
-					
-			if (fDist >= 40.f) 							lSpeedState = eStalkerSpeed_Run;
+
+			if (mbBossFight_AlwaysRun)						lSpeedState = eStalkerSpeed_Run;
+			else if (fDist >= 40.f) 						lSpeedState = eStalkerSpeed_Run;
 			else if (fDist < 15.f && bPlayerInFront) 	lSpeedState = eStalkerSpeed_Run;
 			else 										lSpeedState = eStalkerSpeed_Walk;
 			
