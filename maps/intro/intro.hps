@@ -63,17 +63,21 @@ class cScrMap : iScrMap
 			Parkour_SetDebug(true);
 		}
 
-		Player_SetActive(true);
+		Player_SetActive(false);
 		Player_SetFallDamageActive(true);
-		Player_SetGravity(cVector3f(0,-18,0));
 		Parkour_SetEnabled(false);
 		Player_SetAmbientLight_None();
 		Sketchbook_SetInventoryEnabled(false);
 
-		Entity_SetActive("Stalker_1", true);
+		Effect_Fade_Out(0);
+
+		Sound_FadeGlobalVolume(1.0f, 0, eSoundEntryType_WorldAll);
+
+		Sound_PlayGui("trenches/dream/run_sweet", 1.0f, eSoundEntryType_Gui);
+
 		Entity_SetActive("Stalker_EndingCutscene", false);
 		Map_RemoveTimer("Timer_StartIntroStalkerChase");
-		Map_AddTimer("Timer_StartIntroStalkerChase", 0.15f, "OnTimer_StartIntroStalkerChase");
+		Map_AddTimer("Timer_StartIntroStalkerChase", 4.0f, "OnTimer_StartIntroStalkerChase");
 		cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
 		Map_Preload(gsParkourMap);
 		Game_SetupAfterMapChange();
@@ -116,19 +120,27 @@ class cScrMap : iScrMap
 		if (mbStalkerChaseStarted) return;
 		mbStalkerChaseStarted = true;
 
+		Sound_FadeGlobalVolume(1.0f, 0, eSoundEntryType_WorldAll);
+
+		Effect_Fade_In(0);
+
+		Player_SetActive(true);
+
+		Sound_CreateAtEntity("gasp", "player/vocalisations/world/fear_gasp", "player", 0, false, 1.0f, -1, -1);
+
 		Entity_SetActive("Stalker_1", true);
 		Agent_SetSensesActive("Stalker_1", true);
 		Stalker_SetMode("Stalker_1", eStalkerMode_Active, true);
 
 		cScript_SetGlobalArgBool(0, true);
 		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysChase");
-		cScript_SetGlobalArgBool(0, true);
-		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysRun");
+		// cScript_SetGlobalArgBool(0, true);
+		// cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetAlwaysRun");
 		cScript_SetGlobalArgBool(0, true);
 		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_SetIsDesperate");
 		cScript_RunGlobalFunc("Stalker_1", "cScrAgentStalker", "_Global_BossFight_Enter");
 
-		Music_Play("Bunker_Arena_Hunt.ogg", 0.4f, true, eMusicPrio_BgAmb);
+		Music_Play("stalker_hunt_01.ogg", 0.5f, true, eMusicPrio_BgAmb);
 	}
 
 	void StopIntroStalkerChase()

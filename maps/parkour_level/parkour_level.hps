@@ -208,7 +208,10 @@ class cScrMap : iScrMap
 		PlayerBody_SetActive(false);
 		Player_SetActive(false);
 
-		Effect_Fade_Out(0);
+		
+		// Effect_Fade_Out(0);
+
+		Sound_PlayGui("DW_tunnel/portal/portal_close", 1.0f, eSoundEntryType_Gui);
 
 		Player_SetFallDamageActive(false);
 		Player_ChangeStateToNormal();
@@ -226,7 +229,8 @@ class cScrMap : iScrMap
 		Sound_CreateAtEntity("Sound_IntroFallWind", "monke/Player/falling_woosh/falling_aaaah_woosh", "player", 0.15f, false, 0.45f);
 		Effect_Shake_Start(0.012f, 4.f, 0.35f, 0.5f);
 		Effect_Rumble_Start(0.06f, 4.f, 0.35f, 0.5f);
-		Effect_Fade_In(0.6f);
+		Effect_Flash_Start(0.1f, 0.2f, 1.0f, 1.0f);
+		// Effect_Fade_In(0.6f);
 	}
 
 	//-------------------------------------------------------
@@ -319,13 +323,15 @@ class cScrMap : iScrMap
 		Player_ShowCrossHairIcons(false, true);
 
 		// Fade into increasingly violent camera movement as the ground approaches.
-		Effect_Shake_Start(0.075f, 0.1f, 1.0f, 0.1f,
+		Effect_Shake_Start(0.075f, 0.1f, 1.0f, 5.1f,
 			cVector3f(0.7f, 1.0f, 0.7f), 28.0f);
-		Effect_FOV_Shake_Start(0.045f, 0.1f, 1.0f, 0.1f,
+		Effect_FOV_Shake_Start(0.045f, 0.1f, 1.0f, 5.1f,
 			18.0f, true, 0.15f, 4.0f, true);
-		Effect_Roll_Shake_Start(2.5f, 0.1f, 1.0f, 0.1f,
+		Effect_Roll_Shake_Start(2.5f, 0.1f, 1.0f, 5.1f,
 			18.0f, true, 0.15f, 4.0f);
-		Effect_Rumble_Start(0.7f, 0.1f, 1.0f, 0.1f);
+		Effect_Rumble_Start(0.7f, 0.1f, 1.0f, 5.1f);
+
+		Hint_SetCanShowHints(false);
 
 		Map_RemoveTimer("DeathSequence_Impact");
 		Map_AddTimer("DeathSequence_Impact", 1.05f, "OnTimer_DeathSequenceImpact");
@@ -410,9 +416,10 @@ class cScrMap : iScrMap
 			bPause = true;
 		}
 
-		Parkour_ShowTutorialHint(sHintEntry, bPause);
+		
 
-		Game_AutoSave(true);
+		Parkour_ShowTutorialHint(sHintEntry, bPause);
+		
 		return true;
 	}
 
@@ -498,6 +505,17 @@ class cScrMap : iScrMap
 		cScript_SetGlobalArgBool(2, false);
 		cScript_SetGlobalArgBool(3, false);
 		cScript_RunGlobalFunc(asStalkerName, "cScrAgentStalker", "_Global_Jump");
+	}
+
+	//-------------------------------------------------------
+
+	bool Trigger_Scream(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		Game_AutoSave(true, false);
+
+		Sound_CreateAtEntity("scream", "creatures/stalker/retreat", "ScreamSound", 0, false, 1.0f, -1, -1);
+
+		return false;
 	}
 
 	//-------------------------------------------------------
@@ -1116,7 +1134,7 @@ class cScrMap : iScrMap
 					EvaluateBeastTraversal();
 				}
 
-				Music_PlayExt("chase_1.ogg", true, 0.4f, 1.0f, 0.0f, 0.0f, eMusicPrio_AgentHunt, true);
+				Music_PlayExt("chase_1.ogg", true, 0.3f, 1.0f, 0.0f, 0.0f, eMusicPrio_AgentHunt, true);
 
 			}
 
@@ -1130,7 +1148,7 @@ class cScrMap : iScrMap
 			
 			tString sMusicPart = Entity_GetVarString(asParent, "");
 			
-			Music_PlayExt("chase_" + sMusicPart + ".ogg", true, 0.4f, 1.0f, 1.0f, 0.5f, eMusicPrio_AgentHunt, true);
+			Music_PlayExt("chase_" + sMusicPart + ".ogg", true, 0.3f, 1.0f, 1.0f, 0.5f, eMusicPrio_AgentHunt, true);
 
 			return true;
 		}
