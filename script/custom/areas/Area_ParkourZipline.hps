@@ -2,13 +2,15 @@
 #include "player/Player_Types.hps"
 #include "custom/player/PlayerTypes_Custom.hps"
 #include "helpers/helper_player.hps"
-#include "helpers/helper_physics.hps"
 #include "custom/helpers/helper_parkour.hps"
 
 //------------------------------------------------------------
 
 const float gfParkourZipline_RopeGfxInitialDelay = 0.10f;
 const float gfParkourZipline_RopeGfxRetryDelay = 0.25f;
+const float gfParkourZipline_RopePhysicsCreateDelay = 0.10f;
+const float gfParkourZipline_RopePhysicsRetryDelay = 0.25f;
+const int glParkourZipline_RopeParticleReadyRetryMax = 8;
 
 //------------------------------------------------------------
 
@@ -20,9 +22,13 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	{
 		mbPlayerIsInside = false;
 		mbNeedsExitAfterGrab = false;
+		mbRopeRebuildQueued = false;
 		mfDebugTimer = 0.f;
 		mfGrabCooldown = 0.f;
+		mfRopeCreateRetryTimer = 0.f;
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
+		mlRopeGfxCapacity = 0;
+		mlRopeParticleReadyRetries = 0;
 		m_idEndArea = tID_Invalid;
 		m_idAnchorBody = tID_Invalid;
 		m_idTrolleyBody = tID_Invalid;
@@ -75,7 +81,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		}
 
 		UpdateLineData();
-		CreateZiplineRope();
+		QueueZiplineRopeRebuild(gfParkourZipline_RopePhysicsCreateDelay);
 		CreateZiplinePhysics();
 
 		if (Parkour_GetDebug())
@@ -105,7 +111,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		if (mfGrabCooldown > 0.f)
 			mfGrabCooldown -= afTimeStep;
 
-		EnsureZiplineRopeGfx(afTimeStep);
+		UpdateZiplineRope(afTimeStep);
 
 		if (mbCanRide == false) return;
 		if (m_idEndArea == tID_Invalid) return;
@@ -260,57 +266,119 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 
 	//------------------------------------------------------------
 
+	void QueueZiplineRopeRebuild(float afDelay)
+	{
+		DestroyZiplineRope();
+		mbRopeRebuildQueued = true;
+		mfRopeCreateRetryTimer = cMath_Max(0.f, afDelay);
+		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
+		mlRopeParticleReadyRetries = 0;
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateZiplineRope(float afTimeStep)
+	{
+		if (mbRopeRebuildQueued)
+		{
+			if (mfRopeCreateRetryTimer > 0.f)
+			{
+				mfRopeCreateRetryTimer -= afTimeStep;
+				return;
+			}
+
+			// Rope destruction is deferred by the physics world. If the old name
+			// is still registered, destroy it again and wait another physics tick
+			// instead of creating a same-name rope and dereferencing a null result.
+			if (GetZiplineRope() !is null)
+			{
+				DestroyZiplineRope();
+				mfRopeCreateRetryTimer = gfParkourZipline_RopePhysicsRetryDelay;
+				return;
+			}
+
+			if (CreateZiplineRope())
+			{
+				mbRopeRebuildQueued = false;
+				mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
+			}
+			else
+			{
+				mfRopeCreateRetryTimer = gfParkourZipline_RopePhysicsRetryDelay;
+			}
+			return;
+		}
+
+		iPhysicsRope@ pRope = GetZiplineRope();
+		if (ZiplineRopePhysicsIsValid(pRope) == false)
+		{
+			QueueZiplineRopeRebuild(gfParkourZipline_RopePhysicsRetryDelay);
+			return;
+		}
+
+		EnsureZiplineRopeGfx(pRope, afTimeStep);
+	}
+
+	//------------------------------------------------------------
+
 	bool CreateZiplineRope()
 	{
+		iPhysicsWorld@ pPhysicsWorld = mBaseObj.GetMap().GetPhysicsWorld();
+		if (pPhysicsWorld.GetRope(msRopeName) !is null) return false;
+
 		iLuxEntity@ pEnd = ResolveEndArea();
 		iPhysicsBody@ pStartBody = mBaseObj.GetMainBody();
 		iPhysicsBody@ pEndBody = pEnd is null ? null : pEnd.GetMainBody();
 		if (pStartBody is null || pEndBody is null)
-		{
-			DestroyZiplineRope();
 			return false;
-		}
 
 		UpdateLineData();
 		if (mfLineLength <= 0.25f) return false;
 
-		// Generated ropes can survive a save load or script/map reload while the
-		// area script gets a fresh instance. Always replace that stale pair so
-		// the physics rope owns the current endpoint bodies.
-		DestroyZiplineRope();
-		Rope_Create(msRopeName,
-					mBaseObj.GetPosition(),
-					pEnd.GetPosition(),
-					cMath_Max(0.05f, mfRopeSegmentLength),
-					cMath_Max(0.f, mfRopeDamping),
-					cMath_Max(1.f, mfRopeStrength),
-					cMath_Max(0.f, mfRopeStiffness),
-					mbRopeCollideWorld,
-					false);
-
-		iPhysicsRope@ pRope = GetZiplineRope();
+		cVector3f vStart = mBaseObj.GetPosition();
+		cVector3f vEnd = pEnd.GetPosition();
+		iPhysicsRope@ pRope = pPhysicsWorld.CreateRope(msRopeName, vStart, vEnd);
 		if (pRope is null) return false;
 
-		Rope_SetTotalLength(msRopeName, mfLineLength);
+		pRope.SetSegmentLength(cMath_Max(0.05f, mfRopeSegmentLength));
+		pRope.SetDamping(cMath_Max(0.f, mfRopeDamping));
+		pRope.SetStrength(cMath_Max(1.f, mfRopeStrength));
+		pRope.SetStiffness(cMath_Max(0.f, mfRopeStiffness));
+		pRope.SetCollide(mbRopeCollideWorld);
+		pRope.SetCollideAttachments(false);
+		pRope.SetCollideCharacter(mbRopeCollideCharacter);
+		pRope.SetCollideRagDoll(false);
+		pRope.SetCollideFlags(uint(-1));
+		pRope.SetTotalLength(mfLineLength);
 		pRope.SetAttachedStartBody(pStartBody);
 		pRope.SetAttachedEndBody(pEndBody);
-		Rope_SetCollide(msRopeName, mbRopeCollideWorld, false, mbRopeCollideCharacter, false);
 		pRope.SetActive(true);
 		pRope.SetPhysicsActive(true);
+		SnapZiplineRopeEndpoints(pRope);
 
-		// helper_physics requires the graphics rope to be created after a small
-		// delay, once the new physics rope has initialized its particles.
+		// The physics rope needs at least one update before its graphical rope
+		// can safely consume the initialized particle chain.
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
+		mlRopeGfxCapacity = 0;
+		mlRopeParticleReadyRetries = 0;
 		return true;
 	}
 
 	//------------------------------------------------------------
 
-	void EnsureZiplineRopeGfx(float afTimeStep)
+	void EnsureZiplineRopeGfx(iPhysicsRope@ apRope, float afTimeStep)
 	{
-		iPhysicsRope@ pRope = GetZiplineRope();
-		if (ZiplineRopePhysicsIsValid(pRope) == false)
+		cWorld@ pWorld = mBaseObj.GetMap().GetWorld();
+		iRopeEntity@ pRopeGfx = pWorld.GetRopeEntity(msRopeName + "Gfx");
+
+		if (RopeParticlesAreReadyForGfx(apRope) == false)
 		{
+			if (pRopeGfx !is null)
+			{
+				pWorld.DestroyRopeEntity(pRopeGfx);
+				mlRopeGfxCapacity = 0;
+			}
+
 			if (mfRopeGfxRetryTimer > 0.f)
 			{
 				mfRopeGfxRetryTimer -= afTimeStep;
@@ -318,16 +386,19 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 			}
 
 			mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxRetryDelay;
-			CreateZiplineRope();
+			mlRopeParticleReadyRetries++;
+			if (mlRopeParticleReadyRetries >= glParkourZipline_RopeParticleReadyRetryMax)
+				QueueZiplineRopeRebuild(gfParkourZipline_RopePhysicsRetryDelay);
 			return;
 		}
 
-		cWorld@ pWorld = mBaseObj.GetMap().GetWorld();
-		iRopeEntity@ pRopeGfx = pWorld.GetRopeEntity(msRopeName + "Gfx");
+		mlRopeParticleReadyRetries = 0;
+		int lRequiredCapacity = GetRequiredRopeGfxCapacity(apRope);
 		if (pRopeGfx !is null &&
 			pRopeGfx.GetMaterial() !is null &&
-			pRopeGfx.GetPhysicsRope() is pRope &&
-			pRopeGfx.GetScriptableIsSaved() == false)
+			pRopeGfx.GetPhysicsRope() is apRope &&
+			pRopeGfx.GetScriptableIsSaved() == false &&
+			mlRopeGfxCapacity >= lRequiredCapacity)
 		{
 			pRopeGfx.SetActive(true);
 			pRopeGfx.SetVisible(true);
@@ -342,17 +413,20 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxRetryDelay;
 
-		// A saved/stale graphics entity can point at an old physics rope, and a
-		// failed material load can leave an unusable entity behind. Recreate it
-		// unless the material, physics link and derived-only save flag all match.
+		// Rope-entity destruction can also be deferred. Never destroy and create
+		// the same graphics name in one update; wait for the next retry instead.
 		if (pRopeGfx !is null)
+		{
 			pWorld.DestroyRopeEntity(pRopeGfx);
+			mlRopeGfxCapacity = 0;
+			return;
+		}
 
-		CreateZiplineRopeGfx(pRope);
+		CreateZiplineRopeGfx(apRope);
 
 		@pRopeGfx = pWorld.GetRopeEntity(msRopeName + "Gfx");
 		if (pRopeGfx !is null && pRopeGfx.GetMaterial() !is null && Parkour_GetDebug())
-			cLux_AddDebugMessage("[Parkour] Zipline rope graphics ready for '" + mBaseObj.GetName() + "'.", true);
+			cLux_AddDebugMessage("[Parkour] Zipline rope graphics ready for '" + mBaseObj.GetName() + "'. particles=" + apRope.GetParticleNum() + " capacity=" + mlRopeGfxCapacity + ".", true);
 	}
 
 	//------------------------------------------------------------
@@ -372,6 +446,50 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 
 	//------------------------------------------------------------
 
+	void SnapZiplineRopeEndpoints(iPhysicsRope@ apRope)
+	{
+		if (apRope is null || apRope.GetParticleNum() < 2) return;
+
+		cVector3f vStart = mBaseObj.GetPosition();
+		cVector3f vEnd = GetEndPoint();
+		apRope.GetStartParticle().SetPosition(vStart, true);
+		apRope.GetEndParticle().SetPosition(vEnd, true);
+	}
+
+	//------------------------------------------------------------
+
+	bool RopeParticlesAreReadyForGfx(iPhysicsRope@ apRope)
+	{
+		if (apRope is null) return false;
+
+		int lParticleNum = apRope.GetParticleNum();
+		int lMinParticleNum = cMath_FloorToInt(mfLineLength / cMath_Max(0.05f, mfRopeSegmentLength));
+		if (lMinParticleNum < 2) lMinParticleNum = 2;
+		if (lParticleNum < lMinParticleNum) return false;
+
+		cVector3f vFirst = apRope.GetStartParticle().GetPosition();
+		cVector3f vLast = apRope.GetEndParticle().GetPosition();
+		cVector3f vStart = mBaseObj.GetPosition();
+		cVector3f vEnd = GetEndPoint();
+		float fTolerance = cMath_Max(0.25f, mfRopeSegmentLength);
+
+		return cMath_Vector3Dist(vFirst, vStart) <= fTolerance &&
+			   cMath_Vector3Dist(vLast, vEnd) <= fTolerance;
+	}
+
+	//------------------------------------------------------------
+
+	int GetRequiredRopeGfxCapacity(iPhysicsRope@ apRope)
+	{
+		int lCapacity = cMath_CeilToInt(mfLineLength / cMath_Max(0.05f, mfRopeSegmentLength)) + 2;
+		if (apRope !is null && lCapacity < apRope.GetParticleNum() + 1)
+			lCapacity = apRope.GetParticleNum() + 1;
+		if (lCapacity < 32) lCapacity = 32;
+		return lCapacity;
+	}
+
+	//------------------------------------------------------------
+
 	bool CreateZiplineRopeGfx(iPhysicsRope@ apRope)
 	{
 		if (apRope is null) return false;
@@ -382,11 +500,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		cMaterial@ pMaterial = cResources_CreateMaterial(msRopeMaterial);
 		if (pMaterial is null) return false;
 
-		// The stock helper reserves only 32 mesh segments. Every BunkersEdge
-		// zipline currently exceeds that at its configured 0.5 m rope segment
-		// length, so reserve enough geometry for this rope's actual particles.
-		int lMaxSegments = lParticleNum + 1;
-		if (lMaxSegments < 32) lMaxSegments = 32;
+		int lMaxSegments = GetRequiredRopeGfxCapacity(apRope);
 
 		cWorld@ pWorld = mBaseObj.GetMap().GetWorld();
 		iRopeEntity@ pRopeGfx = pWorld.CreateRopeEntity(msRopeName + "Gfx", eRopeType_3D, apRope, lMaxSegments, 6);
@@ -398,6 +512,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		pRopeGfx.SetVisible(true);
 		pRopeGfx.SetScriptableIsSaved(false);
 		pRopeGfx.SetRenderFlagBit(eRenderableFlag_ShadowCaster, true);
+		mlRopeGfxCapacity = lMaxSegments;
 		return true;
 	}
 
@@ -415,6 +530,8 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		iPhysicsRope@ pRope = pPhysicsWorld.GetRope(msRopeName);
 		if (pRope !is null)
 			pPhysicsWorld.DestroyRope(pRope);
+
+		mlRopeGfxCapacity = 0;
 	}
 
 	//------------------------------------------------------------
@@ -706,7 +823,10 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	void OnSetActive(bool abX)
 	{
 		if (abX)
+		{
+			mfRopeCreateRetryTimer = 0.f;
 			mfRopeGfxRetryTimer = 0.f;
+		}
 	}
 	void OnConnectionStateChange(iLuxEntity@ apEntity,int alState) { if (alState != 0) mbCanRide = alState == 1; }
 
@@ -722,12 +842,16 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	bool mbCanRide = true;
 	bool mbPlayerIsInside = false;
 	bool mbNeedsExitAfterGrab = false;
+	[nosave] bool mbRopeRebuildQueued = false;
 	bool mbRopeCollideWorld = false;
 	bool mbRopeCollideCharacter = false;
 
 	float mfDebugTimer = 0.f;
 	float mfGrabCooldown = 0.f;
+	[nosave] float mfRopeCreateRetryTimer = 0.f;
 	float mfRopeGfxRetryTimer = 0.f;
+	[nosave] int mlRopeGfxCapacity = 0;
+	[nosave] int mlRopeParticleReadyRetries = 0;
 	float mfGrabRadius = 0.85f;
 	float mfMinApproachSpeed = 0.65f;
 	float mfMinVerticalSpeed = -10.0f;
