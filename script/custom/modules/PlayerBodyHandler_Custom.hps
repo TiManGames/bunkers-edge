@@ -30,10 +30,7 @@ class cScrPlayerBodyHandler_Custom : cScrPlayerBodyHandler, iScrPlayerBodyHandle
 
 		SetCustomAnimations();
 
-		mCurrentAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
-		mPrevAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
-		mNextAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
-		mPendingState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		ResetAnimationStateForActivation();
 
 		mbUnequipItemsOnCutsceneLeft = true;
 		mbUnequipItemsOnCutsceneRight = true;
@@ -69,10 +66,7 @@ class cScrPlayerBodyHandler_Custom : cScrPlayerBodyHandler, iScrPlayerBodyHandle
 
 		SetCustomAnimations();
 
-		mCurrentAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
-		mPrevAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
-		mNextAnimationState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
-		mPendingState = ePlayerBodyAnimationState(ePlayerBodyAnimationState_Custom_LastEnum);
+		ResetAnimationStateForActivation();
 		ResetParkourBodyHeadBobReduction();
 	}
 
@@ -98,10 +92,49 @@ class cScrPlayerBodyHandler_Custom : cScrPlayerBodyHandler, iScrPlayerBodyHandle
 
 	//------------------------------------------------------------
 
-	void VariableUpdate(float afTimeStep)
+	void Update(float afTimeStep) override
 	{
+		EnsureAnimationStateValid();
+		cScrPlayerBodyHandler::Update(afTimeStep);
+	}
+
+	//------------------------------------------------------------
+
+	void VariableUpdate(float afTimeStep) override
+	{
+		EnsureAnimationStateValid();
 		cScrPlayerBodyHandler::VariableUpdate(afTimeStep);
 		UpdateParkourBodyHeadBobReduction(afTimeStep);
+	}
+
+	//------------------------------------------------------------
+
+	void ResetAnimationStateForActivation()
+	{
+		// -1 is the sentinel expected by ChangeAnimationState().  The custom
+		// LastEnum value is one past the final array element and must never be
+		// used as a live state (notably after a script hot reload).
+		mCurrentAnimationState = ePlayerBodyAnimationState(-1);
+		mPrevAnimationState = ePlayerBodyAnimationState(-1);
+		mNextAnimationState = ePlayerBodyAnimationState_Idle;
+		mPendingState = ePlayerBodyAnimationState(mvAnimationStates.length());
+	}
+
+	//------------------------------------------------------------
+
+	void EnsureAnimationStateValid()
+	{
+		if (mbActive == false) return;
+
+		int lState = int(mCurrentAnimationState);
+		if (lState >= 0 && uint(lState) < mvAnimationStates.length() &&
+			mvAnimationStates[lState] !is null)
+			return;
+
+		mCurrentAnimationState = ePlayerBodyAnimationState(-1);
+		mPrevAnimationState = ePlayerBodyAnimationState(-1);
+		ChangeAnimationState(ePlayerBodyAnimationState_Idle);
+		PlayLayerIdleAnimation(ePlayerBodyAnimationLayer_FullBody);
 	}
 
 	//------------------------------------------------------------

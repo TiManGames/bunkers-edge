@@ -23,6 +23,7 @@
 const float gfBeastTraversalApproachFallDistance = 1.25f;
 const int glBeastTraversalMaxLaunchRecoveries = 1;
 const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
+const tString gsBunkerEndingReturnGlobal = "BunkersEdge_PlayReturnedBunkerEnding";
 
 
 //--------------------------------------------------
@@ -293,6 +294,8 @@ class cScrMap : iScrMap
 	{
 		Game_AutoSave(true);
 
+		Entity_SetActive(asParent, false);
+
 		return true;
 	}
 	
@@ -415,8 +418,6 @@ class cScrMap : iScrMap
 		{
 			bPause = true;
 		}
-
-		
 
 		Parkour_ShowTutorialHint(sHintEntry, bPause);
 		
@@ -582,6 +583,8 @@ class cScrMap : iScrMap
 			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_1");
 			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_2");
 			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_3");
+			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_4");
+			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_5");
 		}
 
 		//-------------------------------------------------------
@@ -1326,8 +1329,18 @@ class cScrMap : iScrMap
 			return false;
 		}
 
+		bool Trigger_LookDown(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			Player_StartLookAt("WindowSoundSource", 10, 10, 10, true);
+
+			return false;
+		}
+
 		bool Trigger_Ending(const tString &in asParent, const tString &in asChild, int alState)
 		{
+			if (alState != 1) return true;
+
+			Entity_SetActive(asParent, false);
 			Player_SetFallDamageActive(false);
 			
 			Sound_CreateAtEntity(
@@ -1338,7 +1351,78 @@ class cScrMap : iScrMap
 			Entity_SetActive("window", false);
 			Entity_SetActive("window_broken", true);
 
+			iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+			cVector3f vSlideForward = Parkour_GetFlatVelocity(pBody);
+			if (vSlideForward.SqrLength() <= 0.001f && pBody !is null)
+				vSlideForward = pBody.GetForward();
+			Parkour_StartWallSlide(vSlideForward);
+
+			Entity_SetActive("Trigger_Death", false);
+			Player_StopLookAt(0);
+			Player_StartLookAt("Trigger_Ending_5", 10.0f, 10.0f, 20.0f, true);
+
 			return false;
+		}
+
+		bool Trigger_StopSlide(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			Entity_SetActive("Trigger_Death", true);
+			Parkour_StopWallSlide();
+			Player_StopLookAt(0);
+
+			return false;
+		}
+
+		void BeginRiftTransfer()
+		{
+			Effect_Flash_Start(0.08f, 0.18f, 0.18f, 1.f);
+			Effect_Shake_Start(0.035f, 0.65f, 0.05f, 0.35f);
+			Effect_Rumble_Start(0.35f, 0.65f, 0.05f, 0.35f);
+			Sound_PlayGui("DW_tunnel/level/portal_death", 1.f, eSoundEntryType_Gui);
+
+			// This rift returns to the bunker ending. Keep it separate from the
+			// first-arrival flag that drives the parkour sky-fall sequence.
+			cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
+			cScript_SetGlobalVarBool(gsBunkerEndingReturnGlobal, true);
+			Map_AddTimer("Timer_FadeIntroRift", 0.2f, "OnTimer_FadeIntroRift");
+			Map_AddTimer("Timer_ChangeToBunker", 0.65f, "OnTimer_ChangeToBunker");
+		}
+
+		void OnTimer_FadeIntroRift(const tString &in asTimer)
+		{
+			Effect_Fade_Out(0.35f);
+		}
+
+		void OnTimer_ChangeToBunker(const tString &in asTimer)
+		{
+			// Return every shared player/camera state to neutral while black.
+			PlayerBody_SetAnimationControlledCamera(false);
+			CameraAnimation_End();
+			Player_StopLookAt(0);
+			PlayerBody_ResetCutscenePitchYawLimits();
+			PlayerBody_ResetYaw();
+			Player_ChangeStateToNormal();
+			Player_SetActive(true);
+
+			// Give the camera-mode and player-state changes one update to settle
+			// before map teardown serializes the shared player-body handler.
+			Map_RemoveTimer("Timer_CommitBunkerMapChange");
+			Map_AddTimer("Timer_CommitBunkerMapChange", 0.05f, "OnTimer_CommitBunkerMapChange");
+		}
+
+		bool Trigger_TheEnd(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			Music_Play("stinger.ogg", 0.6f, false, eMusicPrio_BigEvent);
+			BeginRiftTransfer();
+
+			return false;
+		}
+
+		void OnTimer_CommitBunkerMapChange(const tString &in asTimer)
+		{
+			PlayerBody_SetAnimationControlledCamera(false);
+			Player_ChangeStateToNormal();
+			Map_ChangeMap("intro.hpm", "Start_ExitTunnel", "", "", true);
 		}
 	 
 	//} END SCENE X 

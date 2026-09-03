@@ -11,13 +11,24 @@
 #include "helpers/helper_player.hps"
 #include "helpers/helper_ai.hps"
 #include "helpers/helper_agent.hps"
+#include "custom/helpers/helper_menu.hps"
 
 #include "custom/helpers/helper_parkour.hps"
 #include "custom/helpers/helper_player_custom.hps"
 
 const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
+const tString gsBunkerEndingReturnGlobal = "BunkersEdge_PlayReturnedBunkerEnding";
+const tString gsBunkerFallResumeGlobal = "BunkersEdge_BunkerFallResumeTime";
 const tString gsParkourMap = "parkour_level.hpm";
 const tString gsParkourStart = "Start_Begin";
+const tString gsBunkersEdgeCreditsFile = "BunkersEdge_Credits.cfg";
+const tString gsBunkersEdgeCreditsMusic = "Bunker_EndCredits.ogg";
+
+const float gfBunkerFallResumeFallback = 0.05f;
+const float gfBunkerFallElapsedBeforeParkour = 2.05f;
+const float gfStalkerEscapeStartTime = 31.2f;
+const float gfSeveredArmSplashTime = 27.5f;
+const float gfEndingRubbleTime = 10.f;
 
 class cScrMap : iScrMap
 {
@@ -25,6 +36,8 @@ class cScrMap : iScrMap
 	bool mbExitSequenceStarted = false;
 	bool mbRiftTransferStarted = false;
 	bool mbStalkerChaseStarted = false;
+	bool mbReturnedBunkerEndingStarted = false;
+	bool mbReturnedBunkerEndingFinished = false;
 
 	void Setup()
 	{
@@ -61,6 +74,23 @@ class cScrMap : iScrMap
 			PlayerBody_SetModel("player_bunker.ent");
 			Parkour_SetEnabled(true);
 			Parkour_SetDebug(true);
+		}
+
+		if (cScript_GetGlobalVarBool(gsBunkerEndingReturnGlobal))
+		{
+			cScript_SetGlobalVarBool(gsBunkerEndingReturnGlobal, false);
+			mbReturnedBunkerEndingStarted = true;
+			Game_SetupAfterMapChange();
+			PrepareReturnedBunkerEnding();
+			return;
+		}
+
+		// A later load or re-entry after the return must not restart the opening
+		// fade, music, Stalker chase, rock interaction, or rift transition.
+		if (mbReturnedBunkerEndingStarted)
+		{
+			Game_SetupAfterMapChange();
+			return;
 		}
 
 		Player_SetActive(false);
@@ -333,6 +363,12 @@ class cScrMap : iScrMap
 		// The exit tumble owns the camera through PlayerBodyHandler, not through
 		// CameraAnimation. Release that ownership and return the player to a
 		// neutral state while the screen is black, before changing maps.
+		float fResumeTime = gfBunkerFallResumeFallback;
+		cAnimationState@ pExitAnimation = PlayerBody_GetAnimationState("player_end_tumble_into_trench_no_stalker");
+		if (pExitAnimation !is null)
+			fResumeTime = pExitAnimation.GetRelativeTimePosition();
+		cScript_SetGlobalVarFloat(gsBunkerFallResumeGlobal, fResumeTime);
+
 		PlayerBody_StopAnimation("player_end_tumble_into_trench_no_stalker", 0.f);
 		PlayerBody_StopAnimationLayer(ePlayerBodyAnimationLayer_FullBody, 0.f);
 		PlayerBody_SetAnimationControlledCamera(false);
@@ -354,6 +390,129 @@ class cScrMap : iScrMap
 		PlayerBody_SetAnimationControlledCamera(false);
 		Player_ChangeStateToNormal();
 		Map_ChangeMap(gsParkourMap, gsParkourStart, "", "", true);
+	}
+
+	void PrepareReturnedBunkerEnding()
+	{
+		mbPlayerPushingTunnelRock = false;
+		mbExitSequenceStarted = true;
+		mbRiftTransferStarted = true;
+		mbStalkerChaseStarted = false;
+
+		Map_RemoveTimer("Timer_StartIntroStalkerChase");
+		Map_RemoveTimer("Timer_PushSmallTunnelRocks");
+		Map_RemoveTimer("Timer_PushTunnelRock");
+		Map_RemoveTimer("Timer_ShowIntroRift");
+		Map_RemoveTimer("Timer_EnterIntroRift");
+		StopIntroStalkerChase();
+		Entity_SetActive("Stalker_1", false);
+		Entity_SetActive("Stalker_EndingCutscene", false);
+
+		Push_SetCanLeaveState(true);
+		Parkour_SetEnabled(false);
+		Sketchbook_SetInventoryEnabled(false);
+		Player_SetActive(false);
+		Player_SetFallDamageActive(false);
+		Player_SetAmbientLight_None();
+
+		Effect_Fade_Out(0.f);
+		Sound_FadeGlobalVolume(1.f, 0.f, eSoundEntryType_WorldAll);
+		Music_StopAll(0.f);
+
+		Map_Preset_Fade("Outside", 0.f);
+		Billboard_SetVisible("billboard_exit_*", false);
+		Light_SetVisible("light_exit_*", false);
+		Map_SetEnvironmentParticlesActive(true);
+		Entity_SetActive("TunnelRock_*", false);
+		Entity_SetActive("TunnelRockWater", true);
+
+		Map_RemoveTimer("Timer_BeginReturnedBunkerEnding");
+		Map_AddTimer("Timer_BeginReturnedBunkerEnding", 0.1f, "OnTimer_BeginReturnedBunkerEnding");
+	}
+
+	void OnTimer_BeginReturnedBunkerEnding(const tString &in asTimer)
+	{
+		float fResumeTime = cScript_GetGlobalVarFloat(gsBunkerFallResumeGlobal);
+		if (fResumeTime <= 0.f || fResumeTime >= 1.f)
+			fResumeTime = gfBunkerFallResumeFallback;
+		cScript_SetGlobalVarFloat(gsBunkerFallResumeGlobal, 0.f);
+
+		PlayerBody_SetAnimationControlledCamera(false);
+		PlayerBody_ResetCutscenePitchYawLimits();
+		PlayerBody_ResetYaw();
+		Player_ChangeStateToNormal();
+		Player_SetActive(true);
+		Player_SetCrouching(false, true);
+
+		PlayerBody_PlayCutsceneAtEntity(
+			"player_end_tumble_into_trench",
+			"Area_ExitBunkerCutscene",
+			false,
+			0.f,
+			"OnAnimEnd_ReturnedBunkerFall",
+			1.f,
+			fResumeTime
+		);
+		Entity_SetAnimationMessageEventCallback(PlayerBody_GetEntityName(), "OnAnimMessage_Player", false);
+		PlayerBody_SetCutsceneMaxPitch(0.f);
+		PlayerBody_SetCutsceneMaxYaw(0.f);
+
+		Entity_SetActive("severed_arm", true);
+		Entity_PlayAnimation("severed_arm", "severed_arn_end_tumble", 0.f);
+		Entity_SetAnimationRelativeTimePosition("severed_arm", "severed_arn_end_tumble", fResumeTime);
+
+		Map_AddTimer("Timer_PlayReturnedSeveredArmSplash",
+			gfSeveredArmSplashTime - gfBunkerFallElapsedBeforeParkour,
+			"OnTimer_PlayReturnedSeveredArmSplash");
+		Map_AddTimer("Timer_ShowReturnedEndingRubble",
+			gfEndingRubbleTime - gfBunkerFallElapsedBeforeParkour,
+			"OnTimer_ShowReturnedEndingRubble");
+		Map_AddTimer("Timer_PlayReturnedStalkerEscape",
+			gfStalkerEscapeStartTime - gfBunkerFallElapsedBeforeParkour,
+			"OnTimer_PlayReturnedStalkerEscape");
+
+		Effect_Fade_In(0.5f);
+	}
+
+	void OnTimer_ShowReturnedEndingRubble(const tString &in asTimer)
+	{
+		Entity_SetActive("rock_tumble_*", true);
+	}
+
+	void OnTimer_PlayReturnedSeveredArmSplash(const tString &in asTimer)
+	{
+		ParticleSystem_CreateAtEntity("PS_ReturnedArmSplash", "water_splash_oneshot.ps", "Area_ArmSplash", false);
+	}
+
+	void OnTimer_PlayReturnedStalkerEscape(const tString &in asTimer)
+	{
+		Entity_SetActive("Stalker_EndingCutscene", true);
+		Entity_PlayAnimation("Stalker_EndingCutscene", "stalker_ending_scene", 0.f, false, true, "OnAnimEnd_StalkerEndingCutscene");
+	}
+
+	void OnAnimEnd_StalkerEndingCutscene(const tString &in asEntity, const tString &in asAnim)
+	{
+		Entity_SetActive("Stalker_EndingCutscene", false);
+		Player_SetActive(false);
+		Sound_FadeGlobalVolume(0.f, 0.5f, eSoundEntryType_WorldAll);
+		Credits_Start(gsBunkersEdgeCreditsFile, "OnEndOfBunkersEdgeCredits", "", cVector3f_Zero, gsBunkersEdgeCreditsMusic);
+	}
+
+	void OnEndOfBunkersEdgeCredits()
+	{
+		Music_StopAll(2.f);
+		Sound_FadeGlobalVolume(1.f, 0.5f, eSoundEntryType_WorldAll);
+		MainMenu_GameOver();
+	}
+
+	void OnAnimEnd_ReturnedBunkerFall(const tString &in asAnim)
+	{
+		mbReturnedBunkerEndingFinished = true;
+		PlayerBody_ResetCutscenePitchYawLimits();
+		PlayerBody_ResetYaw();
+		Player_ChangeStateToNormal();
+		Player_SetActive(true);
+		Player_SetFallDamageActive(true);
 	}
 
 	void OnAnimMessage_Player(const tString &in asEntityName, const tString &in asAnimName, int alMessageEventID)

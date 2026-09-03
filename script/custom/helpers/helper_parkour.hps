@@ -2,6 +2,8 @@
 // Parkour helper functions for MinimalCustomMap.
 //------------------------------------------------------------
 
+#include "custom/player/PlayerTypes_Custom.hps"
+
 const tString gsParkourModuleName = "ParkourHandler";
 
 const float gfParkourWallDetect_EntryRayLength = 0.5f;
@@ -66,6 +68,30 @@ cVector3f Parkour_GetFlatVelocity(iCharacterBody@ apBody,
 	}
 
 	return vFlatVel;
+}
+
+//------------------------------------------------------------
+
+void Parkour_StartWallSlide(const cVector3f &in avForward,
+								float afStartDownSpeed = 4.0f,
+								float afDownAcceleration = 2.25f,
+								float afMaxDownSpeed = 10.0f,
+								float afWallPressSpeed = 1.6f,
+								float afSideSpeed = 2.4f)
+{
+	cScript_SetGlobalArgVector3f(0, avForward);
+	cScript_SetGlobalArgFloat(1, afStartDownSpeed);
+	cScript_SetGlobalArgFloat(2, afDownAcceleration);
+	cScript_SetGlobalArgFloat(3, afMaxDownSpeed);
+	cScript_SetGlobalArgFloat(4, afWallPressSpeed);
+	cScript_SetGlobalArgFloat(5, afSideSpeed);
+	cScript_RunGlobalFunc("State_ParkourWallSlide", "", "SetupParkourWallSlide");
+	cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourWallSlide);
+}
+
+void Parkour_StopWallSlide()
+{
+	cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 }
 
 //------------------------------------------------------------
@@ -689,6 +715,30 @@ int Parkour_GetWallRunSideFromNormal(const cVector3f &in avNormal,
 									 const cVector3f &in avRight)
 {
 	return cMath_Vector3Dot(avNormal, avRight) < 0.f ? 1 : -1;
+}
+
+//------------------------------------------------------------
+
+bool Parkour_CastSurfaceRay(const cVector3f &in avStart,
+							const cVector3f &in avDir,
+							float afRayLength,
+							float &out afDistance,
+							cVector3f &out avNormal)
+{
+	afDistance = 1000.f;
+	avNormal = cVector3f_Zero;
+
+	cVector3f vDir = avDir;
+	if (vDir.SqrLength() <= 0.001f) return false;
+	vDir.Normalize();
+
+	iPhysicsBody@ pHit = cLux_GetClosestCharCollideBody(avStart, vDir, afRayLength, afDistance, avNormal);
+	if (pHit is null)
+		@pHit = cLux_GetClosestBody(avStart, vDir, afRayLength, afDistance, avNormal);
+
+	if (pHit is null || avNormal.SqrLength() <= 0.001f) return false;
+	avNormal.Normalize();
+	return true;
 }
 
 //------------------------------------------------------------

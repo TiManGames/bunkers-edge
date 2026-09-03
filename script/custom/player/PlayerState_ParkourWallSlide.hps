@@ -1,0 +1,399 @@
+#include "interfaces/PlayerState_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "player/Player_Types.hps"
+
+#include "helpers/helper_player.hps"
+#include "helpers/helper_items.hps"
+#include "helpers/helper_modules.hps"
+#include "helpers/helper_effects.hps"
+#include "custom/helpers/helper_parkour.hps"
+
+//------------------------------------------------------------
+
+const float gfParkourWallSlide_CameraLowerOffset = 0.55f;
+const float gfParkourWallSlide_CameraForwardOffset = 0.08f;
+const float gfParkourWallSlide_CameraBlendTime = 0.24f;
+const float gfParkourWallSlide_CameraYawLimit = 40.f;
+const float gfParkourWallSlide_CameraPitchMin = -70.f;
+const float gfParkourWallSlide_CameraPitchMax = 70.f;
+const float gfParkourWallSlide_SteerResponse = 5.5f;
+const float gfParkourWallSlide_MaxSteerRoll = 3.5f;
+const float gfParkourWallSlide_RollFrequency = 4.0f;
+const float gfParkourWallSlide_ShakeRampTime = 4.0f;
+const float gfParkourWallSlide_ShakePulseInterval = 0.16f;
+const float gfParkourWallSlide_ShakeBaseAmount = 0.010f;
+const float gfParkourWallSlide_ShakeMaxAmount = 0.075f;
+const float gfParkourWallSlide_SurfaceRayLength = 1.75f;
+const float gfParkourWallSlide_SurfaceTargetDistance = 0.45f;
+
+//------------------------------------------------------------
+
+class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interface
+{
+	//------------------------------------------------------------
+
+	void OnAttachBodyToStickyArea() {}
+
+	//------------------------------------------------------------
+
+	void Init() {}
+	void LoadUserConfig() {}
+	void SaveUserConfig() {}
+	void OnMapEnter(cLuxMap @apMap) {}
+	void OnMapLeave(cLuxMap @apMap) {}
+	void CreateWorldEntities(cLuxMap @apMap) {}
+	void DestroyWorldEntities(cLuxMap @apMap) {}
+	void Reset() {}
+	void PostUpdate(float afTimeStep) {}
+	bool OnExitPressed() { return true; }
+
+	//------------------------------------------------------------
+
+	void SetupParkourWallSlide()
+	{
+		mvWallForward = cScript_GetGlobalArgVector3f(0);
+		mfStartDownSpeed = cScript_GetGlobalArgFloat(1);
+		mfDownAcceleration = cScript_GetGlobalArgFloat(2);
+		mfMaxDownSpeed = cScript_GetGlobalArgFloat(3);
+		mfWallPressSpeed = cScript_GetGlobalArgFloat(4);
+		mfSideSpeed = cScript_GetGlobalArgFloat(5);
+	}
+
+	//------------------------------------------------------------
+
+	void OnEnterState(int alPrevStateId)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		NormalizeSetup(pBody);
+
+		mfTimer = 0.f;
+		mfDownSpeed = mfStartDownSpeed;
+		mfSteer = 0.f;
+		mfAnalogSteer = 0.f;
+		mfSmoothedRoll = 0.f;
+		mfShakePulseTimer = 0.f;
+		mlSlideShakeId = -1;
+		mvScriptedFeetPosition = pBody.GetFeetPosition();
+		RefreshSlideSurface(pBody);
+
+		float fYaw = GetYawFromDir(mvWallForward);
+		pBody.SetYaw(fYaw);
+		cLux_GetPlayer().GetCamera().SetYaw(fYaw);
+		Player_EnableCameraLock(-gfParkourWallSlide_CameraYawLimit,
+								gfParkourWallSlide_CameraYawLimit,
+								gfParkourWallSlide_CameraPitchMin,
+								gfParkourWallSlide_CameraPitchMax);
+
+		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+		pBody.SetGravityActive(false);
+		pBody.SetTestCollision(false);
+		pBody.SetPhysicsBodyActive(false);
+		pBody.StopMovement();
+		pBody.SetForceVelocity(cVector3f_Zero);
+
+		Player_SetDisableCrawling(true);
+		Player_SetCrouching(false);
+		Player_SetCrouchDisabled(true);
+		Player_SetCrouchActionDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_SetJumpDisabled(true);
+		Player_CancelJump();
+		PlayerBody_SetVisible(false);
+
+		Item_PutAway(eItemHandlerHand_Left);
+		Item_PutAway(eItemHandlerHand_Right);
+
+		cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, cVector3f_Zero);
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Wall slide state entered.", true);
+	}
+
+	//------------------------------------------------------------
+
+	void OnLeaveState(int alNextStateId)
+	{
+		StopWallSlideShake(0.12f);
+
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody !is null)
+		{
+			pBody.SetGravityActive(true);
+			pBody.SetTestCollision(true);
+			pBody.SetPhysicsBodyActive(true);
+		}
+
+		PlayerBody_SetVisible(true);
+		Player_DisableCameraLock();
+		Player_ResetCameraLimits();
+		Player_SetDisableCrawling(false);
+		Player_SetCrouchDisabled(false);
+		Player_SetCrouchActionDisabled(false);
+		Player_SetLeanDisabled(false);
+		Player_SetJumpDisabled(false);
+		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+	}
+
+	//------------------------------------------------------------
+
+	void Update(float afTimeStep)
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (pBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		mfTimer += afTimeStep;
+		mfDownSpeed = cMath_Min(mfMaxDownSpeed, mfDownSpeed + mfDownAcceleration * afTimeStep);
+		RefreshSlideSurface(pBody);
+
+		float fSteerTarget = GetSteerTarget();
+		mfSteer = cMath_IncreaseTo(mfSteer, gfParkourWallSlide_SteerResponse * afTimeStep, fSteerTarget);
+
+		cVector3f vVelocity = mvSlideDown * mfDownSpeed;
+		vVelocity += mvSlideRight * (mfSideSpeed * mfSteer);
+		if (mbHasSlideSurface == false || mfSurfaceDistance > gfParkourWallSlide_SurfaceTargetDistance)
+			vVelocity += mvWallForward * mfWallPressSpeed;
+		mvScriptedFeetPosition += vVelocity * afTimeStep;
+		pBody.SetForceVelocity(cVector3f_Zero);
+		pBody.SetFeetPosition(mvScriptedFeetPosition, true);
+
+		UpdateCameraMotion(afTimeStep);
+		UpdateWallSlideShake(afTimeStep);
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAction(int alAction, bool abPressed)
+	{
+		return false;
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (alAnalogId == eAnalogType_Look)
+			return true;
+
+		if (alAnalogId == eAnalogType_Move || alAnalogId == eAnalogType_GamepadMove)
+		{
+			if (cMath_Abs(avAmount.x) > cMath_Abs(mfAnalogSteer))
+				mfAnalogSteer = cMath_Clamp(avAmount.x, -1.f, 1.f);
+			return false;
+		}
+
+		if (alAnalogId == eAnalogType_Lean)
+			return false;
+
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	bool AllowBuoyancy(iPhysicsBody @apBody)
+	{
+		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void CharBody_GravityCollide(iCharacterBody@ apCharBody, iPhysicsBody@ apBody, cCollideData @apCollideData) {}
+	void CharBody_HitGround(iCharacterBody@ apCharBody, const cVector3f &in avVel) {}
+
+	//------------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet @apSet, iFontData @apFont, float afStartY)
+	{
+		return afStartY;
+	}
+
+	//------------------------------------------------------------
+
+	void NormalizeSetup(iCharacterBody@ apBody)
+	{
+		mvWallForward.y = 0.f;
+		if (mvWallForward.SqrLength() <= 0.001f && apBody !is null)
+		{
+			mvWallForward = apBody.GetForward();
+			mvWallForward.y = 0.f;
+		}
+
+		if (mvWallForward.SqrLength() > 0.001f)
+			mvWallForward.Normalize();
+		else
+			mvWallForward = cVector3f_Forward;
+
+		mvWallRight = cMath_Vector3Normalize(cMath_Vector3Cross(mvWallForward, cVector3f_Up));
+		mvSlideDown = cVector3f_Down;
+		mvSlideRight = mvWallRight;
+		mbHasSlideSurface = false;
+		mfSurfaceDistance = 1000.f;
+		mfStartDownSpeed = cMath_Max(0.1f, mfStartDownSpeed);
+		mfDownAcceleration = cMath_Max(0.f, mfDownAcceleration);
+		mfMaxDownSpeed = cMath_Max(mfStartDownSpeed, mfMaxDownSpeed);
+		mfWallPressSpeed = cMath_Max(0.f, mfWallPressSpeed);
+		mfSideSpeed = cMath_Max(0.f, mfSideSpeed);
+	}
+
+	//------------------------------------------------------------
+
+	void RefreshSlideSurface(iCharacterBody@ apBody)
+	{
+		if (apBody is null) return;
+
+		float fDistance;
+		cVector3f vNormal;
+		cVector3f vFeet = mvScriptedFeetPosition;
+		mbHasSlideSurface = false;
+		mfSurfaceDistance = 1000.f;
+		bool bHit = Parkour_CastSurfaceRay(vFeet + cVector3f_Up * 0.45f,
+											mvWallForward,
+											gfParkourWallSlide_SurfaceRayLength,
+											fDistance,
+											vNormal);
+		if (bHit == false)
+			bHit = Parkour_CastSurfaceRay(vFeet + cVector3f_Up * 1.25f,
+										mvWallForward,
+										gfParkourWallSlide_SurfaceRayLength,
+										fDistance,
+										vNormal);
+		if (bHit == false) return;
+
+		if (cMath_Vector3Dot(vNormal, mvWallForward) > 0.f)
+			vNormal *= -1.f;
+
+		cVector3f vDown = cVector3f_Down - vNormal * cMath_Vector3Dot(cVector3f_Down, vNormal);
+		if (vDown.SqrLength() <= 0.001f) return;
+		vDown.Normalize();
+		if (vDown.y > 0.f) vDown *= -1.f;
+
+		cVector3f vRight = mvWallRight - vNormal * cMath_Vector3Dot(mvWallRight, vNormal);
+		if (vRight.SqrLength() <= 0.001f)
+			vRight = cMath_Vector3Cross(vDown, vNormal);
+		if (vRight.SqrLength() <= 0.001f) return;
+		vRight.Normalize();
+		if (cMath_Vector3Dot(vRight, mvWallRight) < 0.f)
+			vRight *= -1.f;
+
+		mvSlideDown = vDown;
+		mvSlideRight = vRight;
+		mbHasSlideSurface = true;
+		mfSurfaceDistance = fDistance;
+	}
+
+	//------------------------------------------------------------
+
+	float GetSteerTarget()
+	{
+		float fTarget = mfAnalogSteer;
+		mfAnalogSteer = 0.f;
+
+		float fDigital = 0.f;
+		if (cInput_IsTriggered(eAction_Right)) fDigital += 1.f;
+		if (cInput_IsTriggered(eAction_Left)) fDigital -= 1.f;
+		if (cMath_Abs(fDigital) > cMath_Abs(fTarget))
+			fTarget = fDigital;
+
+		return cMath_Clamp(fTarget, -1.f, 1.f);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateCameraMotion(float afTimeStep)
+	{
+		float fEntryT = cMath_Easing(eEasing_SineInOut,
+										cMath_Clamp(mfTimer / gfParkourWallSlide_CameraBlendTime, 0.f, 1.f));
+		float fRollGoal = cMath_ToRad(-mfSteer * gfParkourWallSlide_MaxSteerRoll);
+		fRollGoal += cMath_ToRad(cMath_Sin(mfTimer * gfParkourWallSlide_RollFrequency) * 0.45f);
+		float fRollStep = cMath_Clamp(afTimeStep * 5.f, 0.f, 1.f);
+		mfSmoothedRoll = cMath_InterpolateLinear(mfSmoothedRoll, fRollGoal, fRollStep);
+		cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Script, mfSmoothedRoll * fEntryT);
+		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
+									  cVector3f(0.f,
+												-gfParkourWallSlide_CameraLowerOffset * fEntryT,
+												 gfParkourWallSlide_CameraForwardOffset * fEntryT),
+									  5.f,
+									  4.f,
+									  gfParkourWallSlide_CameraBlendTime);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateWallSlideShake(float afTimeStep)
+	{
+		mfShakePulseTimer -= afTimeStep;
+		if (mfShakePulseTimer > 0.f) return;
+
+		if (mlSlideShakeId >= 0)
+			Effect_Shake_FadeOut(mlSlideShakeId, 0.05f);
+
+		float fSlideT = cMath_Clamp(mfTimer / gfParkourWallSlide_ShakeRampTime, 0.f, 1.f);
+		fSlideT = cMath_Easing(eEasing_QuadIn, fSlideT);
+		float fSpeedT = cMath_Clamp((mfDownSpeed - mfStartDownSpeed) /
+										cMath_Max(0.001f, mfMaxDownSpeed - mfStartDownSpeed), 0.f, 1.f);
+		float fShakeT = cMath_Clamp(fSlideT * 0.75f + fSpeedT * 0.25f, 0.f, 1.f);
+		float fAmount = cMath_InterpolateLinear(gfParkourWallSlide_ShakeBaseAmount,
+												gfParkourWallSlide_ShakeMaxAmount,
+												fShakeT);
+
+		mlSlideShakeId = Effect_Shake_Start(fAmount,
+											gfParkourWallSlide_ShakePulseInterval,
+											0.025f,
+											0.10f,
+											cVector3f(0.85f, 0.70f, 0.35f),
+											18.f);
+		mfShakePulseTimer = gfParkourWallSlide_ShakePulseInterval;
+	}
+
+	//------------------------------------------------------------
+
+	void StopWallSlideShake(float afFadeOutTime)
+	{
+		if (mlSlideShakeId < 0) return;
+
+		Effect_Shake_FadeOut(mlSlideShakeId, afFadeOutTime);
+		mlSlideShakeId = -1;
+		mfShakePulseTimer = 0.f;
+	}
+
+	//------------------------------------------------------------
+
+	float GetYawFromDir(const cVector3f &in avDir)
+	{
+		return cMath_GetAngleFromPoints3D(cVector3f_Zero, avDir).y;
+	}
+
+	//------------------------------------------------------------
+
+	cVector3f mvWallForward = cVector3f_Forward;
+	cVector3f mvWallRight = cVector3f_Right;
+	cVector3f mvSlideDown = cVector3f_Down;
+	cVector3f mvSlideRight = cVector3f_Right;
+	cVector3f mvScriptedFeetPosition = cVector3f_Zero;
+
+	bool mbHasSlideSurface = false;
+
+	float mfStartDownSpeed = 4.0f;
+	float mfDownAcceleration = 2.25f;
+	float mfMaxDownSpeed = 10.0f;
+	float mfWallPressSpeed = 1.6f;
+	float mfSideSpeed = 1.4f;
+	float mfDownSpeed = 2.0f;
+	float mfSteer = 0.f;
+	float mfAnalogSteer = 0.f;
+	float mfTimer = 0.f;
+	float mfSmoothedRoll = 0.f;
+	float mfShakePulseTimer = 0.f;
+	float mfSurfaceDistance = 1000.f;
+	int mlSlideShakeId = -1;
+}
