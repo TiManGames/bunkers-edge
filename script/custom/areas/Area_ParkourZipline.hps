@@ -20,7 +20,6 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	{
 		mbPlayerIsInside = false;
 		mbNeedsExitAfterGrab = false;
-		mbRopeCreated = false;
 		mfDebugTimer = 0.f;
 		mfGrabCooldown = 0.f;
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
@@ -68,14 +67,13 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		if (msEndArea == "")
 			msEndArea = mBaseObj.GetName() + "_End";
 
-		iLuxEntity@ pEnd = mBaseObj.GetMap().GetEntityByName(msEndArea, eLuxEntityType_Area);
+		iLuxEntity@ pEnd = ResolveEndArea();
 		if (pEnd is null)
 		{
 			Error("Cannot find end area '" + msEndArea + "' for zipline area '" + mBaseObj.GetName() + "'");
 			return;
 		}
 
-		m_idEndArea = pEnd.GetID();
 		UpdateLineData();
 		CreateZiplineRope();
 		CreateZiplinePhysics();
@@ -236,10 +234,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 
 	cVector3f GetEndPoint()
 	{
-		if (m_idEndArea == tID_Invalid)
-			return mBaseObj.GetPosition();
-
-		iLuxEntity@ pEnd = cLux_ID_Entity(m_idEndArea);
+		iLuxEntity@ pEnd = ResolveEndArea();
 		if (pEnd is null)
 			return mBaseObj.GetPosition();
 
@@ -248,40 +243,91 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 
 	//------------------------------------------------------------
 
-	void CreateZiplineRope()
+	iLuxEntity@ ResolveEndArea()
 	{
-		if (mfLineLength <= 0.25f) return;
+		iLuxEntity@ pEnd = null;
+		if (m_idEndArea != tID_Invalid)
+			@pEnd = cLux_ID_Entity(m_idEndArea);
 
-		if (Rope_Exists(msRopeName) == false)
+		if (pEnd is null || pEnd.GetName() != msEndArea)
 		{
-			Rope_Create(msRopeName,
-						mBaseObj.GetPosition(),
-						GetEndPoint(),
-						cMath_Max(0.05f, mfRopeSegmentLength),
-						cMath_Max(0.f, mfRopeDamping),
-						cMath_Max(1.f, mfRopeStrength),
-						cMath_Max(0.f, mfRopeStiffness),
-						mbRopeCollideWorld,
-						false);
-			Rope_SetTotalLength(msRopeName, mfLineLength);
-			Rope_AttachStart(msRopeName, mBaseObj.GetName());
-			Rope_AttachEnd(msRopeName, msEndArea);
-			Rope_SetCollide(msRopeName, mbRopeCollideWorld, false, mbRopeCollideCharacter, false);
-			mbRopeCreated = true;
+			@pEnd = mBaseObj.GetMap().GetEntityByName(msEndArea, eLuxEntityType_Area);
+			m_idEndArea = pEnd is null ? tID_Invalid : pEnd.GetID();
 		}
+
+		return pEnd;
+	}
+
+	//------------------------------------------------------------
+
+	bool CreateZiplineRope()
+	{
+		iLuxEntity@ pEnd = ResolveEndArea();
+		iPhysicsBody@ pStartBody = mBaseObj.GetMainBody();
+		iPhysicsBody@ pEndBody = pEnd is null ? null : pEnd.GetMainBody();
+		if (pStartBody is null || pEndBody is null)
+		{
+			DestroyZiplineRope();
+			return false;
+		}
+
+		UpdateLineData();
+		if (mfLineLength <= 0.25f) return false;
+
+		// Generated ropes can survive a save load or script/map reload while the
+		// area script gets a fresh instance. Always replace that stale pair so
+		// the physics rope owns the current endpoint bodies.
+		DestroyZiplineRope();
+		Rope_Create(msRopeName,
+					mBaseObj.GetPosition(),
+					pEnd.GetPosition(),
+					cMath_Max(0.05f, mfRopeSegmentLength),
+					cMath_Max(0.f, mfRopeDamping),
+					cMath_Max(1.f, mfRopeStrength),
+					cMath_Max(0.f, mfRopeStiffness),
+					mbRopeCollideWorld,
+					false);
+
+		iPhysicsRope@ pRope = GetZiplineRope();
+		if (pRope is null) return false;
+
+		Rope_SetTotalLength(msRopeName, mfLineLength);
+		pRope.SetAttachedStartBody(pStartBody);
+		pRope.SetAttachedEndBody(pEndBody);
+		Rope_SetCollide(msRopeName, mbRopeCollideWorld, false, mbRopeCollideCharacter, false);
+		pRope.SetActive(true);
+		pRope.SetPhysicsActive(true);
 
 		// helper_physics requires the graphics rope to be created after a small
 		// delay, once the new physics rope has initialized its particles.
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
+		return true;
 	}
 
 	//------------------------------------------------------------
 
 	void EnsureZiplineRopeGfx(float afTimeStep)
 	{
+		iPhysicsRope@ pRope = GetZiplineRope();
+		if (ZiplineRopePhysicsIsValid(pRope) == false)
+		{
+			if (mfRopeGfxRetryTimer > 0.f)
+			{
+				mfRopeGfxRetryTimer -= afTimeStep;
+				return;
+			}
+
+			mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxRetryDelay;
+			CreateZiplineRope();
+			return;
+		}
+
 		cWorld@ pWorld = mBaseObj.GetMap().GetWorld();
 		iRopeEntity@ pRopeGfx = pWorld.GetRopeEntity(msRopeName + "Gfx");
-		if (pRopeGfx !is null && pRopeGfx.GetMaterial() !is null)
+		if (pRopeGfx !is null &&
+			pRopeGfx.GetMaterial() !is null &&
+			pRopeGfx.GetPhysicsRope() is pRope &&
+			pRopeGfx.GetScriptableIsSaved() == false)
 		{
 			pRopeGfx.SetActive(true);
 			pRopeGfx.SetVisible(true);
@@ -295,18 +341,64 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		}
 
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxRetryDelay;
-		if (Rope_Exists(msRopeName) == false) return;
 
-		// A failed material load can leave behind a graphics entity that makes
-		// the old existence-only check suppress every later attempt.
+		// A saved/stale graphics entity can point at an old physics rope, and a
+		// failed material load can leave an unusable entity behind. Recreate it
+		// unless the material, physics link and derived-only save flag all match.
 		if (pRopeGfx !is null)
 			pWorld.DestroyRopeEntity(pRopeGfx);
 
-		Rope_CreateGfx(msRopeName, msRopeMaterial, cMath_Max(0.005f, mfRopeRadius));
+		CreateZiplineRopeGfx(pRope);
 
 		@pRopeGfx = pWorld.GetRopeEntity(msRopeName + "Gfx");
 		if (pRopeGfx !is null && pRopeGfx.GetMaterial() !is null && Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Zipline rope graphics ready for '" + mBaseObj.GetName() + "'.", true);
+	}
+
+	//------------------------------------------------------------
+
+	bool ZiplineRopePhysicsIsValid(iPhysicsRope@ apRope)
+	{
+		if (apRope is null) return false;
+
+		iLuxEntity@ pEnd = ResolveEndArea();
+		iPhysicsBody@ pStartBody = mBaseObj.GetMainBody();
+		iPhysicsBody@ pEndBody = pEnd is null ? null : pEnd.GetMainBody();
+		if (pStartBody is null || pEndBody is null) return false;
+
+		return apRope.GetAttachedStartBody() is pStartBody &&
+			   apRope.GetAttachedEndBody() is pEndBody;
+	}
+
+	//------------------------------------------------------------
+
+	bool CreateZiplineRopeGfx(iPhysicsRope@ apRope)
+	{
+		if (apRope is null) return false;
+
+		int lParticleNum = apRope.GetParticleNum();
+		if (lParticleNum < 2) return false;
+
+		cMaterial@ pMaterial = cResources_CreateMaterial(msRopeMaterial);
+		if (pMaterial is null) return false;
+
+		// The stock helper reserves only 32 mesh segments. Every BunkersEdge
+		// zipline currently exceeds that at its configured 0.5 m rope segment
+		// length, so reserve enough geometry for this rope's actual particles.
+		int lMaxSegments = lParticleNum + 1;
+		if (lMaxSegments < 32) lMaxSegments = 32;
+
+		cWorld@ pWorld = mBaseObj.GetMap().GetWorld();
+		iRopeEntity@ pRopeGfx = pWorld.CreateRopeEntity(msRopeName + "Gfx", eRopeType_3D, apRope, lMaxSegments, 6);
+		if (pRopeGfx is null) return false;
+
+		pRopeGfx.SetMaterial(pMaterial);
+		pRopeGfx.SetRadius(cMath_Max(0.005f, mfRopeRadius));
+		pRopeGfx.SetActive(true);
+		pRopeGfx.SetVisible(true);
+		pRopeGfx.SetScriptableIsSaved(false);
+		pRopeGfx.SetRenderFlagBit(eRenderableFlag_ShadowCaster, true);
+		return true;
 	}
 
 	//------------------------------------------------------------
@@ -320,14 +412,9 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		if (pRopeGfx !is null)
 			pWorld.DestroyRopeEntity(pRopeGfx);
 
-		if (mbRopeCreated)
-		{
-			iPhysicsRope@ pRope = pPhysicsWorld.GetRope(msRopeName);
-			if (pRope !is null)
-				pPhysicsWorld.DestroyRope(pRope);
-		}
-
-		mbRopeCreated = false;
+		iPhysicsRope@ pRope = pPhysicsWorld.GetRope(msRopeName);
+		if (pRope !is null)
+			pPhysicsWorld.DestroyRope(pRope);
 	}
 
 	//------------------------------------------------------------
@@ -635,7 +722,6 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	bool mbCanRide = true;
 	bool mbPlayerIsInside = false;
 	bool mbNeedsExitAfterGrab = false;
-	bool mbRopeCreated = false;
 	bool mbRopeCollideWorld = false;
 	bool mbRopeCollideCharacter = false;
 
@@ -673,8 +759,8 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	cVector3f mvLowPoint = cVector3f_Zero;
 	cVector3f mvRideDir = cVector3f_Forward;
 
-	iCollideShape@ mpAnchorShape = null;
-	iCollideShape@ mpTrolleyShape = null;
+	[nosave] iCollideShape@ mpAnchorShape = null;
+	[nosave] iCollideShape@ mpTrolleyShape = null;
 
 	//------------------------------------------------------------
 }
