@@ -24,6 +24,12 @@ const float gfBeastTraversalApproachFallDistance = 1.25f;
 const int glBeastTraversalMaxLaunchRecoveries = 1;
 const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
 const tString gsBunkerEndingReturnGlobal = "BunkersEdge_PlayReturnedBunkerEnding";
+const tString gsParkourAutoSaveBeginTimer = "Timer_ParkourAutoSaveBegin";
+const tString gsParkourAutoSavePollTimer = "Timer_ParkourAutoSavePoll";
+const float gfParkourAutoSaveRopeDestroyDelay = 0.25f;
+const float gfParkourAutoSavePollDelay = 0.10f;
+const float gfParkourAutoSaveThreadStartGrace = 1.0f;
+const int glParkourAutoSaveMaxRopeDestroyAttempts = 20;
 
 
 //--------------------------------------------------
@@ -49,7 +55,6 @@ class cScrMap : iScrMap
 	// Set up map environment
 	void Setup()
 	{
-		// Put display name entry in english.lang / Levels
 		GetBase().SetDisplayNameEntry("parkour-level");
 		
 		// etc.
@@ -73,17 +78,6 @@ class cScrMap : iScrMap
 		
 	void PreloadData()
 	{
-		/////////////////
-		// Preload gui
-		//ImGui_PreloadImage("some_image");
-
-		///////////////
-		// Preload particles
-		//ParticleSystem_Preload("some_particle.ps");
-
-		//////////////
-		// Preload screen effects
-		//Material_Preload("some_material.mat");
 	}
 	
 	//-------------------------------------------------------
@@ -109,6 +103,7 @@ class cScrMap : iScrMap
 	// Run when entering map
 	void OnEnter()
 	{	
+		ResetParkourAutoSaveCoordinator();
 		EnsureStalkerNarrowBodySectionsSetup();
 		SetBeastNarrowSectionBody(false);
 		Entity_SetActive("stalker", false);
@@ -152,12 +147,17 @@ class cScrMap : iScrMap
 	// Run when leaving map
 	void OnLeave()
 	{
+		ResetParkourAutoSaveCoordinator();
 		SetBeastNarrowSectionBody(false);
 	}
 	
 	//-------------------------------------------------------
 
 	int jumpArea = 1;
+	[nosave] bool mbParkourAutoSavePending = false;
+	[nosave] bool mbParkourAutoSaveThreadObserved = false;
+	[nosave] float mfParkourAutoSaveThreadWait = 0.f;
+	[nosave] int mlParkourAutoSaveRopeDestroyAttempts = 0;
 
 	////////////////////////////
 	// To get when player makes input (mostly used for debug)
@@ -285,18 +285,162 @@ class cScrMap : iScrMap
 		Player_ChangeStateToNormal();
 		Player_SetFallDamageActive(true);
 		Parkour_SetEnabled(true);
-		Game_AutoSave(true);
+		RequestParkourAutoSave();
 	}
 
 	//-------------------------------------------------------
 
 	bool Trigger_AutoSave(const tString &in asParent, const tString &in asChild, int alState)
 	{
-		Game_AutoSave(true);
+		RequestParkourAutoSave();
 
 		Entity_SetActive(asParent, false);
 
-		return true;
+		return false;
+	}
+
+	//-------------------------------------------------------
+
+	void ResetParkourAutoSaveCoordinator()
+	{
+		Map_RemoveTimer(gsParkourAutoSaveBeginTimer);
+		Map_RemoveTimer(gsParkourAutoSavePollTimer);
+		mbParkourAutoSavePending = false;
+		mbParkourAutoSaveThreadObserved = false;
+		mfParkourAutoSaveThreadWait = 0.f;
+		mlParkourAutoSaveRopeDestroyAttempts = 0;
+	}
+
+	//-------------------------------------------------------
+
+	void PrepareZiplineRopesForSave()
+	{
+		cScript_RunGlobalFunc("Zipline_1", "cScrAreaParkourZipline", "_Global_PrepareForSave");
+		cScript_RunGlobalFunc("Zipline_2", "cScrAreaParkourZipline", "_Global_PrepareForSave");
+		cScript_RunGlobalFunc("Zipline_5", "cScrAreaParkourZipline", "_Global_PrepareForSave");
+	}
+
+	//-------------------------------------------------------
+
+	void ResumeZiplineRopesAfterSave()
+	{
+		cScript_RunGlobalFunc("Zipline_1", "cScrAreaParkourZipline", "_Global_ResumeAfterSave");
+		cScript_RunGlobalFunc("Zipline_2", "cScrAreaParkourZipline", "_Global_ResumeAfterSave");
+		cScript_RunGlobalFunc("Zipline_5", "cScrAreaParkourZipline", "_Global_ResumeAfterSave");
+	}
+
+	//-------------------------------------------------------
+
+	bool ZiplineRopesAreDetachedForSave()
+	{
+		iPhysicsWorld@ pPhysicsWorld = cLux_GetCurrentMap().GetPhysicsWorld();
+		cWorld@ pWorld = cLux_GetCurrentMap().GetWorld();
+
+		return pPhysicsWorld.GetRope("Zipline_1_rope") is null &&
+			pPhysicsWorld.GetRope("Zipline_2_rope") is null &&
+			pPhysicsWorld.GetRope("Zipline_5_rope") is null &&
+			pWorld.GetRopeEntity("Zipline_1_ropeGfx") is null &&
+			pWorld.GetRopeEntity("Zipline_2_ropeGfx") is null &&
+			pWorld.GetRopeEntity("Zipline_5_ropeGfx") is null;
+	}
+
+	//-------------------------------------------------------
+
+	void RequestParkourAutoSave()
+	{
+		if (mbParkourAutoSavePending) return;
+		if (cLux_GetSaveHandler().GetSaveThreadActive()) return;
+
+		mbParkourAutoSavePending = true;
+		mbParkourAutoSaveThreadObserved = false;
+		mfParkourAutoSaveThreadWait = 0.f;
+		mlParkourAutoSaveRopeDestroyAttempts = 0;
+		PrepareZiplineRopesForSave();
+
+		// Rope destruction is deferred by the physics world. Give it one short
+		// frame window before the synchronous save snapshot begins.
+		Map_RemoveTimer(gsParkourAutoSaveBeginTimer);
+		Map_AddTimer(gsParkourAutoSaveBeginTimer, gfParkourAutoSaveRopeDestroyDelay,
+			"OnTimer_BeginParkourAutoSave");
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_BeginParkourAutoSave(const tString &in asTimer)
+	{
+		if (mbParkourAutoSavePending == false) return;
+
+		if (ZiplineRopesAreDetachedForSave() == false)
+		{
+			mlParkourAutoSaveRopeDestroyAttempts++;
+			if (mlParkourAutoSaveRopeDestroyAttempts >= glParkourAutoSaveMaxRopeDestroyAttempts)
+			{
+				Error("Parkour autosave cancelled because the zipline rope graph could not be detached safely.");
+				FinishParkourAutoSave();
+				return;
+			}
+
+			PrepareZiplineRopesForSave();
+			Map_AddTimer(gsParkourAutoSaveBeginTimer, gfParkourAutoSavePollDelay,
+				"OnTimer_BeginParkourAutoSave");
+			return;
+		}
+
+		if (cLux_GetSaveHandler().GetSaveThreadActive())
+		{
+			mbParkourAutoSaveThreadObserved = true;
+		}
+		else if (cLux_GetSaveHandler().AutoSave(true, false) == false)
+		{
+			FinishParkourAutoSave();
+			return;
+		}
+
+		Map_RemoveTimer(gsParkourAutoSavePollTimer);
+		Map_AddTimer(gsParkourAutoSavePollTimer, gfParkourAutoSavePollDelay,
+			"OnTimer_PollParkourAutoSave");
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_PollParkourAutoSave(const tString &in asTimer)
+	{
+		if (mbParkourAutoSavePending == false) return;
+
+		if (cLux_GetSaveHandler().GetSaveThreadActive())
+		{
+			mbParkourAutoSaveThreadObserved = true;
+			mfParkourAutoSaveThreadWait = 0.f;
+			Map_AddTimer(gsParkourAutoSavePollTimer, gfParkourAutoSavePollDelay,
+				"OnTimer_PollParkourAutoSave");
+			return;
+		}
+
+		// A very fast save can finish before the first poll. Conversely, the
+		// worker may take a few frames to report active after AutoSave returns.
+		if (mbParkourAutoSaveThreadObserved == false &&
+			mfParkourAutoSaveThreadWait < gfParkourAutoSaveThreadStartGrace)
+		{
+			mfParkourAutoSaveThreadWait += gfParkourAutoSavePollDelay;
+			Map_AddTimer(gsParkourAutoSavePollTimer, gfParkourAutoSavePollDelay,
+				"OnTimer_PollParkourAutoSave");
+			return;
+		}
+
+		FinishParkourAutoSave();
+	}
+
+	//-------------------------------------------------------
+
+	void FinishParkourAutoSave()
+	{
+		Map_RemoveTimer(gsParkourAutoSaveBeginTimer);
+		Map_RemoveTimer(gsParkourAutoSavePollTimer);
+		mbParkourAutoSavePending = false;
+		mbParkourAutoSaveThreadObserved = false;
+		mfParkourAutoSaveThreadWait = 0.f;
+		mlParkourAutoSaveRopeDestroyAttempts = 0;
+		ResumeZiplineRopesAfterSave();
 	}
 	
 	//-------------------------------------------------------
@@ -457,7 +601,7 @@ class cScrMap : iScrMap
 	{
 		if (alState == 1)
 		{
-			Effect_ToneMapping_FadeWorldGrading("grading_parkour_interior.dds", 2.0f);
+			Effect_ToneMapping_FadeWorldGrading("grading_parkour_interior.dds", 1.0f);
 			Light_FadeTo("Light_Box_32", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_45", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor_White, -1, 1.0f);
@@ -474,7 +618,7 @@ class cScrMap : iScrMap
 		}
 		else
 		{
-			Effect_ToneMapping_FadeWorldGrading("grading_parkour_new.dds", 2.0f);
+			Effect_ToneMapping_FadeWorldGrading("grading_parkour_new.dds", 1.0f);
 			Light_FadeTo("Light_Box_32", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_45", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
@@ -514,7 +658,7 @@ class cScrMap : iScrMap
 
 	bool Trigger_Scream(const tString &in asParent, const tString &in asChild, int alState)
 	{
-		Game_AutoSave(true, false);
+		RequestParkourAutoSave();
 
 		Sound_CreateAtEntity("scream", "creatures/stalker/retreat", "ScreamSound", 0, false, 1.0f, -1, -1);
 
