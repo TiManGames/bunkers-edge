@@ -545,6 +545,7 @@ class cScrMap : iScrMap
 		bool mbBeastNarrowSectionActive = false;
 		bool mbBeastNodePathChaseActive = false;
 		bool mbBeastTraversalRetryBlocked = false;
+		bool mbBeastAutomaticRoutingPaused = false;
 		float mfBeastTraversalTime = 0.0f;
 		float mfBeastTraversalHighestApproachY = 0.0f;
 		int mlBeastTraversalLaunchRecoveryCount = 0;
@@ -577,6 +578,8 @@ class cScrMap : iScrMap
 		{
 			mvBeastNarrowSectionAreas.resize(0);
 			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_1");
+			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_2");
+			RegisterStalkerNarrowBodySection("Trigger_StalkerNarrowSection_3");
 		}
 
 		//-------------------------------------------------------
@@ -669,6 +672,90 @@ class cScrMap : iScrMap
 		{
 			cScript_SetGlobalArgBool(0, abActive);
 			cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_BossFight_SetAlwaysChase");
+		}
+
+		//-------------------------------------------------------
+
+		void ResetBeastForScriptedTeleport()
+		{
+			Map_RemoveTimer("BeastTraversalWatchdog");
+			Map_RemoveTimer("ReevaluateBeastTraversal");
+			Pathfinder_Stop("stalker");
+
+			mbBeastTraversalActive = false;
+			mbBeastExternalTraversalActive = false;
+			mbBeastNodePathChaseActive = false;
+			mbBeastTraversalRetryBlocked = false;
+			msBeastTraversalStage = "";
+			msBeastTraversalRouteId = "";
+			msBeastTraversalLaunchNode = "";
+			msBeastTraversalJumpTarget = "";
+			msBeastTraversalTargetRegion = "";
+			msBeastStalkerRegion = "";
+			msPlayerStalkerRegion = "";
+			msBeastSameRegionRouteLatch = "";
+			msBeastLastRouteWarning = "";
+			mbBeastTraversalHighJump = false;
+			mfBeastTraversalTime = 0.0f;
+			mfBeastTraversalHighestApproachY = 0.0f;
+			mlBeastTraversalLaunchRecoveryCount = 0;
+
+			cScript_RunGlobalFunc("stalker", "cScrAgentStalker",
+				"_Global_BossFight_ResetForScriptedTeleport");
+			SetBeastNarrowSectionBody(false);
+		}
+
+		//-------------------------------------------------------
+
+		bool TeleportBeastToChaseSpawn(const tString &in asSpawnArea)
+		{
+			Agent_TeleportFeetToEntity("stalker", asSpawnArea, true);
+
+			cVector3f vSpawnPos = Entity_GetPosition(asSpawnArea);
+			cAINode@ pSpawnNode = Pathfinder_GetNodeAtPosition("stalker", vSpawnPos,
+				0.0f, 15.0f, true);
+			if (pSpawnNode is null)
+			{
+				// A scripted marker may be separated from navigable ground by the vent
+				// geometry itself. In that case, retry without a direct-path ray test.
+				cLuxPathfinder@ pPathfinder = cast<cLuxPathfinder@>(cLux_GetCurrentMap().GetEntityComponent(
+					eLuxEntityComponentType_Pathfinder, "stalker"));
+				if (pPathfinder !is null)
+					@pSpawnNode = pPathfinder.GetNodeAtPos(vSpawnPos, 0.0f, 15.0f,
+						true, false, false, null);
+			}
+			if (pSpawnNode is null)
+			{
+				Error("Stalker chase spawn '" + asSpawnArea +
+					"' has no Stalker PathNode within 15 metres.");
+				return false;
+			}
+
+			float fNodeDistance = (pSpawnNode.GetPosition() - vSpawnPos).Length();
+			if (fNodeDistance > 1.5f)
+			{
+				Debug_Log("Stalker chase spawn '" + asSpawnArea + "' is " +
+					fNodeDistance + " metres from its nearest Stalker PathNode; snapping to '" +
+					pSpawnNode.GetName() + "'.", false);
+			}
+
+			// // A cAINode is not a map entity, so it cannot be passed to
+			// // Agent_TeleportFeetToEntity. Move the character body to the node's
+			// // position directly, preserving the yaw copied from the spawn marker.
+			// iLuxEntity@ pEntity = Map_GetEntity("stalker", eLuxEntityType_Agent);
+			// cLuxAgent@ pAgent = cLux_ToAgent(pEntity);
+			// if (pAgent is null || pAgent.GetCharBody() is null)
+			// {
+			// 	Error("Could not resolve the Stalker character body while teleporting to chase spawn '" +
+			// 		asSpawnArea + "'.");
+			// 	return false;
+			// }
+
+			// iCharacterBody@ pCharBody = pAgent.GetCharBody();
+			// pCharBody.StopMovement();
+			// pCharBody.SetForceVelocity(cVector3f_Zero);
+			// pCharBody.SetFeetPosition(pSpawnNode.GetPosition(), false);
+			return true;
 		}
 
 		//-------------------------------------------------------
@@ -848,7 +935,8 @@ class cScrMap : iScrMap
 
 		void EvaluateBeastTraversal()
 		{
-			if (mbBeastActivated == false || mbBeastTraversalActive || mbBeastTraversalRetryBlocked) return;
+			if (mbBeastActivated == false || mbBeastAutomaticRoutingPaused ||
+				mbBeastTraversalActive || mbBeastTraversalRetryBlocked) return;
 
 			EnsureStalkerJumpNetworkSetup();
 			RefreshStalkerRegions();
@@ -984,11 +1072,14 @@ class cScrMap : iScrMap
 		{
 			if (mbBeastActivated == false) return;
 
-			EnsureStalkerJumpNetworkSetup();
-			UpdateBeastNarrowSectionBody();
-			RefreshStalkerRegions();
-			if (mbBeastTraversalActive == false && mbBeastTraversalRetryBlocked == false)
-				EvaluateBeastTraversal();
+			if (mbBeastAutomaticRoutingPaused == false)
+			{
+				EnsureStalkerJumpNetworkSetup();
+				UpdateBeastNarrowSectionBody();
+				RefreshStalkerRegions();
+				if (mbBeastTraversalActive == false && mbBeastTraversalRetryBlocked == false)
+					EvaluateBeastTraversal();
+			}
 
 			Map_AddTimer("BeastRouteEvaluator", 0.25f, "UpdateBeastRouteEvaluator");
 		}
@@ -1143,14 +1234,94 @@ class cScrMap : iScrMap
 	 
 		//-------------------------------------------------------
 
+		bool Trigger_ReachZipline(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState != 1) return true;
+
+			Player_SetActive(false);
+			mbBeastAutomaticRoutingPaused = true;
+			ResetBeastForScriptedTeleport();
+
+			SetBeastAlwaysChase(true);
+			Agent_TeleportFeetToEntity("stalker", "StalkerZiplinePlace", true);
+			Agent_RevealPlayerPosition("stalker", true);
+			RefreshStalkerRegions();
+
+			tString sSetpieceRoute = Entity_GetVarString(asParent, "");
+			if (sSetpieceRoute == "")
+				sSetpieceRoute = "Trigger_29";
+			
+			Player_StartLookAt("stalker", 5.0, 3.0f, 5.0f, false);
+
+			Map_AddTimer("ReactivatePlayer", 1.5f, "Timer_ReactivatePlayer");
+			Map_AddTimer("Jump", 1.0f, "Timer_BeastJump");
+
+			return false;
+		}
+
+		void Timer_BeastJump(const tString&in asTimer)
+		{
+			if (BeginBeastTraversal("Trigger_29", true) == false)
+				Error("Zipline Stalker setpiece could not start route '" + "Trigger_29" + "'.");;
+		}
+
+		void Timer_ReactivatePlayer(const tString&in asTimer)
+		{
+			Player_StopLookAt(0);
+			Player_SetActive(true);
+		}
+
 		bool Trigger_UpdateChaseMusic(const tString &in asParent, const tString &in asChild, int alState)
 		{
-			
 			tString sMusicPart = Entity_GetVarString(asParent, "");
 			
 			Music_PlayExt("chase_" + sMusicPart + ".ogg", true, 0.3f, 1.0f, 1.0f, 0.5f, eMusicPrio_AgentHunt, true);
 
 			return true;
+		}
+
+		bool Trigger_ContinueChase(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState != 1) return true;
+
+			mbBeastAutomaticRoutingPaused = true;
+			Entity_SetActive("stalker", true);
+			ResetBeastForScriptedTeleport();
+
+			TeleportBeastToChaseSpawn("StalkerVentSpawn");
+			mbBeastActivated = true;
+			
+
+			Map_AddTimer("ResumeTimer", 2.0f, "Timer_Resume");
+			
+
+			return false;
+		}
+
+		void Timer_Resume(const tString&in asTimer)
+		{
+			Stalker_SetMode("stalker", eStalkerMode_Active);
+			cScript_RunGlobalFunc("stalker", "cScrAgentStalker",
+				"_Global_BossFight_ResumeChaseAfterScriptedTeleport");
+			SetBeastAlwaysChase(true);
+			Agent_RevealPlayerPosition("stalker", true);
+			RefreshStalkerRegions();
+
+			mbBeastAutomaticRoutingPaused = false;
+			StartBeastRouteEvaluator();
+			EvaluateBeastTraversal();
+		}
+
+		bool DisableStalker(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState != 1) return true;
+
+			mbBeastAutomaticRoutingPaused = true;
+			ResetBeastForScriptedTeleport();
+			SetBeastAlwaysChase(false);
+			Entity_SetActive("stalker", false);
+
+			return false;
 		}
 	 
 	//} END SCENE X 

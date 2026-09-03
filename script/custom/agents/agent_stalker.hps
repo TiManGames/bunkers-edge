@@ -2332,6 +2332,89 @@ class cScrAgentStalker : cScrAgentHumanoid
 	{
 		mpStateMachine.ChangeState(eStalkerState_BossFight_Default);
 	}
+
+	//------------------------------------------------------------
+
+	void _Global_BossFight_ResetForScriptedTeleport()
+	{
+		// A scripted teleport can happen while BossFightJump owns root motion,
+		// collision and the movement animation state. Deactivating the entity at
+		// that point preserves the half-finished jump, so explicitly unwind it
+		// before the entity is moved or disabled.
+		mpPathfinder.Stop();
+		if (mbCutsceneAnimation_Active)
+			StopCutsceneAnimation(true);
+
+		mbBossFight_ExternalTraversalActive = false;
+		mlBossFight_PathFailCount = 0;
+		mBossFight_Behaviour = eStalkerBossFightBehaviour_Default;
+		mvBossFight_ClosestJumpPos = cVector3f_Zero;
+		mbBossFightJump_HangOnLedge = false;
+		mbBossFightJump_ThrewPlayer = false;
+		mbBossFightJump_HurtMidJump = false;
+		mbBossFightJump_Fall = false;
+		mbBossFightJump_JumpingToPlatform = false;
+		mbBossFightJump_TurnAround = false;
+		mbBossFightJump_IncreasedHurtCount = false;
+		mbBossFightJump_PlayerBrokeBridge = false;
+		mbBossFightJump_HighJump = false;
+		mbBossFightJump_NextHighJump = false;
+		mfBossFightJump_ExtraArcHeight = 0.0f;
+		mfBossFightJump_AnimSpeed = 1.0f;
+		mlBossFightJump_JumpCount = 0;
+		msBossFightJump_JumpAnim = "";
+		msBossFightJump_FallStartAnim = "";
+		msBossFightJump_ClimbUpLedgeAnim = "";
+		msBossFightJump_ClimbUpLedgeTackleAnim = "";
+
+		mpStateMachine.ChangeState(eStalkerState_BossFight_Default);
+		mpStateMachine.StopTimer("Move");
+		mpStateMachine.AddTimer("Move", 0.0f);
+
+		iCharacterBody@ pCharBody = mBaseObj.GetCharBody();
+		if (pCharBody !is null)
+		{
+			pCharBody.StopMovement();
+			pCharBody.SetForceVelocity(cVector3f_Zero);
+			pCharBody.SetTestCollision(true);
+			pCharBody.SetGravityActive(true);
+			pCharBody.SetPhysicsBodyActive(true);
+		}
+
+		mpMover.SetUseMoveStateAnimations(true);
+		msAnimState = "";
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_BossFight_ResumeChaseAfterScriptedTeleport()
+	{
+		// Run this after the entity has been enabled, teleported and placed in
+		// Active mode. Those operations can leave BossFightDefault selected
+		// without re-entering it, so AlwaysChase alone is not enough to start a
+		// fresh Move cycle or restore the detected alert state.
+		mbBossFight_ExternalTraversalActive = false;
+		mlBossFight_PathFailCount = 0;
+		mBossFight_Behaviour = eStalkerBossFightBehaviour_Default;
+		mbBossFight_AlwaysChase = true;
+		mbBossFight_Active = true;
+		mbPresencePaused = true;
+
+		mpStateMachine.ChangeState(eStalkerState_BossFight_Default);
+		mBaseObj.RevealPlayerPos();
+		SetAlertState(eStalkerAlertState_Detected);
+		SetSpeedState(mbBossFight_AlwaysRun ? eStalkerSpeed_Run : eStalkerSpeed_Walk);
+		mpMover.SetSpeedMul(1.0f);
+
+		mpStateMachine.StopTimer("Roar");
+		mpStateMachine.StopTimer("Move");
+		mpStateMachine.StopTimer("UpdateMoveSpeed");
+		mpStateMachine.AddTimer("Move", 0.0f);
+		mpStateMachine.AddTimer("UpdateMoveSpeed", 0.0f);
+
+		cLux_AddAIDebugMessage("(" + mBaseObj.GetName() +
+			") Scripted teleport complete; BossFight chase resumed.", false, true);
+	}
 	
 	//------------------------------------------------------------
 
