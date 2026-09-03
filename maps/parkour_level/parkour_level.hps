@@ -54,6 +54,7 @@ class cScrMap : iScrMap
 		// etc.
 		Map_SetSkyboxRotation(cVector3f(0, cMath_ToRad(45), 0));
 
+		Light_FadeTo("Light_Box_32", cColor(0,0,0,0), -1, 1.0f);
 		Light_FadeTo("Light_Box_45", cColor(0,0,0,0), -1, 1.0f);
 		Light_FadeTo("Light_Box_46", cColor(0,0,0,0), -1, 1.0f);
 		Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
@@ -390,8 +391,7 @@ class cScrMap : iScrMap
 	//-------------------------------------------------------
 
 	void OnTimer_DeathSequenceReload(const tString &in asTimer)
-	{
-		
+	{		
 		cLux_LoadScreenSetBarPosAndSize(0.0f, 0.0f);
 		SaveRoom_LoadLastSave();
 	}
@@ -457,6 +457,7 @@ class cScrMap : iScrMap
 		if (alState == 1)
 		{
 			Effect_ToneMapping_FadeWorldGrading("grading_parkour_interior.dds", 2.0f);
+			Light_FadeTo("Light_Box_32", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_45", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_46", cColor_White, -1, 1.0f);
@@ -473,6 +474,7 @@ class cScrMap : iScrMap
 		else
 		{
 			Effect_ToneMapping_FadeWorldGrading("grading_parkour_new.dds", 2.0f);
+			Light_FadeTo("Light_Box_32", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_45", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_46", cColor(0,0,0,0), -1, 1.0f);
@@ -1320,6 +1322,21 @@ class cScrMap : iScrMap
 			ResetBeastForScriptedTeleport();
 			SetBeastAlwaysChase(false);
 			Entity_SetActive("stalker", false);
+
+			return false;
+		}
+
+		bool Trigger_Ending(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			Player_SetFallDamageActive(false);
+			
+			Sound_CreateAtEntity(
+			"WindowCrack",
+			"01_01_upsilon_awake/sfx/window_smash/glass_smash",
+			"WindowSoundSource");
+
+			Entity_SetActive("window", false);
+			Entity_SetActive("window_broken", true);
 
 			return false;
 		}
