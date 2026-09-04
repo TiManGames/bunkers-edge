@@ -2247,8 +2247,9 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		cLux_GetSaveHandler().SetSaveSuffix(sSuffixName);
 		
 		Log("[MenuHandler] [StartSavedGameLoad] SaveFile: " + cString_To8Char(asFile) + " SaveSlot: " + cString_To8Char(sSuffixName));
-		
-		cLux_LoadScreenSetContinueText("", cResources_Translate("LoadGame", "LoadingHint"), "");
+
+		int mlHintNum = cMath_RandRectl(1, 5);
+		cLux_LoadScreenSetContinueText("", cResources_Translate("LoadGame", "LoadingHint_"+mlHintNum), "");
 
 		mbGameOver = false;
 		cLux_GetSaveHandler().DelayedLoadGameFromFile(asFile, "", "", true, true);
