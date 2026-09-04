@@ -1,0 +1,309 @@
+//----------------------------------------------------------------------------------------
+
+#include "interfaces/UserModule_Interface.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+
+//----------------------------------------------------------------------------------------
+
+class cScrFontHandler : iScrUserModule, iScrUserModule_Interface, iScrFontHandler_Interface
+{
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// INIT
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void Init()
+	{
+		LoadUserConfig();
+	}
+		
+	//------------------------------------------------------------
+	
+	void LoadUserConfig()
+	{
+		cConfigFile@ pConfig = cLux_GetUserConfig();
+		msLanguage = cString_SetFileExt(pConfig.GetString("Main", "StartLanguage", cLux_GetDefaultGameLanguage()), "");
+		//msLanguage = pConfig.GetString("Main", "StartLanguage", cLux_GetDefaultGameLanguage());
+	}
+	
+	//------------------------------------------------------------
+	
+	void SaveUserConfig()
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// INTERFACE
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------	
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// MAP LOADING
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnMapEnter(cLuxMap @apMap)
+	{
+
+	}
+
+	//------------------------------------------------------------
+
+	void OnMapLeave(cLuxMap @apMap)
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	void PreloadData(cLuxMap @apMap)
+	{
+
+	}
+	
+	//------------------------------------------------------------
+
+	void CreateWorldEntities(cLuxMap @apMap)
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	void DestroyWorldEntities(cLuxMap @apMap)
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GENERAL
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnEnterContainer(const tString&in asOldContainer)
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnLeaveContainer(const tString&in asNewContainer)
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	void Update(float afTimeStep)
+	{
+		//cLux_AddDebugMessage(msLanguage);
+	}
+	
+	//------------------------------------------------------------
+	
+	void VariableUpdate(float afDeltaTime)
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	void PostUpdate(float afTimeStep)
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	void Reset()
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// ACTIONS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnAction(int alAction, bool abPressed)
+	{
+
+	}
+	
+	//------------------------------------------------------------
+
+	void OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnExitPressed()
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	void AppGotInputFocus()
+	{
+	
+	}
+	void AppLostInputFocus()
+	{
+	
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// GUI
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void OnGui(float afTimeStep)
+	{
+	}
+	
+	//-------------------------------------------------------
+	
+	void OnDraw(float afFrameTime)
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	void OnPostRender(float afFrameTime)
+	{
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// METHODS
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	void SetLanguage(const tString &in asLanguage)
+	{
+		msLanguage = asLanguage;
+	}
+	
+	//-------------------------------------------------------
+	
+	tString GetFont(eFontType aFontType, int alSize)
+	{
+		tString sFont = "";
+		tString sEnd = (alSize == -1) ? "" : "_"+alSize;
+		
+		if (msLanguage == "russian")
+		{
+			switch (aFontType){
+				case eFontType_MainMenu:
+					sFont = "merryweather";
+					break;
+				case eFontType_MainMenu_InfoBox:
+				case eFontType_GamepadPrompt:
+				case eFontType_Hints:
+				case eFontType_Subtitles:
+				case eFontType_Readable:
+				case eFontType_MemoryCylinder_Big:
+				case eFontType_MemoryCylinder_Small:
+				case eFontType_Intro:
+				case eFontType_Credits:
+				case eFontType_Sketchbook:
+					sFont = "roboto-medium";
+					break;
+				//	sFont = "caveat";
+				//	break;
+				case eFontType_AccountName:
+					sFont = "noto_sans";
+					break;
+			}
+		}
+		else if (msLanguage == "simplified_chinese")
+		{
+			switch (aFontType)
+			{
+				case eFontType_MainMenu:
+				case eFontType_MainMenu_InfoBox:
+				case eFontType_GamepadPrompt:
+				case eFontType_Hints:
+				case eFontType_Subtitles:
+				case eFontType_Readable:
+				case eFontType_MemoryCylinder_Big:
+				case eFontType_MemoryCylinder_Small:
+				case eFontType_Credits:
+				case eFontType_Intro:
+				case eFontType_Sketchbook:
+					sFont = "noto_sans_sc";
+					break;
+				case eFontType_AccountName:
+					sFont = "noto_sans";
+					break;
+			}
+		}
+		else
+		{
+			switch (aFontType)
+			{
+				case eFontType_MainMenu:
+					sFont = "orbitron";
+					break;
+				case eFontType_Sketchbook:
+					sFont = "orbitron";
+					break;
+				case eFontType_MainMenu_InfoBox:
+					sFont = "orbitron";
+					break;
+				case eFontType_GamepadPrompt:
+					sFont = "orbitron";
+					break;
+				case eFontType_Hints:
+				case eFontType_Subtitles:
+				case eFontType_Readable:
+				case eFontType_Credits:
+					sFont = "work";
+					break;
+				case eFontType_MemoryCylinder_Big:
+					sFont = "macondoswash";
+					break;
+				case eFontType_MemoryCylinder_Small:
+				case eFontType_Intro:
+					sFont = "macondo";
+					break;
+				case eFontType_AccountName:
+					sFont = "noto_sans";
+					break;
+			}
+		}
+		//cLux_AddDebugMessage(sFont+".fnt");
+		return sFont+sEnd+".fnt";
+		
+	}
+	
+	//------------------------------------------------------------
+	
+	/////////////////////////////////////////
+	// PROPERTIES
+	/////////////////////////////////////////
+	
+	//------------------------------------------------------------
+	
+	[nosave] tString msLanguage;
+}

@@ -1,0 +1,2593 @@
+#include "custom/helpers/helper_modules_custom.hps"
+#include "helpers/helper_game.hps"
+#include "helpers/helper_input.hps"
+
+/////////////////////////////
+
+const cColor gHoverColor = cColor(1.0f, 0.122f, 0.18f, 1.0f);
+
+////////////////////////
+//const cVector2f kMainMenu_ButtonBgSize = cVector2f(16 * 12, 72);
+//const cVector2f kMainMenu_ButtonBgUnderlineSize = cVector2f(16 * 12, 32);
+
+const cVector2f kBackButtonPos = cVector2f(50,655);
+const cVector2f kStartButtonPos = cVector2f(755,655);
+const cVector2f kSelectButtonPos = cVector2f(100,455);
+const cVector2f kContinueButtonPos = cVector2f(100,590);
+
+const cColor kOptionMenu_ButtonBgColor = cColor(69.0 / 255.0, 139.0 / 255.0, 139.0 / 255.0, 1);
+const cVector2f kOptionMenu_ButtonSize = cVector2f(860, 38);
+const cVector2f kOptionMenu_ButtonLabelSize = cVector2f(400, 38);
+const float kOptionMenu_ButtonSpacing = 32;
+const cVector2f kOptionMenu_ButtonBgSize = cVector2f(16 * 4, 36);
+const cVector2f kOptionMenu_ButtonBgLargeSize = cVector2f(16 * 12, 36);
+const cVector2f kMainMenu_ButtonBgOffset = cVector2f(22, 16);
+
+const cVector2f kOptionMenu_BgPos = cVector2f(100, 260);
+const cVector2f kOptionMenu_BgSize = cVector2f(680, 170);
+const cVector2f kOptionMenu_VideoBgSize = cVector2f(680, 300);
+const cVector2f kOptionMenu_BgBorderSize = cVector2f(680, 42.5);
+
+const cVector2f kOptionMenu_CheckboxOffset = cVector2f(300, 2);
+const cVector2f kOptionMenu_CheckboxSize = cVector2f(2 * 50, 38);
+const cVector2f kOptionMenu_CheckboxCircleSize = cVector2f(46, 46);
+
+// Slider (ie Mouse Sensitivity)
+const cVector2f kOptionMenu_SliderSize = cVector2f(210, 36); 		// Size of the slider bg
+const cVector2f kOptionMenu_SliderArrowOffsetL = cVector2f(305, -2);
+const cVector2f kOptionMenu_SliderArrowOffsetR = cVector2f(460, -1);
+const cVector2f kOptionMenu_SliderArrowSize = cVector2f(20, 40);
+const cVector2f kOptionMenu_SliderArrowHoverSize = cVector2f(32, 32);
+const cVector2f kOptionMenu_SliderArrowHoverUnderlineSize = cVector2f(20, 3);
+
+// Texted slider (ie FOV)
+const cVector2f kOptionMenu_TextedSliderSize = cVector2f(260, 36);
+const cVector2f kOptionMenu_TextedSliderTextOffset = cVector2f(486, 16);
+
+// Multi-Select (ie Language)
+const cVector2f kOptionMenu_MultiSize = cVector2f(210, 36);
+
+// Keybinding
+const cVector2f kOptionMenu_KeybindButtonPrimaryPos = cVector2f(240, 3);
+const cVector2f kOptionMenu_KeybindButtonSecondaryPos = cVector2f(370, 3);
+const cVector2f kOptionMenu_KeybindBaseButtonSize = cVector2f(275, 30);
+const cVector2f kOptionMenu_KeybindButtonBgOffset = cVector2f(5, 3.5);
+const cVector2f kOptionMenu_KeybindButtonBgSize = cVector2f(130, 30);
+
+// Save slots
+const cVector2f kOptionMenu_SaveSlotTextSize = cVector2f(180, 180);
+
+// Info box
+const cVector2f kOptionMenu_InfoBoxBgSize = cVector2f(300,200);
+const cVector2f kOptionMenu_InfoBoxBgOffset = cVector2f(42,0);
+const cVector2f kOptionMenu_LoadInfoBoxBgOffset = cVector2f(56,0);
+
+// Fonts
+const float gfFontSize_MainMenu = 24;
+const float gfFontSize_MainMenu_Small = 22;
+const float gfFontSize_MainMenu_Title = 32;
+const float gfFontSize_MainMenu_ConfirmButton = 26;
+const float gfFontSize_Prompts = 20;
+const float gfFontSize_PromptButtons = 26;
+const float gfFontSize_GamepadPrompts = 24;
+const float gfFontSize_InfoBox = 19;
+
+// Difficulty Settings menu btn size
+const float gfCustomSettingsButtonWidth = 360.f;
+
+// Mod color
+cColor gOptionMenu_ModColor = cColor(1,1);
+cColor gTextCol_Dark = cColor(0.066f,0.058f,0.054f,1.f);
+
+void OptionMenu_SetModColor(const cColor &in aCol)
+{
+	gOptionMenu_ModColor = aCol;
+}
+
+// Scaling
+float gfOptionsMenu_ExtraWidth = 0;
+float gfOptionsMenu_ExtraWidth_Toggle = 0;
+float gfOptionsMenu_ExtraWidth_MultiSelect = 0;
+float gfOptionsMenu_ExtraWidth_Slider = 0;
+float gfOptionsMenu_ExtraWidth_Keybind = 0;
+
+void OptionMenu_UpdateButtonWidth(const tString &in asButton, float afMaxWidth = -1.f)
+{
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+		
+	float fWidth = GetFontLengthW(font, 1, ImGui_TranslatePlatformSpecific(asButton));
+	//cLux_AddDebugMessage(asButton+" Width: "+fWidth+" - ExtraWidth: "+gfOptionsMenu_ExtraWidth);
+	if (fWidth > gfOptionsMenu_ExtraWidth)
+		gfOptionsMenu_ExtraWidth = fWidth;
+		
+	if (afMaxWidth > 0.f)
+	{
+		if (gfOptionsMenu_ExtraWidth > afMaxWidth)
+			gfOptionsMenu_ExtraWidth = afMaxWidth;
+	}
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_UpdateExtraButtonWidth_Toggle()
+{
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+	float fMax = OptionMenu_GetScaledSize(60).x;
+	
+	float fOnWidth = GetFontLengthW(font, 1, ImGui_TranslatePlatformSpecific("On"));
+	if (fOnWidth > fMax && (fOnWidth-fMax) > gfOptionsMenu_ExtraWidth_Toggle)
+		gfOptionsMenu_ExtraWidth_Toggle = (fOnWidth-fMax);
+	float fOffWidth = GetFontLengthW(font, 1, ImGui_TranslatePlatformSpecific("Off"));
+	if (fOffWidth > fMax && (fOffWidth-fMax) > gfOptionsMenu_ExtraWidth_Toggle)
+		gfOptionsMenu_ExtraWidth_Toggle = (fOffWidth-fMax);
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_UpdateKeybindExtraWidth(const tString &in asPrimary, const tString &in asSecondary)
+{
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+	
+	float fWidth = cMath_Max(GetFontLengthW(font, 1, asPrimary),GetFontLengthW(font, 1, asSecondary));
+	//cLux_AddDebugMessage("STRING: "+asPrimary+" - WIDTH: "+fWidth+" - EXTRA: "+gfOptionsMenu_ExtraWidth_Keybind+" - CHECK: "+OptionMenu_GetScaledSize(kOptionMenu_CheckboxSize).x);
+	if (fWidth > OptionMenu_GetScaledSize(kOptionMenu_CheckboxSize).x)
+		gfOptionsMenu_ExtraWidth_Keybind = cMath_Clamp(fWidth-OptionMenu_GetScaledSize(kOptionMenu_CheckboxSize).x + 60.f, 0, 80);
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_UpdateToggleExtraWidth()
+{
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+	
+	float fWidth = cMath_Max(GetFontLengthW(font, 1, ImGui_Translate("On")),GetFontLengthW(font, 1, ImGui_Translate("Off")));
+	
+	if (fWidth > OptionMenu_GetScaledSize(kOptionMenu_CheckboxSize).x)
+		gfOptionsMenu_ExtraWidth_Toggle = fWidth - OptionMenu_GetScaledSize(kOptionMenu_CheckboxSize).x + 60.f;
+}
+
+//-------------------------------------------------------
+
+void OptionMenu_AlignExtraButtonWidth()
+{
+	//cLux_AddDebugMessage("TOGGLE: "+gfOptionsMenu_ExtraWidth_Toggle+" - MULTI: "+gfOptionsMenu_ExtraWidth_MultiSelect);
+	
+	if (gfOptionsMenu_ExtraWidth_Toggle > gfOptionsMenu_ExtraWidth_MultiSelect) 
+		gfOptionsMenu_ExtraWidth_MultiSelect = gfOptionsMenu_ExtraWidth_Toggle;
+	else if (gfOptionsMenu_ExtraWidth_MultiSelect > gfOptionsMenu_ExtraWidth_Toggle)
+		gfOptionsMenu_ExtraWidth_Toggle = gfOptionsMenu_ExtraWidth_MultiSelect;
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_UpdateExtraButtonWidth_MultiSelection(const array<tString> &in avValues, const tString &in asCategory="Menu")
+{
+	ImGui_SetTransCategory(asCategory);
+	
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+	
+	float fMax = OptionMenu_GetScaledSize(200).x;
+	
+	for (uint i = 0; i < avValues.length(); i++)
+	{
+		float fWidth = GetFontLengthW(font, 1, ImGui_TranslatePlatformSpecific(avValues[i]));
+		if (fWidth > fMax && (fWidth-fMax) > gfOptionsMenu_ExtraWidth_MultiSelect)
+			gfOptionsMenu_ExtraWidth_MultiSelect = (fWidth-fMax);
+	}
+	
+	ImGui_SetTransCategory("Menu");
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_UpdateMultiSelectionExtraWidth(const array<tString> &in avValues, const tString &in asCategory="Menu", 
+											   const cVector2f &in avSize=gfFontSize_MainMenu, float afMaxWidth = -1.f)
+{
+	// LATEST 
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+	ImGui_SetTransCategory(asCategory);
+	
+	for (uint i = 0; i < avValues.length(); i++)
+	{
+		float fWidth = GetFontLengthW(font, 1.0, ImGui_TranslatePlatformSpecific(avValues[i]));
+		if (fWidth > (kOptionMenu_MultiSize.x)-40)
+			gfOptionsMenu_ExtraWidth_MultiSelect = fWidth - (kOptionMenu_MultiSize.x) + 80.f;
+	}
+
+	if (afMaxWidth > 0.f)
+	{
+		if (gfOptionsMenu_ExtraWidth_MultiSelect > afMaxWidth)
+			gfOptionsMenu_ExtraWidth_MultiSelect = afMaxWidth;
+	}
+
+	ImGui_SetTransCategory("Menu");
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_UpdateSliderExtraWidth(const array<tString> &in avValues, const tString &in asCategory="Menu")
+{
+	cImGuiFont font;
+	font.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	font.mvSize = gfFontSize_MainMenu;
+	ImGui_SetTransCategory(asCategory);
+	
+	for (uint i = 0; i < avValues.length(); i++)
+	{
+		float fWidth = GetFontLengthW(font, 1, ImGui_TranslatePlatformSpecific(avValues[i]));
+		
+		if (fWidth > OptionMenu_GetScaledSize(kOptionMenu_SliderSize).x-40)
+			gfOptionsMenu_ExtraWidth_Slider = fWidth-OptionMenu_GetScaledSize(kOptionMenu_SliderSize).x + 80.f;
+	}
+	ImGui_SetTransCategory("Menu");
+}
+
+//------------------------------------------------------- 
+
+float OptionMenu_GetExtraWidth()
+{
+	return gfOptionsMenu_ExtraWidth + cMath_Max(gfOptionsMenu_ExtraWidth_MultiSelect, gfOptionsMenu_ExtraWidth_Toggle);
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_ResetExtraWidth()
+{
+	gfOptionsMenu_ExtraWidth = 0;
+	gfOptionsMenu_ExtraWidth_Toggle = 0;
+	gfOptionsMenu_ExtraWidth_MultiSelect = 0;
+	gfOptionsMenu_ExtraWidth_Keybind = 0;
+}
+
+//-------------------------------------------------------
+
+cVector3f OptionMenu_GetTopLeftOffset(cVector2f avPos, float aZ = 0.0)
+{
+	cVector2f vRealPos = OptionMenu_GetOffsetPosHelper(avPos);
+	return cVector3f(vRealPos.x, vRealPos.y, aZ+20.0);
+}
+
+//------------------------------------------------------- 
+
+cVector3f OptionMenu_GetBotLeftOffset(cVector2f avPos, float aZ = 0.0)
+{
+	cVector2f vRealPos = OptionMenu_GetOffsetPosHelper(avPos);
+	cVector2f vSize = cLux_GetCurrentImGui().GetSet().GetVirtualSize();
+	return cVector3f(vRealPos.x, vSize.y - vRealPos.y, aZ+20.0);
+}
+
+//------------------------------------------------------- 
+
+cVector3f OptionMenu_GetTopRightOffset(cVector2f avPos, float aZ = 0.0)
+{
+	cVector2f vRealPos = OptionMenu_GetOffsetPosHelper(avPos);
+	cVector2f vSize = cLux_GetCurrentImGui().GetSet().GetVirtualSize();
+	return cVector3f(vRealPos.x + vSize.x, vRealPos.y, aZ+20.0);
+}
+
+//------------------------------------------------------- 
+
+cVector3f OptionMenu_GetBotRightOffset(cVector2f avPos, float aZ = 0.0)
+{
+	cVector2f vRealPos = OptionMenu_GetOffsetPosHelper(avPos);
+	cVector2f vSize = cLux_GetCurrentImGui().GetSet().GetVirtualSize();
+	return cVector3f(vRealPos.x + vSize.x, vSize.y - vRealPos.y, aZ+20.0);
+}
+
+//------------------------------------------------------- 
+
+cVector3f OptionMenu_GetCenterOffset(cVector2f avPos, float aZ = 0.0)
+{
+	cGuiSet@ pSet = cLux_GetCurrentImGui().GetSet();
+	cVector2f vRealPos = OptionMenu_GetOffsetPosHelper(avPos) + pSet.GetVirtualSize()*0.5f;
+	return cVector3f(vRealPos.x, vRealPos.y, aZ+20.0);
+}
+
+//------------------------------------------------------- 
+
+cVector2f OptionMenu_GetOffsetPosHelper(const cVector2f &in avPos)
+{
+	cGuiSet@ pSet = cLux_GetCurrentImGui().GetSet();
+	cVector2f vSize = pSet.GetVirtualSize();
+	cVector2f vOffset = pSet.GetVirtualSizeOffset();
+	cVector2f vAspectRatio = cGraphics_GetLowLevel().GetScreenSizeFloat();
+	vAspectRatio /= vAspectRatio.y;
+	
+	return vSize * avPos / (vAspectRatio * 720.0) - vOffset;
+}
+
+//------------------------------------------------------- 
+
+cVector2f OptionMenu_GetScaledSize(cVector2f avSize)
+{
+	cGuiSet@ pSet = cLux_GetCurrentImGui().GetSet();
+	cVector2f vSize = pSet.GetVirtualSize();
+	cVector2f vAspectRatio = cGraphics_GetLowLevel().GetScreenSizeFloat();
+	vAspectRatio /= vAspectRatio.y;
+
+	return avSize * vSize / (vAspectRatio * 720.0);
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_GetMouseInsideSliderArrow(cVector2f avMin, cVector2f avMax)
+{
+	if (ImGui_GetModUseInput() == false)
+		return false;
+
+	cVector3f vMin = OptionMenu_GetTopLeftOffset(avMin, 1.5);
+	cVector3f vMax = OptionMenu_GetTopLeftOffset(avMax, 1.5);
+	cVector2f vMousePos = ImGui_GetMousePosition();
+	
+	//cLux_AddDebugMessage("MIN: "+vMin+" - MAX: "+vMax+" - MOUSE: "+vMousePos);
+		
+	vMousePos.x = (vMousePos.x - vMin.x) / (vMax.x - vMin.x);
+
+	if(vMousePos.x >= 0 && vMousePos.x <= 1)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+//-------------------------------------------------------
+
+int mlLastDir = 0;
+
+int OptionMenu_GetMouseInsideMultiSelectArrows(cVector3f avPos, cVector2f avSize)
+{
+	if (ImGui_GetModUseInput() == false)
+		return 0;
+
+	int lArrow = 0;
+	
+	cVector2f vMousePos = ImGui_GetMousePosition();
+	
+	if (vMousePos.x >= avPos.x && vMousePos.x <= avPos.x+avSize.x/2) lArrow = -1;
+	else if (vMousePos.x > avPos.x+avSize.x/2 && vMousePos.x <= avPos.x+avSize.x) lArrow = 1;
+		
+	mlCurrentDir = lArrow;
+	
+	if (mlCurrentDir != mlLastDir)
+	{
+		//cLux_AddTodoMessage("Sound: Menu toggle button pressed");
+		Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.0f, eSoundEntryType_Gui);
+		mlLastDir = mlCurrentDir;
+	}
+		
+	return lArrow;
+}
+
+//-------------------------------------------------------
+
+int OptionMenu_GetMouseInsideSliderArrowsNew(cVector3f avLeft, cVector3f avRight, cVector2f avSize)
+{
+	///////////////////////////////////////////
+	// -1 = left, 1 = right, 0 = not hovering
+	if(ImGui_GetModUseInput() == false)
+		return 0;
+
+	int lArrow = 0;
+	float fMargin = 5;
+	cVector2f vMousePos = ImGui_GetMousePosition();
+
+	if (vMousePos.y < avLeft.y || vMousePos.y > avLeft.y+avSize.y) return 0;
+	
+	if (vMousePos.x >= avLeft.x-fMargin && vMousePos.x <= avLeft.x+avSize.x+fMargin) lArrow = -1;
+	else if (vMousePos.x >= avRight.x-fMargin && vMousePos.x <= avRight.x+avSize.x+fMargin) lArrow = 1;
+	
+	//cLux_AddDebugMessage("ARROW: "+lArrow);
+	
+	mlCurrentDir = lArrow;
+	
+	if (mlCurrentDir != mlLastDir && mlCurrentDir != 0)
+	{
+		//cLux_AddTodoMessage("Sound: Menu toggle button pressed");
+		Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.0f, eSoundEntryType_Gui);
+		mlLastDir = mlCurrentDir;
+	}
+	
+	return lArrow;
+}
+
+//-------------------------------------------------------
+
+cVector2f OptionMenu_GetMouseInsideSlider(cVector2f avMin, cVector2f avMax)
+{
+	if (ImGui_GetModUseInput() == false)
+		return -1.0;
+
+	cVector2f vMousePos = ImGui_GetMousePosition();
+		
+	vMousePos.x = (vMousePos.x - avMin.x) / (avMax.x - avMin.x);
+	vMousePos.y = (vMousePos.y - avMin.y) / (avMax.y - avMin.y);
+
+	if(vMousePos.y >= 0 && vMousePos.y <= 1 &&
+		vMousePos.x >= 0 && vMousePos.x <= 1)
+	{
+		return vMousePos;
+	}
+
+	return -1.0;
+}
+
+//------------------------------------------------------- 
+
+int OptionMenu_GetMouseInsideSliderArrows(cVector2f avPos)
+{
+	if (ImGui_GetModUseInput() == false)
+		return 0;
+
+	///////////////////////////////////////////
+	// -1 = left, 1 = right, 0 = not hovering
+	
+	int lArrow = 0;
+	
+	if (OptionMenu_GetMouseInsideSliderArrow(avPos+cVector2f(kOptionMenu_SliderArrowOffsetL.x-40,0), avPos+cVector2f(kOptionMenu_SliderArrowOffsetL.x+20,1))) lArrow = -1;
+	else if (OptionMenu_GetMouseInsideSliderArrow(avPos+cVector2f(kOptionMenu_SliderArrowOffsetR.x-40,0), avPos+cVector2f(kOptionMenu_SliderArrowOffsetR.x+60,1))) lArrow = 1;
+	
+	return lArrow;
+}
+
+//------------------------------------------------------- 
+
+cVector2f OptionMenu_GetMouseInside(cVector2f avMin, cVector2f avMax)
+{
+	if (ImGui_GetModUseInput() == false)
+		return -1.0;
+
+	cVector3f vMin = OptionMenu_GetTopLeftOffset(avMin, 1.5);
+	cVector3f vMax = OptionMenu_GetTopLeftOffset(avMax, 1.5);
+	cVector2f vMousePos = ImGui_GetMousePosition();
+		
+	vMousePos.x = (vMousePos.x - vMin.x) / (vMax.x - vMin.x);
+	vMousePos.y = (vMousePos.y - vMin.y) / (vMax.y - vMin.y);
+
+	if(vMousePos.y >= 0 && vMousePos.y <= 1 &&
+		vMousePos.x >= 0 && vMousePos.x <= 1)
+	{
+		return vMousePos;
+	}
+
+	return -1.0;
+}
+
+//------------------------------------------------------- 
+
+tString OptionMenu_UpdateFocus(tString asID, tString asSelector)
+{	
+	if (ImGui_PrevBecameInFocus())
+	{
+		Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.0f, eSoundEntryType_Gui);
+		return asID;
+	}
+	//cLux_AddDebugMessage("SELECTOR:"+asSelector);
+	return asSelector;
+}
+
+//-------------------------------------------------------
+
+void OptionMenu_OptionsCheckbox(cVector2f avPos, bool abIsSelected, bool abIsChecked, tString asOffText = "Off", tString asOnText="On", const tString &in asName="", cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, float afAlpha=1, const tString&in asInfoBoxContent="", const tWString&in asInfoBoxSecondLine=cString_To16Char(""), bool abActive = true)
+{
+	cVector3f vPosNrm = OptionMenu_GetTopLeftOffset(avPos,3);
+	cVector3f vRightAnchorNrm = OptionMenu_GetTopLeftOffset(avRightAnchor);
+	
+	cVector2f vButtonSizeNrm = OptionMenu_GetScaledSize(kOptionMenu_MultiSize + cVector2f(gfOptionsMenu_ExtraWidth_Toggle, 0));
+	cVector3f vButtonLeftPosNrm = cVector3f(vRightAnchorNrm.x - vButtonSizeNrm.x, vPosNrm.y + 5, vPosNrm.z);
+	
+	tString sTickboxImg = abIsChecked ? "startmenu_options_tickbox_true" : "startmenu_options_tickbox_false";
+	cImGuiGfx gfxTickbox(sTickboxImg);
+	vButtonSizeNrm.y *= 0.65;
+	
+	float fAlphaMul = abActive ? 1.f : 0.5f;
+	cColor tickboxColor = cColor(1, afAlpha * fAlphaMul) * gOptionMenu_ModColor;
+	if (abIsSelected)
+		tickboxColor = gHoverColor * tickboxColor;
+	ImGui_DrawGfx(gfxTickbox, vButtonLeftPosNrm + cVector3f(14,0,1), vButtonSizeNrm.y, tickboxColor);
+	
+	/////////////
+	// Info
+	if (abIsSelected)
+	{
+		tString sInfoBox = asInfoBoxContent;
+		if (sInfoBox=="") sInfoBox = asName+"_Info";
+		cVector3f vInfoBoxPos = OptionMenu_GetTopLeftOffset(avPos + kOptionMenu_TextedSliderTextOffset + cVector2f(kOptionMenu_TextedSliderSize.x,0), 0) + OptionMenu_GetTopLeftOffset(kOptionMenu_InfoBoxBgOffset);
+		OptionMenu_InfoBox("", cVector3f(avInfoBoxPos.x,vInfoBoxPos.y,avInfoBoxPos.z), kOptionMenu_InfoBoxBgSize, sInfoBox, afAlpha, asInfoBoxSecondLine);
+	}
+}
+
+//-------------------------------------------------------
+
+tString sSliderActive = "";
+	
+float OptionMenu_OptionsSlider(cVector2f avMainPos, cVector2f avPos, float afValue, int alID, float afStepSize, int alUIActionHorizontal, cImGuiButtonData aButtonData, tString asTextValue, bool abSelected, tString asTextValueTransCat="", const tString &in asName="", cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, bool abSnap=false, float afAlpha=1, bool abUseSmallFont=false, bool abActive=true, bool abCustomSettings=false, const tString&in asInfoBoxContent="", const tWString&in asInfoBoxSecondLine=cString_To16Char(""))
+{
+	cVector3f vRightAnchorNrm = OptionMenu_GetTopLeftOffset(avRightAnchor);
+	cVector3f vLeftAnchorNrm = OptionMenu_GetTopLeftOffset(avMainPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0);
+	
+	if (abActive==false)
+	{
+		ImGui_DoRepeatButtonExt(asName,asName, aButtonData, vLeftAnchorNrm+cVector3f(0,0,0), cVector2f(vRightAnchorNrm.x-vLeftAnchorNrm.x,kOptionMenu_ButtonSize.y));
+		return afValue;
+	}
+	
+	bool bTexted = asTextValue.length() > 0;
+	float fLabelWidth = (bTexted) ? 24 : 0;
+	
+	cImGuiGfx gfxArrow("startmenu_options_arrow");
+	cImGuiGfx gfxBar;
+	
+	///////////////////////////////
+	// Absolute left of the entire row left
+	cVector3f vPosNrm = OptionMenu_GetTopLeftOffset(avPos,1);	
+	
+	cVector2f vButtonAreaSizeNrm = OptionMenu_GetScaledSize(kOptionMenu_SliderSize+cVector2f(gfOptionsMenu_ExtraWidth_MultiSelect, 0));
+	cVector3f vButtonAreaPosNrm = cVector3f(vRightAnchorNrm.x-vButtonAreaSizeNrm.x,vPosNrm.y, vPosNrm.z);
+	cVector3f vArrowLeftPosNrm = cVector3f(vButtonAreaPosNrm.x+8,vButtonAreaPosNrm.y-5,vPosNrm.z+2);
+	cVector3f vArrowRightPosNrm = cVector3f(vButtonAreaPosNrm.x + vButtonAreaSizeNrm.x - OptionMenu_GetScaledSize(kOptionMenu_SliderArrowHoverSize).x + 10 - fLabelWidth, vButtonAreaPosNrm.y - 4, vPosNrm.z + 2);
+	cVector2f vArrowSizeNrm = OptionMenu_GetScaledSize(kOptionMenu_SliderArrowSize);
+	cVector2f vArrowHoverSizeNrm = OptionMenu_GetScaledSize(kOptionMenu_SliderArrowHoverUnderlineSize);
+	
+	////////////////////
+	// Interaction Area
+	cVector2f vSliderMin = cVector2f(vArrowLeftPosNrm.x + vArrowSizeNrm.x);
+	cVector2f vSliderMax = cVector2f(vArrowRightPosNrm.x);
+	
+	cVector2f vVal = OptionMenu_GetMouseInsideSlider(vSliderMin - cVector2f(0, 1024), vSliderMax + cVector2f(0, 1024));
+	float fVal = vVal.x;
+
+	if(fVal != -1)
+	{
+		////////////////////////////////////
+		// Repeat button if it is being clicked
+		if(ImGui_DoRepeatButtonExt(asName,asName, aButtonData, vLeftAnchorNrm+cVector3f(0,0,100), cVector2f(vRightAnchorNrm.x-vLeftAnchorNrm.x,kOptionMenu_ButtonSize.y)))
+		{
+			sSliderActive = asName;
+			cLux_GetCurrentImGui().LockMouseFocus();
+			
+			////////////////////
+			// Any value changes?
+			float fStep = abSnap ? afStepSize*0.9 : 0.001f;
+			if(cMath_Abs(fVal-afValue) > fStep)
+			{
+				afValue = fVal;
+				if (ImGui_TimerExists("SliderDelay") == false)
+				{
+					Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+					ImGui_AddTimer("SliderDelay", 0.08f);
+				}					
+			}
+		}
+	}
+	else
+	{
+		////////////////////////////////////////
+		// Snap to min-max when out of boundaries
+		if (sSliderActive == asName)
+		{
+			if (ImGui_ActionIsDown(eImGuiAction_MouseLeft) == false)
+			{
+				cLux_AddDebugMessage("RELEASE");
+				sSliderActive = "";
+			}
+			else
+			{
+				cLux_GetCurrentImGui().LockMouseFocus();
+				afValue = (afValue <= 0.5) ? 0 : 1;
+			}
+		}
+		
+		/////////////////
+		// Normal button
+		if(ImGui_DoButtonExt(asName,asName, aButtonData, vLeftAnchorNrm, cVector2f(vRightAnchorNrm.x-vLeftAnchorNrm.x,kOptionMenu_ButtonSize.y)))
+		{
+			// Select based on which side the mouse was
+			if(ImGui_GetMouseVisible()) 
+			{
+				fVal = cMath_Clamp(afValue + afStepSize*mlCurrentDir, 0.0f, 1.0f);
+			}
+			
+			if(afValue != fVal && fVal != -1)
+			{
+				afValue = fVal;
+				if (ImGui_TimerExists("SliderDelay") == false)
+				{
+					Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+					ImGui_AddTimer("SliderDelay", 0.08f);
+				}
+			}
+		}
+	}
+
+	///////////
+	// Gamepad input
+	int lHorizontalAction = ImGui_GetStateInt(asName + "_HorizontalAction");
+	if (abSelected)
+	{
+		afValue += alUIActionHorizontal * afStepSize;
+
+		if(alUIActionHorizontal != 0)
+		{
+			lHorizontalAction = alUIActionHorizontal;
+			
+			if (ImGui_TimerExists("SliderDelay") == false)
+			{
+				Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+				ImGui_AddTimer("SliderDelay", 0.08f);
+			}
+		}
+	}
+	else
+	{
+		lHorizontalAction = 0;
+	}
+	
+	ImGui_SetStateInt(asName + "_HorizontalAction", + lHorizontalAction);
+
+	/////////////
+	// Clamp
+	afValue = cMath_Clamp(afValue, 0.0, 1.0);
+	
+	int lHoveredArrow = 0;	
+	if (abSelected)
+	{
+		int lLastInputDevice = cLux_GetInputHandler().GetLastDeviceUsed();
+		if (lLastInputDevice == eInputDeviceType_Gamepad ||
+			lLastInputDevice == eInputDeviceType_Keyboard)
+		{
+			int lHorizontalAction = ImGui_GetStateInt(asName + "_HorizontalAction");
+			if (lHorizontalAction != 0)
+				lHoveredArrow = lHorizontalAction;
+		}
+		else
+		{
+			lHoveredArrow = OptionMenu_GetMouseInsideSliderArrowsNew(vArrowLeftPosNrm, vArrowRightPosNrm, vArrowSizeNrm);
+		}
+	}
+	
+	bool bHighlightArrows = lHoveredArrow != 0;
+	cColor arrowColor_L = cColor(1,afAlpha);
+	cColor arrowColor_R = cColor(1,afAlpha);
+	
+	if (bHighlightArrows)
+	{
+		if (lHoveredArrow == -1)
+			arrowColor_L = gHoverColor * cColor(1, afAlpha);
+		else
+			arrowColor_R = gHoverColor * cColor(1, afAlpha);
+	}
+	
+	//////////////////////
+	// Slider with text
+	gfxBar.mColor = abSelected ? gHoverColor * cColor(1, afAlpha) : cColor(1,afAlpha);
+	
+	if (bTexted)
+	{
+		//////////////
+		// Draw text at the end
+		cImGuiLabelData labelData;
+		labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+		labelData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+		labelData.mFont.mColor = gOptionMenu_ModColor * cColor(1,afAlpha);
+		if (abSelected) labelData.mFont.mColor = gHoverColor * labelData.mFont.mColor;
+		labelData.mFontAlign = eFontAlign_Left;
+		labelData.mbScrolling = true;
+		labelData.mfScrollSpeed = abSelected ? 45.f : 0.f;
+		labelData.mfScrollStartDelay = 1.f;
+		labelData.mfScrollResetDelay = 1.f;
+		ImGui_SetTransCategory(asTextValueTransCat);
+		ImGui_DoLabelExt(asTextValue,labelData, vButtonAreaPosNrm+cVector3f(vButtonAreaSizeNrm.x-fLabelWidth,8,0), cVector2f(180, -1));
+		ImGui_SetTransCategory("Menu");
+			
+		/////////////
+		// Draw arrows
+		ImGui_SetModRotateAngle(180);
+		gfxArrow.mColor = arrowColor_L;
+		ImGui_DrawGfx(gfxArrow, vArrowLeftPosNrm, vArrowSizeNrm, cColor(1,afAlpha) * gOptionMenu_ModColor);
+		ImGui_SetModRotateAngle(0.0);
+		gfxArrow.mColor = arrowColor_R;
+		ImGui_DrawGfx(gfxArrow, vArrowRightPosNrm, vArrowSizeNrm, cColor(1,afAlpha) * gOptionMenu_ModColor);
+
+		//////////////
+		// Draw bar
+		ImGui_DrawGfx(gfxBar, cVector3f(vSliderMin.x, (vPosNrm.y + vButtonAreaSizeNrm.y/2) - 5, vArrowLeftPosNrm.z), cVector2f(vSliderMax.x - vSliderMin.x, 5), gOptionMenu_ModColor * cColor(1,afAlpha));
+		cColor sliderPointerColor = cColor(1,afAlpha) * cColor(gOptionMenu_ModColor.a, 1);
+		float fPointerWidth = 8;
+		ImGui_DrawGfx(gfxBar, cVector3f(vSliderMin.x - fPointerWidth/2 + afValue*(vSliderMax.x - vSliderMin.x), vPosNrm.y + 8,vArrowLeftPosNrm.z), OptionMenu_GetScaledSize(cVector2f(fPointerWidth, 16)), sliderPointerColor);
+	}
+	else
+	{
+		/////////////
+		// Draw arrows
+		ImGui_SetModRotateAngle(180);
+		gfxArrow.mColor = arrowColor_L;
+		ImGui_DrawGfx(gfxArrow, vArrowLeftPosNrm, vArrowSizeNrm, cColor(1,afAlpha) * gOptionMenu_ModColor);
+		ImGui_SetModRotateAngle(0.0);
+		gfxArrow.mColor = arrowColor_R;
+		ImGui_DrawGfx(gfxArrow, vArrowRightPosNrm, vArrowSizeNrm, cColor(1,afAlpha) * gOptionMenu_ModColor);
+		
+		//////////////
+		// Draw bar
+		ImGui_DrawGfx(gfxBar, cVector3f(vSliderMin.x, (vPosNrm.y + vButtonAreaSizeNrm.y/2) - 5, vArrowLeftPosNrm.z), cVector2f(vSliderMax.x - vSliderMin.x, 5), gOptionMenu_ModColor * cColor(1,afAlpha));
+		cColor sliderPointerColor = cColor(1,afAlpha) * cColor(gOptionMenu_ModColor.a, 1);
+		float fPointerWidth = 8;
+		ImGui_DrawGfx(gfxBar, cVector3f(vSliderMin.x - fPointerWidth/2 + afValue*(vSliderMax.x - vSliderMin.x), vPosNrm.y + 8, vArrowLeftPosNrm.z), OptionMenu_GetScaledSize(cVector2f(6, 16)), sliderPointerColor);
+	}
+	
+	if (abSelected)
+	{
+		////////////////
+		// InfoBox
+		tString sInfoBox = asInfoBoxContent;
+		if (sInfoBox=="") sInfoBox = asName+"_Info";
+		
+		float fInfoBoxPosY = ImGui_GetStateFloat("CustomInfoBoxPosYAdd", 0.f);
+		cVector3f vInfoBoxPos = OptionMenu_GetTopLeftOffset(avPos + kOptionMenu_TextedSliderTextOffset + cVector2f(kOptionMenu_TextedSliderSize.x, fInfoBoxPosY), 0) + OptionMenu_GetTopLeftOffset(kOptionMenu_InfoBoxBgOffset);
+		OptionMenu_InfoBox("", cVector3f(avInfoBoxPos.x,vInfoBoxPos.y,avInfoBoxPos.z), kOptionMenu_InfoBoxBgSize, sInfoBox, afAlpha, asInfoBoxSecondLine);
+	}
+	
+	return afValue;
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_InfoBox(tString asGfx, cVector3f avPos, cVector2f avSize, const tString &in asText, float afAlpha=1, const tWString&in asSecondLine=cString_To16Char(""))
+{
+	if (cLux_HasTranslation("Menu",asText) == false) return;
+	
+	float fClampedSize = cLux_GetCurrentImGui().GetSet().GetVirtualSize().x-cLux_GetCurrentImGui().GetSet().GetVirtualSizeOffset().x-60-avPos.x;
+	cVector3f vPos = avPos;
+	cVector2f vSize = cVector2f(cMath_Min(avSize.x,fClampedSize),avSize.y);
+		
+	cImGuiTextFrameData textData = ImGui_GetDefaultTextFrame();
+	textData.mbUseBackgroundGfx = false;
+	textData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu_InfoBox,56));
+	textData.mFont.mvSize = cVector2f(gfFontSize_InfoBox);
+	textData.mFont.mColor = cColor(1, afAlpha) * gOptionMenu_ModColor;
+	textData.mFontAlign = eFontAlign_Left;
+	
+	array<tWString> vLines;
+	GetFontWordWrapRows(textData.mFont, 1, asText, vSize.x, vLines);
+	
+	bool bHasSecondLine = asSecondLine != cString_To16Char("");
+	
+	const float fTextVertSpacing = 12;
+	int lLinesCount = vLines.length();
+	
+	const float fLineHeight = (textData.mFont.mvSize.y + fTextVertSpacing);
+	const float fTextHeight = fLineHeight * lLinesCount;
+	float fBkgHeight = fTextHeight + fTextVertSpacing + 20;
+	
+	if (bHasSecondLine)
+	{
+		array<tWString> vSecondLineLines;
+		GetFontWordWrapRowsW(textData.mFont, 1, asSecondLine, vSize.x, vSecondLineLines);
+		
+		int lSecondLineLinesCount = vSecondLineLines.size();
+		const float fSecondLineTextHeight = fLineHeight * lSecondLineLinesCount;
+		fBkgHeight += fSecondLineTextHeight + 20;
+	}
+	
+	cGuiSet@ pSet = cLux_GetCurrentImGui().GetSet();
+	if (vPos.y + fBkgHeight > pSet.GetVirtualSize().y)
+		vPos.y-=(vPos.y+fBkgHeight-pSet.GetVirtualSize().y);
+	
+	cVector3f vBkgPos = cVector3f(vPos.x,vPos.y-12,22);
+	cVector3f vTextPos = cVector3f(vBkgPos.x + 30, vPos.y + 10, 23);
+	cImGuiGfx gfxBkg("", eImGuiGfx_Texture);
+	ImGui_DrawGfx(gfxBkg, vBkgPos, cVector2f(vSize.x + 50, fBkgHeight), cColor(0.03,afAlpha) * gOptionMenu_ModColor);
+	
+	ImGui_DoTextFrameExt(asText, cVector2f_Zero, fTextVertSpacing, 0, textData, vTextPos, cVector2f(vSize.x,fTextHeight));
+	
+	if (bHasSecondLine)
+	{
+		vTextPos.y += fTextHeight + fLineHeight;
+		ImGui_DoTextFrameExtW(asSecondLine, cVector2f_Zero, fTextVertSpacing, 0, textData, vTextPos, cVector2f(vSize.x,fTextHeight));
+	}
+}
+
+//-------------------------------------------------------
+
+void OptionMenu_InfoBoxInputIcons(tString asGfx, cVector3f avPos, cVector2f avSize, const tString &in asText, float afAlpha=1)
+{
+	if (cLux_HasTranslation("Menu",asText) == false) return;
+	
+	float fClampedSize = cLux_GetCurrentImGui().GetSet().GetVirtualSize().x-cLux_GetCurrentImGui().GetSet().GetVirtualSizeOffset().x-15-avPos.x;
+	cVector3f vPos = avPos;
+	cVector2f vSize = cVector2f(cMath_Min(avSize.x,fClampedSize),avSize.y);
+
+	cLuxScreenTextFormatParameters format;
+	format.mLabelText.mFontAlign = eFontAlign_Left;
+	format.mLabelText.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu_InfoBox,56));
+	format.mLabelText.mFont.mvSize = cVector2f(gfFontSize_InfoBox);
+	format.mLabelText.mFont.mColor = cColor(1, afAlpha) * gOptionMenu_ModColor;
+	format.mfIconGamepadHeight = format.mLabelText.mFont.mvSize.y;
+	format.mfIconKeyHeight = format.mLabelText.mFont.mvSize.y;
+	format.mfIconMouseHeight = format.mLabelText.mFont.mvSize.y;
+	format.mfOutputLineWidth = vSize.x;
+	
+	array<tWString> vLines;
+	array<cLuxScreenTextIcon@> vIcons;
+	array<array<int>> vIconsPerLine;							
+	
+	float fLineHeight = 0.f;
+	float fTextVertSpacing = 12;	
+	float fDisplayTime = 0.f;
+	bool bGamepad = Platform_IsConsole() || cLux_GetInputHandler().GetGamepadWasLastDeviceUsed();
+	
+	cLux_ParseStringIntoScreenText(cLux_Translate("Menu", asText), cLux_GetCurrentImGui(), format, vLines, 
+								   vIcons, vIconsPerLine, fLineHeight, fDisplayTime, bGamepad);  
+						
+	fLineHeight += fTextVertSpacing;
+	
+	int lLinesCount = vLines.length();	
+	float fTextHeight = fLineHeight * lLinesCount;
+	float fBkgHeight = fTextHeight + fTextVertSpacing + 20;
+	
+	cGuiSet@ pSet = cLux_GetCurrentImGui().GetSet();
+	if (vPos.y + fBkgHeight > pSet.GetVirtualSize().y)
+		vPos.y-=(vPos.y+fBkgHeight-pSet.GetVirtualSize().y);
+	
+	cVector3f vBkgPos = cVector3f(vPos.x,vPos.y-12,22);
+	cVector3f vTextPos = cVector3f(vBkgPos.x + 30, vPos.y + 10, 23);
+	cImGuiGfx gfxBkg("", eImGuiGfx_Texture);
+	ImGui_DrawGfx(gfxBkg, vBkgPos, cVector2f(vSize.x + 50, fBkgHeight), cColor(0.03,afAlpha) * gOptionMenu_ModColor);	
+	
+	cLux_DrawScreenText(cLux_GetCurrentImGui(), cEngine_GetGameTime(), format.mLabelText, vTextPos, vSize.x, fLineHeight, 
+						vLines, vIcons, vIconsPerLine);
+}
+
+//-------------------------------------------------------
+
+int mlCurrentDir = 0;
+	
+void OptionMenu_OptionsMultiSelect(cVector2f avPos, array<tString> aArray, int aValue, bool abSelected, tString asCategory="Menu", tString asName="", cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, float afAlpha=1, bool abUseSmallFont=false, bool abActive=true, const tString&in asInfoBoxContent="", const tWString&in asInfoBoxSecondLine=cString_To16Char(""), bool abScrollingLabel=false, bool abUseInputIcons = false)
+{
+	///////////////
+	// Check language
+	bool bIsEnglish = false;
+	{
+		cConfigFile@ pConfig = cLux_GetUserConfig();
+		tString sLang = cString_SetFileExt(pConfig.GetString("Main", "StartLanguage", cLux_GetDefaultGameLanguage()), "");
+		bIsEnglish = (sLang=="english");
+	}
+	
+	/////////////////
+	// Check screen ratio
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	const cVector2l vResolution = cVector2l(pConfig.GetInt("Screen", "Width", 1280), pConfig.GetInt("Screen", "Height", 720));
+	const cVector2l vScreenRatio = MainMenu_GetScreenRatio(vResolution.x, vResolution.y);
+	bool bIsSquareScreen = vScreenRatio == cVector2l(4,3) || vScreenRatio == cVector2l(5,4);
+	bool bIsUltraWideScreen = vScreenRatio == cVector2l(8,3) || vScreenRatio == cVector2l(21,9) || vScreenRatio == cVector2l(64,27) || vScreenRatio == cVector2l(12,5) || vScreenRatio == cVector2l(43,18);
+	
+	//////////////
+	// Shuld we scroll?
+	const bool bShouldScroll = abScrollingLabel && bIsEnglish==false;
+		
+	////////////////
+	// Setup gfx
+	cVector3f vPosNrm = OptionMenu_GetTopLeftOffset(avPos,2);
+	cVector3f vRightAnchorNrm = OptionMenu_GetTopLeftOffset(avRightAnchor);
+	cVector2f vButtonSizeNrm = OptionMenu_GetScaledSize(kOptionMenu_MultiSize+cVector2f(gfOptionsMenu_ExtraWidth_MultiSelect, 0));
+	cVector3f vButtonPosNrm = cVector3f(vRightAnchorNrm.x - vButtonSizeNrm.x, vPosNrm.y + 5, vPosNrm.z);
+	cVector3f vArrowLeftPosNrm = cVector3f(vButtonPosNrm.x + 8,vButtonPosNrm.y - 10,vPosNrm.z + 2);
+	cVector3f vArrowRightPosNrm = cVector3f(vButtonPosNrm.x+vButtonSizeNrm.x-OptionMenu_GetScaledSize(kOptionMenu_SliderArrowHoverSize).x - 14,vButtonPosNrm.y-8,vPosNrm.z+2);
+	cVector3f vLabelPosNrm = cVector3f(vButtonPosNrm.x + (vButtonSizeNrm.x/2), vButtonPosNrm.y + 4, vPosNrm.z + 1);
+	cImGuiGfx gfxArrow("startmenu_options_arrow");
+	
+	///////////////////////////////
+	// Do switch value arrows
+	if(abSelected)
+	{
+		int lArrowHovered = 0;
+		int lLastInputDevice = cLux_GetInputHandler().GetLastDeviceUsed();
+		if (lLastInputDevice == eInputDeviceType_Gamepad ||
+			lLastInputDevice == eInputDeviceType_Keyboard)
+		{
+			int lHorizontalAction = ImGui_GetStateInt(asName + "_HorizontalAction");
+			if (lHorizontalAction != 0)
+				lArrowHovered = lHorizontalAction;
+		}
+		else
+		{
+			lArrowHovered = OptionMenu_GetMouseInsideMultiSelectArrows(vButtonPosNrm, vButtonSizeNrm);
+		}
+		
+		bool bHighlightArrow = lArrowHovered != 0;
+		cColor arrowColor_L = cColor(1,afAlpha);
+		cColor arrowColor_R = cColor(1,afAlpha);		
+		
+		if (bHighlightArrow)
+		{
+			////////////////////
+			// Arrow hover color
+			if (lArrowHovered == 1)
+				arrowColor_L = gHoverColor * cColor(1, afAlpha);
+			else
+				arrowColor_R = gHoverColor * cColor(1, afAlpha);
+		}
+		
+		///////////////
+		// Draw arrows
+		ImGui_DrawGfx(gfxArrow, vArrowRightPosNrm, OptionMenu_GetScaledSize(kOptionMenu_SliderArrowSize), arrowColor_L * gOptionMenu_ModColor);
+		ImGui_SetModRotateAngle(180);
+		
+		ImGui_DrawGfx(gfxArrow, vArrowLeftPosNrm, OptionMenu_GetScaledSize(kOptionMenu_SliderArrowSize), arrowColor_R * gOptionMenu_ModColor);
+		ImGui_SetModRotateAngle(0.0);
+		
+		////////////////
+		// InfoBox
+		cVector3f vInfoBoxPos = vLabelPosNrm+cVector3f(kOptionMenu_MultiSize.x/2+60,0,0);
+		tString sInfoBox = asInfoBoxContent;
+		if (sInfoBox=="") sInfoBox = asName+"_Info";
+		
+		if (abUseInputIcons)
+		{
+			sInfoBox += "_" + aValue;
+			OptionMenu_InfoBoxInputIcons("", cVector3f(avInfoBoxPos.x,vInfoBoxPos.y,avInfoBoxPos.z), kOptionMenu_InfoBoxBgSize, sInfoBox, afAlpha);
+		}
+		else
+		{
+			OptionMenu_InfoBox("", cVector3f(avInfoBoxPos.x,vInfoBoxPos.y,avInfoBoxPos.z), kOptionMenu_InfoBoxBgSize, sInfoBox, afAlpha, asInfoBoxSecondLine);
+		}
+	}
+	else
+	{
+		/////////////
+		// Draw arrows
+		ImGui_DrawGfx(gfxArrow, vArrowRightPosNrm, OptionMenu_GetScaledSize(kOptionMenu_SliderArrowSize), cColor(1,afAlpha)*gOptionMenu_ModColor);
+		ImGui_SetModRotateAngle(180);
+		ImGui_DrawGfx(gfxArrow, vArrowLeftPosNrm, OptionMenu_GetScaledSize(kOptionMenu_SliderArrowSize), cColor(1,afAlpha)*gOptionMenu_ModColor);
+		ImGui_SetModRotateAngle(0.0);
+	}
+		
+	/////////////////////////////////
+	// Draw multi-select items
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	labelData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	cColor labelColor = abSelected ? gHoverColor * cColor(1,afAlpha) : cColor(1,afAlpha);
+	labelData.mFont.mColor = labelColor * gOptionMenu_ModColor;
+	labelData.mFontAlign = eFontAlign_Center;
+	labelData.mbScrolling = bShouldScroll;
+	labelData.mfScrollSpeed = abSelected ? 45.f : 0.f;
+	labelData.mfScrollStartDelay = 1.f;
+	labelData.mfScrollResetDelay = 1.f;
+
+	if(aValue < aArray.size())
+	{
+		const float fLabelSizeNrm = vButtonSizeNrm.x * 0.6;
+		ImGui_SetTransCategory(asCategory);
+		
+		if (bShouldScroll)
+		{
+			////////////////////////////////
+			// TODO: Temp solution because aigmnet while scrolling seems broken in the source. Find a better way to center the labels across screen types if time. 
+			vLabelPosNrm.x -= bIsUltraWideScreen ? 32 : 25;
+			vLabelPosNrm.x -= fLabelSizeNrm/2;
+		}
+		else
+			vLabelPosNrm.x -= 12;
+		
+		/////////////////
+		// Hack to make labels reset scrolling when not in focus		
+		bool bWasSelected = ImGui_GetStateBool(asName + "_IsSelected", false);
+		ImGui_SetStateBool(asName + "_IsSelected", abSelected);
+		
+		if (bWasSelected == false && abSelected)
+			ImGui_SetStateFloat(cString_To8Char(ImGui_Translate(aArray[aValue])) + "$value", -labelData.mfScrollStartDelay);
+		
+		// Hack to fix issue with scroll speed when there are multiple labels with the same name
+		tWString sLabelText = ImGui_Translate(aArray[aValue]);
+		if (abSelected == false) 
+			sLabelText += "\n";
+		
+		/////////////////
+		// Do label
+		cVector2f vLabelSize = labelData.mbScrolling ? OptionMenu_GetScaledSize(cVector2f(fLabelSizeNrm, -1)) : 0;
+		ImGui_DoLabelExtW(sLabelText, labelData, vLabelPosNrm, vLabelSize);		
+	}
+	
+	ImGui_SetTransCategory("Menu");
+}
+
+//-------------------------------------------------------
+
+int OptionMenu_MessageBox(const tString &in asMessage, const tString &in asButton, tString &out asFocusIn, tString &out asFocusOut, const bool abPlaySound=true)
+{
+	return OptionMenu_MessageBox(asMessage, asButton, "", asFocusIn, asFocusOut, tWString(""), abPlaySound);
+}
+
+//------------------------------------------------------- 
+
+int mlPrevSelectedButton = 0;
+int mlSelectedButton = 0;
+
+bool OptionMenu_MessageBox_GameCompleted(const tString &in asMessage, const tString &in asButton, tString &out asFocusIn, tString &out asFocusOut, const bool abPlaySound=true)
+{
+	////////////////////////////////////
+	// ImGui Data
+	cImGuiTextFrameData textFrameData;
+	textFrameData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	textFrameData.mFont.mvSize = gfFontSize_MainMenu_Small;
+	textFrameData.mFont.mColor = cColor(1,0);
+	textFrameData.mFontAlign = eFontAlign_Left;
+	textFrameData.mbUseBackgroundGfx = false;
+	
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_PromptButtons;
+	buttonData.mFontAlign = eFontAlign_Center;
+	buttonData.mFont.mColor =  cColor(1,1) * gOptionMenu_ModColor;
+	
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	labelData.mFont.mvSize = gfFontSize_MainMenu;
+	labelData.mFont.mColor = cColor(1,1) * gOptionMenu_ModColor;
+	labelData.mFontAlign = eFontAlign_Center;
+	
+	///////////////////////
+	// Position & scale
+	const float fRowHeight = 0.03;
+	cVector2f vFrameSize = ImGui_NrmSize(0.65, fRowHeight);
+	cVector3f vFramePos = ImGui_NrmPos(0.5f,0.25f,30.0f) - cVector3f(vFrameSize.x, vFrameSize.y, 0)/2.0f;
+	cVector2f vFrameEdgeSpacing = cVector2f(40);
+	
+	////////////////////////////////////
+	// Draw black overlay
+	cVector3f vScreenCoverPos = ImGui_FullScreenPos(25);
+	cVector2f vScreenOverlay = ImGui_FullScreenSize();
+	ImGui_DrawGfx(cImGuiGfx(), vScreenCoverPos, vScreenOverlay, cColor(0.0, 0.75));
+	
+	///////////////
+	// Draw Header
+	const float fHeaderHeight = 40;
+	ImGui_DoLabelExt("NewGamePlus", labelData, vFramePos + cVector3f(0, vFrameEdgeSpacing.y/2, 0), cVector2f(vFrameSize.x, fHeaderHeight));
+	
+	////////////////////
+	// Ugly hack to get the text frame length
+	vFramePos.y += fHeaderHeight;
+	const float fTextFrameLength = ImGui_DoTextFrameExt(asMessage, vFrameEdgeSpacing, 0, 0, textFrameData, vFramePos, vFrameSize);
+	vFrameSize += ImGui_NrmSize(0.f, fRowHeight * fTextFrameLength);
+	vFrameSize.y += fHeaderHeight; // Header height
+	
+	//////////////////
+	// Draw Txt
+	textFrameData.mFont.mColor = cColor(1,1) * gOptionMenu_ModColor;
+	ImGui_DoTextFrameExt(asMessage, vFrameEdgeSpacing, 0, 0, textFrameData, vFramePos, vFrameSize);
+	
+	///////////////////////
+	// Calculate button size
+	cVector2f vButtonSize = cVector2f(116,43);
+	const float fButtonAspectRatio = vButtonSize.x / vButtonSize.y;
+	vButtonSize.y = buttonData.mFont.mvSize.y * 1;
+	vButtonSize.x = vButtonSize.y * fButtonAspectRatio * 2;
+	
+	//////////////////////////
+	// Draw background slip
+	cVector3f vBgFramePos = vFramePos;
+	vFramePos.y -= fHeaderHeight;
+	cVector2f vBgFrameSize = vFrameSize + cVector2f(0.f, vButtonSize.y * 3.5);
+	ImGui_DrawGfx(cImGuiGfx(), vFramePos + cVector3f(0, 0, -0.1), vBgFrameSize, cColor(0.03, 1));
+	
+	///////////////
+	// White Lines
+	cVector2f vLineSize = cVector2f(vBgFrameSize.x * 0.95, 2);
+	cVector3f vLinePos = ImGui_NrmPos(0.5f,0.25f,30.0f) - cVector3f(vLineSize.x, vLineSize.y, 0)/2.0f;
+	cVector3f vLinePos_Top = vLinePos + cVector3f(0, vFrameEdgeSpacing.y/2 + fHeaderHeight/1.5, 0.1);
+	cVector3f vLinePos_Bottom = vLinePos + cVector3f(0, (vFrameEdgeSpacing.y/2) - 12, 0.1) + cVector3f(0, vFrameSize.y, 0);
+	ImGui_DrawGfx(cImGuiGfx(), vLinePos_Top, vLineSize, cColor(1, 0.5));
+	ImGui_DrawGfx(cImGuiGfx(), vLinePos_Bottom, vLineSize, cColor(1, 0.5));
+	
+	/////////////////////
+	// Draw button
+	cVector3f vButtonPos = vFramePos + cVector3f(vBgFrameSize.x/2.0f, vBgFrameSize.y - (vButtonSize.y * 2), 0.1f); // Middle
+	bool bVal = false;
+	
+	if(asButton!="")
+	{
+		if(mlSelectedButton == 1)
+			buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+		
+		if(ImGui_DoButtonExt(asButton,asButton, buttonData, vButtonPos + cVector3f(-vButtonSize.x/2, 0.0f, 1.0f), vButtonSize))
+		{
+			bVal = true;
+			if (abPlaySound)
+				Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		}
+		
+		asFocusOut = OptionMenu_UpdateFocus(asButton, asFocusIn);
+		mlSelectedButton = (ImGui_PrevInFocus() ? 1 : -1);
+	}
+	
+	return bVal;
+}
+
+//------------------------------------------------------- 
+
+int OptionMenu_MessageBox(const tString &in asMessage, const tString &in asLeft, const tString &in asRight, tString &out asFocusIn, tString &out asFocusOut, const tWString &in asSecondRow=tWString(""), const bool abPlaySound=true)
+{	
+	////////////////////////////////////
+	// ImGui Data
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	labelData.mFont.mvSize = gfFontSize_Prompts;
+	labelData.mFont.mColor = cColor(1,1) * gOptionMenu_ModColor;
+	labelData.mFontAlign = eFontAlign_Center;
+	
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_PromptButtons;
+	buttonData.mFontAlign = eFontAlign_Center;
+	buttonData.mFont.mColor =  cColor(1,1) * gOptionMenu_ModColor;
+	
+	cImGuiButtonData buttonLeftData = buttonData;
+	buttonLeftData.mGfxInFocus = cImGuiGfx("startmenu_selection_ring_on.tga");
+		
+	cImGuiButtonData buttonRightData = buttonData;
+	buttonRightData.mGfxInFocus = cImGuiGfx("startmenu_selection_ring_off.tga");
+	
+	
+	// Second row used for timer countdown
+	tWString sMessage = ImGui_TranslatePlatformSpecific(asMessage);
+	tWString sSecondRow = asSecondRow;
+	tWString sThirdRow = "";
+		
+	cVector2f vButtonSize = cVector2f(116,43);
+	float fButtonAspectRatio = vButtonSize.x/vButtonSize.y;
+	vButtonSize.y = buttonData.mFont.mvSize.y;
+	vButtonSize.x = vButtonSize.y*fButtonAspectRatio;
+	
+	cVector2f vMessageSize(cLux_GetCurrentImGui().GetFontLength(labelData.mFont,  1.0f,  sMessage), labelData.mFont.mvSize.y);
+	vMessageSize = OptionMenu_GetScaledSize(vMessageSize);
+	
+	// Padding between Buttons (x) and between Message and Buttons (y)
+	//cVector2f vPadding = OptionMenu_GetScaledSize(cVector2f(15.0f, 15.0f));
+	cVector2f vPadding = OptionMenu_GetScaledSize(cVector2f(2.0f, 2.0f));
+	
+	/////////////////////
+	// Calculate Message wrapping
+	
+	float fMinWidth = vButtonSize.x*2+80;
+	float fMaxWidth = cLux_GetCurrentImGui().GetSet().GetVirtualSize().x-200;
+	
+	if (vMessageSize.x + 2*vPadding.x > fMaxWidth)
+	{
+		int lHalfLength = sMessage.length()/2;
+		tWString sWhitespaceCheck = cString_SubW(sMessage, lHalfLength);
+		int lWhitespace = cString_GetFirstStringPosW(sWhitespaceCheck, cString_To16Char(" "));
+		if (lWhitespace < 0)
+		{
+			sWhitespaceCheck = cString_SubW(sMessage, 0, lHalfLength);
+			lWhitespace = cString_GetLastStringPosW(sWhitespaceCheck, cString_To16Char(" "));
+		}
+		else
+		{
+			lWhitespace += lHalfLength;
+		}
+		
+		if (lWhitespace > 0)
+		{
+			sThirdRow = sSecondRow;
+			sSecondRow = cString_SubW(sMessage, lWhitespace+1);
+			sMessage = cString_SubW(sMessage, 0, lWhitespace);
+			if (lWhitespace >= lHalfLength)
+				vMessageSize = cVector2f(cLux_GetCurrentImGui().GetFontLength(labelData.mFont,  1.0f,  sMessage), labelData.mFont.mvSize.y);
+			else
+				vMessageSize = cVector2f(cLux_GetCurrentImGui().GetFontLength(labelData.mFont,  1.0f,  sSecondRow), labelData.mFont.mvSize.y);
+			vMessageSize = OptionMenu_GetScaledSize(vMessageSize);
+		}
+	}
+	
+	///////////////////////
+	// Positioning
+	
+	cVector2f vFrameSize = cVector2f(cMath_Max(vPadding.x + vMessageSize.x + vPadding.x, fMinWidth), (vPadding.y + vMessageSize.y + vPadding.y + vButtonSize.y + vPadding.y));
+	cVector3f vFramePos = ImGui_NrmPos(0.5f,0.5f,30.0f) - cVector3f(vFrameSize.x, vFrameSize.y, 0)/2.0f;
+	
+	cVector3f vMessagePos = vFramePos + cVector3f(0, vPadding.y, 1.0f);
+	//cVector3f vButtonPos = vFramePos + cVector3f(vFrameSize.x/2.0f, vPadding.y + vMessageSize.y + vPadding.y - 6, 1.0f); // Middle
+	cVector3f vButtonPos = vFramePos + cVector3f(vFrameSize.x/2.0f, vPadding.y + vMessageSize.y + vPadding.y + 2, 1.0f); // Middle
+	
+	////////////////////////////////////
+	// Draw black overlay
+	cVector3f vScreenCoverPos = ImGui_FullScreenPos(25);
+	cVector2f vScreenOverlay = ImGui_FullScreenSize();
+	ImGui_DrawGfx(cImGuiGfx(), vScreenCoverPos, vScreenOverlay, cColor(0.0, 0.75));
+	
+	//////////////////////////
+	// Draw background slip
+	float fHeight = (sSecondRow.length() != 0) ? 180 : 116;
+	float fVOffset = (sSecondRow.length() != 0) ? 30 : 0;
+	cVector2f vSize = cVector2f(cMath_Max(vMessageSize.x,475.f),fHeight);
+	
+	cVector2f kScreenCenter = cVector2f(512, 384); // Virtual size: 1024x768
+	cImGuiGfx gfxBkg;
+	cVector3f vTextFramePos = cVector3f(kScreenCenter.x,kScreenCenter.y+fVOffset,30);
+	ImGui_DrawAlignedGfx(gfxBkg, vTextFramePos, eImGuiAlign_CenterCenter, vSize, cColor(0.03,1) * gOptionMenu_ModColor);
+	
+	//////////////////////
+	// Draw message
+	ImGui_SetTextOverride(sMessage);
+	ImGui_DoLabelExt("",labelData, vMessagePos, cVector2f(vFrameSize.x, -1));
+	ImGui_ClearTextOverride();
+	
+	if(sSecondRow.length()!=0)
+	{
+		ImGui_SetTextOverride(sSecondRow);
+		ImGui_DoLabelExt("",labelData, vMessagePos + cVector3f(0, vMessageSize.y * 0.9, 0.0f), cVector2f(vFrameSize.x, -1));
+		ImGui_ClearTextOverride();
+		
+		vButtonPos.y += vMessageSize.y + vPadding.y + fVOffset;
+		vFrameSize.y += vMessageSize.y + vPadding.y;
+	}
+	
+	if(sThirdRow.length()!=0)
+	{
+		ImGui_SetTextOverride(sThirdRow);
+		ImGui_DoLabelExt("",labelData, vMessagePos + cVector3f(0, vMessageSize.y * 2 * 0.9, 0.0f), cVector2f(vFrameSize.x, -1));
+		ImGui_ClearTextOverride();
+		
+		vButtonPos.y += vMessageSize.y + vPadding.y + fVOffset;
+		vFrameSize.y += vMessageSize.y + vPadding.y;
+	}
+	
+	/////////////////////
+	// Draw two buttons
+	int lVal = 0; // Output value
+	int lSelectedButton = 0; // Currently selected
+	float fButtonSep = vPadding.x/2;
+	cVector2f vUnderlineSizeNrm = OptionMenu_GetScaledSize(cVector2f(70,5));
+	cImGuiGfx gfxHover = cImGuiGfx("startmenu_underscore_yesno", eImGuiGfx_Texture);
+	
+	if(asLeft!="" && asRight!="")
+	{
+		ImGui_LayoutBegin(eImGuiLayout_X, vButtonPos-cVector3f(vButtonSize.x+fButtonSep/2, 0.0f, 0.0f), cVector2f_MinusOne, cVector2f(fButtonSep,0));
+		
+			ImGui_SetUIMoveWrapMode(eImGuiWrap_None);
+			
+			if (mlSelectedButton == 1)
+				buttonRightData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+			else if (mlSelectedButton == -1)
+				buttonLeftData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+				
+			if(ImGui_DoButtonExt(asLeft,asLeft, buttonLeftData, 0, vButtonSize+cVector2f(0,6)))
+			{
+				lVal = -1;
+				if (abPlaySound) Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+			}
+			asFocusOut = OptionMenu_UpdateFocus(asLeft, asFocusIn);
+				
+			if(ImGui_DoButtonExt(asRight,asRight, buttonRightData, 0, vButtonSize+cVector2f(0,6)) ||
+			   ImGui_ActionTriggered(eImGuiAction_Cancel, true))
+			{
+				lVal = 1;
+				if (abPlaySound) Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+			}
+			asFocusOut = OptionMenu_UpdateFocus(asRight, asFocusOut);
+		
+			lSelectedButton = (ImGui_PrevInFocus()) ? 1 : -1;
+			mlSelectedButton = lSelectedButton;
+	
+		ImGui_LayoutEnd();
+	}
+	
+	///////////////////
+	// Only one option
+	else if(asLeft!="" || asRight!="")
+	{
+		tString sButton = (asLeft!="") ? asLeft : asRight;
+		
+		ImGui_LayoutBegin(eImGuiLayout_X, vButtonPos+cVector3f(-vButtonSize.x/2, 0.0f, 1.0f), cVector2f_MinusOne, cVector2f(0,0));
+		
+			if(mlSelectedButton == 1)
+				buttonLeftData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+			
+			if(ImGui_DoButtonExt(asLeft,asLeft, buttonLeftData, 0, vButtonSize+cVector2f(0,6)))
+			{
+				lVal = 1;
+				if (abPlaySound) Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+			}
+			asFocusOut = OptionMenu_UpdateFocus(asLeft, asFocusIn);
+			
+
+			mlSelectedButton = (ImGui_PrevInFocus() ? 1 : -1);
+		
+		ImGui_LayoutEnd();
+	}
+	
+	return lVal;
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_ButtonBackgroundSaveFile(cVector2f avPos, cVector2f avSize = kOptionMenu_ButtonBgSize, float afAlpha=1)
+{
+	///////////
+	// Draw background
+	{
+		cImGuiGfx gfx("startmenu_selection_submenu", eImGuiGfx_Texture);
+		ImGui_DrawGfx(gfx, OptionMenu_GetTopLeftOffset(avPos + cVector2f(-6, 6), 0.29), OptionMenu_GetScaledSize(avSize+cVector2f(368,0)), kOptionMenu_ButtonBgColor*gOptionMenu_ModColor*cColor(1, afAlpha));
+	}
+}
+
+//-------------------------------------------------------
+
+bool MainMenu_DoButton(tString asName, const cVector3f &in avPos, bool abSelected, float afAlpha=1.f, float afBrightness=1.f, bool abUseSmallFont=false, cVector2f avScale=kOptionMenu_ButtonSize)
+{
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor =  cColor(1.0, afAlpha) * gOptionMenu_ModColor * afBrightness;
+	
+	if (abSelected)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+		
+	return ImGui_DoButtonExt(asName, asName, buttonData, avPos, OptionMenu_GetScaledSize(avScale));
+}
+
+//-------------------------------------------------------
+
+bool MainMenu_DoBackButton(const tString&in asSelected, float afAlpha=1.f)
+{
+	if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed())
+		return false;
+	
+	bool bClicked = false;
+	bool bSelected = asSelected == "Back";
+	
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu_ConfirmButton;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor =  cColor(1.0, afAlpha) * gOptionMenu_ModColor;
+	
+	if (bSelected)
+		buttonData.mFont.mColor = gHoverColor * cColor(1, afAlpha);
+	
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(kBackButtonPos, 1.0);
+	
+	if (ImGui_DoButtonExt("Back", "Back", buttonData, vButtonPos, OptionMenu_GetScaledSize(cVector2f(256, 40))))
+	{
+		if (ImGui_TimerExists("TransitionOut") == false)
+			ImGui_AddTimer("TransitionOut", 10.f);
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		bClicked = true;
+	}
+	
+	return bClicked;
+}
+
+//-------------------------------------------------------
+
+bool MainMenu_DoStartButton(const tString&in asSelected, float afAlpha=1.f)
+{
+	bool bClicked = false;
+	bool bSelected = asSelected == "Start";
+	
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu_ConfirmButton;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor =  cColor(1.0, afAlpha) * gOptionMenu_ModColor;
+	
+	if (bSelected)
+		buttonData.mFont.mColor = gHoverColor * cColor(1, afAlpha);
+	
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(kSelectButtonPos, 1.0);
+	
+	if (ImGui_DoButtonExt("Start", "Start", buttonData, vButtonPos, OptionMenu_GetScaledSize(cVector2f(256, 40))))
+	{
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		bClicked = true;
+	}
+	
+	return bClicked;
+}
+
+//-------------------------------------------------------
+
+bool MainMenu_DoContinueButton(const tString&in asSelected, float afAlpha=1.f)
+{
+	bool bClicked = false;
+	tString sLabel = "Continue";
+	bool bSelected = asSelected == sLabel;
+	
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu_ConfirmButton;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor =  cColor(1.0, afAlpha) * gOptionMenu_ModColor;
+	
+	if (bSelected)
+		buttonData.mFont.mColor = gHoverColor * cColor(1, afAlpha);
+	
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(kContinueButtonPos, 1.0);
+	
+	if (ImGui_DoButtonExt(sLabel, sLabel, buttonData, vButtonPos, OptionMenu_GetScaledSize(cVector2f(256, 40))))
+	{
+		if (ImGui_TimerExists("TransitionOut") == false)
+			ImGui_AddTimer("TransitionOut", 10.f);
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		bClicked = true;
+	}
+	
+	return bClicked;
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_MainMenuButton(tString asName, const cVector2f &in avBasePos, int alEntryPos, int alID, tString asSelectedID, int alClickedID, float afAlpha=1.f)
+{
+	bool bClicked = false;
+	
+	//////////////////////
+	// Define if selected
+	bool bSelected = (asSelectedID == asName && alClickedID == -1) || alClickedID == alID;
+	if (ImGui_TimerExists("ButtonClicked") && bSelected)
+		bSelected = false;
+	
+	/////////////
+	// Draw Btn
+	cVector2f vButtonPos2D = avBasePos + cVector2f(0, kOptionMenu_ButtonSpacing * alEntryPos);
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(vButtonPos2D, 1.0);
+	
+	if (MainMenu_DoButton(asName, vButtonPos, bSelected, afAlpha) && alClickedID == -1)
+	{
+		if (asName != "ReturnToGame" && 
+			asName != "Exit" && 
+			asName != "LoadLastSave" &&
+			asName != "SaveAndExit" && 
+			asName != "QuitToMainMenu" &&
+			asName != "QuitToDesktop" &&
+			ImGui_TimerExists("TransitionOut") == false)
+		{
+			ImGui_AddTimer("TransitionOut",10.f);
+		}
+			
+		ImGui_AddTimer("ButtonClicked", 0.15f);
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		
+		bClicked = true;
+	}
+
+	return bClicked;
+}
+
+//-------------------------------------------------------
+
+void OptionMenu_MainMenuDisabledButton(tString asName, const cVector2f &in avBasePos, int alEntryPos, float afAlpha=1.f)
+{
+	cImGuiLabelData disabledLabelData;
+	disabledLabelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+	disabledLabelData.mFont.mvSize = gfFontSize_MainMenu;
+	disabledLabelData.mFontAlign = eFontAlign_Left;
+	disabledLabelData.mFont.mColor = cColor(100.f / 255.f, afAlpha);
+
+
+	//MainMenu_DoButton(asName, OptionMenu_GetTopLeftOffset(avBasePos + cVector2f(0, kOptionMenu_ButtonSpacing * alEntryPos)), false, afAlpha);
+	ImGui_DoLabelExt(asName, disabledLabelData, OptionMenu_GetTopLeftOffset(avBasePos + cVector2f(0, kOptionMenu_ButtonSpacing * alEntryPos + 7), 0.0f));
+}
+
+//-------------------------------------------------------
+
+int mlItemLimit = 99;
+
+int OptionMenu_GetLimit()
+{
+	return mlItemLimit;
+}
+
+void OptionMenu_SetOutOfLimit(int alLimit)
+{
+	mlItemLimit = alLimit;
+}
+
+//-------------------------------------------------------
+//TODO: Remove this. Menus don't extend off the screen anymore.
+bool OptionMenu_CheckOutOfLimits(int alID)
+{
+	return false;
+	/*bool bOutOfLimits = (alID < 0 || alID >= mlItemLimit);
+	return bOutOfLimits;*/
+}
+
+//------------------------------------------------------- 
+
+bool OptionMenu_ButtonOptions(tString asName, cVector2f avPos, int alID, tString asSelected, bool abSubMenu=true, cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBox=cVector3f_Zero, float afAlpha=1)
+{
+	if (MainMenu_DoButton(asName, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 0.0), asSelected == asName, afAlpha, 1.f, abSubMenu))
+	{
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		
+		if (asName != "ResetToDefault" && 
+			asName != "AutoDetect" &&
+			ImGui_TimerExists("TransitionOut") == false)
+		{
+			ImGui_AddTimer("TransitionOut",10.f);
+		}
+			
+		return true;
+	}
+	
+	return false;
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_ButtonModOptions(tString asName, cVector2f avPos, tString asSelected, bool bFadeOnClick=false, float afAlpha=1, bool abUseSmallFont = false)
+{
+	//////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = (asSelected == asName ? cColor(1, afAlpha) * gHoverColor : cColor(1,afAlpha)); 
+	buttonData.mFont.mColor = buttonData.mFont.mColor * gOptionMenu_ModColor;
+	
+	if(ImGui_DoButtonExt(asName,asName, buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_ButtonSize.x * 0.45, kOptionMenu_ButtonSize.y))))
+	{
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		if (bFadeOnClick && ImGui_TimerExists("TransitionOut") == false)
+			ImGui_AddTimer("TransitionOut", 10.f);
+			
+		return true;
+	}
+	
+	return false;
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_ButtonSaveSlot(tString asName, tWString asTitle, tString asDate, cVector2f avPos, bool abSelected, bool abExpanded, float afAlpha=1)
+{
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;	// overridden below
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, afAlpha);
+	if (abSelected)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	labelData.mFont.mvSize = gfFontSize_MainMenu;
+	labelData.mFont.mColor = buttonData.mFont.mColor;
+	labelData.mFontAlign = eFontAlign_Right;
+	
+	int lSep = cString_GetFirstCharPos(asDate,'-');
+	tString sDate = cString_Sub(asDate,0,lSep) + "/" + cString_Sub(asDate,lSep+3);
+
+	//////////////
+	// Draw button
+	bool bClicked = false;
+	
+	cImGuiGfx arrowImage("notespage_arrow", eImGuiGfx_Image);
+	cVector2f vArrowPosOffset = cVector2f(-25, 10);
+			
+	if (abExpanded)
+	{
+		ImGui_SetModRotateAngle(90);
+		vArrowPosOffset.y += 5;
+	}
+	
+	cLux_GetCurrentImGui().DoImage(arrowImage, OptionMenu_GetTopLeftOffset(avPos + vArrowPosOffset, 0.3f), OptionMenu_GetScaledSize(cVector2f(20, 20)));
+	
+	ImGui_SetModRotateAngle(0);
+	
+	///////////////////
+	// Save slot btn
+	ImGui_SetTransCategory("Menu");
+	if(cLux_GetCurrentImGui().DoButton(asName, asTitle, buttonData, OptionMenu_GetTopLeftOffset(avPos, 0.3f), OptionMenu_GetScaledSize(cVector2f(420, 40))))
+	{
+		bClicked = true;
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+	}
+
+	if (abExpanded)
+		return bClicked;
+		
+	////////////////
+	// Date label when collapsed
+	ImGui_SetTransCategory("");
+	cVector2f vDatePos = avPos + cVector2f(350, 0);
+	ImGui_DoLabelExt(sDate, labelData, OptionMenu_GetTopLeftOffset(vDatePos, 1.0), 0);
+	ImGui_SetTransCategory("Menu");
+	
+	return bClicked;
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_ButtonSaveFile(tString asName, tString asTitle, cVector2f avPos, bool abSelected, float afAlpha=1)
+{
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;	// overridden below
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	buttonData.mFont.mvSize = gfFontSize_InfoBox * 0.9;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, afAlpha);
+	if (abSelected) buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+
+	//////////////
+	// Draw button
+	bool bClicked = false;
+	
+	//////////////////////////////
+	// Translate if it's not a quicksave
+	//ImGui_SetTransCategory("Levels");
+	ImGui_SetTransCategory("");
+	
+	///////////////////
+	// Save file btn
+	if(cLux_GetCurrentImGui().DoButton(asName, cString_To16Char(asTitle), buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.5f), OptionMenu_GetScaledSize(cVector2f(130, 40))))
+	{
+		bClicked = true;
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+	}
+
+	ImGui_SetTransCategory("Menu");
+
+	return bClicked;
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_ButtonMod(tString&in asName, tString&in asTitle, cVector2f avPos, bool abInFocus, tString&in asProvider, float afAlpha=1, bool abDownload=false, float afDownloadProgress=0)
+{
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;	// overridden below
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	const float fAlpha = abDownload ? afAlpha * 0.75 : afAlpha;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, fAlpha) ;
+	if (abInFocus)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	
+	ImGui_LayoutBegin(eImGuiLayout_X, cVector3f_Zero, cVector2f_MinusOne, cVector2f(2));
+	{
+		// Provider img
+		if (abDownload==false)
+		{
+			const cVector2f vProvImgSize = cVector2f(25);
+			const cVector2f vProvImgPos = avPos + cVector2f(0,8);
+			cImGuiGfx gfxProviderImg = cImGuiGfx(asProvider, eImGuiGfx_Texture);
+			gfxProviderImg.mColor = buttonData.mFont.mColor;
+			ImGui_DoImage(gfxProviderImg, OptionMenu_GetTopLeftOffset(vProvImgPos, 1.0), OptionMenu_GetScaledSize(vProvImgSize));
+		}
+		// download %
+		else
+		{
+			cImGuiLabelData labelData;
+			labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+			labelData.mFont.mvSize = cVector2f(28, 28);
+			labelData.mFontAlign = eFontAlign_Left;
+			labelData.mColorBase = buttonData.mFont.mColor;
+			const cVector2f vProvImgPos = avPos + cVector2f(0,8);
+			tString sLabel = ""+ cMath_RoundToInt(100 * afDownloadProgress) +" % ";
+			ImGui_DoLabelExt(sLabel, labelData, OptionMenu_GetTopLeftOffset(vProvImgPos, 1.0), cVector2f_MinusOne, 0.8);
+		}
+		
+		// Button
+		const cVector2f vBtnSize = cVector2f(360, 38);
+		if (ImGui_DoButtonExt(asName, asTitle, buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.0), OptionMenu_GetScaledSize(vBtnSize)))
+		{
+			if (abDownload==false)
+			{
+				Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+				return true;
+			}
+		}
+	}
+	ImGui_LayoutEnd();
+	
+	return false;
+}
+
+bool OptionMenu_ButtonModHeader(tString asName, const cVector3f &in avPos, bool abSelected, float afAlpha=1.f, float afBrightness=1.f)
+{
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor =  cColor(1.0, afAlpha) * gOptionMenu_ModColor * afBrightness;
+	
+	if (abSelected)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	
+	cVector2f vBtnSize = OptionMenu_GetScaledSize(cVector2f(150, 30));
+	
+	if (ImGui_DoButtonExt(asName, asName, buttonData, avPos, vBtnSize))
+	{
+		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		return true;
+	}
+	
+	return false;
+}
+
+bool OptionMenu_ButtonModBase(uint32 alID, tString&in asTitle, cVector2f avPos, bool abInFocus, const array<tString> &in avProviderIcons, float afAlpha=1, bool abDoCheckbox=false, bool abIsChecked=false)
+{
+	uint32 lProviderIndex = cLux_GetModHandler().GetProviderIndexFromModID(alID);
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;	// overridden below
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, afAlpha) ;
+	if (abInFocus)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+
+	cImGuiLabelData labelData;
+	labelData.mFont = buttonData.mFont;
+	labelData.mFontAlign = eFontAlign_Left;
+	labelData.mColorBase = cColor(1);
+	labelData.mbScrolling = true;
+	labelData.mfScrollSpeed = abInFocus ? 45.f : 0.f;
+	labelData.mfScrollResetDelay = 1.f;
+	labelData.mfScrollStartDelay = 1.f;
+	
+	// Hack to make labels reset scrolling when not in focus
+	if (abInFocus == false)
+		ImGui_SetStateFloat(asTitle + "$value", -labelData.mfScrollStartDelay);
+
+	bool bRet = false;
+
+	cVector3f vBtnPos = OptionMenu_GetTopLeftOffset(avPos, 1.0f);
+	const cVector2f vBtnSize = OptionMenu_GetScaledSize(cVector2f(360, labelData.mFont.mvSize.y));
+	cVector2f vLabelSize = OptionMenu_GetScaledSize(cVector2f(320, labelData.mFont.mvSize.y));
+	
+	ImGui_GroupBegin(vBtnPos, vBtnSize);
+	{
+		ImGui_LayoutBegin(eImGuiLayout_X, cVector3f_Zero, cVector2f_MinusOne, cVector2f(0));
+		{
+			float fYOffset;
+
+			if(abDoCheckbox)
+			{
+				tString sTickboxImg = abIsChecked ? "startmenu_options_tickbox_true" : "startmenu_options_tickbox_false";
+				cImGuiGfx gfxTickbox(sTickboxImg);
+				float fTickboxSize = vBtnSize.y*0.8f;
+				fYOffset = (vBtnSize.y - fTickboxSize)*0.5f;
+			
+				gfxTickbox.mColor = cColor(1, afAlpha) * gOptionMenu_ModColor;
+				if (abInFocus)
+					gfxTickbox.mColor = gfxTickbox.mColor * gHoverColor;
+
+				ImGui_DoImage(gfxTickbox, cVector3f(0, fYOffset, 0), fTickboxSize);
+				ImGui_AddLayoutHorizontalSpace(5);
+			}
+
+			// Provider img
+			const cVector2f vProvImgSize = OptionMenu_GetScaledSize(25);
+			fYOffset = (vBtnSize.y - vProvImgSize.y)*0.5f;
+			
+			cImGuiGfx gfxProviderImg;
+			
+			if(alID != -1)
+			{
+				gfxProviderImg = cImGuiGfx(avProviderIcons[lProviderIndex], eImGuiGfx_Texture);
+				gfxProviderImg.mColor = buttonData.mFont.mColor;
+			}
+			else
+			{
+				gfxProviderImg.mColor = cColor(0,0);
+			}
+			
+			ImGui_DoImage(gfxProviderImg, cVector3f(0,fYOffset, 0), vProvImgSize);
+
+			fYOffset = (vBtnSize.y - labelData.mFont.mvSize.y)*2.f;
+			ImGui_DoLabelExt(asTitle, labelData, cVector3f(2, fYOffset, 0), vLabelSize);
+			
+			//ImGui_DoLabelExt("Mod" + alID, labelData, cVector3f(0, fYOffset, 0), cVector2f_MinusOne);
+		}
+		ImGui_LayoutEnd();
+	
+		// Button
+		ImGui_LayoutBegin(eImGuiLayout_X, cVector3f_Zero, cVector2f_MinusOne, cVector2f(2));	
+		if (ImGui_DoButtonExt("Mod" + alID, "", buttonData, cVector3f_Zero, vBtnSize))
+		{
+			bRet = true;
+			Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		}
+		ImGui_LayoutEnd();
+	}
+	ImGui_GroupEnd();
+	
+	return bRet;
+}
+
+bool OptionMenu_ModDownload(uint32 alID, tString&in asTitle, cVector2f avPos, bool abInFocus, const array<tString> &in avProviderIcons, float afDownloadProgress, float afAlpha=1)
+{
+	uint32 lProviderIndex = cLux_GetModHandler().GetProviderIndexFromModID(alID);
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;	// overridden below
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	const float fAlpha = afAlpha * 0.75;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, fAlpha) ;
+	if (abInFocus)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	
+	ImGui_LayoutBegin(eImGuiLayout_X, cVector3f_Zero, cVector2f_MinusOne, cVector2f(2));
+	{
+		// Provider img
+		const cVector2f vProvImgSize = cVector2f(25);
+		const cVector2f vProvImgPos = avPos + cVector2f(0,8);
+		cImGuiGfx gfxProviderImg = cImGuiGfx(avProviderIcons[lProviderIndex], eImGuiGfx_Texture);
+		gfxProviderImg.mColor = buttonData.mFont.mColor;
+		ImGui_DoImage(gfxProviderImg, OptionMenu_GetTopLeftOffset(vProvImgPos, 1.0), OptionMenu_GetScaledSize(vProvImgSize));
+		
+		cImGuiLabelData labelData;
+		labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+		labelData.mFont.mvSize = cVector2f(28, 28);
+		labelData.mFontAlign = eFontAlign_Left;
+		labelData.mColorBase = buttonData.mFont.mColor;
+		tString sLabel = ""+ cMath_RoundToInt(100 * afDownloadProgress) +" % ";
+		ImGui_DoLabelExt(sLabel, labelData, OptionMenu_GetTopLeftOffset(vProvImgPos, 1.0), cVector2f_MinusOne, 0.8);
+				
+		// Button
+		const cVector2f vBtnSize = cVector2f(360, 38);
+		if (ImGui_DoButtonExt("Download" + alID, asTitle, buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.0), OptionMenu_GetScaledSize(vBtnSize)))
+		{
+		}
+	}
+	ImGui_LayoutEnd();
+	
+	return false;
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_ButtonModStandAlone(uint32 alID, tString&in asTitle, cVector2f avPos, bool abInFocus, const array<tString> &in avProviderIcons, float afAlpha=1, bool abIsChecked=false)
+{
+	return OptionMenu_ButtonModBase(alID, asTitle, avPos, abInFocus, avProviderIcons, afAlpha, true, abIsChecked);
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_ButtonModAddOn(uint32 alID, tString&in asTitle, cVector2f avPos, bool abInFocus, bool abIsChecked, const array<tString> &in avProviderIcons, float afAlpha=1)
+{
+	return OptionMenu_ButtonModBase(alID, asTitle, avPos, abInFocus, avProviderIcons, afAlpha, true, abIsChecked);
+}
+
+//-------------------------------------------------------
+
+int OptionMenu_ButtonKeybind(tString asName, tString asTitle, tString asBindPrimary, tString asBindSecondary, cVector2f avPos, bool abSelected, int alTypeFocus, int&out alFocusChange, bool abDuplicate, cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBox=cVector3f_Zero, float afAlpha=1)
+{
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mGfxBackground.SetFile("keybind_grid_slot");// =  = cImGuiGfx("keybind_grid_slot", eImGuiGfx_Texture);
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu * 0.8;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, afAlpha);
+	if (abSelected) buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	buttonData.mfClipAreaPaddingLeft = 12;
+	buttonData.mfClipAreaPaddingRight = 16;
+	buttonData.mfScrollSpeed = 45;
+	buttonData.mfScrollResetDelay = 1;
+	
+	buttonData.mGfxInFocus = cImGuiGfx("keybind_grid_slot_hover", eImGuiGfx_Texture);
+	buttonData.mGfxInFocus.mColor = gOptionMenu_ModColor * gHoverColor * cColor(1, afAlpha);
+	
+	cVector3f vPosNrm = OptionMenu_GetTopLeftOffset(avPos,3);
+	cVector3f vRightAnchorNrm = OptionMenu_GetTopLeftOffset(avRightAnchor);
+	
+	cVector2f vButtonSizeNrm = OptionMenu_GetScaledSize(kOptionMenu_MultiSize+cVector2f(gfOptionsMenu_ExtraWidth_Keybind, -5));
+	cVector3f vButtonLeftPosNrm = cVector3f(vRightAnchorNrm.x-vButtonSizeNrm.x-30,vPosNrm.y+5, vPosNrm.z);
+	cVector3f vButtonRightPosNrm = cVector3f(vRightAnchorNrm.x-vButtonSizeNrm.x/2-30,vPosNrm.y+5, vPosNrm.z);
+	
+	cColor mPrimaryColor = (abDuplicate) ? cColor(1, 0.0f, 0.0, afAlpha) : cColor(1, afAlpha) * gOptionMenu_ModColor;
+	cColor mSecondaryColor = cColor(1, afAlpha) * gOptionMenu_ModColor;
+	
+	//////////////
+	// Draw button
+	int lClicked = 0;
+	alFocusChange = 0;
+
+	/////////////
+	// Label
+	ImGui_SetTransCategory("Actions"); 
+
+	{
+		if(ImGui_DoButtonExt(asName,asTitle, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 3), 2.0), OptionMenu_GetScaledSize(kOptionMenu_KeybindBaseButtonSize)))
+		{
+			lClicked = 1;
+			//cLux_AddTodoMessage("Sound: Keybind file pressed");
+			//Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		}
+		if(ImGui_PrevBecameInFocus()) alFocusChange = 1; //Update focus
+	}
+	
+	buttonData.mFontAlign = eFontAlign_Center;
+	buttonData.mbClipText = true;
+	
+	buttonData.mbUseBackgroundGfx = true;
+	buttonData.mbUseInFocusGfx = true;
+
+	/////////////////
+	// Primary button
+	{
+		buttonData.mFont.mColor = mPrimaryColor;
+		ImGui_SetTransCategory("ButtonNames"); 
+		if(ImGui_DoButtonExt(asName+"Primary",asBindPrimary, buttonData, vButtonLeftPosNrm, cVector2f(vButtonSizeNrm.x/2,vButtonSizeNrm.y)))
+		{
+			lClicked = 1;
+			//cLux_AddTodoMessage("Sound: Keybind file pressed");
+			Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		}
+		if(ImGui_PrevBecameInFocus())
+			alFocusChange = 2; //Update focus
+	}
+			
+	///////////////
+	// Secondary button
+	{
+		buttonData.mFont.mColor = mSecondaryColor;
+
+		if(ImGui_DoButtonExt(asName+"Secondary",asBindSecondary, buttonData, vButtonRightPosNrm, cVector2f(vButtonSizeNrm.x/2,vButtonSizeNrm.y)))
+		{
+			lClicked = 2;
+			//cLux_AddTodoMessage("Sound: Keybind file pressed");
+			Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
+		}
+		if(ImGui_PrevBecameInFocus())
+			alFocusChange = 3; //Update focus
+	}
+	
+	ImGui_SetTransCategory("Menu");
+
+	return lClicked;
+}
+
+//-------------------------------------------------------
+
+tString GetGameModeNameByID(int alGameModeID)
+{
+	if (alGameModeID == eGameMode_VeryEasy) return "VeryEasy";
+	else if (alGameModeID == eGameMode_Easy) return "Easy";
+	else if (alGameModeID == eGameMode_Normal) return "Normal";
+	else if (alGameModeID == eGameMode_Hard) return "Hard";
+	else if (alGameModeID == eGameMode_UltraHard) return "ShellShock";
+	else if (alGameModeID == eGameMode_Custom) return "Custom";
+	return "";
+}
+
+//-------------------------------------------------------
+
+bool OptionMenu_LoadSlot(bool abDisabled, int alGameMode, bool abSelected, tString&in asName, tWString&in asMapName, tString&in asDate, cVector2f avPos, tString&in asDescription, bool abHovered, float afAlpha)
+{
+	ImGui_SetTransCategory("Menu");
+	
+	bool bClicked = false;
+	float fBrightness = 1.f;
+	bool bUsed = alGameMode != -1;
+	
+	//cLux_AddDebugMessage("asMapName " + cString_To8Char(asMapName));
+	
+	/////////////////////////////////////
+	// Label
+	cImGuiLabelData labeldata;
+	labeldata.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	labeldata.mFont.mvSize = gfFontSize_MainMenu * 0.75;
+	labeldata.mFontAlign = eFontAlign_Center;
+	//labeldata.mFont.mColor = cColor_White;
+	labeldata.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+	ImGui_DoLabelExt(asName, labeldata, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, -35), 2.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_SaveSlotTextSize.x, 30)));
+	
+	/////////////////////////////////////
+	// Date
+	if (abDisabled || bUsed==false) afAlpha *= 0.25;
+	labeldata.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+	if (bUsed && abSelected==false)
+	{
+		ImGui_SetTransCategory("");
+
+		cImGuiLabelData detailsLabeldata;
+		detailsLabeldata.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+		detailsLabeldata.mFont.mvSize = gfFontSize_MainMenu * 0.65;
+		detailsLabeldata.mFontAlign = eFontAlign_Center;
+		detailsLabeldata.mFont.mColor = cColor_White;
+		detailsLabeldata.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+		
+		ImGui_SetTransCategory("Levels");
+		ImGui_DoLabelExt(cString_To8Char(asMapName), detailsLabeldata, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 120), 2.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_SaveSlotTextSize.x, 30)));
+		ImGui_SetTransCategory("");
+		ImGui_DoLabelExt(asDate, detailsLabeldata, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 140), 2.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_SaveSlotTextSize.x, 30)));
+	}
+	
+	/////////////////////////////////////
+	// Do slot button
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = true;
+	tString sImg = bUsed ? "startmenu_saveslot_used" : "startmenu_saveslot";
+	buttonData.mGfxBackground = cImGuiGfx(sImg);
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu_Small;
+	buttonData.mFontAlign = eFontAlign_Center;	
+	buttonData.mFont.mColor = cColor(fBrightness, afAlpha);
+	buttonData.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+	buttonData.mbClipText = true;
+	buttonData.mfScrollSpeed = abHovered ? 45.f : 0.f;
+	buttonData.mfScrollResetDelay = 1.f;
+	buttonData.mfScrollStartDelay = 1.f;
+	buttonData.mfClipAreaPaddingLeft = OptionMenu_GetScaledSize(15.f).x;
+	buttonData.mfClipAreaPaddingRight = OptionMenu_GetScaledSize(15.f).x;
+	
+	if ((abSelected && abDisabled && bUsed) || (abHovered && abDisabled==false && bUsed))
+		buttonData.mColorBase = gHoverColor;
+	
+	ImGui_SetTransCategory("Menu");
+	tString sLabelText = abSelected ? "" : "Empty";
+	tWString sLabel = cString_To16Char(sLabelText);
+	if (bUsed && abSelected==false)
+		sLabel = cString_To16Char(GetGameModeNameByID(alGameMode));
+	
+	sLabel = _ImGui_GetTextString(cString_To8Char(sLabel));
+	if(cLux_GetCurrentImGui().DoButton(asName, sLabel, buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.0), OptionMenu_GetScaledSize(kOptionMenu_SaveSlotTextSize)))
+	{
+		if (abDisabled==false && bUsed)
+		{
+			bClicked = true;
+			Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+		}
+	}
+
+	//ImGui_SetTransCategory("Menu");
+	return bClicked;
+}
+
+//-------------------------------------------------------
+	
+bool OptionMenu_SaveSlot(int alGameMode, tString&in asName, tWString&in asMapName, tString&in asDate, cVector2f avPos, tString&in asDescription, bool abHovered, float afAlpha, bool abSmallFont=false)
+{
+	bool bClicked = false;
+	float fBrightness = 0.9f;
+	bool bUsed = alGameMode != -1;
+		
+	/////////////////////////////////////
+	// Label
+	cImGuiLabelData labeldata;
+	labeldata.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	labeldata.mFont.mvSize = gfFontSize_MainMenu * 0.75;
+	labeldata.mFontAlign = eFontAlign_Center;
+	labeldata.mFont.mColor = cColor_White;
+	labeldata.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+	ImGui_DoLabelExt(asName, labeldata, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, -35), 2.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_SaveSlotTextSize.x, 30)));
+	
+	/////////////////////////////////////
+	// Map & Date
+	if (bUsed)
+	{
+		cImGuiLabelData detailsLabeldata;
+		detailsLabeldata.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+		detailsLabeldata.mFont.mvSize = gfFontSize_MainMenu * 0.65;
+		detailsLabeldata.mFontAlign = eFontAlign_Center;
+		detailsLabeldata.mFont.mColor = cColor(1, 1);
+		detailsLabeldata.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+		
+		ImGui_SetTransCategory("Levels");
+		ImGui_DoLabelExt(cString_To8Char(asMapName), detailsLabeldata, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 120), 2.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_SaveSlotTextSize.x, 30)));
+		ImGui_SetTransCategory("");
+		ImGui_DoLabelExt(asDate, detailsLabeldata, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 140), 2.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_SaveSlotTextSize.x, 30)));
+	}
+	
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = true;
+	tString sImage = bUsed ? "startmenu_saveslot_used" : "startmenu_saveslot";
+	buttonData.mGfxBackground = cImGuiGfx(sImage);
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = gfFontSize_MainMenu_Small;
+	buttonData.mFontAlign = eFontAlign_Center;
+	float fFontBrightness = bUsed ? fBrightness : fBrightness * 0.75;
+	buttonData.mFont.mColor = cColor(fFontBrightness, afAlpha);
+	buttonData.mColorBase = cColor(fBrightness, afAlpha) * gOptionMenu_ModColor;
+	buttonData.mbClipText = true;
+	buttonData.mfScrollSpeed = abHovered ? 45.f : 0.f;
+	buttonData.mfScrollResetDelay = 1.f;
+	buttonData.mfScrollStartDelay = 1.f;
+	buttonData.mfClipAreaPaddingLeft = OptionMenu_GetScaledSize(15.f).x;
+	buttonData.mfClipAreaPaddingRight = OptionMenu_GetScaledSize(15.f).x;
+	
+	if (abHovered)
+		buttonData.mColorBase = gHoverColor;
+
+	/////////////////////////////////////
+	// Translate if it's not a quicksave
+	ImGui_SetTransCategory("Menu");
+	tWString sLabel = bUsed ? cString_To16Char(GetGameModeNameByID(alGameMode)) : cString_To16Char("Empty");
+	
+	sLabel = _ImGui_GetTextString(cString_To8Char(sLabel));
+	if(cLux_GetCurrentImGui().DoButton(asName, sLabel, buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.0), OptionMenu_GetScaledSize(kOptionMenu_SaveSlotTextSize)))
+	{
+		Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+		bClicked = true;
+	}
+
+	ImGui_SetTransCategory("Menu");
+	return bClicked;
+}
+
+//-------------------------------------------------------
+	
+bool OptionMenu_ButtonOptionsToggle(tString asName, cVector2f avPos, int alID, tString asSelected, bool abValue, int alUIActionHorizontal, cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, float afAlpha=1, bool abUseSmallFont=false, bool abActive=true, const tString&in asInfoBoxContent="", const tWString&in asInfoBoxSecondLine=cString_To16Char(""), bool abCustomSettings=false)
+{
+	float fAlphaMul = (abActive==false) ? 0.5f : 1.f;
+	bool bSelected = asSelected == asName;
+	
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+	buttonData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = gOptionMenu_ModColor * cColor(1, afAlpha * fAlphaMul);
+		
+	if (abCustomSettings)
+	{
+		buttonData.mbClipText = true;
+		buttonData.mfScrollSpeed = bSelected ? 45.f : 0.f;
+		buttonData.mfScrollResetDelay = 1.f;
+		buttonData.mfScrollStartDelay = 1.f;
+		buttonData.mfClipAreaPaddingRight = OptionMenu_GetScaledSize(kOptionMenu_SliderSize + cVector2f(gfOptionsMenu_ExtraWidth_Toggle, 0)).x;
+	}
+	
+	if (bSelected) buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	
+	//////////////////////////////
+	// Check if button was clicked
+	if(ImGui_DoButtonExt(asName,asName, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0),  OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y))))
+	{
+		//cLux_AddTodoMessage("Sound: Menu toggle button pressed");
+		abValue = !abValue;
+		if (abActive == false)
+			abValue = true;
+		Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+	}
+
+	/////////////
+	// Check for gamepad input
+	if(bSelected && ((alUIActionHorizontal == 1 && abValue == false) || (alUIActionHorizontal ==-1 && abValue == true)))
+	{
+		//cLux_AddTodoMessage("Sound: Menu toggle button pressed");
+		abValue = !abValue;
+		if (abActive == false)
+			abValue = true;
+		Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+	}
+			
+	/////////////////
+	// Draw checkbox
+	bool bCheckboxValue = abActive ? abValue : false;
+	OptionMenu_OptionsCheckbox(avPos+ cVector2f(OptionMenu_GetExtraWidth()-gfOptionsMenu_ExtraWidth_Toggle, kOptionMenu_ButtonSpacing * alID), asSelected == asName, bCheckboxValue, "Off", "On", asName, avRightAnchor, avInfoBoxPos, afAlpha, asInfoBoxContent, asInfoBoxSecondLine, abActive);
+
+	return abValue;
+}
+
+//-------------------------------------------------------
+	
+int OptionMenu_ButtonOptionsMultiSelect(tString asName, cVector2f avPos, int alID, tString asSelected, array<tString> avValues, int alValue, bool abInvert, int alUIActionHorizontal, tString asCategory="Menu", int afExtraSpacingFromLabel=0, cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, float afAlpha=1, bool abSkipAccept=false, bool abUseSmallFont=false, bool abActive=true, const tString&in asInfoBoxContent="", const tWString&in asInfoBoxSecondLine=cString_To16Char(""), bool abCustomSettings=false, bool abUseInputIcons=false)
+{
+	if (abActive==false) afAlpha*=0.5f;
+	bool bSelected = asSelected == asName;
+	
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor =  cColor(1.0, afAlpha) * gOptionMenu_ModColor;
+	
+	if (abCustomSettings)
+	{
+		buttonData.mbClipText = true;
+		buttonData.mfScrollSpeed = bSelected ? 45.f : 0.f;
+		buttonData.mfScrollResetDelay = 1.f;
+		buttonData.mfScrollStartDelay = 1.f;
+		buttonData.mfClipAreaPaddingRight = OptionMenu_GetScaledSize(kOptionMenu_MultiSize + cVector2f(gfOptionsMenu_ExtraWidth_MultiSelect, 0)).x;
+	}
+	
+	if (bSelected)
+		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
+	
+	if (abActive==false)
+	{
+		ImGui_DoButtonExt(asName, asName, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0), OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y)));
+		return alValue;
+	}
+	
+	int lDirection = 0;
+	if (ImGui_DoButtonExt(asName, asName, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0), OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y))))
+	{
+		/////////////////////////////////////////////
+		// Select based on which side the mouse was
+		//if(ImGui_GetMouseVisible()) 
+		if(cLux_GetInputHandler().GetLastDeviceUsed()==eInputDeviceType_Mouse)
+		{
+			if (mlCurrentDir == 0) 
+				lDirection++;
+			else 
+			{
+				lDirection += mlCurrentDir;
+				mlCurrentDir = 0;
+			}
+		}
+		else if(abSkipAccept == false)
+		{
+			lDirection++;
+		}
+
+		Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+	}
+
+	////////////
+	// Check gamepad input
+	int lHorizontalAction = ImGui_GetStateInt(asName + "_HorizontalAction");
+	if (bSelected && alUIActionHorizontal != 0)
+	{
+		lDirection += alUIActionHorizontal;
+		lHorizontalAction = alUIActionHorizontal;
+		
+		Sound_PlayGui("special_fx/frontend/frontend_menu_slider", 1.0f, eSoundEntryType_Gui);
+	}
+	else if (bSelected == false)
+	{
+		lHorizontalAction = 0;
+	}	
+	
+	ImGui_SetStateInt(asName + "_HorizontalAction", + lHorizontalAction);
+
+	/////////////
+	// Wrap data
+	if(lDirection != 0)
+	{
+		if(abInvert) alValue -= lDirection;
+		else		 alValue += lDirection;
+
+		alValue = (alValue + avValues.size()) % avValues.size();
+	}
+
+	OptionMenu_OptionsMultiSelect(avPos+ cVector2f(OptionMenu_GetExtraWidth()-gfOptionsMenu_ExtraWidth_MultiSelect, kOptionMenu_ButtonSpacing * alID)+cVector2f(afExtraSpacingFromLabel,0), avValues, alValue, asSelected == asName, asCategory, asName, avRightAnchor, avInfoBoxPos, afAlpha, abUseSmallFont, abActive, asInfoBoxContent, asInfoBoxSecondLine, abCustomSettings, abUseInputIcons);
+	
+	return alValue;
+}
+
+//-------------------------------------------------------
+
+int OptionMenu_ButtonOptionsMultiSelectSlider(tString asName, cVector2f avPos, int alID, tString asSelected,  array<tString> avValues, int alValue, int alUIActionHorizontal, tString asTextValue="", tString asTextValueTransCat="", cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, float afAlpha=1, bool abUseSmallFont=false, bool abActive=true, const tString&in asInfoBoxContent="", const tWString&in asInfoBoxSecondLine=cString_To16Char(""), bool abCustomSettings=false)
+{
+	if (avValues.size() == 0) return 0;
+	if (abActive==false) afAlpha *= 0.5f;
+	
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = cColor(1, afAlpha) * gOptionMenu_ModColor;
+	if (asSelected == asName)
+		buttonData.mFont.mColor = gHoverColor * buttonData.mFont.mColor;
+		
+	if (abCustomSettings)
+	{
+		buttonData.mbClipText = true;
+		buttonData.mfScrollSpeed = asSelected == asName ? 45.f : 0.f;
+		buttonData.mfScrollResetDelay = 1.f;
+		buttonData.mfScrollStartDelay = 1.f;
+		buttonData.mfClipAreaPaddingRight = OptionMenu_GetScaledSize(kOptionMenu_SliderSize + cVector2f(gfOptionsMenu_ExtraWidth_MultiSelect, 0)).x;
+	}
+	
+	cVector2f vRealPos = avPos;
+	vRealPos.x += OptionMenu_GetExtraWidth();
+	
+	int lMaxNum = avValues.size()-1;
+	float fValue = float(alValue) / float(lMaxNum);
+	float fStepSize = (lMaxNum > 0.f) ? float(1.f / lMaxNum) : 0.f;
+	
+	fValue = OptionMenu_OptionsSlider(avPos, vRealPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), fValue, alID, fStepSize, alUIActionHorizontal, buttonData, asTextValue, asSelected == asName, asTextValueTransCat, asName, avRightAnchor, avInfoBoxPos, true, afAlpha, abUseSmallFont, abActive, abCustomSettings, asInfoBoxContent, asInfoBoxSecondLine);
+	int lMappedValue = cMath_RoundToInt(fValue * lMaxNum);
+	
+	return lMappedValue;
+}
+
+//-------------------------------------------------------
+
+float OptionMenu_ButtonOptionsSlider(tString asName, cVector2f avPos, int alID, tString asSelected, float afValue, float afStepSize, int alUIActionHorizontal, tString asTextValue="", tString asTextValueTransCat="", cVector2f avRightAnchor=cVector2f_Zero, cVector3f avInfoBoxPos=cVector3f_Zero, float afAlpha=1, bool abUseSmallFont=false, bool abActive=true, bool abCustomSettings=false, bool abSnap = false)
+{
+	if (abActive==false) afAlpha *= 0.5f;
+	
+	/////////////////////////////////////
+	//Button setup
+	cImGuiButtonData buttonData = ImGui_GetDefaultButton();
+	buttonData.mbUseBackgroundGfx = false;
+	buttonData.mbUseInFocusGfx = false;
+	buttonData.mbUseTriggeredGfx = false;
+	buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,72));
+	buttonData.mFont.mvSize = abUseSmallFont ? gfFontSize_MainMenu_Small : gfFontSize_MainMenu;
+	buttonData.mFontAlign = eFontAlign_Left;
+	buttonData.mFont.mColor = cColor(1, afAlpha) * gOptionMenu_ModColor;
+	if (asSelected == asName) buttonData.mFont.mColor = gHoverColor * buttonData.mFont.mColor;
+	
+	cVector2f vRealPos = avPos;
+	vRealPos.x += OptionMenu_GetExtraWidth();
+	
+	///////////////
+	// Repeat or normal button?
+	//cVector2f vSliderMin = kOptionMenu_SliderMin;
+	//cVector2f vSliderMax = kOptionMenu_SliderMax;
+	
+	float fValue = OptionMenu_OptionsSlider(avPos, vRealPos+ cVector2f(0, kOptionMenu_ButtonSpacing * alID), afValue, alID, afStepSize, alUIActionHorizontal, buttonData, asTextValue, asSelected == asName, asTextValueTransCat, asName, avRightAnchor, avInfoBoxPos, abSnap, afAlpha, abUseSmallFont, abActive, abCustomSettings);
+
+	return fValue;
+}
+
+//-------------------------------------------------------
+
+void OptionMenu_ShowGamepadButtons(bool abShowArrows, bool abShowCancel = true, cVector2f avOffset = cVector2f(0), bool abShowAccept=true)
+{
+	if(cLux_GetInputHandler().IsGamepadConnected() == false) return;
+	if(cLux_GetInputHandler().GetGamepadWasLastDeviceUsed() == false) return;
+
+	////////////
+	// Buttons
+	eGamepadProfile connectedGamepadProfile = Input_GetCurrentGamepadProfile();
+	tString sButtonAccept, sButtonBack;
+	cColor colButtonAccept, colButtonBack;
+
+	if(connectedGamepadProfile == eGamepadProfile_PS4)
+	{
+		sButtonAccept = "startmenu_button_x";
+		colButtonAccept = cColor(0.42,0.54,0.78,1);
+	
+		sButtonBack = "startmenu_button_circle";
+		colButtonBack = cColor(1,0.4,0.4,1);
+	}
+	else 
+	{
+		sButtonAccept = "startmenu_button_xbox_A";
+		colButtonAccept = cColor(0,0.8,0.4,1);
+	
+		sButtonBack = "startmenu_button_xbox_B";
+		colButtonBack = cColor(1,0.4,0.4,1);
+	}
+	
+	tString sButtonA = Platform_IsPlayStation() ? "startmenu_button_x" : "startmenu_button_xbox_A";
+	tString sButtonB = Platform_IsPlayStation() ? "startmenu_button_circle" : "startmenu_button_xbox_B";
+	
+	cColor colButtonA = Platform_IsPlayStation() ? cColor(0.42,0.54,0.78,1) : cColor(0,0.8,0.4,1);
+	cColor colButtonB = Platform_IsPlayStation() ? cColor(1,0.4,0.4,1) : cColor(1,0.4,0.4,1);
+
+	//cImGuiGfx gfxConfirm(sButtonA);
+	//cImGuiGfx gfxCancel(sButtonB);
+	cImGuiGfx gfxConfirm(sButtonAccept);
+	cImGuiGfx gfxCancel(sButtonBack);
+	cImGuiGfx gfxArrows("startmenu_button_direction2");
+
+	/////////////
+	// Text
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_GamepadPrompt, 56));
+	labelData.mFont.mvSize = gfFontSize_GamepadPrompts;
+	labelData.mFont.mColor = cColor(1,1);
+	
+	float fX = 50;
+	float fXOffset = 0;
+	float fY = 63;
+	
+	if (abShowAccept)
+	{
+		ImGui_DoLabelExt("Accept",labelData, OptionMenu_GetBotLeftOffset(cVector2f(fX+fXOffset, fY) + avOffset, 10.0));
+		fXOffset += GetFontLengthW(labelData.mFont, 1, ImGui_TranslatePlatformSpecific("Accept"));
+		ImGui_DrawGfx(gfxConfirm, OptionMenu_GetBotLeftOffset(cVector2f(fX-8+fXOffset, 70) + avOffset, 10.5), OptionMenu_GetScaledSize(36), colButtonAccept);
+		fXOffset += 37;
+	}
+
+	if(abShowCancel)
+	{
+		ImGui_DoLabelExt("Cancel",labelData, OptionMenu_GetBotLeftOffset(cVector2f(fX+fXOffset, fY) + avOffset, 10.0));
+		fXOffset += GetFontLengthW(labelData.mFont, 1, ImGui_TranslatePlatformSpecific("Cancel"));
+		ImGui_DrawGfx(gfxCancel, OptionMenu_GetBotLeftOffset(cVector2f(fX-8+fXOffset, 70) + avOffset, 10.5), OptionMenu_GetScaledSize(36), colButtonBack);
+		fXOffset += 37;
+	}
+
+	if(abShowArrows)
+	{
+		ImGui_DoLabelExt("Select",labelData, OptionMenu_GetBotLeftOffset(cVector2f(fX+fXOffset, fY) + avOffset, 10.0));
+		fXOffset += GetFontLengthW(labelData.mFont, 1, ImGui_TranslatePlatformSpecific("Select"));
+		ImGui_DrawGfx(gfxArrows, OptionMenu_GetBotLeftOffset(cVector2f(fX-18+fXOffset, 85) + avOffset, 10.5), OptionMenu_GetScaledSize(72), cColor(1,1));
+	}
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_SectionTitle(tString asTitle, cVector2f avPos)
+{
+	/////////////
+	// Text
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,92));
+	labelData.mFont.mvSize = cVector2f(84, 84);
+	labelData.mFont.mColor = cColor(1,1);
+	labelData.mFontAlign = eFontAlign_Right;
+
+	ImGui_DoLabelExt(asTitle,labelData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, -8), 1.0), OptionMenu_GetScaledSize(cVector2f(190, 72)));
+
+	////////////
+	// Borders
+	cImGuiGfx border;
+
+	float fSize = GetFontLengthW(labelData.mFont, 1.0f, _ImGui_GetTextString(asTitle)) + 18;
+	
+	ImGui_DrawGfx(border, OptionMenu_GetTopLeftOffset(avPos + cVector2f(193, -13), 10.5), cVector2f(10, 90), cColor(1,1));
+	ImGui_DrawGfx(border, OptionMenu_GetTopLeftOffset(avPos + cVector2f(193, -13), 10.5) - cVector3f(fSize, 0, 0), cVector2f(fSize, 10), cColor(1,1));
+	ImGui_DrawGfx(border, OptionMenu_GetTopLeftOffset(avPos + cVector2f(193, -13), 10.5) - cVector3f(fSize,-80, 0), cVector2f(fSize, 10), cColor(1,1));
+	ImGui_DrawGfx(border, OptionMenu_GetTopLeftOffset(avPos + cVector2f(193, -13), 10.5) - cVector3f(fSize,0, 0), cVector2f(10, 90), cColor(1,1));
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_SectionTitle(tString asTitle, cVector2f avPos, cVector2f avSize, float afAlpha)
+{
+	/////////////
+	// Text
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	labelData.mFont.mvSize = gfFontSize_MainMenu_Title;
+	labelData.mFont.mColor = cColor(1,1,1,afAlpha) * gOptionMenu_ModColor;
+	labelData.mFontAlign = eFontAlign_Right;
+	
+	cVector2f vSize = OptionMenu_GetScaledSize(avSize);
+	cVector3f vPos = OptionMenu_GetTopLeftOffset(avPos, 1);
+	vPos.y += vSize.y+5;
+		
+	ImGui_DoLabelExt(asTitle,labelData, vPos, cVector2f(vSize.x-54, -1));
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_SectionTitle(const tWString &in asTitle, const cVector2f &in avPos, const cVector2f &in avSize, float afAlpha)
+{
+	/////////////
+	// Text
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu,56));
+	labelData.mFont.mvSize = gfFontSize_MainMenu_Title;
+	labelData.mFont.mColor = cColor(1,1,1,afAlpha) * gOptionMenu_ModColor;
+	labelData.mFontAlign = eFontAlign_Right;
+	
+	cVector2f vSize = OptionMenu_GetScaledSize(avSize);
+	cVector3f vPos = OptionMenu_GetTopLeftOffset(avPos, 1);
+	vPos.y += vSize.y+5;
+		
+	ImGui_DoLabelExtW(asTitle,labelData, vPos, cVector2f(vSize.x-54, -1));
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_SectionTitleIcon(const tString &in asIcon, const cVector2f &in avPos)
+{
+	cVector3f vTitlePos(avPos.x, avPos.y, 21);
+	
+	cImGuiGfx gfxTitleIcon(asIcon, eImGuiGfx_Texture);
+	ImGui_DrawAlignedGfx(gfxTitleIcon, vTitlePos, eImGuiAlign_TopRight, OptionMenu_GetScaledSize(GetUsedGfxSize(gfxTitleIcon,-1))*0.6f, cColor(1.0, 1.0));
+}
+
+//------------------------------------------------------- 
+
+void OptionMenu_ShowCurrentUser(bool abShowPicker)
+{
+	///////////////////////////////////
+	// Users handler will always return empty string on non-GDK platforms
+	tWString sAccountName = cLux_GetUsersHandler().GetCurrentUser();
+	if (sAccountName.length() == 0)
+		return;
+	
+	tString sPrevCategory = ImGui_GetTransCategory();
+	ImGui_SetTransCategory("");
+
+	/////////////////
+	// Account picker on Xbox
+	cImGuiGfx gfxAccount("but_x");
+	cVector2f vButtonXSize = OptionMenu_GetScaledSize(36);
+
+	cVector2f vOffset = cVector2f(-(vButtonXSize.x + 10), 10);
+	
+	if(abShowPicker)
+		ImGui_DrawGfx(gfxAccount, OptionMenu_GetTopRightOffset(vOffset, -20), vButtonXSize, cColor(0.04,0.57,0.78,1));
+
+	cImGuiLabelData labelData;
+	labelData.mFont.SetFile(FontHandler_GetFont(eFontType_AccountName, 28));
+	labelData.mFont.mvSize =  28;
+	labelData.mFont.mColor = cColor(1,1);
+	labelData.mFontAlign = eFontAlign_Right;
+
+	float fXOffset = -GetFontLengthW(labelData.mFont, 1, sAccountName) + 10;
+
+	vOffset += cVector2f(-5, vButtonXSize.y/2);
+
+	ImGui_DoLabelExtW(sAccountName, labelData, OptionMenu_GetTopRightOffset(vOffset, -20), 1);
+
+	ImGui_SetTransCategory(sPrevCategory);
+}
