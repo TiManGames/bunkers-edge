@@ -52,7 +52,7 @@ enum ePreMenuPhase
 	ePreMenuPhase_Init,
 	ePreMenuPhase_None,
 	ePreMenuPhase_FrictionalLogo,
-	ePreMenuPhase_FmodLogo,
+	//ePreMenuPhase_FmodLogo,
 	ePreMenuPhase_PressToContinue,
 	ePreMenuPhase_Gamma,
 	ePreMenuPhase_FinalFade,
@@ -2128,7 +2128,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		cImGuiGfx gfxBkg("startmenu_bg", eImGuiGfx_Texture);
 		cVector2f vSize = cVector2f(afWidth+75, 1000);
 		cColor bgColor = cColor(0.0, afAlphaMul * fAlphaNrm) * gOptionMenu_ModColor;
-		ImGui_DrawGfx(gfxBkg, OptionMenu_GetTopLeftOffset(cVector2f(-75,-200), -22), OptionMenu_GetScaledSize(vSize), bgColor);
+		//ImGui_DrawGfx(gfxBkg, OptionMenu_GetTopLeftOffset(cVector2f(-75,-200), -22), OptionMenu_GetScaledSize(vSize), bgColor);
 
 		///////////////
 		// Vignette
@@ -2139,13 +2139,13 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		cVector2f vSizeVignette = vScaledSize + vOuterOffset;
 		cImGuiGfx gfxBkgVignette("startmenu_vignette.dds", eImGuiGfx_Texture);
 		gfxBkgVignette.mColor = cColor(0, afVignetteAlphaMul * fAlphaNrm);
-		ImGui_DrawAlignedGfx(gfxBkgVignette, cVector3f(vBgCenter.x,vBgCenter.y,-10), eImGuiAlign_CenterCenter, vSizeVignette);
+		//ImGui_DrawAlignedGfx(gfxBkgVignette, cVector3f(vBgCenter.x,vBgCenter.y,-10), eImGuiAlign_CenterCenter, vSizeVignette);
 		cVector3f vLeftVignetteBorder = cVector3f(vBgCenter.x - vSizeVignette.x*0.5f, vBgCenter.y-vSizeVignette.y*0.5f, -30);
 		cVector3f vRightVignetteBorder = cVector3f(vBgCenter.x + vSizeVignette.x*0.5f, vBgCenter.y-vSizeVignette.y*0.5f, -30);
 		cVector2f vRightVignetteFillerSize = OptionMenu_GetScaledSize(cVector2f(2100-vRightVignetteBorder.x,vScaledSize.y));
 		//cVector2f vRealRightVignetteBorder = OptionMenu_GetOffsetPosHelper(cVector2f(vRightVignetteBorder.x, vRightVignetteBorder.y));
-		ImGui_DrawAlignedGfx(cImGuiGfx(), vLeftVignetteBorder, eImGuiAlign_TopRight, vRightVignetteFillerSize, gfxBkgVignette.mColor);		
-		ImGui_DrawAlignedGfx(cImGuiGfx(), vRightVignetteBorder, eImGuiAlign_TopLeft, vRightVignetteFillerSize, gfxBkgVignette.mColor);		
+		//ImGui_DrawAlignedGfx(cImGuiGfx(), vLeftVignetteBorder, eImGuiAlign_TopRight, vRightVignetteFillerSize, gfxBkgVignette.mColor);		
+		//ImGui_DrawAlignedGfx(cImGuiGfx(), vRightVignetteBorder, eImGuiAlign_TopLeft, vRightVignetteFillerSize, gfxBkgVignette.mColor);		
 	}
 	
 	//-------------------------------------------------------
@@ -4675,7 +4675,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			
 			/////////////////
 			// Lock Code Quick Access
-			if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
+			/* if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
 			{
 				bool bValue = mpConfig.GetBool("Gameplay", "LockCodeQuickAccess", false);
 				bool bNewValue = OptionMenu_ButtonOptionsToggle(vMenuItems[mlCurrentItemId-mlFirstItemId], vWidgetPos, mlCurrentItemId, msSelectedGameplayButton, bValue, mlActionHorizontal, vRightAnchor, vInfoBoxPos, mfTransitionAlpha);
@@ -4685,7 +4685,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 				}
 				msSelectedGameplayButton = OptionMenu_UpdateFocusCustom(vMenuItems,vMenuItems[mlCurrentItemId], msSelectedGameplayButton);
 			}
-			mlCurrentItemId++;
+			mlCurrentItemId++; */
 		}
 		
 		if (bStartingNewGame)
@@ -9306,7 +9306,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 	{
 		GuiPauseDarkOverlay();
 		
-		array<tString> vMenuItems = {"HearingAid", "SubtitleDirectionalIndicators", "ReduceCameraMotion", "ScreenDisortion", "AccessibilityGameplay", "AccessibilityInput"};
+		array<tString> vMenuItems = {"HearingAid", "SubtitleDirectionalIndicators", "ReduceCameraMotion", "ScreenDisortion", "AccessibilityInput"};
 		if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed()==false)
 			vMenuItems.push_back("Back");
 		
@@ -9391,7 +9391,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		
 		/////////////////
 		// Gameplay
-		if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
+		/* if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
 		{
 			if(OptionMenu_ButtonOptions(vMenuItems[mlCurrentItemId-mlFirstItemId], kOptionsAccessibilityButtonPos, mlCurrentItemId, msSelectedAccessibilityButton, true, vRightAnchor, vInfoBoxPos, mfTransitionAlpha))
 			{
@@ -9404,7 +9404,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			}
 			msSelectedAccessibilityButton = OptionMenu_UpdateFocusCustom(vMenuItems, vMenuItems[mlCurrentItemId], msSelectedAccessibilityButton);
 		}
-		mlCurrentItemId++;
+		mlCurrentItemId++; */
 		
 		/////////////////
 		// Input
@@ -11381,8 +11381,6 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			// Fade in
 			if (mPreMenuPhase == ePreMenuPhase_FrictionalLogo)
 				fMul = 0.45;
-			else if (mPreMenuPhase == ePreMenuPhase_FmodLogo)
-				fMul = 0.5f;
 			else
 				fMul = 1.0f;
 		}
@@ -11391,10 +11389,19 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			// Fade out
 			if (mPreMenuPhase == ePreMenuPhase_FrictionalLogo)
 				fMul = 0.6;
-			else if (mPreMenuPhase == ePreMenuPhase_FmodLogo)
-				fMul = 0.7f;
 			else
 				fMul = 0.6f;
+		}
+
+		// Skip logo on keypress
+		tString sKeyPressed = cLux_GetInputHandler().GetLatestKeyPressed();
+		if(mPreMenuPhase==ePreMenuPhase_FrictionalLogo)
+		{
+			if(sKeyPressed.length() > 0) 
+			{
+				mfPreMenuFadeDest = mfPreMenuFadeDestMin;
+				Sound_StopGui("special_fx/frontend/FG_Menu_Sting", 2.0f, false);
+			}
 		}
 
 		mfPreMenuFadeAmount	= cMath_IncreaseTo(mfPreMenuFadeAmount, afTimeStep*fMul, mfPreMenuFadeDest);
@@ -11444,26 +11451,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 				cLux_AddDebugMessage("[PRE-MENU] LOGO");
 				ImGui_AddTimer("FGLogoOver", 3.2f);
 				mbMouseVisible = true;
-				Sound_PlayGui("special_fx/frontend/FG_Menu_Sting", 1.0f, eSoundEntryType_Gui);
-				/*
-				if(mbShowPressX)
-				{
-					cLux_AddTodoMessage("Sound: Menu background noise");
-					//Sound_CreateAtEntity("MenuBGNoise", "special_fx/frontend/main_menu_bg", "Player", 6.0f, false, 1.0f);
-				}
-				else
-				{
-					//mPreMenuPhase++;
-					//mlPreMenuState++;
-				}
-				*/
-			}
-			
-			if(mPreMenuPhase==ePreMenuPhase_FmodLogo)
-			{
-				cLux_AddDebugMessage("[PRE-MENU] FMOD LOGO");
-				ImGui_AddTimer("FModLogoOver", 2.5f);
-				mbMouseVisible = true;
+				//Sound_PlayGui("special_fx/frontend/FG_Menu_Sting", 1.0f, eSoundEntryType_Gui);
 			}
 		
 			if(mPreMenuPhase==ePreMenuPhase_Welcome) // WELCOME
@@ -11558,57 +11546,13 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		{			
 			cImGuiGfx gfxBlack;
 			ImGui_DrawGfx(gfxBlack, ImGui_FullScreenPos(0.1), ImGui_FullScreenSize(), cColor(0,1));
-			//cImGuiGfx gfx("frictional_games_logo.dds", eImGuiGfx_Texture);
-			//cVector2f vBgSize = OptionMenu_GetScaledSize(cVector2f(900, 351));
 			cImGuiGfx gfxFG("frictional_games_logo_color.png", eImGuiGfx_Texture);
-			cVector2f vBgSize = OptionMenu_GetScaledSize(cVector2f(1000, 343)*0.6f);
+			//cVector2f vBgSize = OptionMenu_GetScaledSize(cVector2f(1000, 343)*0.6f);
+			cVector2f vBgSize = ImGui_GetRatioCorrectSizeByNrmHeight(gfxFG, 0.5);
 			cVector3f vBgPos = OptionMenu_GetCenterOffset(cVector2f(0), 10.2) - cVector3f(vBgSize.x * 0.5, vBgSize.y * 0.5, 0.0);
 			ImGui_DrawGfx(gfxFG, vBgPos, vBgSize, cColor(1, mfPreMenuFadeAmount));
 			
-			/*cImGuiGfx gfxNewton("newton_logo.png", eImGuiGfx_Texture);
-			cImGuiGfx gfxFMod("fmod_logo.png", eImGuiGfx_Texture);
-			cImGuiGfx gfxAnnosoft("annosoft_logo.png", eImGuiGfx_Texture);
-			cVector2f vLicenseLogoSize = OptionMenu_GetScaledSize(cVector2f(728, 192)*0.3f);
-			cVector3f vLicenseLogoPos = OptionMenu_GetCenterOffset(cVector2f(0), 10.2) - cVector3f(vLicenseLogoSize.x * 0.5, vLicenseLogoSize.y * 0.5, 0.0);
-			
-			cLux_AddDebugMessage("CENTER: "+vLicenseLogoPos);
-			
-			ImGui_DrawGfx(gfxNewton, vLicenseLogoPos+cVector3f(-vLicenseLogoPos.x * 0.70f, vLicenseLogoPos.y*0.6f, 0), vLicenseLogoSize, cColor(1, mfPreMenuFadeAmount));
-			ImGui_DrawGfx(gfxFMod, vLicenseLogoPos+cVector3f(0, vLicenseLogoPos.y*0.6f, 0), vLicenseLogoSize, cColor(1, mfPreMenuFadeAmount));
-			ImGui_DrawGfx(gfxAnnosoft, vLicenseLogoPos+cVector3f(vLicenseLogoPos.x * 0.70f, vLicenseLogoPos.y*0.6f, 0), vLicenseLogoSize, cColor(1, mfPreMenuFadeAmount));*/
-			
-			//loadscreen_mask
-			
 			if(ImGui_TimerOver("FGLogoOver"))
-			{
-				mfPreMenuFadeDest = mfPreMenuFadeDestMin;
-			}
-		}
-		///////////////////////
-		// Fmod Logo
-		if(mPreMenuPhase==ePreMenuPhase_FmodLogo)
-		{			
-			cImGuiGfx gfxBlack;
-			ImGui_DrawGfx(gfxBlack, ImGui_FullScreenPos(0.1), ImGui_FullScreenSize(), cColor(0,1));
-			
-			/*cVector3f vBgCenter = cVector3f(kScreenCenter.x,kScreenCenter.y,0);
-			cImGuiGfx gfx("fmod_logo.png", eImGuiGfx_Texture);
-			cVector2f vBgSize = OptionMenu_GetScaledSize(cVector2f(728, 192) * 0.3f);
-			cVector3f vBgPos = OptionMenu_GetCenterOffset(cVector2f(0), 10.2) - cVector3f(vBgSize.x * 0.5, vBgSize.y * 0.5, 0.0);
-			ImGui_DrawGfx(gfx, vBgPos, vBgSize, cColor(1, mfPreMenuFadeAmount));*/
-			//ImGui_DrawAlignedGfx(gfx, cVector3f(vBgCenter.x,vBgCenter.y,9990), eImGuiAlign_CenterCenter, cVector2f(300,300));
-			
-			cImGuiGfx gfxNewton("newton_logo.png", eImGuiGfx_Texture);
-			cImGuiGfx gfxFMod("fmod_logo.png", eImGuiGfx_Texture);
-			cImGuiGfx gfxAnnosoft("annosoft_logo.png", eImGuiGfx_Texture);
-			cVector2f vLicenseLogoSize = OptionMenu_GetScaledSize(cVector2f(728, 192)*0.3f);
-			cVector3f vLicenseLogoPos = OptionMenu_GetCenterOffset(cVector2f(0), 10.2) - cVector3f(vLicenseLogoSize.x * 0.5, vLicenseLogoSize.y * 0.5, 0.0);
-			
-			ImGui_DrawGfx(gfxNewton, vLicenseLogoPos+cVector3f(-vLicenseLogoPos.x * 0.70f, 0, 0), vLicenseLogoSize, cColor(1, mfPreMenuFadeAmount));
-			ImGui_DrawGfx(gfxFMod, vLicenseLogoPos+cVector3f(0, 0, 0), vLicenseLogoSize, cColor(1, mfPreMenuFadeAmount));
-			ImGui_DrawGfx(gfxAnnosoft, vLicenseLogoPos+cVector3f(vLicenseLogoPos.x * 0.70f, 0, 0), vLicenseLogoSize, cColor(1, mfPreMenuFadeAmount));
-			
-			if(ImGui_TimerOver("FModLogoOver"))
 			{
 				mfPreMenuFadeDest = mfPreMenuFadeDestMin;
 			}
