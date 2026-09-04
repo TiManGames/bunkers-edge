@@ -114,8 +114,8 @@ enum eGraphicSettings
 const cVector2f kScreenCenter = cVector2f(512, 384); // Virtual size: 1024x768
 
 const cVector2f kMainMenuButtonPos = cVector2f(180, 320);
-const cVector2f kTitlePos = cVector2f(40, 65);
-const cVector2f kTitleSize = cVector2f(380, 207);
+const cVector2f kTitlePos = cVector2f(120, 145);
+const cVector2f kTitleSize = cVector2f(434, 145);
 
 //-----------------------------------------
 
@@ -1726,7 +1726,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			//Title
 			if(mfBackgroundTitleAlpha>0)
 			{
-				cImGuiGfx gfxMainTitle("startmenu_title_1k.dds", eImGuiGfx_Texture);
+				cImGuiGfx gfxMainTitle("startmenu_title.png", eImGuiGfx_Texture);
 				cColor colorMul1(1, mfBackgroundTitleAlpha);
 				cColor titleCol1 = ImGui_GetStateColor("TitleColor", cColor(1.0, 1.0));	
 				ImGui_DrawGfx(gfxMainTitle, OptionMenu_GetTopLeftOffset(kTitlePos, -20), OptionMenu_GetScaledSize(kTitleSize), titleCol1*colorMul1);
@@ -9596,7 +9596,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 	{
 		GuiPauseDarkOverlay();
 		
-		array<tString> vMenuItems = {"PhysicsInteractionMode", "SprintMode", "UseItemMode", "ReloadWeaponMode", "ChargeFlashlightMode", "CheckHealthMode", "LeanMode"};
+		array<tString> vMenuItems = {"PhysicsInteractionMode", "SprintMode", "UseItemMode", "ReloadWeaponMode", "LeanMode"};
 		array<tString> vOptions = {"Hold", "Toggle"};
 		array<tString> vRunOptions = {"Hold", "SemiToggle", "Toggle"};
 		if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed()==false)
@@ -9684,7 +9684,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		
 		/////////////////
 		// Flashlight Mode
-		if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
+		/* if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
 		{
 			int lValue = mpConfig.GetInt("Accessibility", "ChargeFlashlightMode", 0);
 			int lNewValue = OptionMenu_ButtonOptionsMultiSelect(vMenuItems[mlCurrentItemId-mlFirstItemId], kOptionsAccessibilityButtonPos, mlCurrentItemId, msSelectedAccessibilityInputButton, vOptions, lValue, false, mlActionHorizontal, "menu", 0, vRightAnchor, vInfoBoxPos, mfTransitionAlpha, false, false, true, "", cString_To16Char(""), true, true);
@@ -9694,11 +9694,11 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			}
 			msSelectedAccessibilityInputButton = OptionMenu_UpdateFocusCustom(vMenuItems,vMenuItems[mlCurrentItemId], msSelectedAccessibilityInputButton);
 		}
-		mlCurrentItemId++;
+		mlCurrentItemId++; */
 		
 		/////////////////
 		// Check health Mode
-		if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
+		/* if (OptionMenu_CheckOutOfLimits(mlCurrentItemId) == false)
 		{
 			int lValue = mpConfig.GetInt("Accessibility", "CheckHealthMode", 0);
 			int lNewValue = OptionMenu_ButtonOptionsMultiSelect(vMenuItems[mlCurrentItemId-mlFirstItemId], kOptionsAccessibilityButtonPos, mlCurrentItemId, msSelectedAccessibilityInputButton, vOptions, lValue, false, mlActionHorizontal, "menu", 0, vRightAnchor, vInfoBoxPos, mfTransitionAlpha, false, false, true, "", cString_To16Char(""), true, true);
@@ -9708,7 +9708,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			}
 			msSelectedAccessibilityInputButton = OptionMenu_UpdateFocusCustom(vMenuItems,vMenuItems[mlCurrentItemId], msSelectedAccessibilityInputButton);
 		}
-		mlCurrentItemId++;
+		mlCurrentItemId++; */
 		
 		/////////////////
 		// Lean Mode
