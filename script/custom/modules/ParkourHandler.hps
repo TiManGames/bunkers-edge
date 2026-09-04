@@ -208,6 +208,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfLedgeRequiredFacingDot = 0.35f;
 		mfLedgeMinFallSpeed = 0.5f;
 		mfLedgeMaxPlayerFeetY = 999999.f;
+		mfFrontWallDot = gfParkour_FrontWallDot;
+		mbSpeedVaultEnabled = true;
 		ClearPoleClimbCandidate();
 		ClearPoleSwingCandidate();
 		ClearZiplineCandidate();
@@ -1119,7 +1121,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		cVector3f vTravelFwd = GetTravelForward2D(apBody);
 		if (vTravelFwd.SqrLength() <= 0.001f) return false;
 
-		return cMath_Vector3Dot(avWallNormal, vTravelFwd) <= gfParkour_FrontWallDot;
+		return cMath_Vector3Dot(avWallNormal, vTravelFwd) <= mfFrontWallDot;
 	}
 
 	//------------------------------------------------------------
@@ -1704,6 +1706,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	bool TryStartSpeedVault(float afTimeStep = 0.f)
 	{
+		if (mbSpeedVaultEnabled == false)
+		{
+			DebugSpeedVaultFail("speed vault disabled");
+			return false;
+		}
+
 		if (PlayerCanUseParkour(true) == false)
 		{
 			DebugSpeedVaultFail("player cannot use parkour");
@@ -2633,6 +2641,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	void _Global_SetSpeedVaultEnabled()
+	{
+		mbSpeedVaultEnabled = cScript_GetGlobalArgBool(0);
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_GetDebug()
 	{
 		cScript_SetGlobalReturnBool(mbDebug);
@@ -2643,6 +2658,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	void _Global_SetDebug()
 	{
 		mbDebug = cScript_GetGlobalArgBool(0);
+	}
+
+	//------------------------------------------------------------
+
+	void _Global_SetFrontWallDot()
+	{
+		mfFrontWallDot = cMath_Clamp(cScript_GetGlobalArgFloat(0), -1.f, 1.f);
 	}
 
 	//------------------------------------------------------------
@@ -2999,6 +3021,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	//------------------------------------------------------------
 
 	bool mbEnabled = true;
+	bool mbSpeedVaultEnabled = true;
 	bool mbDebug = false;
 	bool mbRollLandingArmed = false;
 
@@ -3106,6 +3129,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	float mfWallRunChainResetTimer = -1.f;
 	int mlWallRunChainCount = 0;
 	float mfWallRunPowerMul = 1.f;
+	float mfFrontWallDot = gfParkour_FrontWallDot;
 	cVector3f mvWallJumpLastNormal = cVector3f_Zero;
 	cVector3f mvWallScrambleJumpLastNormal = cVector3f_Zero;
 

@@ -492,6 +492,7 @@ class cScrMap : iScrMap
 
 	void OnAnimEnd_StalkerEndingCutscene(const tString &in asEntity, const tString &in asAnim)
 	{
+		Parkour_SetLevelCompletedOnce();
 		Entity_SetActive("Stalker_EndingCutscene", false);
 		Player_SetActive(false);
 		Sound_FadeGlobalVolume(0.f, 0.5f, eSoundEntryType_WorldAll);

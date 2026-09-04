@@ -255,10 +255,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 			if (cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone)
 			{
 				int lYawDir = avAmount.x > 0.f ? -1 : 1;
-				if (IsOutwardLookYawDir(lYawDir))
-					SetOutwardLookFromYawDir(lYawDir);
-				else
-					mfOutwardLookTargetYawOffset = 0.f;
+				SetOutwardLookFromYawDir(lYawDir);
 			}
 			else
 				mfOutwardLookTargetYawOffset = 0.f;
@@ -374,46 +371,9 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	
 	//------------------------------------------------------------
 
-	bool IsOutwardLookYawDir(int alYawDir)
-	{
-		if (mvWallNormal.SqrLength() <= 0.001f) return false;
-
-		cVector3f vLookDir = RotateBodyYawDelta2D(mvWallForward, gfParkourWallRun_OutwardLookAngle * float(alYawDir));
-		return cMath_Vector3Dot(vLookDir, mvWallNormal) > 0.f;
-	}
-
-	//------------------------------------------------------------
-
 	void SetOutwardLookFromYawDir(int alYawDir)
 	{
-		if (IsOutwardLookYawDir(alYawDir) == false) return;
-
 		mfOutwardLookTargetYawOffset = gfParkourWallRun_OutwardLookAngle * float(alYawDir);
-	}
-
-	//------------------------------------------------------------
-
-	cVector3f RotateBodyYawDelta2D(const cVector3f &in avBaseDir, float afDeltaYaw)
-	{
-		// HPL body yaw deltas run opposite to this local XZ rotation helper.
-		return Rotate2D(avBaseDir, -afDeltaYaw);
-	}
-
-	//------------------------------------------------------------
-
-	cVector3f Rotate2D(const cVector3f &in avDir, float afYaw)
-	{
-		float fSin = cMath_Sin(afYaw);
-		float fCos = cMath_Cos(afYaw);
-		cVector3f vOut = cVector3f_Zero;
-		vOut.x = avDir.x * fCos - avDir.z * fSin;
-		vOut.y = 0.f;
-		vOut.z = avDir.x * fSin + avDir.z * fCos;
-		if (vOut.SqrLength() > 0.001f)
-			vOut.Normalize();
-		else
-			vOut = cVector3f_Forward;
-		return vOut;
 	}
 
 	//------------------------------------------------------------

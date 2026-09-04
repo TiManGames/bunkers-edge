@@ -138,6 +138,7 @@ class cScrMap : iScrMap
 
 		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
 		Game_SetupAfterMapChange();
+		Hint_SetCanShowHints(Parkour_GetLevelCompletedOnce() == false);
 
 		if (cScript_GetGlobalVarBool(gsIntroArrivalGlobal))
 		{
@@ -153,6 +154,7 @@ class cScrMap : iScrMap
 	void OnLeave()
 	{
 		SetBeastNarrowSectionBody(false);
+		Hint_SetCanShowHints(true);
 	}
 	
 	//-------------------------------------------------------
@@ -1423,6 +1425,35 @@ class cScrMap : iScrMap
 			PlayerBody_SetAnimationControlledCamera(false);
 			Player_ChangeStateToNormal();
 			Map_ChangeMap("intro.hpm", "Start_ExitTunnel", "", "", true);
+		}
+
+		bool ForceWallRun(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState == 1)
+			{
+				Parkour_SetFrontWallDot(-0.2);
+			}
+			else
+			{
+				Parkour_SetFrontWallDot(-0.7f);
+			}
+			
+
+			return true;
+		}
+
+		bool DisableSpeedValue(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState == 1)
+			{
+				Parkour_SetSpeedVaultEnabled(false);
+			}
+			else
+			{
+				Parkour_SetSpeedVaultEnabled(true);
+			}
+			
+			return true;
 		}
 	 
 	//} END SCENE X 
