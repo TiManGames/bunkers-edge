@@ -14,7 +14,7 @@ const float gfParkour_RunSpeedMulMax = 2.55f;
 const float gfParkour_WallRunMaxAge = 1.1f;
 const float gfParkour_WallRunMinSpeed = 1.7f;
 const float gfParkour_FrontWallDot = -0.65f;
-const float gfParkour_WallScrambleAutoFrontDot = -0.88f;
+const float gfParkour_WallScrambleAutoFrontDot = -0.60f;
 const float gfParkour_FrontWallUpSpeed = 1.7f;
 const float gfParkour_FrontWallOutSpeed = 0.85f;
 const float gfParkour_FrontWallForwardDamp = 1.92f;
@@ -1316,7 +1316,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		}
 
 		cVector3f vVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
-		if (vVel.Length() < gfParkour_WallRunMinSpeed && bForwardInput == false)
+		if (vVel.Length() < gfParkour_WallRunMinSpeed)
 		{
 			DebugWallRunFail("speed too low");
 			return false;
