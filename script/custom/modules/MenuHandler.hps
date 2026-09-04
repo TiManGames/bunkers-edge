@@ -52,7 +52,6 @@ enum ePreMenuPhase
 	ePreMenuPhase_Init,
 	ePreMenuPhase_None,
 	ePreMenuPhase_FrictionalLogo,
-	//ePreMenuPhase_FmodLogo,
 	ePreMenuPhase_PressToContinue,
 	ePreMenuPhase_Gamma,
 	ePreMenuPhase_FinalFade,
@@ -11546,8 +11545,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		{			
 			cImGuiGfx gfxBlack;
 			ImGui_DrawGfx(gfxBlack, ImGui_FullScreenPos(0.1), ImGui_FullScreenSize(), cColor(0,1));
-			cImGuiGfx gfxFG("frictional_games_logo_color.png", eImGuiGfx_Texture);
-			//cVector2f vBgSize = OptionMenu_GetScaledSize(cVector2f(1000, 343)*0.6f);
+			cImGuiGfx gfxFG("frictional_dogs.png", eImGuiGfx_Texture);
 			cVector2f vBgSize = ImGui_GetRatioCorrectSizeByNrmHeight(gfxFG, 0.5);
 			cVector3f vBgPos = OptionMenu_GetCenterOffset(cVector2f(0), 10.2) - cVector3f(vBgSize.x * 0.5, vBgSize.y * 0.5, 0.0);
 			ImGui_DrawGfx(gfxFG, vBgPos, vBgSize, cColor(1, mfPreMenuFadeAmount));
