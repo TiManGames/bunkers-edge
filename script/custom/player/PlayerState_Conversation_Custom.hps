@@ -25,16 +25,42 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 		if (cLux_HasTranslation(sCategory, "Conversation_Heading"))
 			msResponseHeading = cLux_Translate(sCategory, "Conversation_Heading");
 
+		// Long, looping conversations can keep native repeat responses so the
+		// engine never auto-selects a sole remaining option. This map-local flag
+		// makes those repeats invisible once the player has chosen them.
+		mbHideUsedResponses = cLux_HasTranslation(sCategory, "Conversation_HideUsedResponses");
+
 		mbResponseHasTimeLimit = mfResponseTimeCount > 0;
 		mfResponseAlpha = 0;
 		mbResponseSelectionActive = true;
-		mlCurrentSelection = mvResponseOptions.empty() ? -1 : 0;
+		mlCurrentSelection = -1;
+		for (int i = 0; i < int(mvResponseOptions.size()); ++i)
+		{
+			if (mbHideUsedResponses == false || ResponseWasUsed(mvResponseOptions[i]) == false)
+			{
+				mlCurrentSelection = i;
+				break;
+			}
+		}
 		mlNextSelection = mlCurrentSelection;
 		mlNextSelectionCount = 0;
 		mvInputPos = cVector3f(0);
 
 		mbSetInitialResponseFocus = true;
 		SetResponseGuiInputActive(true);
+	}
+
+	//------------------------------------------------------------
+
+	bool ResponseWasUsed(const tWString &in asOption)
+	{
+		for (int i = 0; i < int(mvUsedResponseOptions.size()); ++i)
+		{
+			if (mvUsedResponseOptions[i] == asOption)
+				return true;
+		}
+
+		return false;
 	}
 
 	//------------------------------------------------------------
@@ -56,6 +82,9 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 	{
 		if (mbResponseSelectionActive == false || mfResponseAlpha < 1.f) return;
 		if (alIndex < 0 || alIndex >= int(mvResponseOptions.size())) return;
+
+		if (mbHideUsedResponses && ResponseWasUsed(mvResponseOptions[alIndex]) == false)
+			mvUsedResponseOptions.push_back(mvResponseOptions[alIndex]);
 
 		mlCurrentSelection = alIndex;
 		mbResponseSelectionActive = false;
@@ -81,6 +110,8 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 	void OnLeaveState(int alNextStateId)
 	{
 		SetResponseGuiInputActive(false);
+		mvUsedResponseOptions.resize(0);
+		mbHideUsedResponses = false;
 		cScrPlayerState_Conversation::OnLeaveState(alNextStateId);
 	}
 
@@ -103,7 +134,13 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 		cVector3f vHudStart = cLux_GetHudVirtualStartPos();
 
 		int lOptionCount = mvResponseOptions.size();
-		if (lOptionCount <= 0) return;
+		int lVisibleOptionCount = 0;
+		for (int i = 0; i < lOptionCount; ++i)
+		{
+			if (mbHideUsedResponses == false || ResponseWasUsed(mvResponseOptions[i]) == false)
+				++lVisibleOptionCount;
+		}
+		if (lVisibleOptionCount <= 0) return;
 
 		// Match the compact centered layout from the reference: one narrow stack,
 		// with the prompt immediately above it.
@@ -112,7 +149,7 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 		float fRowGap = 5.f;
 		float fHeadingHeight = msResponseHeading.length() > 0 ? 24.f : 0.f;
 		float fHeadingGap = msResponseHeading.length() > 0 ? 14.f : 0.f;
-		float fOptionsHeight = float(lOptionCount) * fButtonHeight + float(lOptionCount-1) * fRowGap;
+		float fOptionsHeight = float(lVisibleOptionCount) * fButtonHeight + float(lVisibleOptionCount-1) * fRowGap;
 		float fTotalHeight = fHeadingHeight + fHeadingGap + fOptionsHeight;
 		float fLeftX = vHudStart.x + (vHudSize.x - fButtonWidth) * 0.5f;
 		float fTopY = vHudStart.y + (vHudSize.y - fTotalHeight) * 0.5f;
@@ -150,17 +187,21 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 
 		if (mbSetInitialResponseFocus)
 		{
-			pImGui.SetFocus("ConversationResponse_0");
+			pImGui.SetFocus("ConversationResponse_"+mlCurrentSelection);
 			mbSetInitialResponseFocus = false;
 		}
 
 		int lDrawSelection = mlCurrentSelection;
 		int lNextSelection = mlCurrentSelection;
 		int lClickedIndex = -1;
+		int lVisibleIndex = 0;
 
 		for (int i = 0; i < lOptionCount; ++i)
 		{
-			cVector3f vButtonPos(fLeftX, fOptionsTopY + float(i) * (fButtonHeight + fRowGap), 1.f);
+			if (mbHideUsedResponses && ResponseWasUsed(mvResponseOptions[i]))
+				continue;
+
+			cVector3f vButtonPos(fLeftX, fOptionsTopY + float(lVisibleIndex) * (fButtonHeight + fRowGap), 1.f);
 
 			// In-focus graphics are additive overlays in this API. Select exactly
 			// one opaque TGA as the background instead, avoiding two competing
@@ -184,6 +225,8 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 
 			if (pImGui.PrevInFocus() || pImGui.PrevMouseOver())
 				lNextSelection = i;
+
+			++lVisibleIndex;
 		}
 
 		mlCurrentSelection = lNextSelection;
@@ -241,5 +284,7 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 
 	bool mbResponseGuiInputActive = false;
 	bool mbSetInitialResponseFocus = false;
+	bool mbHideUsedResponses = false;
 	tWString msResponseHeading;
+	array<tWString> mvUsedResponseOptions;
 }
