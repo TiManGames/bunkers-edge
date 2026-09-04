@@ -15,7 +15,7 @@
 #include "helpers/helper_gun.hps"
 #include "helpers/helper_props_custom.hps"
 
-#include "custom/helpers/custom/helpers/helper_parkour.hps"
+#include "custom/helpers/helper_parkour.hps"
 
 //--------------------------------------------------
  
@@ -75,6 +75,8 @@ class cScrMap : iScrMap
 		Player_SetAmbientLight_None();
 		Sketchbook_SetInventoryEnabled(false);
 		PlayerBody_SetActive(true);
+
+		Entity_PlayAnimation("Grunt", "idle", 0.f, true, false);
 	}
 
 	//-------------------------------------------------------
@@ -91,6 +93,8 @@ class cScrMap : iScrMap
 	// Run when leaving map
 	void OnLeave()
 	{
+		Dialog_Stop("SittingRoomConversation");
+		Voice_SetFocusScene("");
 	}
 	
 	//-------------------------------------------------------
@@ -171,14 +175,95 @@ class cScrMap : iScrMap
 
 		//-------------------------------------------------------
 
+		void AddSittingRoomQuestion(const tString &in asEntry, const tString &in asBranch, int alOptionId)
+		{
+			Dialog_AddResponseOption(asEntry, asBranch, alOptionId);
+			Dialog_AddResponse_OneTimeCheck("Asked_"+asBranch);
+			Dialog_AddResponseEvent_IncVar("SittingRoom_QuestionsAsked");
+		}
+
+		//-------------------------------------------------------
+
+		void AddAllSittingRoomQuestions()
+		{
+			AddSittingRoomQuestion("Question_1_Option", "Question_1", 1);
+			AddSittingRoomQuestion("Question_2_Option", "Question_2", 2);
+			AddSittingRoomQuestion("Question_3_Option", "Question_3", 3);
+			AddSittingRoomQuestion("Question_4_Option", "Question_4", 4);
+			AddSittingRoomQuestion("Question_5_Option", "Question_5", 5);
+			AddSittingRoomQuestion("Question_6_Option", "Question_6", 6);
+			AddSittingRoomQuestion("Question_7_Option", "Question_7", 7);
+			AddSittingRoomQuestion("Question_8_Option", "Question_8", 8);
+			AddSittingRoomQuestion("Question_9_Option", "Question_9", 9);
+			AddSittingRoomQuestion("Question_10_Option", "Question_10", 10);
+			AddSittingRoomQuestion("Question_11_Option", "Question_11", 11);
+		}
+
+		//-------------------------------------------------------
+
+		void AddSittingRoomQuestionBranch(const tString &in asBranch, const tString &in asSubject)
+		{
+			Dialog_AddBranch(asBranch);
+				Dialog_AddSubject(asSubject);
+				AddAllSittingRoomQuestions();
+				Dialog_AddEndEvent_VarEquals("SittingRoom_QuestionsAsked", 11, "Finale");
+		}
+
+		//-------------------------------------------------------
+
+		void OnSubject_SitOnYouThreat(const tString &in asSubject, bool abStartOfSubject)
+		{
+			if (abStartOfSubject) return;
+
+			iLuxEntity@ pGrunt = Map_GetEntity("Grunt");
+			if (pGrunt is null) return;
+
+			pGrunt.FadeMeshScaleMul(cVector3f(4.f), 4.5f);
+		}
+
+		//-------------------------------------------------------
+
+		void OnSubject_SitOnYouScream(const tString &in asSubject, bool abStartOfSubject)
+		{
+			if (abStartOfSubject) return;
+			Voice_SetFocusScene("");
+		}
+
+		//-------------------------------------------------------
+
 		bool Trigger_Conversation(const tString &in asParent, const tString &in asChild, int alState)
 		{
-			Player_SetActive(false);
+			if (alState != 1) return true;
+
+			Voice_SetSource("Grunt", "Grunt", 1.f, 20.f, true);
+			Voice_SetFocusScene("General");
 
 			Dialog_Begin("SittingRoomConversation");
-				Dialog_StartConversation_PosBased("Player", "Grunt", "ConversationSource");
-				
-			Dialog_End();
+				Dialog_AddBranch("Opening");
+					Dialog_AddSubject("SeeingGrunt");
+					AddAllSittingRoomQuestions();
+
+				AddSittingRoomQuestionBranch("Question_1", "question_1");
+				AddSittingRoomQuestionBranch("Question_2", "question_2");
+				AddSittingRoomQuestionBranch("Question_3", "question_3");
+				AddSittingRoomQuestionBranch("Question_4", "question_4");
+				AddSittingRoomQuestionBranch("Question_5", "question_5");
+				AddSittingRoomQuestionBranch("Question_6", "question_6");
+				AddSittingRoomQuestionBranch("Question_7", "question_7");
+				AddSittingRoomQuestionBranch("Question_8", "question_8");
+				AddSittingRoomQuestionBranch("Question_9", "question_9");
+				AddSittingRoomQuestionBranch("Question_10", "question_10");
+				AddSittingRoomQuestionBranch("Question_11", "question_11");
+
+				Dialog_AddBranch("Finale");
+					Dialog_AddSubject("SitOnYou_Threat", "OnSubject_SitOnYouThreat");
+					Dialog_AddSubject("SitOnYou_Plea");
+					Dialog_AddSubject("SitOnYou_Laughter");
+					Dialog_AddSubject("SitOnYou_Scream", "OnSubject_SitOnYouScream");
+
+				Dialog_StartConversation_PosBased("Grunt", "Grunt", "ConversationSource", "CenterHead");
+
+			Dialog_End("Opening");
 
 			return false;
 		}

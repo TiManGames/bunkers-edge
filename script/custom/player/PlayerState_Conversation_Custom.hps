@@ -1,0 +1,90 @@
+#include "player/PlayerState_Conversation.hps"
+
+//------------------------------------------------------------
+
+// The stock Bunker conversation state lays out at most four responses around
+// the reticle. BunkersEdge uses a vertical picker so longer conversations can
+// expose every available response at the same time.
+class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
+{
+	//------------------------------------------------------------
+
+	void _Global_StartResponseSelection()
+	{
+		mfResponseTimeCount = cScript_GetGlobalArgFloat(0);
+		mvResponseOptions.resize(cScript_GetGlobalArgInt(1));
+
+		for (int i = 0; i < mvResponseOptions.size(); ++i)
+		{
+			tString sEntry = cScript_GetGlobalArgString(2+i);
+			tString sCategory = cLux_GetCurrentMap().GetName();
+			mvResponseOptions[i] = cLux_Translate(sCategory, sEntry);
+		}
+
+		mbResponseHasTimeLimit = mfResponseTimeCount > 0;
+		mfResponseAlpha = 0;
+		mbResponseSelectionActive = true;
+		mlCurrentSelection = mvResponseOptions.empty() ? -1 : 0;
+		mlNextSelection = mlCurrentSelection;
+		mlNextSelectionCount = 0;
+		mvInputPos = cVector3f(0, -1, 0);
+	}
+
+	//------------------------------------------------------------
+
+	void OnDraw(float afFrameTime)
+	{
+		if (mfResponseAlpha <= 0) return;
+
+		cGuiSet@ pSet = cLux_GetGameHudSet();
+		iFontData@ pFont = cLux_GetDefaultFont();
+
+		if (mbResponseHasTimeLimit)
+		{
+			int lTimeLeft = mfResponseTimeCount;
+			pSet.DrawFontEx(tWString("Time Left: "), pFont, cVector3f(512, 680, 1), cVector2f(22), cColor(1, mfResponseAlpha),
+							eFontAlign_Right, eGuiMaterial_FontNormal);
+			pSet.DrawFontEx(tWString(""+lTimeLeft), pFont, cVector3f(522, 677, 1), cVector2f(29), cColor(1, mfResponseAlpha),
+							eFontAlign_Left, eGuiMaterial_FontNormal);
+		}
+
+		int lOptionCount = mvResponseOptions.size();
+		float fSpacing = lOptionCount > 8 ? 38.f : 48.f;
+		float fTopY = 360.f - (float(lOptionCount-1) * fSpacing * 0.5f);
+		float fFontSize = lOptionCount > 8 ? 22.f : 26.f;
+
+		for (int i = 0; i < lOptionCount; ++i)
+		{
+			cColor optionColor = mlCurrentSelection == i
+				? cColor(1, 0, 0, mfResponseAlpha)
+				: cColor(0.75, mfResponseAlpha);
+
+			pSet.DrawFontEx(mvResponseOptions[i], pFont, cVector3f(512, fTopY + i*fSpacing, 1), cVector2f(fFontSize), optionColor,
+							eFontAlign_Center, eGuiMaterial_FontNormal);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
+	{
+		if (mbResponseSelectionActive && alAnalogId == eAnalogType_Look)
+		{
+			int lOptionCount = mvResponseOptions.size();
+			if (lOptionCount > 0)
+			{
+				mvInputPos.y = cMath_Clamp(mvInputPos.y + avAmount.y*15.f, -1.f, 1.f);
+				float fSelectionPos = (mvInputPos.y + 1.f) * 0.5f;
+				mlCurrentSelection = int(fSelectionPos * float(lOptionCount));
+				if (mlCurrentSelection >= lOptionCount) mlCurrentSelection = lOptionCount-1;
+			}
+
+			LookAndUpdateLimits(avAmount);
+			return false;
+		}
+
+		return cScrPlayerState_Conversation::OnAnalogInput(alAnalogId, avAmount);
+	}
+
+	//------------------------------------------------------------
+}
