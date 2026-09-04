@@ -38,27 +38,13 @@ class cScrMap : iScrMap
 	// Set up map environment
 	void Setup()
 	{
-		// Put display name entry in english.lang / Levels
-		GetBase().SetDisplayNameEntry("xx-xx-dummy-level");
-		
-		// Set up color grading etc.
+		GetBase().SetDisplayNameEntry("ending");
 	}
 	
 	//-------------------------------------------------------
 		
 	void PreloadData()
 	{
-		/////////////////
-		// Preload gui
-		//ImGui_PreloadImage("some_image");
-
-		///////////////
-		// Preload particles
-		//ParticleSystem_Preload("some_particle.ps");
-
-		//////////////
-		// Preload screen effects
-		//Material_Preload("some_material.mat");
 	}
 	
 	//-------------------------------------------------------
@@ -83,6 +69,11 @@ class cScrMap : iScrMap
 	void OnEnter()
 	{	
 		Game_AutoSave();
+
+		Effect_Shake_Start(0.012f, 4.f, 0.35f, 0.5f);
+		Effect_Rumble_Start(0.06f, 4.f, 0.35f, 0.5f);
+		Effect_Flash_Start(0.1f, 0.2f, 1.0f, 1.0f);
+		Sound_PlayGui("DW_tunnel/portal/portal_close", 1.0f, eSoundEntryType_Gui);
 	}
 
 	//-------------------------------------------------------
