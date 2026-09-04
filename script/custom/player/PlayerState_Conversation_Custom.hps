@@ -3,8 +3,8 @@
 //------------------------------------------------------------
 
 // The stock Bunker conversation state lays out at most four responses around
-// the reticle. BunkersEdge uses a vertical picker so longer conversations can
-// expose every available response at the same time.
+// the reticle and drives selection through player look input. BunkersEdge uses
+// the game HUD ImGui so longer conversations get normal mouse buttons instead.
 class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 {
 	//------------------------------------------------------------
@@ -13,13 +13,17 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 	{
 		mfResponseTimeCount = cScript_GetGlobalArgFloat(0);
 		mvResponseOptions.resize(cScript_GetGlobalArgInt(1));
+		tString sCategory = cLux_GetCurrentMap().GetName();
 
 		for (int i = 0; i < mvResponseOptions.size(); ++i)
 		{
 			tString sEntry = cScript_GetGlobalArgString(2+i);
-			tString sCategory = cLux_GetCurrentMap().GetName();
 			mvResponseOptions[i] = cLux_Translate(sCategory, sEntry);
 		}
+
+		msResponseHeading = tWString("");
+		if (cLux_HasTranslation(sCategory, "Conversation_Heading"))
+			msResponseHeading = cLux_Translate(sCategory, "Conversation_Heading");
 
 		mbResponseHasTimeLimit = mfResponseTimeCount > 0;
 		mfResponseAlpha = 0;
@@ -27,41 +31,196 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 		mlCurrentSelection = mvResponseOptions.empty() ? -1 : 0;
 		mlNextSelection = mlCurrentSelection;
 		mlNextSelectionCount = 0;
-		mvInputPos = cVector3f(0, -1, 0);
+		mvInputPos = cVector3f(0);
+
+		mbSetInitialResponseFocus = true;
+		SetResponseGuiInputActive(true);
+	}
+
+	//------------------------------------------------------------
+
+	void SetResponseGuiInputActive(bool abActive)
+	{
+		if (mbResponseGuiInputActive == abActive) return;
+
+		mbResponseGuiInputActive = abActive;
+		cLux_GetGuiHandler().SetGameHudInputFocus(abActive);
+
+		if (abActive == false)
+			cLux_GetGameHudImGui().SetFocus("");
+	}
+
+	//------------------------------------------------------------
+
+	void SelectResponse(int alIndex)
+	{
+		if (mbResponseSelectionActive == false || mfResponseAlpha < 1.f) return;
+		if (alIndex < 0 || alIndex >= int(mvResponseOptions.size())) return;
+
+		mlCurrentSelection = alIndex;
+		mbResponseSelectionActive = false;
+		SetResponseGuiInputActive(false);
+		cLux_GetDialogHandler().ReturnResponseSelectChoice(alIndex);
+	}
+
+	//------------------------------------------------------------
+
+	void Update(float afTimeStep)
+	{
+		bool bSelectionWasActive = mbResponseSelectionActive;
+		cScrPlayerState_Conversation::Update(afTimeStep);
+
+		// The base state closes a timed response from inside Update(). Make sure
+		// GUI focus is also released on that path.
+		if (bSelectionWasActive && mbResponseSelectionActive == false)
+			SetResponseGuiInputActive(false);
+	}
+
+	//------------------------------------------------------------
+
+	void OnLeaveState(int alNextStateId)
+	{
+		SetResponseGuiInputActive(false);
+		cScrPlayerState_Conversation::OnLeaveState(alNextStateId);
 	}
 
 	//------------------------------------------------------------
 
 	void OnDraw(float afFrameTime)
 	{
-		if (mfResponseAlpha <= 0) return;
+		// Response widgets are rendered by OnGui. Keeping this override empty
+		// also prevents the inherited four-way response renderer from running.
+	}
 
-		cGuiSet@ pSet = cLux_GetGameHudSet();
-		iFontData@ pFont = cLux_GetDefaultFont();
+	//------------------------------------------------------------
 
-		if (mbResponseHasTimeLimit)
-		{
-			int lTimeLeft = mfResponseTimeCount;
-			pSet.DrawFontEx(tWString("Time Left: "), pFont, cVector3f(512, 680, 1), cVector2f(22), cColor(1, mfResponseAlpha),
-							eFontAlign_Right, eGuiMaterial_FontNormal);
-			pSet.DrawFontEx(tWString(""+lTimeLeft), pFont, cVector3f(522, 677, 1), cVector2f(29), cColor(1, mfResponseAlpha),
-							eFontAlign_Left, eGuiMaterial_FontNormal);
-		}
+	void OnGui(float afTimeStep)
+	{
+		if (mfResponseAlpha <= 0 || mbResponseSelectionActive == false) return;
+
+		cImGui@ pImGui = cLux_GetGameHudImGui();
+		cVector2f vHudSize = cLux_GetHudVirtualSize();
+		cVector3f vHudStart = cLux_GetHudVirtualStartPos();
 
 		int lOptionCount = mvResponseOptions.size();
-		float fSpacing = lOptionCount > 8 ? 38.f : 48.f;
-		float fTopY = 360.f - (float(lOptionCount-1) * fSpacing * 0.5f);
-		float fFontSize = lOptionCount > 8 ? 22.f : 26.f;
+		if (lOptionCount <= 0) return;
+
+		// Match the compact centered layout from the reference: one narrow stack,
+		// with the prompt immediately above it.
+		float fButtonWidth = cMath_Min(380.f, vHudSize.x * 0.38f);
+		float fButtonHeight = cMath_Clamp(vHudSize.y * 0.047f, 34.f, 38.f);
+		float fRowGap = 5.f;
+		float fHeadingHeight = msResponseHeading.length() > 0 ? 24.f : 0.f;
+		float fHeadingGap = msResponseHeading.length() > 0 ? 14.f : 0.f;
+		float fOptionsHeight = float(lOptionCount) * fButtonHeight + float(lOptionCount-1) * fRowGap;
+		float fTotalHeight = fHeadingHeight + fHeadingGap + fOptionsHeight;
+		float fLeftX = vHudStart.x + (vHudSize.x - fButtonWidth) * 0.5f;
+		float fTopY = vHudStart.y + (vHudSize.y - fTotalHeight) * 0.5f;
+		float fOptionsTopY = fTopY + fHeadingHeight + fHeadingGap;
+
+		// Player states share the game HUD ImGui with the module UI. Isolate this
+		// picker from any modifiers left by other HUD drawing in the same frame.
+		pImGui.PushModifiers();
+		pImGui.ResetModifiers();
+
+		if (msResponseHeading.length() > 0)
+		{
+			cImGuiLabelData headingData;
+			headingData.mbUseBackgroundGfx = false;
+			headingData.mColorBase = cColor(1.f, mfResponseAlpha);
+			headingData.mFont.SetFile("sansation_medium.fnt");
+			headingData.mFont.mvSize = cVector2f(22.f);
+			headingData.mFont.mColor = cColor(1.f, mfResponseAlpha);
+			headingData.mFontAlign = eFontAlign_Center;
+
+			pImGui.DoLabel(msResponseHeading, headingData, cVector3f(fLeftX, fTopY, 2.f), cVector2f(fButtonWidth, fHeadingHeight), 1.f);
+		}
+
+		cImGuiButtonData buttonData = pImGui.GetDefaultButton();
+		buttonData.mvDefaultSize = cVector2f(fButtonWidth, fButtonHeight);
+		buttonData.mbUseBackgroundGfx = true;
+		buttonData.mGfxBackground.mMaterial = eGuiMaterial_Alpha;
+		buttonData.mGfxBackground.mColor = cColor(1.f, mfResponseAlpha);
+		buttonData.mbUseInFocusGfx = false;
+		buttonData.mbUseTriggeredGfx = false;
+		buttonData.mFont.SetFile("sansation_medium.fnt");
+		buttonData.mFont.mvSize = cVector2f(16.f);
+		buttonData.mFont.mColor = cColor(1.f, mfResponseAlpha);
+		buttonData.mFontAlign = eFontAlign_Center;
+
+		if (mbSetInitialResponseFocus)
+		{
+			pImGui.SetFocus("ConversationResponse_0");
+			mbSetInitialResponseFocus = false;
+		}
+
+		int lDrawSelection = mlCurrentSelection;
+		int lNextSelection = mlCurrentSelection;
+		int lClickedIndex = -1;
 
 		for (int i = 0; i < lOptionCount; ++i)
 		{
-			cColor optionColor = mlCurrentSelection == i
-				? cColor(1, 0, 0, mfResponseAlpha)
-				: cColor(0.75, mfResponseAlpha);
+			cVector3f vButtonPos(fLeftX, fOptionsTopY + float(i) * (fButtonHeight + fRowGap), 1.f);
 
-			pSet.DrawFontEx(mvResponseOptions[i], pFont, cVector3f(512, fTopY + i*fSpacing, 1), cVector2f(fFontSize), optionColor,
-							eFontAlign_Center, eGuiMaterial_FontNormal);
+			// In-focus graphics are additive overlays in this API. Select exactly
+			// one opaque TGA as the background instead, avoiding two competing
+			// full-size layers and the flicker they caused.
+			buttonData.mGfxBackground.SetFile(i == lDrawSelection ? "option_selected.tga" : "option_deselected.tga");
+
+			// Keep the longest response inside the compact button.
+			buttonData.mFont.mvSize = cVector2f(16.f);
+			float fTextWidth = pImGui.GetFontLength(buttonData.mFont, 1.f, mvResponseOptions[i]);
+			if (fTextWidth > fButtonWidth - 24.f)
+			{
+				float fFontSize = 16.f * ((fButtonWidth - 24.f) / fTextWidth);
+				buttonData.mFont.mvSize = cVector2f(cMath_Max(12.f, fFontSize));
+			}
+
+			if (pImGui.DoButton("ConversationResponse_"+i, mvResponseOptions[i], buttonData, vButtonPos, cVector2f(fButtonWidth, fButtonHeight)))
+			{
+				lClickedIndex = i;
+				break;
+			}
+
+			if (pImGui.PrevInFocus() || pImGui.PrevMouseOver())
+				lNextSelection = i;
 		}
+
+		mlCurrentSelection = lNextSelection;
+
+		if (mbResponseHasTimeLimit)
+		{
+			cImGuiLabelData timerData;
+			timerData.mbUseBackgroundGfx = false;
+			timerData.mColorBase = cColor(1.f, mfResponseAlpha);
+			timerData.mFont.SetFile("sansation_small.fnt");
+			timerData.mFont.mvSize = cVector2f(16.f);
+			timerData.mFont.mColor = cColor(1.f, mfResponseAlpha);
+			timerData.mFontAlign = eFontAlign_Center;
+
+			pImGui.DoLabel(tWString("Time Left: "+int(mfResponseTimeCount)), timerData,
+				cVector3f(fLeftX, fOptionsTopY + fOptionsHeight + 8.f, 2.f), cVector2f(fButtonWidth, 20.f), 1.f);
+		}
+
+		pImGui.PopModifiers();
+
+		if (lClickedIndex >= 0)
+			SelectResponse(lClickedIndex);
+	}
+
+	//------------------------------------------------------------
+
+	bool OnAction(int alAction, bool abPressed)
+	{
+		// While the picker owns the HUD, button clicks and confirm input are
+		// handled by ImGui. Do not also let Interact select a response.
+		if (mbResponseSelectionActive &&
+			(alAction == eAction_Interact || alAction == eAction_InteractCancel))
+		{
+			return false;
+		}
+
+		return cScrPlayerState_Conversation::OnAction(alAction, abPressed);
 	}
 
 	//------------------------------------------------------------
@@ -70,16 +229,8 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 	{
 		if (mbResponseSelectionActive && alAnalogId == eAnalogType_Look)
 		{
-			int lOptionCount = mvResponseOptions.size();
-			if (lOptionCount > 0)
-			{
-				mvInputPos.y = cMath_Clamp(mvInputPos.y + avAmount.y*15.f, -1.f, 1.f);
-				float fSelectionPos = (mvInputPos.y + 1.f) * 0.5f;
-				mlCurrentSelection = int(fSelectionPos * float(lOptionCount));
-				if (mlCurrentSelection >= lOptionCount) mlCurrentSelection = lOptionCount-1;
-			}
-
-			LookAndUpdateLimits(avAmount);
+			// Mouse movement belongs to the HUD cursor while responses are open.
+			// In particular, do not rotate the camera or derive a selection here.
 			return false;
 		}
 
@@ -87,4 +238,8 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 	}
 
 	//------------------------------------------------------------
+
+	bool mbResponseGuiInputActive = false;
+	bool mbSetInitialResponseFocus = false;
+	tWString msResponseHeading;
 }

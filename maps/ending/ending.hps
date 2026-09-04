@@ -177,9 +177,19 @@ class cScrMap : iScrMap
 
 		void AddSittingRoomQuestion(const tString &in asEntry, const tString &in asBranch, int alOptionId)
 		{
+			tString sAskedVar = "Asked_"+asBranch;
+
+			// First-time version: marks the question and advances the finale count.
 			Dialog_AddResponseOption(asEntry, asBranch, alOptionId);
-			Dialog_AddResponse_OneTimeCheck("Asked_"+asBranch);
+			Dialog_AddResponseCondition_VarNotSet(sAskedVar);
+			Dialog_AddResponseEvent_SetVar(sAskedVar);
 			Dialog_AddResponseEvent_IncVar("SittingRoom_QuestionsAsked");
+
+			// Repeat version: keeps the entry visible after it has been asked. This
+			// guarantees that the dialog handler always has all eleven responses;
+			// it otherwise auto-selects the final remaining response.
+			Dialog_AddResponseOption(asEntry, asBranch, alOptionId);
+			Dialog_AddResponseCondition_VarIsSet(sAskedVar);
 		}
 
 		//-------------------------------------------------------
