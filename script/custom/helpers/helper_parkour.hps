@@ -96,6 +96,17 @@ cVector3f Parkour_GetFlatVelocity(iCharacterBody@ apBody,
 
 //------------------------------------------------------------
 
+// Temporary diagnostics: write to the game log even when parkour debug is off.
+void Parkour_WallSlideDebug(const tString &in asMessage)
+{
+	LogNewLine("[WallSlide diag1] " + asMessage);
+}
+
+tString Parkour_WallSlideDebugVector(const cVector3f &in avValue)
+{
+	return "(" + avValue.x + "," + avValue.y + "," + avValue.z + ")";
+}
+
 void Parkour_StartWallSlide(const cVector3f &in avForward,
 								float afStartDownSpeed = 4.0f,
 								float afDownAcceleration = 2.25f,
@@ -103,6 +114,10 @@ void Parkour_StartWallSlide(const cVector3f &in avForward,
 								float afWallPressSpeed = 1.6f,
 								float afSideSpeed = 2.4f)
 {
+	Parkour_WallSlideDebug("START requested state=" + cLux_GetPlayer().GetCurrentStateId() +
+		" move=" + cLux_GetPlayer().GetCurrentMoveStateId() + " forward=" + Parkour_WallSlideDebugVector(avForward) +
+		" startSpeed=" + afStartDownSpeed + " acceleration=" + afDownAcceleration +
+		" maxSpeed=" + afMaxDownSpeed + " press=" + afWallPressSpeed + " side=" + afSideSpeed);
 	cScript_SetGlobalArgVector3f(0, avForward);
 	cScript_SetGlobalArgFloat(1, afStartDownSpeed);
 	cScript_SetGlobalArgFloat(2, afDownAcceleration);
@@ -110,11 +125,16 @@ void Parkour_StartWallSlide(const cVector3f &in avForward,
 	cScript_SetGlobalArgFloat(4, afWallPressSpeed);
 	cScript_SetGlobalArgFloat(5, afSideSpeed);
 	cScript_RunGlobalFunc("State_ParkourWallSlide", "", "SetupParkourWallSlide");
+	Parkour_WallSlideDebug("START setup returned; changing state to " + ePlayerState_Custom_ParkourWallSlide);
 	cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourWallSlide);
+	Parkour_WallSlideDebug("START returned state=" + cLux_GetPlayer().GetCurrentStateId() +
+		" move=" + cLux_GetPlayer().GetCurrentMoveStateId());
 }
 
 void Parkour_StopWallSlide()
 {
+	Parkour_WallSlideDebug("STOP helper requested state=" + cLux_GetPlayer().GetCurrentStateId());
+	if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Custom_ParkourWallSlide) return;
 	cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 }
 

@@ -24,7 +24,9 @@ const float gfParkourWallSlide_ShakePulseInterval = 0.16f;
 const float gfParkourWallSlide_ShakeBaseAmount = 0.010f;
 const float gfParkourWallSlide_ShakeMaxAmount = 0.075f;
 const float gfParkourWallSlide_SurfaceRayLength = 1.75f;
-const float gfParkourWallSlide_SurfaceTargetDistance = 0.45f;
+const float gfParkourWallSlide_LostSurfaceGrace = 0.25f;
+const float gfParkourWallSlide_EntrySurfaceGrace = 2.0f;
+const float gfParkourWallSlide_FlatSurfaceNormalY = 0.98f;
 
 //------------------------------------------------------------
 
@@ -36,7 +38,7 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 
 	//------------------------------------------------------------
 
-	void Init() {}
+	void Init() { Parkour_WallSlideDebug("STATE Init: collision slide diagnostics loaded"); }
 	void LoadUserConfig() {}
 	void SaveUserConfig() {}
 	void OnMapEnter(cLuxMap @apMap) {}
@@ -57,20 +59,31 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 		mfMaxDownSpeed = cScript_GetGlobalArgFloat(3);
 		mfWallPressSpeed = cScript_GetGlobalArgFloat(4);
 		mfSideSpeed = cScript_GetGlobalArgFloat(5);
+		Parkour_WallSlideDebug("SETUP received forward=" + Parkour_WallSlideDebugVector(mvWallForward) +
+			" speed=" + mfStartDownSpeed + " acceleration=" + mfDownAcceleration +
+			" max=" + mfMaxDownSpeed + " press=" + mfWallPressSpeed + " side=" + mfSideSpeed);
 	}
 
 	//------------------------------------------------------------
 
 	void OnEnterState(int alPrevStateId)
 	{
+		Parkour_WallSlideDebug("ENTER begin prevState=" + alPrevStateId);
+		msDebugExitReason = "external state change";
+		mfDebugSampleTimer = 0.f;
+		mvDebugRequestedVelocity = cVector3f_Zero;
+		mvDebugActualVelocity = cVector3f_Zero;
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
+			msDebugExitReason = "no body on entry";
+			Parkour_WallSlideDebug("ENTER failed: no player body");
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 			return;
 		}
 
 		NormalizeSetup(pBody);
+		mvDebugPreviousFeet = pBody.GetFeetPosition();
 
 		mfTimer = 0.f;
 		mfDownSpeed = mfStartDownSpeed;
@@ -79,7 +92,8 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 		mfSmoothedRoll = 0.f;
 		mfShakePulseTimer = 0.f;
 		mlSlideShakeId = -1;
-		mvScriptedFeetPosition = pBody.GetFeetPosition();
+		mfLostSurfaceTimer = 0.f;
+		mbTouchedSlideSurface = false;
 		RefreshSlideSurface(pBody);
 
 		float fYaw = GetYawFromDir(mvWallForward);
@@ -92,10 +106,19 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 
 		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
 		pBody.SetGravityActive(false);
-		pBody.SetTestCollision(false);
-		pBody.SetPhysicsBodyActive(false);
+		// Let the character controller resolve the full body against geometry.
+		pBody.SetTestCollision(true);
+		pBody.SetPhysicsBodyActive(true);
 		pBody.StopMovement();
+		pBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		pBody.SetMoveSpeed(eCharDir_Right, 0.f);
+		pBody.ResetClimbing();
 		pBody.SetForceVelocity(cVector3f_Zero);
+		mfPreviousGroundFriction = pBody.GetGroundFriction();
+		mfPreviousAirFriction = pBody.GetAirFriction();
+		mbBodyConfigured = true;
+		pBody.SetGroundFriction(0.f);
+		pBody.SetAirFriction(0.f);
 
 		Player_SetDisableCrawling(true);
 		Player_SetCrouching(false);
@@ -110,6 +133,7 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 		Item_PutAway(eItemHandlerHand_Right);
 
 		cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, cVector3f_Zero);
+		DebugSlideStatus("ENTER ready", pBody);
 
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Wall slide state entered.", true);
@@ -119,6 +143,8 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 
 	void OnLeaveState(int alNextStateId)
 	{
+		Parkour_WallSlideDebug("LEAVE nextState=" + alNextStateId + " reason=" + msDebugExitReason);
+		DebugSlideStatus("LEAVE", cLux_GetPlayer().GetCharacterBody());
 		StopWallSlideShake(0.12f);
 
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
@@ -127,7 +153,13 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 			pBody.SetGravityActive(true);
 			pBody.SetTestCollision(true);
 			pBody.SetPhysicsBodyActive(true);
+			if (mbBodyConfigured)
+			{
+				pBody.SetGroundFriction(mfPreviousGroundFriction);
+				pBody.SetAirFriction(mfPreviousAirFriction);
+			}
 		}
+		mbBodyConfigured = false;
 
 		PlayerBody_SetVisible(true);
 		Player_DisableCameraLock();
@@ -148,24 +180,67 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
+			msDebugExitReason = "no body during update";
+			Parkour_WallSlideDebug("UPDATE failed: no player body");
 			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
 			return;
 		}
 
+		mvDebugActualVelocity = (pBody.GetFeetPosition() - mvDebugPreviousFeet) / cMath_Max(afTimeStep, 0.0001f);
+		mvDebugPreviousFeet = pBody.GetFeetPosition();
+		bool bPreviousSurface = mbHasSlideSurface;
+		bool bPreviousFlat = mbOnFlatSurface;
 		mfTimer += afTimeStep;
 		mfDownSpeed = cMath_Min(mfMaxDownSpeed, mfDownSpeed + mfDownAcceleration * afTimeStep);
 		RefreshSlideSurface(pBody);
+		mfDebugSampleTimer -= afTimeStep;
+		if (mfDebugSampleTimer <= 0.f || bPreviousSurface != mbHasSlideSurface || bPreviousFlat != mbOnFlatSurface)
+		{
+			DebugSlideStatus("UPDATE dt=" + afTimeStep, pBody);
+			mfDebugSampleTimer = 0.25f;
+		}
+		if (Player_GetUnderwater())
+		{
+			EndWallSlide("underwater");
+			return;
+		}
+		if (mbOnFlatSurface && mbTouchedSlideSurface)
+		{
+			EndWallSlide("reached flat ground");
+			return;
+		}
+		if (mbHasSlideSurface)
+		{
+			mbTouchedSlideSurface = true;
+			mfLostSurfaceTimer = 0.f;
+		}
+		else
+		{
+			mfLostSurfaceTimer += afTimeStep;
+			float fGrace = mbTouchedSlideSurface ? gfParkourWallSlide_LostSurfaceGrace : gfParkourWallSlide_EntrySurfaceGrace;
+			if (mfLostSurfaceTimer > fGrace)
+			{
+				EndWallSlide("lost slide surface");
+				return;
+			}
+		}
 
 		float fSteerTarget = GetSteerTarget();
 		mfSteer = cMath_IncreaseTo(mfSteer, gfParkourWallSlide_SteerResponse * afTimeStep, fSteerTarget);
 
 		cVector3f vVelocity = mvSlideDown * mfDownSpeed;
 		vVelocity += mvSlideRight * (mfSideSpeed * mfSteer);
-		if (mbHasSlideSurface == false || mfSurfaceDistance > gfParkourWallSlide_SurfaceTargetDistance)
+		if (mbHasSlideSurface)
+			vVelocity -= mvSurfaceNormal * mfWallPressSpeed;
+		else if (mbTouchedSlideSurface == false)
 			vVelocity += mvWallForward * mfWallPressSpeed;
-		mvScriptedFeetPosition += vVelocity * afTimeStep;
-		pBody.SetForceVelocity(cVector3f_Zero);
-		pBody.SetFeetPosition(mvScriptedFeetPosition, true);
+		// Use actual, collision-resolved feet for the next update. Never advance
+		// a separate scripted position through a wall, a seam, or the floor.
+		pBody.StopMovement();
+		pBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		pBody.SetMoveSpeed(eCharDir_Right, 0.f);
+		pBody.SetForceVelocity(vVelocity);
+		mvDebugRequestedVelocity = vVelocity;
 
 		UpdateCameraMotion(afTimeStep);
 		UpdateWallSlideShake(afTimeStep);
@@ -237,7 +312,6 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 		mvSlideDown = cVector3f_Down;
 		mvSlideRight = mvWallRight;
 		mbHasSlideSurface = false;
-		mfSurfaceDistance = 1000.f;
 		mfStartDownSpeed = cMath_Max(0.1f, mfStartDownSpeed);
 		mfDownAcceleration = cMath_Max(0.f, mfDownAcceleration);
 		mfMaxDownSpeed = cMath_Max(mfStartDownSpeed, mfMaxDownSpeed);
@@ -251,35 +325,33 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 	{
 		if (apBody is null) return;
 
-		float fDistance;
-		cVector3f vNormal;
-		cVector3f vFeet = mvScriptedFeetPosition;
+		cVector3f vFeet = apBody.GetFeetPosition();
 		mbHasSlideSurface = false;
-		mfSurfaceDistance = 1000.f;
-		bool bHit = Parkour_CastSurfaceRay(vFeet + cVector3f_Up * 0.45f,
-											mvWallForward,
-											gfParkourWallSlide_SurfaceRayLength,
-											fDistance,
-											vNormal);
-		if (bHit == false)
-			bHit = Parkour_CastSurfaceRay(vFeet + cVector3f_Up * 1.25f,
-										mvWallForward,
-										gfParkourWallSlide_SurfaceRayLength,
-										fDistance,
-										vNormal);
-		if (bHit == false) return;
-
-		if (cMath_Vector3Dot(vNormal, mvWallForward) > 0.f)
-			vNormal *= -1.f;
+		mbOnFlatSurface = false;
+		msDebugProbes = "";
+		float fBestDistance = 1000.f;
+		cVector3f vNormal;
+		// Downward probes find receding slopes that horizontal rays pass above.
+		// Side samples bridge triangle seams without treating rays as collision.
+		array<float> vSideOffsets = { 0.f, -0.22f, 0.22f };
+		for (uint i = 0; i < vSideOffsets.size(); ++i)
+		{
+			cVector3f vStart = vFeet + cVector3f_Up * 0.5f + mvWallRight * vSideOffsets[i];
+			ProbeSlideSurface(vStart, cVector3f_Down, fBestDistance, vNormal, "down" + i);
+		}
+		ProbeSlideSurface(vFeet + cVector3f_Up * 0.45f, mvWallForward, fBestDistance, vNormal, "frontLow");
+		ProbeSlideSurface(vFeet + cVector3f_Up * 1.25f, mvWallForward, fBestDistance, vNormal, "frontHigh");
+		if (mbTouchedSlideSurface)
+			ProbeSlideSurface(vFeet + cVector3f_Up * 0.45f, mvSurfaceNormal * -1.f, fBestDistance, vNormal, "previousNormal");
+		if (fBestDistance >= 1000.f) return;
 
 		cVector3f vDown = cVector3f_Down - vNormal * cMath_Vector3Dot(cVector3f_Down, vNormal);
 		if (vDown.SqrLength() <= 0.001f) return;
 		vDown.Normalize();
 		if (vDown.y > 0.f) vDown *= -1.f;
 
-		cVector3f vRight = mvWallRight - vNormal * cMath_Vector3Dot(mvWallRight, vNormal);
-		if (vRight.SqrLength() <= 0.001f)
-			vRight = cMath_Vector3Cross(vDown, vNormal);
+		// An orthogonal tangent keeps steering from adding uphill/downhill speed.
+		cVector3f vRight = cMath_Vector3Cross(vDown, vNormal);
 		if (vRight.SqrLength() <= 0.001f) return;
 		vRight.Normalize();
 		if (cMath_Vector3Dot(vRight, mvWallRight) < 0.f)
@@ -287,8 +359,90 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 
 		mvSlideDown = vDown;
 		mvSlideRight = vRight;
+		mvSurfaceNormal = vNormal;
 		mbHasSlideSurface = true;
-		mfSurfaceDistance = fDistance;
+	}
+
+	//------------------------------------------------------------
+
+	void ProbeSlideSurface(const cVector3f &in avStart, const cVector3f &in avDir,
+						   float &inout afBestDistance, cVector3f &inout avBestNormal, const tString &in asLabel)
+	{
+		float fDistance;
+		cVector3f vNormal;
+		// Only surfaces that actually collide with the player may guide the slide.
+		iPhysicsBody@ pHit = cLux_GetClosestCharCollideBody(avStart, avDir,
+			gfParkourWallSlide_SurfaceRayLength, fDistance, vNormal);
+		msDebugProbes += " | " + asLabel + " origin=" + Parkour_WallSlideDebugVector(avStart) + " dir=" + Parkour_WallSlideDebugVector(avDir);
+		if (pHit is null)
+		{
+			msDebugProbes += " MISS";
+			return;
+		}
+		msDebugProbes += " body=" + pHit.GetName() + " distance=" + fDistance + " normal=" + Parkour_WallSlideDebugVector(vNormal);
+		if (vNormal.SqrLength() <= 0.001f)
+		{
+			msDebugProbes += " REJECT zero normal";
+			return;
+		}
+		vNormal.Normalize();
+		if (vNormal.y < -0.05f)
+		{
+			msDebugProbes += " REJECT ceiling/backface";
+			return;
+		}
+		if (vNormal.y >= gfParkourWallSlide_FlatSurfaceNormalY)
+		{
+			if (avDir.y < -0.9f && fDistance <= 0.6f)
+				mbOnFlatSurface = true;
+			msDebugProbes += " FLAT groundFlag=" + mbOnFlatSurface;
+			return;
+		}
+		if (vNormal.y < 0.15f && cMath_Vector3Dot(vNormal, mvWallForward) > -0.2f)
+		{
+			msDebugProbes += " REJECT wall angle dot=" + cMath_Vector3Dot(vNormal, mvWallForward);
+			return;
+		}
+		if (fDistance >= afBestDistance)
+		{
+			msDebugProbes += " VALID farther";
+			return;
+		}
+		msDebugProbes += " SELECTED nearest so far";
+		afBestDistance = fDistance;
+		avBestNormal = vNormal;
+	}
+
+	//------------------------------------------------------------
+
+	void EndWallSlide(const tString &in asReason)
+	{
+		msDebugExitReason = asReason;
+		Parkour_WallSlideDebug("END requested reason=" + asReason + " time=" + mfTimer + " lostTimer=" + mfLostSurfaceTimer);
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[Parkour] Wall slide ended: " + asReason, true);
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+
+	//------------------------------------------------------------
+
+	void DebugSlideStatus(const tString &in asEvent, iCharacterBody@ apBody)
+	{
+		Parkour_WallSlideDebug(asEvent + " time=" + mfTimer + " state=" + cLux_GetPlayer().GetCurrentStateId() +
+			" move=" + cLux_GetPlayer().GetCurrentMoveStateId() + " surface=" + mbHasSlideSurface +
+			" flat=" + mbOnFlatSurface + " touched=" + mbTouchedSlideSurface + " lostTimer=" + mfLostSurfaceTimer +
+			" downSpeed=" + mfDownSpeed + " steer=" + mfSteer);
+		if (apBody !is null)
+			Parkour_WallSlideDebug("BODY feet=" + Parkour_WallSlideDebugVector(apBody.GetFeetPosition()) +
+				" actualVel=" + Parkour_WallSlideDebugVector(mvDebugActualVelocity) +
+				" previousCommand=" + Parkour_WallSlideDebugVector(mvDebugRequestedVelocity) +
+				" forceVel=" + Parkour_WallSlideDebugVector(apBody.GetForceVelocity()) +
+				" active=" + apBody.IsActive() + " grounded=" + apBody.IsOnGround() +
+				" collision=" + apBody.GetTestCollision() + " physics=" + apBody.GetPhysicsBodyActive() +
+				" gravity=" + apBody.GravityIsActive() + " groundFriction=" + apBody.GetGroundFriction() + " airFriction=" + apBody.GetAirFriction());
+		Parkour_WallSlideDebug("BASIS forward=" + Parkour_WallSlideDebugVector(mvWallForward) +
+			" down=" + Parkour_WallSlideDebugVector(mvSlideDown) + " normal=" + Parkour_WallSlideDebugVector(mvSurfaceNormal));
+		Parkour_WallSlideDebug("PROBES" + msDebugProbes);
 	}
 
 	//------------------------------------------------------------
@@ -379,9 +533,21 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 	cVector3f mvWallRight = cVector3f_Right;
 	cVector3f mvSlideDown = cVector3f_Down;
 	cVector3f mvSlideRight = cVector3f_Right;
-	cVector3f mvScriptedFeetPosition = cVector3f_Zero;
+	cVector3f mvSurfaceNormal = cVector3f_Up;
 
 	bool mbHasSlideSurface = false;
+	bool mbTouchedSlideSurface = false;
+	bool mbOnFlatSurface = false;
+	bool mbBodyConfigured = false;
+	float mfLostSurfaceTimer = 0.f;
+	float mfPreviousGroundFriction = 0.f;
+	float mfPreviousAirFriction = 0.f;
+	float mfDebugSampleTimer = 0.f;
+	cVector3f mvDebugPreviousFeet = cVector3f_Zero;
+	cVector3f mvDebugRequestedVelocity = cVector3f_Zero;
+	cVector3f mvDebugActualVelocity = cVector3f_Zero;
+	tString msDebugProbes = "";
+	tString msDebugExitReason = "external state change";
 
 	float mfStartDownSpeed = 4.0f;
 	float mfDownAcceleration = 2.25f;
@@ -394,6 +560,5 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 	float mfTimer = 0.f;
 	float mfSmoothedRoll = 0.f;
 	float mfShakePulseTimer = 0.f;
-	float mfSurfaceDistance = 1000.f;
 	int mlSlideShakeId = -1;
 }

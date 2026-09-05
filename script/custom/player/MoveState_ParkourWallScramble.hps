@@ -19,6 +19,8 @@ const float gfParkourWallScramble_LostWallGrace = 0.14f;
 const float gfParkourWallScramble_GroundExitGrace = 0.16f;
 const float gfParkourWallScramble_AntiGravityMul = 0.60f;
 const float gfParkourWallScramble_TurnTime = 0.32f;
+const float gfParkourWallScramble_LookUpTime = 0.35f;
+const float gfParkourWallScramble_LookUpPitchDeg = 45.f;
 const float gfParkourWallScramble_JumpSideImpulse = 235.f;
 const float gfParkourWallScramble_JumpUpImpulse = 360.f;
 const float gfParkourWallScramble_JumpForwardImpulse = 55.f;
@@ -43,6 +45,9 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		mfTurnTimer = -1.f;
 		mbTurned = false;
 		mbTurning = false;
+		mfLookUpTimer = cScript_GetGlobalVarBool("Parkour_WallScramble_CameraAssist") ? 0.f : -1.f;
+		cScript_SetGlobalVarBool("Parkour_WallScramble_CameraAssist", false);
+		mfLookUpStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
 		msLastWallRefreshFail = "";
 		mvWallNormal = cScript_GetGlobalVarVector3f("Parkour_WallScramble_Normal");
 		mfPowerMul = cMath_Clamp(Parkour_GetWallRunPowerMul(), 0.1f, 1.15f);
@@ -78,6 +83,7 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 
 	void OnLeaveState(int alNextStateId)
 	{
+		mfLookUpTimer = -1.f;
 		Player_SetDisableCrawling(false);
 		Player_SetCrouchDisabled(false);
 		Player_SetCrouchActionDisabled(false);
@@ -142,6 +148,8 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 			mfLostWallTimer = gfParkourWallScramble_LostWallGrace;
 			mvWallNormal = vNewNormal;
 		}
+
+		UpdateLookUp(afTimeStep);
 
 		float fT = cMath_Clamp(mfTimer / gfParkourWallScramble_MaxTime, 0.f, 1.f);
 		float fUpSpeed = cMath_InterpolateLinear(gfParkourWallScramble_UpSpeedStart, gfParkourWallScramble_UpSpeedEnd, fT) * mfPowerMul;
@@ -263,6 +271,7 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		if (pBody is null) return;
 
 		mlTurnDir = alDir >= 0 ? 1 : -1;
+		mfLookUpTimer = -1.f;
 		mfTurnStartYaw = pBody.GetYaw();
 		mfTurnTimer = 0.f;
 		mbTurning = true;
@@ -271,6 +280,25 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Wall scramble quick turn.", true);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateLookUp(float afTimeStep)
+	{
+		if (mfLookUpTimer < 0.f) return;
+
+		mfLookUpTimer += afTimeStep;
+		float fT = cMath_Clamp(mfLookUpTimer / gfParkourWallScramble_LookUpTime, 0.f, 1.f);
+		float fEase = cMath_Easing(eEasing_SineInOut, fT);
+		cCamera@ pCam = cLux_GetPlayer().GetCamera();
+		float fTargetPitch = cMath_Clamp(cMath_ToRad(gfParkourWallScramble_LookUpPitchDeg), pCam.GetPitchMinLimit(), pCam.GetPitchMaxLimit());
+		float fPitch = cMath_InterpolateLinear(mfLookUpStartPitch, fTargetPitch, fEase);
+		// Enforce the upward motion, while allowing the player to look higher.
+		pCam.SetPitch(cMath_Max(pCam.GetPitch(), fPitch));
+
+		if (fT >= 1.f)
+			mfLookUpTimer = -1.f;
 	}
 
 	//------------------------------------------------------------
@@ -357,6 +385,8 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 	float mfPowerMul = 1.f;
 	float mfTurnTimer = -1.f;
 	float mfTurnStartYaw = 0.f;
+	float mfLookUpTimer = -1.f;
+	float mfLookUpStartPitch = 0.f;
 	int mlTurnDir = 1;
 	bool mbTurned = false;
 	bool mbTurning = false;

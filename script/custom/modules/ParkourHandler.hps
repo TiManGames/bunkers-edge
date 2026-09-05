@@ -29,7 +29,6 @@ const float gfParkour_WallRunChainCameraForwardDot = 0.18f;
 const float gfParkour_WallScrambleEntryRayLength = 0.65f;
 const float gfParkour_WallScrambleChainRayLength = 0.95f;
 const float gfParkour_WallScrambleLookUpForwardY = 0.12f;
-const float gfParkour_WallScrambleCameraAssistPitchDeg = 7.0f;
 const float gfParkour_WallScrambleChainGrace = 1.05f;
 const float gfParkour_WallScrambleSameWallRejectTime = 0.48f;
 const float gfParkour_WallScrambleSameWallDot = 0.65f;
@@ -1186,28 +1185,18 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	//------------------------------------------------------------
 
 	void SetupWallScrambleGlobals(const cVector3f &in avWallNormal,
-								  float afWallDistance)
+								  float afWallDistance, bool abCameraAssist)
 	{
 		cScript_SetGlobalVarVector3f("Parkour_WallScramble_Normal", avWallNormal);
 		cScript_SetGlobalVarFloat("Parkour_WallScramble_Distance", afWallDistance);
-	}
-
-	//------------------------------------------------------------
-
-	void ApplyWallScrambleCameraAssist()
-	{
-		cLux_GetPlayer().GetCamera().AddPitch(cMath_ToRad(gfParkour_WallScrambleCameraAssistPitchDeg));
-
-		if (mbDebug)
-			cLux_AddDebugMessage("[Parkour] Wall scramble camera assist.", true);
+		cScript_SetGlobalVarBool("Parkour_WallScramble_CameraAssist", abCameraAssist);
 	}
 
 	//------------------------------------------------------------
 
 	bool TryStartWallScramble(float afAge,
 							  bool abFromWallScrambleChain,
-							  float afTimeStep = 0.f,
-							  bool abAllowCameraAssist = false)
+							  float afTimeStep = 0.f)
 	{
 		if (PlayerCanUseParkour(true) == false)
 		{
@@ -1235,11 +1224,6 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		}
 
 		bool bUseCameraAssist = abFromWallScrambleChain == false && IsLookingUpForWallScramble() == false;
-		if (bUseCameraAssist && abAllowCameraAssist == false)
-		{
-			DebugWallRunFail("not looking up for wall scramble");
-			return false;
-		}
 
 		bool bForwardInput = cInput_IsTriggered(eAction_Forward);
 		bool bForwardMove = pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
@@ -1265,6 +1249,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			return false;
 		}
 
+		// Level-looking approaches must head into the wall, not skim along it.
+		if (bUseCameraAssist && IsDirectFrontWallForScramble(pBody, vWallNormal) == false)
+		{
+			DebugWallRunFail("not facing front wall for scramble assist");
+			return false;
+		}
+
 		if (abFromWallScrambleChain && IsSameWallScrambleChainReject(vWallNormal))
 		{
 			DebugWallRunFail("same wall scramble chain cooldown");
@@ -1273,10 +1264,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		PrepareWallRunPower(abFromWallScrambleChain);
 		ApplyFlowEvent(geParkourFlowEvent_WallScrambleStart, 1.f);
-		SetupWallScrambleGlobals(vWallNormal, fWallDistance);
+		SetupWallScrambleGlobals(vWallNormal, fWallDistance, bUseCameraAssist);
 		DebugWallScrambleStart(fWallDistance, abFromWallScrambleChain);
-		if (bUseCameraAssist)
-			ApplyWallScrambleCameraAssist();
 
 		cLux_GetPlayer().ChangeMoveState(eMoveState_ParkourWallScramble);
 		return true;
@@ -1317,17 +1306,16 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			return false;
 		}
 
+		// Contact can already have removed horizontal speed. Check the front wall
+		// during run-jump grace before applying side-wall speed/probe checks.
+		if (abFromWallJumpChain == false && TryStartWallScramble(afRunJumpAge, false, afTimeStep))
+			return true;
+
 		cVector3f vVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
 		if (vVel.Length() < gfParkour_WallRunMinSpeed)
 		{
 			DebugWallRunFail("speed too low");
 			return false;
-		}
-
-		if (abFromWallJumpChain == false && IsLookingUpForWallScramble())
-		{
-			if (TryStartWallScramble(afRunJumpAge, false, afTimeStep))
-				return true;
 		}
 
 		cVector3f vWallNormal;
@@ -1348,9 +1336,6 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		if (IsDirectFrontWallForScramble(pBody, vWallNormal) && abFromWallJumpChain == false)
 		{
-			if (TryStartWallScramble(afRunJumpAge, false, afTimeStep, true))
-				return true;
-
 			DoFrontWallScramble(pBody, vWallNormal, fWallDistance);
 			return true;
 		}

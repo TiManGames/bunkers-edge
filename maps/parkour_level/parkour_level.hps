@@ -10,6 +10,7 @@
 #include "helpers/helper_game.hps"
 #include "helpers/helper_modules.hps"
 #include "helpers/helper_ai.hps"
+#include "helpers/helper_areas.hps"
 #include "helpers/helper_player.hps"
 #include "helpers/helper_physics.hps"
 
@@ -24,6 +25,8 @@ const float gfBeastTraversalApproachFallDistance = 1.25f;
 const int glBeastTraversalMaxLaunchRecoveries = 1;
 const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
 const tString gsBunkerEndingReturnGlobal = "BunkersEdge_PlayReturnedBunkerEnding";
+const tString gsParkourOutdoorGrading = "mods/BunkersEdge/textures/colorgrading/grading_parkour_new.dds";
+const tString gsParkourIndoorGrading = "mods/BunkersEdge/textures/colorgrading/grading_parkour_interior.dds";
 
 
 //--------------------------------------------------
@@ -108,7 +111,9 @@ class cScrMap : iScrMap
 	////////////////////////////
 	// Run when entering map
 	void OnEnter()
-	{	
+	{
+		RestoreParkourColorGrading();
+		Parkour_WallSlideDebug("MAP OnEnter: diagnostics loaded; state=" + cLux_GetPlayer().GetCurrentStateId());
 		EnsureStalkerNarrowBodySectionsSetup();
 		SetBeastNarrowSectionBody(false);
 		Entity_SetActive("stalker", false);
@@ -153,6 +158,7 @@ class cScrMap : iScrMap
 	// Run when leaving map
 	void OnLeave()
 	{
+		Map_RemoveTimer("EndingWallSlide");
 		SetBeastNarrowSectionBody(false);
 		Hint_SetCanShowHints(true);
 	}
@@ -455,11 +461,31 @@ class cScrMap : iScrMap
  
 	//-------------------------------------------------------
 
+	void RestoreParkourColorGrading()
+	{
+		// Saves can contain both the doorway grade and the map's default grade.
+		// Remove both path forms used by older saves before rebuilding this layer.
+		Effect_ToneMapping_RemoveGradingTexture("grading_parkour_interior.dds");
+		Effect_ToneMapping_RemoveGradingTexture("grading_parkour_new.dds");
+		Effect_ToneMapping_RemoveGradingTexture(gsParkourIndoorGrading);
+		Effect_ToneMapping_RemoveGradingTexture(gsParkourOutdoorGrading);
+
+		// The saved doorway group describes the checkpoint, not where we died.
+		tString sGrading = Doorway_PlayerIsInGroup("Inside") ?
+			gsParkourIndoorGrading : gsParkourOutdoorGrading;
+		Effect_ToneMapping_FadeWorldGrading(sGrading, 0.0f);
+		// Also set the viewport layer immediately if the world already has this grade.
+		Effect_ToneMapping_SetGradingTexture(0, sGrading, 1.0f);
+		Debug_Log("[ParkourGrading] Restored " + sGrading);
+	}
+
+	//-------------------------------------------------------
+
 	bool IndoorLightingArea_DoorWay(const tString &in asArea, const tString &in asEntity, int alState)
 	{
 		if (alState == 1)
 		{
-			Effect_ToneMapping_FadeWorldGrading("grading_parkour_interior.dds", 2.0f);
+			Effect_ToneMapping_FadeWorldGrading(gsParkourIndoorGrading, 2.0f);
 			Light_FadeTo("Light_Box_32", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_45", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor_White, -1, 1.0f);
@@ -476,7 +502,7 @@ class cScrMap : iScrMap
 		}
 		else
 		{
-			Effect_ToneMapping_FadeWorldGrading("grading_parkour_new.dds", 2.0f);
+			Effect_ToneMapping_FadeWorldGrading(gsParkourOutdoorGrading, 2.0f);
 			Light_FadeTo("Light_Box_32", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_45", cColor(0,0,0,0), -1, 1.0f);
 			Light_FadeTo("Light_Box_47", cColor(0,0,0,0), -1, 1.0f);
@@ -1340,6 +1366,7 @@ class cScrMap : iScrMap
 
 		bool Trigger_Ending(const tString &in asParent, const tString &in asChild, int alState)
 		{
+			Parkour_WallSlideDebug("MAP Trigger_Ending parent=" + asParent + " child=" + asChild + " collideState=" + alState);
 			if (alState != 1) return true;
 
 			Entity_SetActive(asParent, false);
@@ -1362,17 +1389,37 @@ class cScrMap : iScrMap
 			Entity_SetActive("Trigger_Death", false);
 			Player_StopLookAt(0);
 			Player_StartLookAt("Trigger_Ending_5", 10.0f, 10.0f, 20.0f, true);
+			Map_RemoveTimer("EndingWallSlide");
+			Map_AddTimer("EndingWallSlide", 0.1f, "UpdateEndingWallSlide");
 
 			return false;
 		}
 
 		bool Trigger_StopSlide(const tString &in asParent, const tString &in asChild, int alState)
 		{
+			Parkour_WallSlideDebug("MAP Trigger_StopSlide parent=" + asParent + " child=" + asChild +
+				" collideState=" + alState + " playerState=" + cLux_GetPlayer().GetCurrentStateId());
+			if (alState != 1) return true;
+			Map_RemoveTimer("EndingWallSlide");
 			Entity_SetActive("Trigger_Death", true);
 			Parkour_StopWallSlide();
 			Player_StopLookAt(0);
 
 			return false;
+		}
+
+		void UpdateEndingWallSlide(const tString &in asTimer)
+		{
+			if (cLux_GetPlayer().GetCurrentStateId() == ePlayerState_Custom_ParkourWallSlide)
+			{
+				Map_AddTimer("EndingWallSlide", 0.1f, "UpdateEndingWallSlide");
+				return;
+			}
+
+			// Surface loss can end the slide before the player reaches a stop area.
+			Parkour_WallSlideDebug("MAP slide monitor cleanup; state=" + cLux_GetPlayer().GetCurrentStateId());
+			Entity_SetActive("Trigger_Death", true);
+			Player_StopLookAt(0);
 		}
 
 		void BeginRiftTransfer()
