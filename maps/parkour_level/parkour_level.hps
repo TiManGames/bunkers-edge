@@ -1418,7 +1418,6 @@ class cScrMap : iScrMap
 
 			// Surface loss can end the slide before the player reaches a stop area.
 			Parkour_WallSlideDebug("MAP slide monitor cleanup; state=" + cLux_GetPlayer().GetCurrentStateId());
-			Entity_SetActive("Trigger_Death", true);
 			Player_StopLookAt(0);
 		}
 
@@ -1434,7 +1433,7 @@ class cScrMap : iScrMap
 			cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
 			cScript_SetGlobalVarBool(gsBunkerEndingReturnGlobal, true);
 			Map_AddTimer("Timer_FadeIntroRift", 0.2f, "OnTimer_FadeIntroRift");
-			Map_AddTimer("Timer_ChangeToBunker", 0.65f, "OnTimer_ChangeToBunker");
+			Map_AddTimer("Timer_ChangeToBunker", 4.65f, "OnTimer_ChangeToBunker");
 		}
 
 		void OnTimer_FadeIntroRift(const tString &in asTimer)
@@ -1461,6 +1460,7 @@ class cScrMap : iScrMap
 
 		bool Trigger_TheEnd(const tString &in asParent, const tString &in asChild, int alState)
 		{
+			Sound_FadeGlobalVolume(0, 0, eSoundEntryType_AllExceptGui);
 			Music_Play("stinger.ogg", 0.6f, false, eMusicPrio_BigEvent);
 			BeginRiftTransfer();
 

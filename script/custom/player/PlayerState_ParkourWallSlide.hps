@@ -204,11 +204,10 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 			EndWallSlide("underwater");
 			return;
 		}
-		if (mbOnFlatSurface && mbTouchedSlideSurface)
-		{
-			EndWallSlide("reached flat ground");
-			return;
-		}
+		// A nearby prop can report an upward-facing collision while the actual
+		// slide surface is still valid. Do not let that auxiliary hit cancel the
+		// state; the stop areas handle the intended end, while sustained loss of
+		// every sloped surface still releases through the grace timer below.
 		if (mbHasSlideSurface)
 		{
 			mbTouchedSlideSurface = true;
