@@ -166,16 +166,39 @@ class cScrMap : iScrMap
 		//END DEATH BOX STUFF
 	}
 
+	tString sCountdownSeconds = "SECONDS";
+
 	void OnGui(float afTimeStep)
 	{
-		if (!mbInsideTimeBox) return;
+		cImGuiLabelData labelData = ImGui_GetDefaultLabel();
+		labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 96));
+		
+		if(mbPlayerInDeathBox)
+		{
+			Player_SetCrossHairEnabled(false);
+			
+			if(mfPlayerDeathTimer >= 58.0f) sCountdownSeconds = "SECOND";
+			if(mfPlayerDeathTimer >= 59.0f) sCountdownSeconds = "SECONDS";
 
-		ImGui_SetAlignment(eImGuiAlign_CenterCenter);
-			ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
-			tString sDate =  "Current Time: " + FormatDate(cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate())));
-			ImGui_DoLabelExt(sDate, ImGui_GetDefaultLabel(), ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 1);
-			ImGui_GroupEnd();
-		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+			ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+				ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
+				tString sCountdownLabel;
+				if(mfPlayerDeathTimer < 60.0f) sCountdownLabel = "YOU WILL DIE IN "+ cMath_Clamp(60-mfPlayerDeathTimer, 0, 60) + " " + sCountdownSeconds;
+				else sCountdownLabel = "YOU ARE DEAD";
+				ImGui_DoLabelExt(sCountdownLabel, labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 3);
+				ImGui_GroupEnd();
+			ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		}
+		
+		if (mbInsideTimeBox)
+		{
+			ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+				ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
+				tString sDate =  "Current Time: " + FormatDate(cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate())));
+				ImGui_DoLabelExt(sDate, labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 3);
+				ImGui_GroupEnd();
+			ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		}
 	}
 
 	tString FormatDate(tString&in asDate)
@@ -205,7 +228,16 @@ class cScrMap : iScrMap
  
 	bool OnCollide_TimeBox(const tString &in asParent, const tString &in asChild, int alState)
 	{
-		mbInsideTimeBox = alState == 1;
+		if(alState == 1)
+		{
+			mbInsideTimeBox = true;
+			Player_ShowCrossHairIcons(false, false);
+		}
+		if(alState == -1)
+		{
+			mbInsideTimeBox = false;
+			Player_ShowCrossHairIcons(true, false);
+		}
 
 		return true;
 	}
@@ -249,16 +281,89 @@ class cScrMap : iScrMap
 	 
 		bool OnCollide_DeathBox(const tString &in asParent, const tString &in asChild, int alState)
 		{
-			if(alState==1)
+			if(alState == 1)
 			{
 				mbPlayerInDeathBox = true;
+				Player_ShowCrossHairIcons(false, false);
 			}
-			else if(alState==-1)
+			if(alState == -1)
 			{
 				mbPlayerInDeathBox = false;
+				Player_ShowCrossHairIcons(true, false);
 			}
 
 			return true;
+		}
+	 
+		//-------------------------------------------------------
+		
+		//} END DEAD ROOM
+
+		////////////////////////////////////////
+		// DEBUG ROOM
+		//{//////////////////////////////////////
+		 
+		//-------------------------------------------------------
+
+		bool mbPickedUpShotgun = false;
+		bool mbInsideDebugRoom = false;
+	 
+		//-------------------------------------------------------
+	 
+		bool OnCollide_DebugBox(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if(alState==1)
+			{
+				mbInsideDebugRoom = true;
+				if(mbPickedUpShotgun) 
+				{
+					Item_AddToInventory("Shotgun", eInventoryInstance_Player, false);
+					cLux_AddDebugMessage("[DebugRoom] Add dummy shotgun so the STUPID PLAYER thinks it's the same shotgun. Idiot.");
+					cLux_SetHideDebugOutputOn(false);
+				}
+			}
+			else if(alState==-1)
+			{
+				mbInsideDebugRoom = false;
+
+				// Bunch of stupid hacks because stuff related to the shotgun doesn't want to behave
+				Player_ChangeStateToNormal();
+				PlayerBody_StopAnimationLayer(ePlayerBodyAnimationLayer_Arms, 0.0f);
+				Item_PutAway(eItemHandlerHand_Right);
+				Item_ClearInventory(eInventoryInstance_Player);
+				Map_AddTimer("FreeSocket", 0.7f, "OnTimer_FreeSocket");
+			}
+
+			return true;
+		}
+
+		//-------------------------------------------------------
+
+		void OnGui_DebugPanel(const tString&in asEntityName, float afTimeStep)
+		{
+			ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+				ImGui_DoLabelExt("DEBUG ACTION #"+asEntityName, ImGui_GetDefaultLabel(), ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 6);
+			ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		}
+
+		//-------------------------------------------------------
+
+		void OnInteract_Shotgun(const tString &in asEntity)
+		{
+			Entity_SetActive("shotgun", false);
+			Entity_SetActive("Trigger_1", false);
+			Item_AddToInventory("Shotgun", eInventoryInstance_Player, true); //"player/UI/menu/add_inventory"
+			Sound_CreateAtEntity("PickupSound", "player/UI/menu/add_inventory", "shotgun", 0.0f);
+			mbPickedUpShotgun = true;
+
+			cLux_AddDebugMessage("[DebugRoom] Fake pickup because this engine sucks!");
+		}
+
+		//-------------------------------------------------------
+
+		void OnTimer_FreeSocket(const tString &in asTimer)
+		{
+			PlayerBody_FreeSocket("R_Hand");
 		}
 	 
 		//-------------------------------------------------------
