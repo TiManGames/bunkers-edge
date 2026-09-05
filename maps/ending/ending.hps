@@ -107,6 +107,7 @@ class cScrMap : iScrMap
 		
 		if (alAction == eAction_Test1)
 		{
+			Player_GiveDamage(1.0f, 0.0f, eDamageType_Default, ""); // Die!
 		}
 	}
 
@@ -118,6 +119,58 @@ class cScrMap : iScrMap
 	{
 		//afY = cLux_DrawDebugText("My Debug value:"+..., afY);
 		return afY;
+	}
+
+	//-------------------------------------------------------
+
+	void Update(float afTimeStep)
+	{
+		////////////////////////////
+		// DEATH BOX
+		////////////////////////////
+		
+		// Increment timer
+		if(mbPlayerInDeathBox) mfPlayerDeathTimer += afTimeStep;
+		else if(mfPlayerDeathTimer > 0) mfPlayerDeathTimer -= afTimeStep;
+
+		//cLux_AddDebugMessage("Time until death: "+cMath_Clamp(60-mfPlayerDeathTimer, 0, 60));
+
+		// Hints
+		if(mbPlayerInDeathBox)
+		{
+			if(mfPlayerDeathTimer >= 10.0f)
+			{
+				Hint_ShowInfo("Hints", "HintDie", false);
+			}
+			if(mfPlayerDeathTimer >= 25.0f)
+			{
+				Hint_ShowInfo("Hints", "HintDie2", false);
+			}
+			if(mfPlayerDeathTimer >= 42.0f)
+			{
+				Hint_ShowInfo("Hints", "HintDie3", false);
+			}
+			if(mfPlayerDeathTimer >= 54.0f)
+			{
+				Hint_ShowInfo("Hints", "HintDie4", false);
+			}
+		}
+
+		if(mfPlayerDeathTimer >= 60.0f) Player_GiveDamage(1.0f, 0.0f, eDamageType_Default, ""); // Die!
+
+		//END DEATH BOX STUFF
+	}
+
+	tString thing = cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate()));
+
+	void OnGui(float afTimeStep)
+	{
+		/* ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+			ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
+			tString thing = cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate()));
+			ImGui_DoLabelExt(thing, ImGui_GetDefaultLabel(), ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 1);
+			ImGui_GroupEnd();
+		ImGui_SetAlignment(eImGuiAlign_TopLeft); */
 	}
  
 	//-------------------------------------------------------
@@ -164,9 +217,38 @@ class cScrMap : iScrMap
 		//-------------------------------------------------------
 		
 		//} END General	
+
+		/////////////////////////////////////////
+		// DEAD ROOM
+		//{//////////////////////////////////////
+		 
+		//-------------------------------------------------------
+	 
+		bool mbPlayerInDeathBox;
+		float mfPlayerDeathTimer;
+	 
+		//-------------------------------------------------------
+	 
+		bool OnCollide_DeathBox(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if(alState==1)
+			{
+				mbPlayerInDeathBox = true;
+			}
+			else if(alState==-1)
+			{
+				mbPlayerInDeathBox = false;
+			}
+
+			return true;
+		}
+	 
+		//-------------------------------------------------------
+		
+		//} END General	
 	 
 		/////////////////////////////////////////
-		// Event *Name Of Event*
+		// SITTING ROOM
 		//{//////////////////////////////////////
 
 		//-------------------------------------------------------
