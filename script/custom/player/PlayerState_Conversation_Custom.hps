@@ -133,6 +133,11 @@ class cScrPlayerState_Conversation_Custom : cScrPlayerState_Conversation
 		cVector2f vHudSize = cLux_GetHudVirtualSize();
 		cVector3f vHudStart = cLux_GetHudVirtualStartPos();
 
+		// Game-HUD input focus routes mouse movement to ImGui, but cursor drawing
+		// is controlled separately. Request the HUD's configured default pointer
+		// every frame while the response picker is visible.
+		pImGui.SetShowMouseAutomatically(true);
+
 		int lOptionCount = mvResponseOptions.size();
 		int lVisibleOptionCount = 0;
 		for (int i = 0; i < lOptionCount; ++i)
