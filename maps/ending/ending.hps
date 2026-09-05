@@ -10,6 +10,7 @@
 #include "helpers/helper_game.hps"
 #include "helpers/helper_modules.hps"
 #include "helpers/helper_ai.hps"
+#include "helpers/helper_areas.hps"
 
 #include "helpers/helper_agent.hps"
 #include "helpers/helper_gun.hps"
@@ -19,8 +20,8 @@
 
 //--------------------------------------------------
  
-/*Place any global values here. These must be const variables as they will not be saved*/
-/*This is also the place for enums and classes, but these should be avoided whenever possible*/
+const tString gsBunkersEdgeCreditsFile = "BunkersEdge_Credits.cfg";
+const tString gsBunkersEdgeCreditsMusic = "Bunker_EndCredits.ogg";
  
 //--------------------------------------------------
  
@@ -125,6 +126,8 @@ class cScrMap : iScrMap
 
 	void Update(float afTimeStep)
 	{
+		UpdateSittingRoomGruntThreatRotation(afTimeStep);
+
 		////////////////////////////
 		// DEATH BOX
 		////////////////////////////
@@ -138,15 +141,15 @@ class cScrMap : iScrMap
 		// Hints
 		if(mbPlayerInDeathBox)
 		{
-			if(mfPlayerDeathTimer >= 10.0f)
+			if(mfPlayerDeathTimer >= 5.0f)
 			{
 				Hint_ShowInfo("Hints", "HintDie", false);
 			}
-			if(mfPlayerDeathTimer >= 25.0f)
+			if(mfPlayerDeathTimer >= 20.0f)
 			{
 				Hint_ShowInfo("Hints", "HintDie2", false);
 			}
-			if(mfPlayerDeathTimer >= 42.0f)
+			if(mfPlayerDeathTimer >= 40.0f)
 			{
 				Hint_ShowInfo("Hints", "HintDie3", false);
 			}
@@ -161,16 +164,24 @@ class cScrMap : iScrMap
 		//END DEATH BOX STUFF
 	}
 
-	tString thing = cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate()));
-
 	void OnGui(float afTimeStep)
 	{
-		/* ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+		if (!mbInsideTimeBox) return;
+
+		ImGui_SetAlignment(eImGuiAlign_CenterCenter);
 			ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
-			tString thing = cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate()));
-			ImGui_DoLabelExt(thing, ImGui_GetDefaultLabel(), ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 1);
+			tString sDate =  "Current Time: " + FormatDate(cString_To8Char(cLux_GetStringWFromDate(cSystem_GetDate())));
+			ImGui_DoLabelExt(sDate, ImGui_GetDefaultLabel(), ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 1);
 			ImGui_GroupEnd();
-		ImGui_SetAlignment(eImGuiAlign_TopLeft); */
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+	}
+
+	tString FormatDate(tString&in asDate)
+	{
+		tString sHour = cString_Sub(asDate, 8, 2);
+		tString sMinute = cString_Sub(asDate, 10, 2);
+		tString sSecond = cString_Sub(asDate, 12, 2);
+		return sHour + ":" + sMinute + ":" + sSecond;
 	}
  
 	//-------------------------------------------------------
@@ -186,11 +197,16 @@ class cScrMap : iScrMap
  
 	//-------------------------------------------------------
  
-	/*Put any variables that are used in more than one scene here.*/
+	bool mbInsideTimeBox = false;
  
 	//-------------------------------------------------------
  
-	/*Put any functions that are used in more than one scene here.*/
+	bool OnCollide_TimeBox(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		mbInsideTimeBox = alState == 1;
+
+		return true;
+	}
  
 	//-------------------------------------------------------
  
@@ -253,7 +269,31 @@ class cScrMap : iScrMap
 
 		//-------------------------------------------------------
 
-		/*Put any variables that are only used in Scene X, Event X here.*/
+		bool mbGruntThreatRotating = false;
+		float mfGruntThreatRotationTime = 0.f;
+		cMatrixf m_mtxGruntThreatRotationStart;
+		cMatrixf m_mtxGruntThreatRotationGoal;
+
+		//-------------------------------------------------------
+
+		void UpdateSittingRoomGruntThreatRotation(float afTimeStep)
+		{
+			if (mbGruntThreatRotating == false) return;
+
+			iLuxEntity@ pGrunt = Map_GetEntity("Grunt");
+			if (pGrunt is null)
+			{
+				mbGruntThreatRotating = false;
+				return;
+			}
+
+			mfGruntThreatRotationTime += afTimeStep;
+			float fT = cMath_Clamp(mfGruntThreatRotationTime / 4.5f, 0.f, 1.f);
+			pGrunt.SetMatrix(cMath_MatrixSlerp(fT, m_mtxGruntThreatRotationStart, m_mtxGruntThreatRotationGoal, true));
+
+			if (fT >= 1.f)
+				mbGruntThreatRotating = false;
+		}
 
 		//-------------------------------------------------------
 
@@ -303,6 +343,7 @@ class cScrMap : iScrMap
 
 		//-------------------------------------------------------
 
+		int mlGruntAnimationStage = 1;
 		void OnSubject_SitOnYouThreat(const tString &in asSubject, bool abStartOfSubject)
 		{
 			if (abStartOfSubject) return;
@@ -310,7 +351,56 @@ class cScrMap : iScrMap
 			iLuxEntity@ pGrunt = Map_GetEntity("Grunt");
 			if (pGrunt is null) return;
 
-			pGrunt.FadeMeshScaleMul(cVector3f(4.f), 4.5f);
+			pGrunt.FadeMeshScaleMul(cVector3f(4.0f), 4.5f);
+
+			m_mtxGruntThreatRotationStart = pGrunt.GetMatrix();
+			m_mtxGruntThreatRotationGoal = cMath_MatrixMul(cMath_MatrixRotateY(cMath_Pi), m_mtxGruntThreatRotationStart);
+			m_mtxGruntThreatRotationGoal.SetTranslation(m_mtxGruntThreatRotationStart.GetTranslation());
+			mfGruntThreatRotationTime = 0.f;
+			mbGruntThreatRotating = true;
+
+			Map_AddTimer("1", 4.5f, "Timer_GruntAnimation");
+			Map_AddTimer("1", 6.3f, "Timer_MoveButt");
+		}
+
+		void Timer_GruntAnimation(const tString&in asTimer)
+		{
+			Entity_SetActive("Grunt", false);
+
+			Entity_SetActive("grunt_anim_" + asTimer, true);
+
+			if (mlGruntAnimationStage <= 2)
+			{
+				Map_AddTimer("" + (mlGruntAnimationStage + 1), 0.7f, "Timer_GruntAnimation");
+
+				if (mlGruntAnimationStage > 1)
+					Entity_SetActive("grunt_anim_" + (mlGruntAnimationStage - 1), false);
+
+				mlGruntAnimationStage++;
+			}
+			
+		}
+
+		void Timer_MoveButt(const tString&in asTimer)
+		{
+			Player_StartLookAt("GruntButtTarget_1", 3.0f, 3.0f, 5.0f, true);
+			Area_MoveLinearTo("GruntButtController", "GruntButtTarget", 0.1f, 0.3f, 1.0f, false, "");
+
+			Map_AddTimer("FadeOutAndCredits", 4.5f, "Timer_FadeOutAndCredits");
+		}
+
+		void Timer_FadeOutAndCredits(const tString&in asTimer)
+		{
+			Effect_Fade_Out(0.25f);
+			Map_AddTimer("DoCredits", 3.0f, "Timer_DoCredits");
+		}
+
+		void Timer_DoCredits(const tString&in asTimer)
+		{
+			Parkour_SetLevelCompletedOnce();
+			Player_SetActive(false);
+			Sound_FadeGlobalVolume(0.f, 0.5f, eSoundEntryType_WorldAll);
+			Credits_Start(gsBunkersEdgeCreditsFile, "OnEndOfBunkersEdgeCredits", "", cVector3f_Zero, gsBunkersEdgeCreditsMusic);
 		}
 
 		//-------------------------------------------------------
@@ -327,27 +417,27 @@ class cScrMap : iScrMap
 		{
 			if (alState != 1) return true;
 
-			// Player_SetActive(false);
+			Player_SetActive(false);
 
 			Voice_SetSource("Grunt", "Grunt", 1.f, 20.f, true);
 			Voice_SetFocusScene("General");
 
 			Dialog_Begin("SittingRoomConversation");
-				Dialog_AddBranch("Opening");
-					Dialog_AddSubject("SeeingGrunt");
-					AddAllSittingRoomQuestions();
+				// Dialog_AddBranch("Opening");
+				// 	Dialog_AddSubject("SeeingGrunt");
+				// 	AddAllSittingRoomQuestions();
 
-				AddSittingRoomQuestionBranch("Question_1", "question_1");
-				AddSittingRoomQuestionBranch("Question_2", "question_2");
-				AddSittingRoomQuestionBranch("Question_3", "question_3");
-				AddSittingRoomQuestionBranch("Question_4", "question_4");
-				AddSittingRoomQuestionBranch("Question_5", "question_5");
-				AddSittingRoomQuestionBranch("Question_6", "question_6");
-				AddSittingRoomQuestionBranch("Question_7", "question_7");
-				AddSittingRoomQuestionBranch("Question_8", "question_8");
-				AddSittingRoomQuestionBranch("Question_9", "question_9");
-				AddSittingRoomQuestionBranch("Question_10", "question_10");
-				AddSittingRoomQuestionBranch("Question_11", "question_11");
+				// AddSittingRoomQuestionBranch("Question_1", "question_1");
+				// AddSittingRoomQuestionBranch("Question_2", "question_2");
+				// AddSittingRoomQuestionBranch("Question_3", "question_3");
+				// AddSittingRoomQuestionBranch("Question_4", "question_4");
+				// AddSittingRoomQuestionBranch("Question_5", "question_5");
+				// AddSittingRoomQuestionBranch("Question_6", "question_6");
+				// AddSittingRoomQuestionBranch("Question_7", "question_7");
+				// AddSittingRoomQuestionBranch("Question_8", "question_8");
+				// AddSittingRoomQuestionBranch("Question_9", "question_9");
+				// AddSittingRoomQuestionBranch("Question_10", "question_10");
+				// AddSittingRoomQuestionBranch("Question_11", "question_11");
 
 				Dialog_AddBranch("Finale");
 					Dialog_AddSubject("SitOnYou_Threat", "OnSubject_SitOnYouThreat");
