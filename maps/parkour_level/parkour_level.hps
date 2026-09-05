@@ -1289,6 +1289,8 @@ class cScrMap : iScrMap
 			Map_AddTimer("ReactivatePlayer", 1.5f, "Timer_ReactivatePlayer");
 			Map_AddTimer("Jump", 1.0f, "Timer_BeastJump");
 
+			Game_AutoSave(true);
+
 			return false;
 		}
 
@@ -1324,8 +1326,11 @@ class cScrMap : iScrMap
 			TeleportBeastToChaseSpawn("StalkerVentSpawn");
 			mbBeastActivated = true;
 			
-
 			Map_AddTimer("ResumeTimer", 2.0f, "Timer_Resume");
+
+			Music_PlayExt("chase_3.ogg", true, 0.3f, 1.0f, 0.0f, 0.5f, eMusicPrio_AgentHunt, true);
+
+			Game_AutoSave(true);
 			
 
 			return false;
