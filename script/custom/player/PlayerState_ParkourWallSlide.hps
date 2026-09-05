@@ -329,21 +329,22 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 		mbHasSlideSurface = false;
 		mbOnFlatSurface = false;
 		msDebugProbes = "";
-		float fBestDistance = 1000.f;
-		cVector3f vNormal;
+		mfProbeBestDistance = 1000.f;
+		mvProbeBestNormal = cVector3f_Zero;
 		// Downward probes find receding slopes that horizontal rays pass above.
 		// Side samples bridge triangle seams without treating rays as collision.
 		array<float> vSideOffsets = { 0.f, -0.22f, 0.22f };
 		for (uint i = 0; i < vSideOffsets.size(); ++i)
 		{
 			cVector3f vStart = vFeet + cVector3f_Up * 0.5f + mvWallRight * vSideOffsets[i];
-			ProbeSlideSurface(vStart, cVector3f_Down, fBestDistance, vNormal, "down" + i);
+			ProbeSlideSurface(vStart, cVector3f_Down, "down" + i);
 		}
-		ProbeSlideSurface(vFeet + cVector3f_Up * 0.45f, mvWallForward, fBestDistance, vNormal, "frontLow");
-		ProbeSlideSurface(vFeet + cVector3f_Up * 1.25f, mvWallForward, fBestDistance, vNormal, "frontHigh");
+		ProbeSlideSurface(vFeet + cVector3f_Up * 0.45f, mvWallForward, "frontLow");
+		ProbeSlideSurface(vFeet + cVector3f_Up * 1.25f, mvWallForward, "frontHigh");
 		if (mbTouchedSlideSurface)
-			ProbeSlideSurface(vFeet + cVector3f_Up * 0.45f, mvSurfaceNormal * -1.f, fBestDistance, vNormal, "previousNormal");
-		if (fBestDistance >= 1000.f) return;
+			ProbeSlideSurface(vFeet + cVector3f_Up * 0.45f, mvSurfaceNormal * -1.f, "previousNormal");
+		if (mfProbeBestDistance >= 1000.f) return;
+		cVector3f vNormal = mvProbeBestNormal;
 
 		cVector3f vDown = cVector3f_Down - vNormal * cMath_Vector3Dot(cVector3f_Down, vNormal);
 		if (vDown.SqrLength() <= 0.001f) return;
@@ -366,7 +367,7 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 	//------------------------------------------------------------
 
 	void ProbeSlideSurface(const cVector3f &in avStart, const cVector3f &in avDir,
-						   float &inout afBestDistance, cVector3f &inout avBestNormal, const tString &in asLabel)
+						   const tString &in asLabel)
 	{
 		float fDistance;
 		cVector3f vNormal;
@@ -403,14 +404,14 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 			msDebugProbes += " REJECT wall angle dot=" + cMath_Vector3Dot(vNormal, mvWallForward);
 			return;
 		}
-		if (fDistance >= afBestDistance)
+		if (fDistance >= mfProbeBestDistance)
 		{
 			msDebugProbes += " VALID farther";
 			return;
 		}
 		msDebugProbes += " SELECTED nearest so far";
-		afBestDistance = fDistance;
-		avBestNormal = vNormal;
+		mfProbeBestDistance = fDistance;
+		mvProbeBestNormal = vNormal;
 	}
 
 	//------------------------------------------------------------
@@ -534,6 +535,8 @@ class cScrPlayerState_ParkourWallSlide : iScrPlayerState, iScrPlayerState_Interf
 	cVector3f mvSlideDown = cVector3f_Down;
 	cVector3f mvSlideRight = cVector3f_Right;
 	cVector3f mvSurfaceNormal = cVector3f_Up;
+	cVector3f mvProbeBestNormal = cVector3f_Zero;
+	float mfProbeBestDistance = 1000.f;
 
 	bool mbHasSlideSurface = false;
 	bool mbTouchedSlideSurface = false;
