@@ -11,6 +11,7 @@
 #include "helpers/helper_modules.hps"
 #include "helpers/helper_ai.hps"
 #include "helpers/helper_areas.hps"
+#include "helpers/helper_menu.hps"
 
 #include "helpers/helper_agent.hps"
 #include "helpers/helper_gun.hps"
@@ -351,6 +352,9 @@ class cScrMap : iScrMap
 			iLuxEntity@ pGrunt = Map_GetEntity("Grunt");
 			if (pGrunt is null) return;
 
+			Light_FadeBrightnessTo("Light_Sit", 1.0f, 1.0f, eEasing_Linear);
+			Light_FadeBrightnessTo("Light_Sit_1", 1.0f, 1.0f, eEasing_Linear);
+
 			pGrunt.FadeMeshScaleMul(cVector3f(4.0f), 4.5f);
 
 			m_mtxGruntThreatRotationStart = pGrunt.GetMatrix();
@@ -401,6 +405,13 @@ class cScrMap : iScrMap
 			Player_SetActive(false);
 			Sound_FadeGlobalVolume(0.f, 0.5f, eSoundEntryType_WorldAll);
 			Credits_Start(gsBunkersEdgeCreditsFile, "OnEndOfBunkersEdgeCredits", "", cVector3f_Zero, gsBunkersEdgeCreditsMusic);
+		}
+
+		void OnEndOfBunkersEdgeCredits()
+		{
+			Music_StopAll(2.f);
+			Sound_FadeGlobalVolume(1.f, 0.5f, eSoundEntryType_WorldAll);
+			MainMenu_GameOver();
 		}
 
 		//-------------------------------------------------------

@@ -501,9 +501,12 @@ class cScrMap : iScrMap
 
 	void OnEndOfBunkersEdgeCredits()
 	{
+		GameStats_Save();
 		Music_StopAll(2.f);
 		Sound_FadeGlobalVolume(1.f, 0.5f, eSoundEntryType_WorldAll);
-		MainMenu_GameOver();
+		// MainMenu_GameOver();
+
+		Map_ChangeMap("main_menu.hpm","Start_Begin","","",false);
 	}
 
 	void OnAnimEnd_ReturnedBunkerFall(const tString &in asAnim)
