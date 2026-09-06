@@ -183,9 +183,16 @@ class cScrMap : iScrMap
 			ImGui_SetAlignment(eImGuiAlign_CenterCenter);
 				ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
 				tString sCountdownLabel;
-				if(mfPlayerDeathTimer < 60.0f) sCountdownLabel = "YOU WILL DIE IN "+ cMath_Clamp(60-mfPlayerDeathTimer, 0, 60) + " " + sCountdownSeconds;
-				else sCountdownLabel = "YOU ARE DEAD";
+				if(mfPlayerDeathTimer < 60.0f) 
+				sCountdownLabel = "YOU WILL DIE IN "+ cMath_Clamp(60-mfPlayerDeathTimer, 0, 60) + " " + sCountdownSeconds;
+				else
+				{
+					sCountdownLabel = "YOU ARE DEAD";
+					ImGui_DoLabelExt("You lost the coin toss!", labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.6, 1)), -1, 2);
+				}
+
 				ImGui_DoLabelExt(sCountdownLabel, labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 3);
+				
 				ImGui_GroupEnd();
 			ImGui_SetAlignment(eImGuiAlign_TopLeft);
 		}
@@ -364,6 +371,10 @@ class cScrMap : iScrMap
 		void OnTimer_FreeSocket(const tString &in asTimer)
 		{
 			PlayerBody_FreeSocket("R_Hand");
+		}
+
+		void OnInteract_Button3(const tString &in asEntity)
+		{
 		}
 	 
 		//-------------------------------------------------------
