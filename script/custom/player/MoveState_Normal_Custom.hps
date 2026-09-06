@@ -73,6 +73,8 @@ const float gfParkourMove_SlideGroundRayUp = 0.75f;
 const float gfParkourMove_SlideGroundRayLength = 2.4f;
 const float gfParkourMove_SlideMaxGroundDrop = 0.85f;
 const tString gsParkourMove_CrouchVocalisation = "player/vocalisations/world/crouch";
+const tString gsParkourMove_JumpVocalisation = "player/vocalisations/world/jump";
+const float gfParkourMove_JumpVocalisationChance = 0.5f;
 
 //------------------------------------------------------------
 
@@ -252,6 +254,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 			{
 				if (mbJumping && mfJumpCount <= 0.001f)
 				{
+					PlayJumpVocalisation();
+
 					if (mbParkourPendingSideJump)
 					{
 						cVector3f vSideJumpVel;
@@ -450,6 +454,19 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		cLux_PlayGuiSoundData(gsParkourMove_CrouchVocalisation,
 						  eSoundEntryType_World,
 						  1.0f,
+						  true);
+	}
+
+	//------------------------------------------------------------
+
+	void PlayJumpVocalisation()
+	{
+		if (cMath_RandRectf(0.f, 1.f) > gfParkourMove_JumpVocalisationChance)
+			return;
+
+		cLux_PlayGuiSoundData(gsParkourMove_JumpVocalisation,
+						  eSoundEntryType_World,
+						  0.5f,
 						  true);
 	}
 
@@ -1422,6 +1439,9 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 										   18.f,
 										   8.f,
 										   0.06f);
+
+		Sound_PlayGui("Body_Roll_0" + cMath_RandRectl(1, 4) + ".ogg", 0.6f, eSoundEntryType_Gui);
+		Sound_PlayGui("Body_Roll_Cloth_0" + cMath_RandRectl(1, 4) + ".ogg", 0.6f, eSoundEntryType_Gui);
 
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Land roll started. speed=" + mfParkourLandRollStartSpeed, true);

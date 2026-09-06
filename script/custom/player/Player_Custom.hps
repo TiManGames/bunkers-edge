@@ -45,9 +45,11 @@ const float gfParkourMoveTilt_MaxRollDeg = 5.15f;
 const float gfParkourMoveTilt_YawSpeedForMax = 2.80f;
 const float gfParkourMoveTilt_TargetFadeSpeed = 8.0f;
 const float gfParkourMoveTilt_RollEaseSpeed = 15.0f;
-const float gfFallingWooshDelay = 0.35f;
-const tString gsFallingWooshName = "falling";
-const tString gsFallingWooshEvent = "monke/Player/falling_woosh/falling_aaaah_woosh";
+const tString gsFallingWooshEventPrefix = "A_Ambience_Wind_AeolianPipe_0";
+const float gfFallingWooshDelay = 0.25f;
+const float gfFallingWooshMaxInterval = 3.0f;
+const float gfFallingWooshOverlap = 0.35f;
+const float gfFallingWooshVolume = 1.0f;
 
 const float gfVertigoMinDist = 15.f;
 const float gfVertigoFovAdd = 0.2f;
@@ -166,7 +168,8 @@ class cScrPlayerCustom : cScrPlayer
 		Entity_Preload("medkit_cutscene.ent");
 		Entity_Preload("bandage_cutscene.ent");
 		Entity_Preload("gas_mask_cutscene.ent");
-		Sound_PreloadEvent(gsFallingWooshEvent);
+		for (int lSoundId = 1; lSoundId <= 6; ++lSoundId)
+			cLux_PreloadSound(gsFallingWooshEventPrefix + lSoundId + ".ogg");
 		
 	    ImGui_PreloadImage(gsPlayer_BleedingIcon, eImGuiGfx_Texture);
 	    ImGui_PreloadImage(gsPlayer_BleedingStoppedIcon, eImGuiGfx_Texture);
@@ -206,8 +209,7 @@ class cScrPlayerCustom : cScrPlayer
 		mfParkourMoveTiltPrevYaw = 0.f;
 		mbParkourMoveTiltHasYaw = false;
 		mbParkourSuppressInjuredHintForFall = false;
-		mfFallingWooshTime = 0.f;
-		mbFallingWooshStarted = false;
+		ResetFallingWoosh();
 	}
 	
 	//------------------------------------------------------------
@@ -436,18 +438,23 @@ class cScrPlayerCustom : cScrPlayer
 	//------------------------------------------------------------
 
 	float mfFallingWooshTime = 0.f;
-	bool mbFallingWooshStarted = false;
+	float mfFallingWooshNextPlayTime = gfFallingWooshDelay;
+	[nosave] cSoundEntry@ mpFallingWooshSound;
+	[nosave] int mlFallingWooshSoundId = -1;
+	[nosave] cSoundEntry@ mpPreviousFallingWooshSound;
+	[nosave] int mlPreviousFallingWooshSoundId = -1;
 
 	void UpdateFallingWoosh(float afTimeStep)
 	{
 		iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+		bool bHasBody = pBody !is null;
+		bool bOnGround = bHasBody && pBody.IsOnGround();
+		float fVelocityY = bHasBody ? pBody.GetForceVelocity().y : 0.f;
 		bool bFalling = mBaseObj.IsDead() == false &&
-						pBody !is null &&
+						bHasBody &&
 						pBody.IsActive() &&
-						pBody.GravityIsActive() &&
-						pBody.GetTestCollision() &&
-						pBody.IsOnGround() == false &&
-						pBody.GetForceVelocity().y < 0.f &&
+						bOnGround == false &&
+						fVelocityY < 0.f &&
 						cScript_GetGlobalVarBool("PlayerUnderwater") == false;
 
 		if (bFalling == false)
@@ -457,33 +464,84 @@ class cScrPlayerCustom : cScrPlayer
 		}
 
 		mfFallingWooshTime += afTimeStep;
-		if (mbFallingWooshStarted || mfFallingWooshTime <= gfFallingWooshDelay)
-			return;
+		if (mfFallingWooshTime < mfFallingWooshNextPlayTime) return;
 
-		// A loaded mid-fall save can already contain the saved sound entity.
-		if (Sound_Exists(gsFallingWooshName) == false)
+		// Keep the current stream alive while the next one starts so the clips overlap.
+		// Sound entries can be destroyed by the engine when a non-looping stream ends,
+		// so validate the handle and its original ID before calling methods on it.
+		if (mpPreviousFallingWooshSound !is null)
 		{
-			Sound_CreateAtEntity(gsFallingWooshName, gsFallingWooshEvent, "player",
-				0.5f, true, 0.5f, -1.f, -1.f);
+			if (mlPreviousFallingWooshSoundId >= 0 &&
+				cSound_IsValid(mpPreviousFallingWooshSound, mlPreviousFallingWooshSoundId))
+			{
+				mpPreviousFallingWooshSound.Stop(false);
+			}
+			@mpPreviousFallingWooshSound = null;
+			mlPreviousFallingWooshSoundId = -1;
 		}
 
-		mbFallingWooshStarted = true;
+		if (mpFallingWooshSound !is null &&
+			mlFallingWooshSoundId >= 0 &&
+			cSound_IsValid(mpFallingWooshSound, mlFallingWooshSoundId))
+		{
+			@mpPreviousFallingWooshSound = @mpFallingWooshSound;
+			mlPreviousFallingWooshSoundId = mlFallingWooshSoundId;
+		}
+		@mpFallingWooshSound = null;
+		mlFallingWooshSoundId = -1;
+
+		tString sFallingWooshEvent = gsFallingWooshEventPrefix + cMath_RandRectl(1, 6) + ".ogg";
+		@mpFallingWooshSound = cSound_PlayGuiStream(
+			sFallingWooshEvent,
+			false,
+			gfFallingWooshVolume,
+			cVector3f_Zero,
+			eSoundEntryType_Gui);
+
+		float fNextInterval = gfFallingWooshMaxInterval;
+		if (mpFallingWooshSound !is null)
+		{
+			mlFallingWooshSoundId = mpFallingWooshSound.GetId();
+			float fSoundLength = mpFallingWooshSound.GetTotalTime();
+			if (fSoundLength > gfFallingWooshOverlap)
+			{
+				fNextInterval = cMath_Min(fNextInterval, fSoundLength - gfFallingWooshOverlap);
+			}
+		}
+
+		mfFallingWooshNextPlayTime = mfFallingWooshTime + fNextInterval;
 	}
 
 	//------------------------------------------------------------
 
 	void ResetFallingWoosh()
 	{
+		StopFallingWooshSound();
 		mfFallingWooshTime = 0.f;
-		if (mbFallingWooshStarted &&
-			cLux_GetCurrentMap() !is null &&
-			Sound_Exists(gsFallingWooshName))
-		{
-			// Use an immediate stop so FMOD events with sustain points are safe.
-			Sound_Stop(gsFallingWooshName, 0.25f);
-		}
+		mfFallingWooshNextPlayTime = gfFallingWooshDelay;
+	}
 
-		mbFallingWooshStarted = false;
+	//------------------------------------------------------------
+
+	void StopFallingWooshSound()
+	{
+		if (mpFallingWooshSound !is null &&
+			mlFallingWooshSoundId >= 0 &&
+			cSound_IsValid(mpFallingWooshSound, mlFallingWooshSoundId))
+		{
+			mpFallingWooshSound.Stop(false);
+		}
+		@mpFallingWooshSound = null;
+		mlFallingWooshSoundId = -1;
+
+		if (mpPreviousFallingWooshSound !is null &&
+			mlPreviousFallingWooshSoundId >= 0 &&
+			cSound_IsValid(mpPreviousFallingWooshSound, mlPreviousFallingWooshSoundId))
+		{
+			mpPreviousFallingWooshSound.Stop(false);
+		}
+		@mpPreviousFallingWooshSound = null;
+		mlPreviousFallingWooshSoundId = -1;
 	}
 
 	//------------------------------------------------------------

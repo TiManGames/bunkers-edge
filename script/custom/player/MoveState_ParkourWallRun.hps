@@ -35,6 +35,8 @@ const float gfParkourWallRun_CameraOrganicVertical = 0.014f;
 const float gfParkourWallRun_CameraOrganicForward = 0.020f;
 const float gfParkourWallRun_CameraOrganicRoll = 0.85f;
 
+const tString gsWallRunSound = "WallRun.ogg";
+
 //------------------------------------------------------------
 
 class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
@@ -93,6 +95,8 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		
 		cLux_GetPlayer().SetCameraPosAdd(eCameraAddType_Script, cVector3f_Zero);
 		UpdateCameraRoll(0.f);
+
+		@mpWallRunSound = cSound_PlayGuiStream(gsWallRunSound, false, 1.0f, cLux_GetPlayer().GetCharacterBody().GetPosition(), eSoundEntryType_Gui);
 	}
 	
 	//------------------------------------------------------------
@@ -106,6 +110,8 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		ResetOutwardLookYaw();
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 7.f, cMath_ToRad(140.f));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+
+		mpWallRunSound.FadeVolumeMulTo(0, 1.0f);
 	}
 	
 	//------------------------------------------------------------
@@ -551,6 +557,8 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	cVector3f mvWallNormal = cVector3f_Forward;
 	cVector3f mvWallForward = cVector3f_Forward;
 	cVector3f mvCameraBobOffset = cVector3f_Zero;
+
+	[nosave] cSoundEntry@ mpWallRunSound;
 	
 	//------------------------------------------------------------
 }
