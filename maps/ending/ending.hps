@@ -603,6 +603,8 @@ class cScrMap : iScrMap
 			iLuxEntity@ pGrunt = Map_GetEntity("Grunt");
 			if (pGrunt is null) return;
 
+			Music_Play("stalker_hunt_01.ogg", 0.6f, true, eMusicPrio_BgAmb);
+
 			Light_FadeBrightnessTo("Light_Sit", 1.0f, 1.0f, eEasing_Linear);
 			Light_FadeBrightnessTo("Light_Sit_1", 1.0f, 1.0f, eEasing_Linear);
 
@@ -647,6 +649,7 @@ class cScrMap : iScrMap
 		void Timer_FadeOutAndCredits(const tString&in asTimer)
 		{
 			Effect_Fade_Out(0.25f);
+			Music_StopAll(0.25f);
 			Map_AddTimer("DoCredits", 3.0f, "Timer_DoCredits");
 		}
 
