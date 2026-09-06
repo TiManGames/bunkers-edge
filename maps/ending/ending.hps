@@ -80,6 +80,8 @@ class cScrMap : iScrMap
 		PlayerBody_SetActive(true);
 
 		Entity_PlayAnimation("Grunt", "idle", 0.f, true, false);
+
+		Music_PlayExt("hallway.ogg", true, 0.7f, 1.0f, 0.0f, 0.0f, eMusicPrio_BgAmb, true);
 	}
 
 	//-------------------------------------------------------
@@ -173,29 +175,29 @@ class cScrMap : iScrMap
 		cImGuiLabelData labelData = ImGui_GetDefaultLabel();
 		labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 96));
 		
-		if(mbPlayerInDeathBox)
-		{
-			Player_SetCrossHairEnabled(false);
+		// if(mbPlayerInDeathBox)
+		// {
+		// 	Player_SetCrossHairEnabled(false);
 			
-			if(mfPlayerDeathTimer >= 58.0f) sCountdownSeconds = "SECOND";
-			if(mfPlayerDeathTimer >= 59.0f) sCountdownSeconds = "SECONDS";
+		// 	if(mfPlayerDeathTimer >= 58.0f) sCountdownSeconds = "SECOND";
+		// 	if(mfPlayerDeathTimer >= 59.0f) sCountdownSeconds = "SECONDS";
 
-			ImGui_SetAlignment(eImGuiAlign_CenterCenter);
-				ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
-				tString sCountdownLabel;
-				if(mfPlayerDeathTimer < 60.0f) 
-				sCountdownLabel = "YOU WILL DIE IN "+ cMath_Clamp(60-mfPlayerDeathTimer, 0, 60) + " " + sCountdownSeconds;
-				else
-				{
-					sCountdownLabel = "YOU ARE DEAD";
-					ImGui_DoLabelExt("You lost the coin toss!", labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.6, 1)), -1, 2);
-				}
+		// 	ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+		// 		ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
+		// 		tString sCountdownLabel;
+		// 		if(mfPlayerDeathTimer < 60.0f) 
+		// 		sCountdownLabel = "YOU WILL DIE IN "+ cMath_Clamp(60-mfPlayerDeathTimer, 0, 60) + " " + sCountdownSeconds;
+		// 		else
+		// 		{
+		// 			sCountdownLabel = "YOU ARE DEAD";
+		// 			ImGui_DoLabelExt("You lost the coin toss!", labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.6, 1)), -1, 2);
+		// 		}
 
-				ImGui_DoLabelExt(sCountdownLabel, labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 3);
+		// 		ImGui_DoLabelExt(sCountdownLabel, labelData, ImGui_NrmPosGroup(cVector3f(0.5, 0.5, 1)), -1, 3);
 				
-				ImGui_GroupEnd();
-			ImGui_SetAlignment(eImGuiAlign_TopLeft);
-		}
+		// 		ImGui_GroupEnd();
+		// 	ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		// }
 		
 		if (mbInsideTimeBox)
 		{
@@ -591,6 +593,11 @@ class cScrMap : iScrMap
 		int mlGruntAnimationStage = 1;
 		void OnSubject_SitOnYouThreat(const tString &in asSubject, bool abStartOfSubject)
 		{
+			if (abStartOfSubject)
+			{
+				Music_StopAll(0.0f);
+			}
+
 			if (abStartOfSubject) return;
 
 			iLuxEntity@ pGrunt = Map_GetEntity("Grunt");
@@ -653,9 +660,14 @@ class cScrMap : iScrMap
 
 		void OnEndOfBunkersEdgeCredits()
 		{
+			GameStats_Save();
 			Music_StopAll(2.f);
 			Sound_FadeGlobalVolume(1.f, 0.5f, eSoundEntryType_WorldAll);
-			MainMenu_GameOver();
+			cLux_SetGamePaused(false, false, false, false);
+			cLux_GetGuiHandler().SetGameHudInputFocus(false);
+			cLux_GetEffectHandler().FadeOut(0.f);
+			cLux_LoadScreenSetOneShotSolidColorBackground();
+			cLux_StartMap(cLux_GetMainMenuFile());
 		}
 
 		//-------------------------------------------------------

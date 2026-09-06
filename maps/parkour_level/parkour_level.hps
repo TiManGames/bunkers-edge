@@ -9,6 +9,7 @@
 #include "helpers/helper_sequences.hps"
 #include "helpers/helper_game.hps"
 #include "helpers/helper_modules.hps"
+#include "helpers/helper_menu.hps"
 #include "helpers/helper_ai.hps"
 #include "helpers/helper_areas.hps"
 #include "helpers/helper_player.hps"
@@ -27,6 +28,10 @@ const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
 const tString gsBunkerEndingReturnGlobal = "BunkersEdge_PlayReturnedBunkerEnding";
 const tString gsParkourOutdoorGrading = "mods/BunkersEdge/textures/colorgrading/grading_parkour_new.dds";
 const tString gsParkourIndoorGrading = "mods/BunkersEdge/textures/colorgrading/grading_parkour_interior.dds";
+const float gfParkourRankSTime = 5.f * 60.f;
+const float gfParkourRankATime = 7.f * 60.f;
+const float gfParkourRankBTime = 10.f * 60.f;
+const float gfParkourRankCTime = 15.f * 60.f;
 
 
 //--------------------------------------------------
@@ -145,10 +150,15 @@ class cScrMap : iScrMap
 		Game_SetupAfterMapChange();
 		Hint_SetCanShowHints(Parkour_GetLevelCompletedOnce() == false);
 
-		if (cScript_GetGlobalVarBool(gsIntroArrivalGlobal))
+		bool bPlayIntroArrival = cScript_GetGlobalVarBool(gsIntroArrivalGlobal);
+		if (bPlayIntroArrival)
 		{
 			mbIntroArrivalActive = false;
 			BeginIntroArrival();
+		}
+		else if (mbParkourResultsActive == false && mfParkourCompletionTime <= 0.f)
+		{
+			mbParkourTimerActive = true;
 		}
 	}
 
@@ -161,6 +171,7 @@ class cScrMap : iScrMap
 		Map_RemoveTimer("EndingWallSlide");
 		SetBeastNarrowSectionBody(false);
 		Hint_SetCanShowHints(true);
+		ImGui_SetShowMouseAutomatically(false);
 	}
 	
 	//-------------------------------------------------------
@@ -172,12 +183,93 @@ class cScrMap : iScrMap
 	void OnAction(int alAction, bool abPressed) 
 	{
 		if (abPressed == false) return;
+		if (mbParkourResultsActive) return;
 		
 		if (alAction == eAction_Test0)
 		{
 			
 			Stalker_Jump("stalker", "Jump_interior_Target_" + jumpArea);
 			jumpArea++;
+		}
+	}
+
+	//-------------------------------------------------------
+
+	void VariableUpdate(float afDeltaTime)
+	{
+		if (mbParkourTimerActive && cLux_GetGamePaused() == false)
+			mfParkourElapsedTime += afDeltaTime;
+	}
+
+	//-------------------------------------------------------
+
+	void OnGui(float afTimeStep)
+	{
+		if (mbParkourResultsActive == false) return;
+
+		ImGui_SetShowMouseAutomatically(true);
+
+		ImGui_SetAlignment(eImGuiAlign_TopCenter);
+		cImGuiGfx gfxBg = cImGuiGfx("background_stats.dds", eImGuiGfx_TextureTemporary);
+		ImGui_DoImage(gfxBg, ImGui_NrmPos(0.5f, 0.f, 10.f), ImGui_NrmSize(1.f));
+
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		cImGuiGfx gfxBlackBg;
+		gfxBlackBg.mColor = cColor(0.f, 1.f);
+		cVector3f vShadowOffset(1.5f, 1.f, 0.f);
+
+		ImGui_GroupBegin(ImGui_FullScreenPos(10.f), ImGui_FullScreenSize());
+		{
+			ImGui_DoImage(gfxBlackBg, ImGui_NrmPosGroup(cVector3f_Zero), ImGui_NrmSizeGroup(1.f));
+			DrawParkourResults(vShadowOffset);
+
+			cImGuiButtonData buttonData;
+			buttonData.mbUseInFocusColor = false;
+			buttonData.mbUseBackgroundGfx = false;
+			buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+			buttonData.mFont.mvSize = 22;
+			buttonData.mFont.mColor = msParkourResultsSelectedButton == "Continue"
+				? cColor(1.f, 0.75f, 0.25f, 1.f)
+				: cColor(1.f, 1.f);
+
+			cImGuiLabelData buttonLabelDataShadow = ImGui_GetDefaultLabel();
+			buttonLabelDataShadow.mFontAlign = eFontAlign_Center;
+			buttonLabelDataShadow.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+			buttonLabelDataShadow.mFont.mvSize = 22;
+			buttonLabelDataShadow.mColorBase = cColor(0.f);
+
+			ImGui_SetTransCategory("Menu");
+			ImGui_SetAlignment(eImGuiAlign_TopCenter);
+			cVector3f vButtonPos = ImGui_NrmPosGroup(0.5f, 0.81f, 0.f);
+			cVector2f vButtonSize = ImGui_NrmSizeGroup(0.1f, 0.1f);
+			ImGui_DoLabelExt("Continue", buttonLabelDataShadow, vButtonPos + vShadowOffset, vButtonSize);
+
+			if (ImGui_DoButtonExt("ParkourResultsContinue", "Continue", buttonData, vButtonPos, vButtonSize))
+			{
+				ContinueFromParkourResults();
+				return;
+			}
+
+			if (ImGui_PrevBecameInFocus())
+			{
+				Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+				msParkourResultsSelectedButton = "Continue";
+			}
+
+			ImGui_SetTransCategory("");
+		}
+		ImGui_GroupEnd();
+
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		ImGui_ResetModifiers();
+
+		if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed() == false)
+		{
+			cImGuiButtonData dummyButton;
+			dummyButton.mbUseBackgroundGfx = false;
+			ImGui_DoButtonExt("ParkourResultsDummyButton", "", dummyButton, ImGui_NrmPos(0.f, 0.f, 0.f), ImGui_NrmSize(1.f));
+			if (ImGui_PrevBecameInFocus())
+				msParkourResultsSelectedButton = "";
 		}
 	}
 
@@ -207,6 +299,12 @@ class cScrMap : iScrMap
 	//-------------------------------------------------------
 
 	bool mbIntroArrivalActive = false;
+	bool mbParkourTimerActive = false;
+	bool mbParkourResultsActive = false;
+	bool mbParkourResultsConfirmed = false;
+	float mfParkourElapsedTime = 0.f;
+	float mfParkourCompletionTime = 0.f;
+	tString msParkourResultsSelectedButton = "Continue";
 
 	//-------------------------------------------------------
 
@@ -288,6 +386,7 @@ class cScrMap : iScrMap
 	{
 		mbIntroArrivalActive = false;
 		cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
+		mbParkourTimerActive = true;
 		Player_SetActive(true);
 		
 		Player_ChangeStateToNormal();
@@ -1132,6 +1231,10 @@ class cScrMap : iScrMap
 
 		bool BeastTraversalReachedLanding()
 		{
+			// Crossing the region boundary during the arc is not a completed jump.
+			// Keep routing suspended through the landing animation and tackle delay.
+			if (StalkerJumpRoute_IsAgentJumping("stalker")) return false;
+
 			cStalkerJumpRoute@ pRoute = mStalkerJumpNetwork.GetRoute(msBeastTraversalRouteId);
 			if (pRoute is null) return false;
 
@@ -1330,6 +1433,8 @@ class cScrMap : iScrMap
 
 			Music_PlayExt("chase_3.ogg", true, 0.3f, 1.0f, 0.0f, 0.5f, eMusicPrio_AgentHunt, true);
 
+			Entity_AttachToEntity("StalkerJumpRoute_24", "Player", "", false, true, false);
+
 			Game_AutoSave(true);
 			
 
@@ -1433,10 +1538,10 @@ class cScrMap : iScrMap
 			Effect_Rumble_Start(0.35f, 0.65f, 0.05f, 0.35f);
 			Sound_PlayGui("DW_tunnel/level/portal_death", 1.f, eSoundEntryType_Gui);
 
-			// This rift returns to the bunker ending. Keep it separate from the
-			// first-arrival flag that drives the parkour sky-fall sequence.
+			// This rift now goes directly to the dedicated ending map. Clear both
+			// intro-routing flags so a later new game cannot inherit this transfer.
 			cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
-			cScript_SetGlobalVarBool(gsBunkerEndingReturnGlobal, true);
+			cScript_SetGlobalVarBool(gsBunkerEndingReturnGlobal, false);
 			Map_AddTimer("Timer_FadeIntroRift", 0.2f, "OnTimer_FadeIntroRift");
 			Map_AddTimer("Timer_ChangeToBunker", 4.65f, "OnTimer_ChangeToBunker");
 		}
@@ -1465,6 +1570,11 @@ class cScrMap : iScrMap
 
 		bool Trigger_TheEnd(const tString &in asParent, const tString &in asChild, int alState)
 		{
+			if (alState != 1 || mbParkourResultsActive || mbParkourResultsConfirmed)
+				return true;
+
+			mbParkourTimerActive = false;
+			mfParkourCompletionTime = mfParkourElapsedTime;
 			Sound_FadeGlobalVolume(0, 0, eSoundEntryType_AllExceptGui);
 			Music_Play("stinger.ogg", 0.6f, false, eMusicPrio_AgentHunt);
 			BeginRiftTransfer();
@@ -1476,14 +1586,120 @@ class cScrMap : iScrMap
 		{
 			PlayerBody_SetAnimationControlledCamera(false);
 			Player_ChangeStateToNormal();
+			ShowParkourResults();
+		}
+
+		void ShowParkourResults()
+		{
+			if (mbParkourResultsActive || mbParkourResultsConfirmed) return;
+
+			mbParkourTimerActive = false;
+			mbParkourResultsActive = true;
+			msParkourResultsSelectedButton = "Continue";
+
+			Parkour_SetEnabled(false);
+			Player_SetActive(false);
+			PauseMenu_Enabled(false);
+			cLux_SetGamePaused(true, false, true, true);
+			cLux_GetGuiHandler().SetGameHudInputFocus(true);
+		}
+
+		void ContinueFromParkourResults()
+		{
+			if (mbParkourResultsActive == false || mbParkourResultsConfirmed) return;
+
+			mbParkourResultsConfirmed = true;
+			mbParkourResultsActive = false;
+			ImGui_SetShowMouseAutomatically(false);
+			cLux_GetGuiHandler().SetGameHudInputFocus(false);
+			cLux_SetGamePaused(false, false, false, false);
+			PauseMenu_Enabled(true);
+			Player_SetActive(true);
+			Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+
+			cLux_GetEffectHandler().FadeOut(0.f);
+			cLux_LoadScreenSetOneShotSolidColorBackground();
 			Map_ChangeMap("ending.hpm", "Start_Begin", "", "", true);
+		}
+
+		tString GetParkourRank() const
+		{
+			if (mfParkourCompletionTime <= gfParkourRankSTime) return "S";
+			if (mfParkourCompletionTime <= gfParkourRankATime) return "A";
+			if (mfParkourCompletionTime <= gfParkourRankBTime) return "B";
+			if (mfParkourCompletionTime <= gfParkourRankCTime) return "C";
+			return "D";
+		}
+
+		void DrawParkourResults(const cVector3f &in avShadowOffset)
+		{
+			cImGuiLabelData titleLabelData = ImGui_GetDefaultLabel();
+			titleLabelData.mColorBase = cColor_White;
+			titleLabelData.mFontAlign = eFontAlign_Center;
+			titleLabelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+			titleLabelData.mFont.mvSize = 24;
+
+			cImGuiLabelData titleLabelDataShadow = titleLabelData;
+			titleLabelDataShadow.mColorBase = cColor(0.f);
+
+			ImGui_SetAlignment(eImGuiAlign_TopCenter);
+			ImGui_SetTransCategory("ParkourResults");
+			cVector3f vTitlePos = ImGui_NrmPosGroup(0.5f, 0.113f, 0.f);
+			cVector2f vTitleSize = ImGui_NrmSizeGroup(0.4f, 0.04f);
+			ImGui_DoLabelExt("Title", titleLabelDataShadow, vTitlePos + avShadowOffset, vTitleSize);
+			ImGui_DoLabelExt("Title", titleLabelData, vTitlePos, vTitleSize);
+
+			cImGuiLabelData labelData = ImGui_GetDefaultLabel();
+			labelData.mColorBase = cColor_White;
+			labelData.mFontAlign = eFontAlign_Left;
+			labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+			labelData.mFont.mvSize = 19;
+
+			cImGuiLabelData labelDataShadow = labelData;
+			labelDataShadow.mColorBase = cColor(0.f);
+
+			cImGuiLabelData valueData = labelData;
+			valueData.mFontAlign = eFontAlign_Left;
+			cImGuiLabelData valueDataShadow = valueData;
+			valueDataShadow.mColorBase = cColor(0.f);
+
+			ImGui_SetAlignment(eImGuiAlign_CenterLeft);
+			cVector3f vNamePos = ImGui_NrmPosGroup(0.36f, 0.31f, 0.f);
+			cVector3f vValuePos = ImGui_NrmPosGroup(0.57f, 0.31f, 0.f);
+			const float fLineSpacing = 25.07f;
+
+			ImGui_SetTransCategory("ParkourResults");
+			ImGui_DoLabelExt("CompletionTime", labelDataShadow, vNamePos + avShadowOffset);
+			ImGui_DoLabelExt("CompletionTime", labelData, vNamePos);
+
+			ImGui_SetTransCategory("");
+			tString sCompletionTime = String_SecondsToClockDisplay(mfParkourCompletionTime, true, true, true, false);
+			ImGui_DoLabelExt(sCompletionTime, valueDataShadow, vValuePos + avShadowOffset);
+			ImGui_DoLabelExt(sCompletionTime, valueData, vValuePos);
+
+			vNamePos.y += fLineSpacing;
+			vValuePos.y += fLineSpacing;
+
+			ImGui_SetTransCategory("ParkourResults");
+			ImGui_DoLabelExt("Rank", labelDataShadow, vNamePos + avShadowOffset);
+			ImGui_DoLabelExt("Rank", labelData, vNamePos);
+
+			ImGui_SetTransCategory("");
+			valueData.mColorBase = cColor(1.f, 0.75f, 0.25f, 1.f);
+			valueData.mFont.mvSize = 28;
+			valueDataShadow.mFont.mvSize = 28;
+			tString sRank = GetParkourRank();
+			ImGui_DoLabelExt(sRank, valueDataShadow, vValuePos + avShadowOffset);
+			ImGui_DoLabelExt(sRank, valueData, vValuePos);
+			ImGui_SetTransCategory("");
 		}
 
 		bool ForceWallRun(const tString &in asParent, const tString &in asChild, int alState)
 		{
 			if (alState == 1)
 			{
-				Parkour_SetFrontWallDot(-0.2);
+				// Only scramble when approaching almost directly into the wall.
+				Parkour_SetFrontWallDot(-0.95f);
 			}
 			else
 			{

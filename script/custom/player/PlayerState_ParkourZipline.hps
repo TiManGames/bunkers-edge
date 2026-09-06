@@ -119,6 +119,10 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 		cLux_PlayGuiSoundData("player/climb_ledge/low", eSoundEntryType_WorldClean, 0.55f, true);
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 4.f, 3.f, 0.16f);
 
+		@mpZiplineSound = cSound_PlayGuiStream("zipline_loop.ogg", true, 1.0f, cLux_GetPlayer().GetCharacterBody().GetPosition(), eSoundEntryType_Gui);
+		mpZiplineSound.SetVolume(0);
+		mpZiplineSound.FadeIn(1.0f, 0.5f);
+		
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Zipline state entered. speed=" + mfRideSpeed + " progress=" + mfRideProgress, true);
 	}
@@ -140,6 +144,9 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 		Player_SetLeanDisabled(false);
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+
+		mpZiplineSound.FadeOut(2.5f);
+		// mpZiplineSound.Stop(false);
 	}
 
 	//------------------------------------------------------------
@@ -147,6 +154,8 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 	void Update(float afTimeStep)
 	{
 		if (mbFinished) return;
+
+		mpZiplineSound.SetPosition(cLux_GetPlayer().GetCharacterBody().GetPosition());
 
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
@@ -652,6 +661,8 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 	float mfSmoothedRoll = 0.f;
 	float mfShakePulseTimer = 0.f;
 	int mlRideShakeId = -1;
+
+	[nosave] cSoundEntry@ mpZiplineSound;
 
 	//------------------------------------------------------------
 }

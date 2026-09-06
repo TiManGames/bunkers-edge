@@ -5,12 +5,22 @@
 // define directed jump endpoints: an endpoint with TargetJumpArea is a launch,
 // and an endpoint with no target is landing-only. Discovery order is sorted by
 // entity name so breadth-first route tie-breaking is deterministic.
+// Region membership and launch nodes use the authored endpoint positions;
+// attached landing areas keep their live positions for jumps and collision.
 //--------------------------------------------------
 
 const tString gsStalkerJumpRegionClass = "cScrAreaStalkerJumpRegion";
 const tString gsStalkerJumpRouteClass = "cScrAreaStalkerJumpRoute";
 const float gfStalkerJumpLaunchNodeSearchRadius = 1.5f;
 const float gfStalkerJumpRegionPointTolerance = 0.01f;
+
+//--------------------------------------------------
+
+bool StalkerJumpRoute_IsAgentJumping(const tString &in asAgentName)
+{
+	cScript_RunGlobalFunc(asAgentName, "cScrAgentStalker", "_Global_GetIsJumping");
+	return cScript_GetGlobalReturnBool();
+}
 
 //--------------------------------------------------
 
@@ -345,7 +355,7 @@ class cStalkerJumpNetwork
 					cLuxArea@ pRouteArea = GetArea(sRouteAreaName);
 					if (pRouteArea !is null)
 					{
-						@pLaunchNode = pPathfinder.GetNodeAtPos(pRouteArea.GetPosition(), 0.0f,
+						@pLaunchNode = pPathfinder.GetNodeAtPos(pRouteArea.GetOnLoadTransform().GetTranslation(), 0.0f,
 							gfStalkerJumpLaunchNodeSearchRadius, true, true, false, null);
 						if (pLaunchNode !is null) sLaunchNodeName = pLaunchNode.GetName();
 					}
@@ -620,12 +630,16 @@ class cStalkerJumpNetwork
 		cLuxArea@ pEndpointArea = GetArea(asEndpointAreaName);
 		if (pEndpointArea is null) return false;
 
+		// ParentAttachSnap may already have moved the endpoint to the player.
+		// The route belongs to the region where it was placed in the editor.
+		cVector3f vEndpointPos = pEndpointArea.GetOnLoadTransform().GetTranslation();
+
 		bool bCrossStalkerMatch = false;
 		for (int i = 0; i < mvAllRegionAreaNames.size(); ++i)
 		{
 			cLuxArea@ pRegionArea = GetArea(mvAllRegionAreaNames[i]);
 			if (pRegionArea is null ||
-				IsPointInsideArea(pEndpointArea.GetPosition(), pRegionArea) == false) continue;
+				IsPointInsideArea(vEndpointPos, pRegionArea) == false) continue;
 
 			if (mvAllRegionStalkerNames[i] != asAgentName)
 			{

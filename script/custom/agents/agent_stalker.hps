@@ -2175,6 +2175,13 @@ class cScrAgentStalker : cScrAgentHumanoid
 	
 	//------------------------------------------------------------
 	
+	void _Global_GetIsJumping()
+	{
+		cScript_SetGlobalReturnBool(mpStateMachine.GetCurrentState() == eStalkerState_BossFight_Jump);
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_Jump()
 	{
 		bool bJumping = mpStateMachine.GetCurrentState() == eStalkerState_BossFight_Jump;
@@ -20071,7 +20078,12 @@ class cScrAgentStalker : cScrAgentHumanoid
 		{
 			int lNextState = BossFight_GetCurrentState();		
 			
-			if (mbBossFightJump_ThrewPlayer) lNextState = eStalkerState_Alert;
+			// Constant pursuit resumes after the tackle's existing recovery delay.
+			// Alert stops pathfinding and waits for another animation to finish.
+			if (mbBossFightJump_ThrewPlayer)
+			{
+				if (mbBossFight_AlwaysChase == false) lNextState = eStalkerState_Alert;
+			}
 			else if (mbBossFightJump_HurtMidJump) lNextState = eStalkerState_Hurt;
 			
 			mpStateMachine.ChangeState(lNextState);

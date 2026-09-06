@@ -504,9 +504,10 @@ class cScrMap : iScrMap
 		GameStats_Save();
 		Music_StopAll(2.f);
 		Sound_FadeGlobalVolume(1.f, 0.5f, eSoundEntryType_WorldAll);
-		// MainMenu_GameOver();
 
-		Map_ChangeMap("main_menu.hpm","Start_Begin","","",false);
+		cLux_GetEffectHandler().FadeOut(0.f);
+		cLux_LoadScreenSetOneShotSolidColorBackground();
+		cLux_StartMap(cLux_GetMainMenuFile());
 	}
 
 	void OnAnimEnd_ReturnedBunkerFall(const tString &in asAnim)

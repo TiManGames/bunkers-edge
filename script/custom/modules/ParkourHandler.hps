@@ -90,6 +90,10 @@ const float gfParkour_HealthRegenDelay = 1.50f;
 const float gfParkour_HealthRegenRate = 0.10f;
 const float gfParkour_TutorialMomentumLearnFlow = 0.35f;
 
+const tString gsParkour_TopSpeedSound = "topseed_movement.ogg";
+const float gfParkour_TopSpeedSoundStartFlow = 0.95f;
+const float gfParkour_TopSpeedSoundStopFlow = 0.85f;
+
 const tString gsParkour_TutorialHintCategory = "BunkersEdgeHints";
 const tString gsParkour_TutorialHintShownSuffix = "_Shown";
 const tString gsParkour_TutorialHintPausedSuffix = "_Paused";
@@ -188,6 +192,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		UpdateWallRunChain(afTimeStep);
 		UpdateAirFlow(afTimeStep);
+		UpdateTopSpeedMovementSound();
 		UpdateHealthRegen(afTimeStep);
 	}
 
@@ -195,6 +200,11 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	void ResetMapData()
 	{
+		if (cSound_GetEntry(gsParkour_TopSpeedSound) !is null)
+			mpTopSpeedSound.FadeOut(1.0f);
+
+		mbTopSpeedMovementSoundActive = false;
+
 		mbRollLandingArmed = false;
 		mbLedgeCandidateActive = false;
 		mfLedgeCandidateTime = -1.f;
@@ -602,6 +612,55 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		if (mbWallJumpChainActive || mbWallScrambleJumpChainActive) return;
 
 		ChangeFlow(-gfParkour_FlowAirDecay * afTimeStep, "", false);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateTopSpeedMovementSound()
+	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+
+		bool bCanPlay =
+			mbEnabled &&
+			cLux_GetPlayer().IsActive() &&
+			pBody !is null &&
+			pBody.IsOnGround() &&
+			cLux_GetPlayer().GetCurrentStateId() == ePlayerState_Normal &&
+			cLux_GetPlayer().GetCurrentMoveStateId() == eMoveState_Normal &&
+			Parkour_GetFlatVelocity(pBody).Length() >= gfParkour_FlowRunMinSpeed;
+
+		float fRequiredFlow = mbTopSpeedMovementSoundActive
+			? gfParkour_TopSpeedSoundStopFlow
+			: gfParkour_TopSpeedSoundStartFlow;
+
+		bool bShouldPlay = bCanPlay && mfParkourFlow >= fRequiredFlow;
+		if (bShouldPlay == mbTopSpeedMovementSoundActive) return;
+
+		if (bShouldPlay)
+		{
+			@mpTopSpeedSound = cSound_PlayGuiStream(
+				gsParkour_TopSpeedSound,
+				true,
+				0.35f, 
+				cLux_GetPlayer().GetCharacterBody().GetPosition(),
+				eSoundEntryType_Gui);
+			
+			mpTopSpeedSound.SetVolume(0);
+			mpTopSpeedSound.FadeIn(0.7f, 0.75f);
+		}
+		else if (!bShouldPlay)
+		{
+			mpTopSpeedSound.FadeOut(1.0f);
+		}
+
+		if (mpTopSpeedSound !is null)
+		{
+			mpTopSpeedSound.SetPosition(cLux_GetPlayer().GetCharacterBody().GetPosition());
+		}
+
+		mbTopSpeedMovementSoundActive = bShouldPlay;
+
+		cLux_AddDebugMessage("Should Play: " + bShouldPlay);
 	}
 
 	//------------------------------------------------------------
@@ -1131,7 +1190,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		cVector3f vTravelFwd = GetTravelForward2D(apBody);
 		if (vTravelFwd.SqrLength() <= 0.001f) return false;
 
-		return cMath_Vector3Dot(avWallNormal, vTravelFwd) <= gfParkour_WallScrambleAutoFrontDot;
+		// A stricter map threshold must also apply to automatic scramble and
+		// the front-impact fallback, otherwise they can bypass ForceWallRun.
+		float fFrontDot = gfParkour_WallScrambleAutoFrontDot;
+		if (mfFrontWallDot < gfParkour_FrontWallDot)
+			fFrontDot = cMath_Min(fFrontDot, mfFrontWallDot);
+
+		return cMath_Vector3Dot(avWallNormal, vTravelFwd) <= fFrontDot;
 	}
 
 	//------------------------------------------------------------
@@ -3117,6 +3182,9 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	float mfFrontWallDot = gfParkour_FrontWallDot;
 	cVector3f mvWallJumpLastNormal = cVector3f_Zero;
 	cVector3f mvWallScrambleJumpLastNormal = cVector3f_Zero;
+	
+	[nosave] bool mbTopSpeedMovementSoundActive = false;
+	[nosave] cSoundEntry@ mpTopSpeedSound;
 
 	//------------------------------------------------------------
 }
