@@ -314,6 +314,7 @@ class cScrMap : iScrMap
 		bool mbInsideDebugRoom = false;
 		bool mbWaterFilled;
 		bool mbLightsOff;
+		int mlTerminalTextEntry;
 	 
 		//-------------------------------------------------------
 	 
@@ -400,6 +401,23 @@ class cScrMap : iScrMap
 			else Seq_WaterFill("");
 		}
 
+		void OnInteract_Button3(const tString &in asEntity)
+		{
+			if(mlTerminalTextEntry >= 4)
+			{
+				mlTerminalTextEntry = 0; // Reset terminal to first log
+				cLux_AddDebugMessage("Reset terminal!");
+				Sound_CreateAtEntity("ClearBeep", "01_01_upsilon_awake/sfx/omnitool/omni_door_hack", "StoryTerminal", 0.0f, false);
+			}
+			else
+			{
+				mlTerminalTextEntry++;
+				Sound_CreateAtEntity("TerminalBeep", "01_01_upsilon_awake/sfx/omnitool/omni_door_detect", "StoryTerminal", 0.0f, false);
+			}
+
+			cLux_AddDebugMessage("Text entry is "+mlTerminalTextEntry);
+		}
+
 		cSequenceStatesData mSeqWaterFill;
 		void Seq_WaterFill(const tString &in asX = "")
 		{
@@ -459,6 +477,31 @@ class cScrMap : iScrMap
 			}
 			
 			Sequence_End();
+		}
+
+		void OnGui_StoryTerminal(const tString&in asEntityName, float afTimeStep)
+		{
+			///////////////
+			// Draw text
+			ImGui_LayoutBegin(eImGuiLayout_XY, ImGui_NrmPos(0.f, 0.f, 1.f), ImGui_NrmSize(0.5f, 0.5f));
+				
+				cImGuiTextFrameData textData = ImGui_GetDefaultTextFrame();
+				textData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+				textData.mFontAlign = eFontAlign_Center;
+				textData.mFont.mvSize = cVector2f(20.f);
+				textData.mbUseBackgroundGfx = false;
+				textData.mFont.mColor = cColor_White;
+
+				ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+				ImGui_SetModColorMul(cColor(1.f, 1.f, 1.f, 1.0f));
+				ImGui_SetTransCategory("Ending");
+				ImGui_DoTextFrameExt("DebugRoomNote_"+mlTerminalTextEntry, cVector2f(10, 10), 0.f, 0.f, textData, ImGui_NrmPosGroup(0.f, 0.3f, 0.1f), ImGui_NrmSizeGroup(1.f));
+				ImGui_SetTransCategory("");
+					
+				ImGui_SetAlignment(eImGuiAlign_TopLeft);
+				ImGui_ResetModifiers();
+				
+			ImGui_LayoutEnd();
 		}
 	 
 		//-------------------------------------------------------
