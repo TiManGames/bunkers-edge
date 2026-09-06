@@ -203,7 +203,6 @@ class cScrMap : iScrMap
 		Map_RemoveTimer("SpeedRunRestart");
 		SetBeastNarrowSectionBody(false);
 		Hint_SetCanShowHints(true);
-		ImGui_SetShowMouseAutomatically(false);
 	}
 	
 	//-------------------------------------------------------
@@ -294,6 +293,7 @@ class cScrMap : iScrMap
 				ImGui_DoLabelExt("Retry", buttonLabelDataShadow, vRetryPos + vShadowOffset, vButtonSize);
 				if (ImGui_DoButtonExt("ParkourResultsRetry", "Retry", buttonData, vRetryPos, vButtonSize))
 				{
+					ImGui_SetShowMouseAutomatically(false);
 					QueueSpeedRunRestart();
 					return;
 				}
@@ -433,7 +433,8 @@ class cScrMap : iScrMap
 		mbSpeedRunRestartQueued = true;
 		mbParkourTimerActive = false;
 		ResetSpeedRunRestartHold();
-		ImGui_SetShowMouseAutomatically(false);
+		// This queue is also entered from VariableUpdate and OnCustomDeath, where
+		// there is no active ImGui frame. GUI-only cleanup belongs to the caller.
 		cLux_GetGuiHandler().SetGameHudInputFocus(false);
 		cLux_SetGamePaused(false, false, false, false);
 		PauseMenu_Enabled(true);
