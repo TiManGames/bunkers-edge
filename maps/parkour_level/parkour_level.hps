@@ -32,6 +32,8 @@ const float gfParkourRankSTime = 5.f * 60.f;
 const float gfParkourRankATime = 7.f * 60.f;
 const float gfParkourRankBTime = 10.f * 60.f;
 const float gfParkourRankCTime = 15.f * 60.f;
+const float gfSpeedRunRestartHoldDuration = 1.f;
+const int glSpeedRunRestartRingSegments = 48;
 
 
 //--------------------------------------------------
@@ -117,6 +119,21 @@ class cScrMap : iScrMap
 	// Run when entering map
 	void OnEnter()
 	{
+		mbSpeedRunModeActive = Parkour_GetSpeedRunModeActive();
+		if (mbSpeedRunModeActive)
+		{
+			mbSpeedRunRestartQueued = false;
+			mbSpeedRunNewRecord = false;
+			mfSpeedRunRestartHoldTime = 0.f;
+			mfParkourElapsedTime = 0.f;
+			mfParkourCompletionTime = 0.f;
+			mfParkourBestTime = Parkour_GetBestCompletionTime();
+			mbParkourTimerActive = false;
+			mbParkourResultsActive = false;
+			mbParkourResultsConfirmed = false;
+			Death_SetCustomDeathBehaviour(true);
+		}
+
 		RestoreParkourColorGrading();
 		Parkour_WallSlideDebug("MAP OnEnter: diagnostics loaded; state=" + cLux_GetPlayer().GetCurrentStateId());
 		EnsureStalkerNarrowBodySectionsSetup();
@@ -151,7 +168,20 @@ class cScrMap : iScrMap
 		Hint_SetCanShowHints(Parkour_GetLevelCompletedOnce() == false);
 
 		bool bPlayIntroArrival = cScript_GetGlobalVarBool(gsIntroArrivalGlobal);
-		if (bPlayIntroArrival)
+		if (mbSpeedRunModeActive)
+		{
+			cScript_SetGlobalVarBool(gsIntroArrivalGlobal, false);
+			cScript_SetGlobalVarBool(gsBunkerEndingReturnGlobal, false);
+			Sound_FadeGlobalVolume(1.f, 0.f, eSoundEntryType_AllExceptGui);
+			Music_PlayExt("amb.ogg", true, 0.6f, 1.0f, 1.0f, 0.0f, eMusicPrio_AgentAmb, true);
+			Player_Teleport("Start_Begin");
+			mbIntroArrivalActive = false;
+			Effect_Fade_Out(0.f);
+			Effect_Flash_Start(0.02f, 0.02f, 0.11f, 1.f);
+			Effect_Fade_In(0.15f);
+			mbParkourTimerActive = true;
+		}
+		else if (bPlayIntroArrival)
 		{
 			mbIntroArrivalActive = false;
 			BeginIntroArrival();
@@ -168,7 +198,9 @@ class cScrMap : iScrMap
 	// Run when leaving map
 	void OnLeave()
 	{
+		ResetSpeedRunRestartHold();
 		Map_RemoveTimer("EndingWallSlide");
+		Map_RemoveTimer("SpeedRunRestart");
 		SetBeastNarrowSectionBody(false);
 		Hint_SetCanShowHints(true);
 		ImGui_SetShowMouseAutomatically(false);
@@ -183,6 +215,8 @@ class cScrMap : iScrMap
 	void OnAction(int alAction, bool abPressed) 
 	{
 		if (abPressed == false) return;
+		if (alAction == eAction_OpenMenu)
+			ResetSpeedRunRestartHold();
 		if (mbParkourResultsActive) return;
 		
 		if (alAction == eAction_Test0)
@@ -197,17 +231,32 @@ class cScrMap : iScrMap
 
 	void VariableUpdate(float afDeltaTime)
 	{
-		if (mbParkourTimerActive && cLux_GetGamePaused() == false)
+		bool bPaused = cLux_GetGamePaused();
+		if (mbParkourTimerActive && bPaused == false)
 			mfParkourElapsedTime += afDeltaTime;
+
+		UpdateSpeedRunRestart(afDeltaTime, bPaused);
 	}
 
 	//-------------------------------------------------------
 
 	void OnGui(float afTimeStep)
 	{
+		if (mbSpeedRunModeActive && mbParkourTimerActive && mbParkourResultsActive == false)
+		{
+			if (cLux_GetGamePaused())
+				ResetSpeedRunRestartHold();
+			DrawSpeedRunHud();
+		}
+
 		if (mbParkourResultsActive == false) return;
 
 		ImGui_SetShowMouseAutomatically(true);
+		if (mbParkourResultsSetInitialFocus)
+		{
+			ImGui_SetFocus(mbSpeedRunModeActive ? "ParkourResultsRetry" : "ParkourResultsContinue");
+			mbParkourResultsSetInitialFocus = false;
+		}
 
 		ImGui_SetAlignment(eImGuiAlign_TopCenter);
 		cImGuiGfx gfxBg = cImGuiGfx("background_stats.dds", eImGuiGfx_TextureTemporary);
@@ -228,32 +277,65 @@ class cScrMap : iScrMap
 			buttonData.mbUseBackgroundGfx = false;
 			buttonData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
 			buttonData.mFont.mvSize = 22;
-			buttonData.mFont.mColor = msParkourResultsSelectedButton == "Continue"
-				? cColor(1.f, 0.75f, 0.25f, 1.f)
-				: cColor(1.f, 1.f);
-
 			cImGuiLabelData buttonLabelDataShadow = ImGui_GetDefaultLabel();
 			buttonLabelDataShadow.mFontAlign = eFontAlign_Center;
 			buttonLabelDataShadow.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
 			buttonLabelDataShadow.mFont.mvSize = 22;
 			buttonLabelDataShadow.mColorBase = cColor(0.f);
 
-			ImGui_SetTransCategory("Menu");
 			ImGui_SetAlignment(eImGuiAlign_TopCenter);
-			cVector3f vButtonPos = ImGui_NrmPosGroup(0.5f, 0.81f, 0.f);
-			cVector2f vButtonSize = ImGui_NrmSizeGroup(0.1f, 0.1f);
-			ImGui_DoLabelExt("Continue", buttonLabelDataShadow, vButtonPos + vShadowOffset, vButtonSize);
-
-			if (ImGui_DoButtonExt("ParkourResultsContinue", "Continue", buttonData, vButtonPos, vButtonSize))
+			if (mbSpeedRunModeActive)
 			{
-				ContinueFromParkourResults();
-				return;
+				ImGui_SetTransCategory("ParkourResults");
+				cVector2f vButtonSize = ImGui_NrmSizeGroup(0.16f, 0.1f);
+				cVector3f vRetryPos = ImGui_NrmPosGroup(0.42f, 0.81f, 0.f);
+				buttonData.mFont.mColor = msParkourResultsSelectedButton == "Retry"
+					? cColor(1.f, 0.75f, 0.25f, 1.f) : cColor(1.f, 1.f);
+				ImGui_DoLabelExt("Retry", buttonLabelDataShadow, vRetryPos + vShadowOffset, vButtonSize);
+				if (ImGui_DoButtonExt("ParkourResultsRetry", "Retry", buttonData, vRetryPos, vButtonSize))
+				{
+					QueueSpeedRunRestart();
+					return;
+				}
+				if (ImGui_PrevBecameInFocus())
+				{
+					Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+					msParkourResultsSelectedButton = "Retry";
+				}
+
+				cVector3f vMainMenuPos = ImGui_NrmPosGroup(0.58f, 0.81f, 0.f);
+				buttonData.mFont.mColor = msParkourResultsSelectedButton == "MainMenu"
+					? cColor(1.f, 0.75f, 0.25f, 1.f) : cColor(1.f, 1.f);
+				ImGui_DoLabelExt("MainMenu", buttonLabelDataShadow, vMainMenuPos + vShadowOffset, vButtonSize);
+				if (ImGui_DoButtonExt("ParkourResultsMainMenu", "MainMenu", buttonData, vMainMenuPos, vButtonSize))
+				{
+					ReturnFromSpeedRunToMainMenu();
+					return;
+				}
+				if (ImGui_PrevBecameInFocus())
+				{
+					Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+					msParkourResultsSelectedButton = "MainMenu";
+				}
 			}
-
-			if (ImGui_PrevBecameInFocus())
+			else
 			{
-				Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
-				msParkourResultsSelectedButton = "Continue";
+				ImGui_SetTransCategory("Menu");
+				cVector3f vButtonPos = ImGui_NrmPosGroup(0.5f, 0.81f, 0.f);
+				cVector2f vButtonSize = ImGui_NrmSizeGroup(0.1f, 0.1f);
+				buttonData.mFont.mColor = msParkourResultsSelectedButton == "Continue"
+					? cColor(1.f, 0.75f, 0.25f, 1.f) : cColor(1.f, 1.f);
+				ImGui_DoLabelExt("Continue", buttonLabelDataShadow, vButtonPos + vShadowOffset, vButtonSize);
+				if (ImGui_DoButtonExt("ParkourResultsContinue", "Continue", buttonData, vButtonPos, vButtonSize))
+				{
+					ContinueFromParkourResults();
+					return;
+				}
+				if (ImGui_PrevBecameInFocus())
+				{
+					Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+					msParkourResultsSelectedButton = "Continue";
+				}
 			}
 
 			ImGui_SetTransCategory("");
@@ -302,9 +384,169 @@ class cScrMap : iScrMap
 	bool mbParkourTimerActive = false;
 	bool mbParkourResultsActive = false;
 	bool mbParkourResultsConfirmed = false;
+	bool mbSpeedRunModeActive = false;
+	bool mbSpeedRunRestartQueued = false;
+	bool mbSpeedRunNewRecord = false;
+	bool mbParkourResultsSetInitialFocus = false;
 	float mfParkourElapsedTime = 0.f;
 	float mfParkourCompletionTime = 0.f;
+	float mfParkourBestTime = 0.f;
+	float mfSpeedRunRestartHoldTime = 0.f;
 	tString msParkourResultsSelectedButton = "Continue";
+
+	//-------------------------------------------------------
+
+	void ResetSpeedRunRestartHold()
+	{
+		mfSpeedRunRestartHoldTime = 0.f;
+	}
+
+	//-------------------------------------------------------
+
+	void UpdateSpeedRunRestart(float afDeltaTime, bool abPaused)
+	{
+		if (mbSpeedRunModeActive == false || mbParkourTimerActive == false ||
+			mbParkourResultsActive || mbSpeedRunRestartQueued || abPaused)
+		{
+			ResetSpeedRunRestartHold();
+			return;
+		}
+
+		if (cInput_IsTriggered(eAction_CheckAmmo) == false)
+		{
+			ResetSpeedRunRestartHold();
+			return;
+		}
+
+		mfSpeedRunRestartHoldTime += afDeltaTime;
+		if (mfSpeedRunRestartHoldTime < gfSpeedRunRestartHoldDuration) return;
+
+		QueueSpeedRunRestart();
+	}
+
+	//-------------------------------------------------------
+
+	void QueueSpeedRunRestart()
+	{
+		if (mbSpeedRunModeActive == false || mbSpeedRunRestartQueued) return;
+
+		mbSpeedRunRestartQueued = true;
+		mbParkourTimerActive = false;
+		ResetSpeedRunRestartHold();
+		ImGui_SetShowMouseAutomatically(false);
+		cLux_GetGuiHandler().SetGameHudInputFocus(false);
+		cLux_SetGamePaused(false, false, false, false);
+		PauseMenu_Enabled(true);
+		Map_RemoveTimer("SpeedRunRestart");
+		Map_AddTimer("SpeedRunRestart", 0.01f, "OnTimer_SpeedRunRestart");
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_SpeedRunRestart(const tString &in asTimer)
+	{
+		Music_StopAll(0.f);
+		Death_ResetDeathEffects();
+		PlayerBody_SetAnimationControlledCamera(false);
+		PlayerBody_ResetCutscenePitchYawLimits();
+		Player_ChangeStateToNormal();
+		Player_SetActive(true);
+		Parkour_SetEnabled(true);
+		Parkour_SetSpeedRunModeActive(true);
+		cLux_LoadScreenSetOneShotSolidColorBackground();
+		cLux_StartNewGame("parkour_level.hpm", "Start_Begin");
+	}
+
+	//-------------------------------------------------------
+
+	void DrawSpeedRunHud()
+	{
+		cVector3f vShadowOffset(1.5f, 1.f, 0.f);
+		cImGuiLabelData labelData = ImGui_GetDefaultLabel();
+		labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+		labelData.mFont.mvSize = 20;
+		labelData.mColorBase = cColor_White;
+		labelData.mFontAlign = eFontAlign_Left;
+
+		cImGuiLabelData shadowData = labelData;
+		shadowData.mColorBase = cColor(0.f, 0.85f);
+
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		ImGui_SetTransCategory("SpeedRunHUD");
+		cVector3f vLabelPos = ImGui_NrmPos(0.03f, 0.035f, 5.f);
+		ImGui_DoLabelExt("Timer", shadowData, vLabelPos + vShadowOffset);
+		ImGui_DoLabelExt("Timer", labelData, vLabelPos);
+
+		ImGui_SetTransCategory("");
+		tString sTime = String_SecondsToClockDisplay(mfParkourElapsedTime, false, true, true, true);
+		cVector3f vTimePos = ImGui_NrmPos(0.03f, 0.072f, 5.f);
+		ImGui_DoLabelExt(sTime, shadowData, vTimePos + vShadowOffset);
+		ImGui_DoLabelExt(sTime, labelData, vTimePos);
+
+		if (mfSpeedRunRestartHoldTime > 0.f)
+			DrawSpeedRunRestartIndicator();
+
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
+		ImGui_SetTransCategory("");
+		ImGui_ResetModifiers();
+	}
+
+	//-------------------------------------------------------
+
+	void DrawSpeedRunRestartIndicator()
+	{
+		cVector3f vCenterPos = ImGui_NrmPos(0.92f, 0.88f, 5.f);
+		cVector2f vCenter(vCenterPos.x, vCenterPos.y);
+		cVector2f vRadius = ImGui_NrmSize(0.028f, 0.037f);
+		float fProgress = cMath_Clamp(mfSpeedRunRestartHoldTime / gfSpeedRunRestartHoldDuration, 0.f, 1.f);
+
+		for (int i = 0; i <= glSpeedRunRestartRingSegments; ++i)
+		{
+			float fAngle = -cMath_Pi * 0.5f + cMath_PiMul2 * (float(i) / float(glSpeedRunRestartRingSegments));
+			ImGui_AddLineStripVertex(vCenter + cVector2f(cMath_Cos(fAngle) * vRadius.x, cMath_Sin(fAngle) * vRadius.y));
+		}
+		ImGui_DrawAndClearLineStrip(5.f, 2.f, cColor(1.f, 1.f, 1.f, 0.22f));
+
+		int lFilledSegments = int(fProgress * float(glSpeedRunRestartRingSegments));
+		for (int i = 0; i <= lFilledSegments; ++i)
+		{
+			float fAngle = -cMath_Pi * 0.5f + cMath_PiMul2 * (float(i) / float(glSpeedRunRestartRingSegments));
+			ImGui_AddLineStripVertex(vCenter + cVector2f(cMath_Cos(fAngle) * vRadius.x, cMath_Sin(fAngle) * vRadius.y));
+		}
+		float fEndAngle = -cMath_Pi * 0.5f + cMath_PiMul2 * fProgress;
+		ImGui_AddLineStripVertex(vCenter + cVector2f(cMath_Cos(fEndAngle) * vRadius.x, cMath_Sin(fEndAngle) * vRadius.y));
+		ImGui_DrawAndClearLineStrip(5.1f, 3.f, cColor(1.f, 0.75f, 0.25f, 1.f));
+
+		cImGuiLabelData controlData = ImGui_GetDefaultLabel();
+		controlData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
+		controlData.mFont.mvSize = 22;
+		controlData.mColorBase = cColor_White;
+		controlData.mFontAlign = eFontAlign_Center;
+		ImGui_SetAlignment(eImGuiAlign_CenterCenter);
+		ImGui_SetTransCategory("ButtonNames");
+		ImGui_DoLabelExt(GetSpeedRunRestartControlLabel(), controlData, cVector3f(vCenter.x, vCenter.y, 5.2f), ImGui_NrmSize(0.07f, 0.08f));
+	}
+
+	//-------------------------------------------------------
+
+	tString GetSpeedRunRestartControlLabel()
+	{
+		bool bGamepad = cLux_GetInputHandler().GetGamepadWasLastDeviceUsed();
+		tString sCategory = bGamepad ? "GamepadPrimary" : "Primary";
+		tString sSecondaryCategory = bGamepad ? "GamepadSecondary" : "Secondary";
+		tString sDefaultBinding = bGamepad ? "Gamepad.0.Button.2" : "Keyboard.R";
+		tString sActionName = cLux_GetInputHandler().GetActionName(eAction_CheckAmmo, false);
+		cConfigFile@ pKeyConfig = cLux_GetKeyConfig();
+		tString sBinding = pKeyConfig is null ? sDefaultBinding : pKeyConfig.GetString(sActionName, sCategory, sDefaultBinding);
+		if (sBinding == "" && pKeyConfig !is null)
+			sBinding = pKeyConfig.GetString(sActionName, sSecondaryCategory, sDefaultBinding);
+
+		int lFirstDot = cString_GetFirstCharPos(sBinding, '.');
+		if (lFirstDot < 0) return sBinding;
+		if (cString_Sub(sBinding, 0, lFirstDot) == "Gamepad")
+			return cString_Sub(sBinding, lFirstDot + 3);
+		return cString_Sub(sBinding, lFirstDot + 1);
+	}
 
 	//-------------------------------------------------------
 
@@ -392,14 +634,16 @@ class cScrMap : iScrMap
 		Player_ChangeStateToNormal();
 		Player_SetFallDamageActive(true);
 		Parkour_SetEnabled(true);
-		Game_AutoSave(true);
+		if (mbSpeedRunModeActive == false)
+			Game_AutoSave(true);
 	}
 
 	//-------------------------------------------------------
 
 	bool Trigger_AutoSave(const tString &in asParent, const tString &in asChild, int alState)
 	{
-		Game_AutoSave(true);
+		if (mbSpeedRunModeActive == false)
+			Game_AutoSave(true);
 
 		Entity_SetActive(asParent, false);
 
@@ -486,6 +730,13 @@ class cScrMap : iScrMap
 
 	void OnCustomDeath(const tString &in asSource)
 	{
+		if (mbSpeedRunModeActive)
+		{
+			Sound_Stop("falling", 0);
+			QueueSpeedRunRestart();
+			return;
+		}
+
 		if (mbDeathSequenceActive == false)
 		{
 			GameOver_Start(asSource);
@@ -503,6 +754,11 @@ class cScrMap : iScrMap
 	void OnTimer_DeathSequenceReload(const tString &in asTimer)
 	{		
 		cLux_LoadScreenSetBarPosAndSize(0.0f, 0.0f);
+		if (mbSpeedRunModeActive)
+		{
+			QueueSpeedRunRestart();
+			return;
+		}
 		SaveRoom_LoadLastSave();
 	}
 
@@ -641,7 +897,8 @@ class cScrMap : iScrMap
 
 	bool Trigger_Scream(const tString &in asParent, const tString &in asChild, int alState)
 	{
-		Game_AutoSave(true, false);
+		if (mbSpeedRunModeActive == false)
+			Game_AutoSave(true, false);
 
 		Sound_CreateAtEntity("scream", "creatures/stalker/retreat", "ScreamSound", 0, false, 1.0f, -1, -1);
 
@@ -1392,7 +1649,8 @@ class cScrMap : iScrMap
 			Map_AddTimer("ReactivatePlayer", 1.5f, "Timer_ReactivatePlayer");
 			Map_AddTimer("Jump", 1.0f, "Timer_BeastJump");
 
-			Game_AutoSave(true);
+			if (mbSpeedRunModeActive == false)
+				Game_AutoSave(true);
 
 			return false;
 		}
@@ -1435,7 +1693,8 @@ class cScrMap : iScrMap
 
 			Entity_AttachToEntity("StalkerJumpRoute_24", "Player", "", false, true, false);
 
-			Game_AutoSave(true);
+			if (mbSpeedRunModeActive == false)
+				Game_AutoSave(true);
 			
 
 			return false;
@@ -1575,8 +1834,16 @@ class cScrMap : iScrMap
 
 			mbParkourTimerActive = false;
 			mfParkourCompletionTime = mfParkourElapsedTime;
+			mbSpeedRunNewRecord = Parkour_RecordCompletionTime(mfParkourCompletionTime);
+			mfParkourBestTime = Parkour_GetBestCompletionTime();
 			Sound_FadeGlobalVolume(0, 0, eSoundEntryType_AllExceptGui);
 			Music_Play("stinger.ogg", 0.6f, false, eMusicPrio_AgentHunt);
+			if (mbSpeedRunModeActive)
+			{
+				ResetSpeedRunRestartHold();
+				ShowParkourResults();
+				return false;
+			}
 			BeginRiftTransfer();
 
 			return false;
@@ -1595,7 +1862,9 @@ class cScrMap : iScrMap
 
 			mbParkourTimerActive = false;
 			mbParkourResultsActive = true;
-			msParkourResultsSelectedButton = "Continue";
+			msParkourResultsSelectedButton = mbSpeedRunModeActive ? "Retry" : "Continue";
+			mbParkourResultsSetInitialFocus = true;
+			ResetSpeedRunRestartHold();
 
 			Parkour_SetEnabled(false);
 			Player_SetActive(false);
@@ -1622,13 +1891,34 @@ class cScrMap : iScrMap
 			Map_ChangeMap("ending.hpm", "Start_Begin", "", "", true);
 		}
 
+		void ReturnFromSpeedRunToMainMenu()
+		{
+			if (mbParkourResultsActive == false || mbParkourResultsConfirmed) return;
+
+			mbParkourResultsConfirmed = true;
+			mbParkourResultsActive = false;
+			ImGui_SetShowMouseAutomatically(false);
+			cLux_GetGuiHandler().SetGameHudInputFocus(false);
+			cLux_SetGamePaused(false, false, false, false);
+			PauseMenu_Enabled(true);
+			Parkour_SetSpeedRunModeActive(false);
+			Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+			cLux_LoadScreenSetOneShotSolidColorBackground();
+			cLux_StartMap(cLux_GetMainMenuFile());
+		}
+
+		tString GetParkourRankForTime(float afTime) const
+		{
+			if (afTime <= gfParkourRankSTime) return "S";
+			if (afTime <= gfParkourRankATime) return "A";
+			if (afTime <= gfParkourRankBTime) return "B";
+			if (afTime <= gfParkourRankCTime) return "C";
+			return "D";
+		}
+
 		tString GetParkourRank() const
 		{
-			if (mfParkourCompletionTime <= gfParkourRankSTime) return "S";
-			if (mfParkourCompletionTime <= gfParkourRankATime) return "A";
-			if (mfParkourCompletionTime <= gfParkourRankBTime) return "B";
-			if (mfParkourCompletionTime <= gfParkourRankCTime) return "C";
-			return "D";
+			return GetParkourRankForTime(mfParkourCompletionTime);
 		}
 
 		void DrawParkourResults(const cVector3f &in avShadowOffset)
@@ -1673,7 +1963,9 @@ class cScrMap : iScrMap
 			ImGui_DoLabelExt("CompletionTime", labelData, vNamePos);
 
 			ImGui_SetTransCategory("");
-			tString sCompletionTime = String_SecondsToClockDisplay(mfParkourCompletionTime, true, true, true, false);
+			tString sCompletionTime = mbSpeedRunModeActive
+				? String_SecondsToClockDisplay(mfParkourCompletionTime, false, true, true, true)
+				: String_SecondsToClockDisplay(mfParkourCompletionTime, true, true, true, false);
 			ImGui_DoLabelExt(sCompletionTime, valueDataShadow, vValuePos + avShadowOffset);
 			ImGui_DoLabelExt(sCompletionTime, valueData, vValuePos);
 
@@ -1691,6 +1983,41 @@ class cScrMap : iScrMap
 			tString sRank = GetParkourRank();
 			ImGui_DoLabelExt(sRank, valueDataShadow, vValuePos + avShadowOffset);
 			ImGui_DoLabelExt(sRank, valueData, vValuePos);
+
+			if (mbSpeedRunModeActive)
+			{
+				vNamePos.y += fLineSpacing;
+				vValuePos.y += fLineSpacing;
+				labelData.mFont.mvSize = 19;
+				labelDataShadow.mFont.mvSize = 19;
+				valueData.mFont.mvSize = 19;
+				valueDataShadow.mFont.mvSize = 19;
+
+				ImGui_SetTransCategory("ParkourResults");
+				ImGui_DoLabelExt("PersonalBest", labelDataShadow, vNamePos + avShadowOffset);
+				ImGui_DoLabelExt("PersonalBest", labelData, vNamePos);
+
+				ImGui_SetTransCategory("");
+				tString sBestTime = String_SecondsToClockDisplay(mfParkourBestTime, false, true, true, true);
+				tString sBestValue = sBestTime + "  (" + GetParkourRankForTime(mfParkourBestTime) + ")";
+				ImGui_DoLabelExt(sBestValue, valueDataShadow, vValuePos + avShadowOffset);
+				ImGui_DoLabelExt(sBestValue, valueData, vValuePos);
+
+				if (mbSpeedRunNewRecord)
+				{
+					cImGuiLabelData recordData = titleLabelData;
+					recordData.mFont.mvSize = 21;
+					recordData.mColorBase = cColor(1.f, 0.75f, 0.25f, 1.f);
+					cImGuiLabelData recordShadowData = recordData;
+					recordShadowData.mColorBase = cColor(0.f);
+					ImGui_SetAlignment(eImGuiAlign_TopCenter);
+					ImGui_SetTransCategory("ParkourResults");
+					cVector3f vRecordPos = ImGui_NrmPosGroup(0.5f, 0.52f, 0.f);
+					cVector2f vRecordSize = ImGui_NrmSizeGroup(0.4f, 0.05f);
+					ImGui_DoLabelExt("NewRecord", recordShadowData, vRecordPos + avShadowOffset, vRecordSize);
+					ImGui_DoLabelExt("NewRecord", recordData, vRecordPos, vRecordSize);
+				}
+			}
 			ImGui_SetTransCategory("");
 		}
 

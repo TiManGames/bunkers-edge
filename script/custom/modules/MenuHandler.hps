@@ -12,6 +12,7 @@
 #include "helpers/helper_effects.hps"
 #include "helpers/helper_input.hps"
 #include "custom/helpers/helper_items.hps"
+#include "custom/helpers/helper_parkour.hps"
 #include "base/AchievementHandler_Types.hps"
 #include "helpers/helper_map.hps"
 
@@ -35,6 +36,7 @@ enum eMainMenuButtonID
 {
 	eMainMenuButtonID_Continue,
 	eMainMenuButtonID_NewGame,
+	eMainMenuButtonID_SpeedRun,
 	eMainMenuButtonID_LoadGame,
 	eMainMenuButtonID_CustomStories,
 	eMainMenuButtonID_Options,
@@ -770,6 +772,8 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			pStatsFile.SetBool("Game", "GameCompletedOnce", true);
 			
 		mbGameCompletedMsgSeen = pStatsFile.GetBool("Game", "NewGamePlusMsgSeen", false);
+		mbSpeedRunUnlocked = Parkour_GetLevelCompletedOnce();
+		mbSpeedRunUnlockMessageSeen = Parkour_GetSpeedRunUnlockMessageSeen();
 	}
 	
 	//------------------------------------------------------------
@@ -916,6 +920,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		mbShowGameCompleted = false;
 		mbShowGameCompleted_02 = false;
 		mbShowGameCompleted_03 = false;
+		mbShowSpeedRunUnlocked = false;
 		mbShowRestartWarning = false;
 		mbShowApplyChanges = false;
 		mbShowApplyKeyChanges = false;
@@ -1043,6 +1048,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 
 		if(apMap.GetName() == "main_menu")
 		{
+			Parkour_SetSpeedRunModeActive(false);
 			mfFadeIn = 1.0;
 		}
 
@@ -1063,6 +1069,8 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		mbGameCompletedOnce = mpConfig.GetBool("Game", "GameCompletedOnce", false) || pStatsFile.GetBool("Game", "GameCompletedOnce", false);
 		mbGameCompletedMsgSeen = pStatsFile.GetBool("Game", "NewGamePlusMsgSeen", false);
 		mbNewGamePlus = mbGameCompletedOnce;
+		mbSpeedRunUnlocked = Parkour_GetLevelCompletedOnce();
+		mbSpeedRunUnlockMessageSeen = Parkour_GetSpeedRunUnlockMessageSeen();
 		
 		//////////////////////////////////////////
 		// Setup resolutions
@@ -1520,11 +1528,11 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		}
 		
 		/////////////////////////
-		// Show game completed msg
-		if (mbPremenuActive==false && mbGameCompletedOnce && mbGameCompletedMsgSeen==false)
+		// Show the BunkersEdge speedrun unlock once after the first completion.
+		if (mbPremenuActive == false && mbSpeedRunUnlocked && mbSpeedRunUnlockMessageSeen == false)
 		{
-			mbShowGameCompleted = true;
-			msFocusNextFrame = "Next";
+			mbShowSpeedRunUnlocked = true;
+			msFocusNextFrame = "Ok";
 		}
 		
 		//////////////////////////////////
@@ -1584,7 +1592,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			mbMenuButtonPressed = false;
 			if(mCurrentGroup == eMainMenuGroup_Main 
 				&& ((mbShowApplyChanges || mbShowApplyKeyChanges || mbShowDuplicateKeys || mbShowReset
-				||  mbShowRestartWarning || mbShowExit || mbShowPlayGo || mbShowNewGame || mbShowGameCompleted 
+				||  mbShowRestartWarning || mbShowExit || mbShowPlayGo || mbShowNewGame || mbShowSpeedRunUnlocked || mbShowGameCompleted
 				|| mbShowGameCompleted_02 || mbShowGameCompleted_03 || mbShowSkipIntro || mbShowCustomSettingsChangesWillBeLost 
 				|| mbShowOverwriteSaveSlot || mbShowNewGamePlusPopUpMsg || mbShowLoadGame || mbShowNewGamePlusSettingPopUp
 				|| mbShowSelectedModDialog || mfKeepDisplaySetting > 0 || mlActionToBind > 0) == false))
@@ -1613,7 +1621,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			mbShowRestartWarning || mbShowExit || mbShowPlayGo ||
 			mbShowNewGame || mbShowSkipIntro || mbShowCustomSettingsChangesWillBeLost || mbShowOverwriteSaveSlot 
 			|| mbShowLoadGame || mbShowSelectedModDialog || mbShowNewGamePlusPopUpMsg || mbShowNewGamePlusSettingPopUp ||
-			mbShowDetectSettings || mbShowGameCompleted ||  mbShowGameCompleted_02 || mbShowGameCompleted_03 || 
+			mbShowDetectSettings || mbShowSpeedRunUnlocked || mbShowGameCompleted ||  mbShowGameCompleted_02 || mbShowGameCompleted_03 ||
 			mfKeepDisplaySetting > 0 || mlActionToBind > 0 || 
 			(msLoadSaveError.length() > 0 && mbPremenuActive == false))
 		{
@@ -1789,7 +1797,10 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 				//SetMenuActive(false);
 				//mbGameOver = false;
 				//msPreviousSaveLoaded = "";
-				StartNewGame();
+				if (mbLaunchingSpeedRun)
+					StartBunkersEdgeSpeedRun();
+				else
+					StartNewGame();
 				
 				return;
 			}
@@ -2152,6 +2163,8 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 	void BeginBunkersEdgeNewGame()
 	{
 		if (ImGui_TimerExists("NewGameTimer")) return;
+		mbLaunchingSpeedRun = false;
+		Parkour_SetSpeedRunModeActive(false);
 
 		///////////////////////////////////////////////
 		// BunkersEdge uses one fixed, standard ruleset.
@@ -2170,8 +2183,62 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 
 	//-------------------------------------------------------
 
+	void BeginBunkersEdgeSpeedRun()
+	{
+		if (ImGui_TimerExists("NewGameTimer") || mbSpeedRunUnlocked == false) return;
+
+		mlSelectedGameMode = eGameMode_Normal;
+		mbNewGamePlus = false;
+		mbNewGameSkipIntro = false;
+		mbLaunchingSpeedRun = true;
+		GameDifficulty_SwitchSettingsPresetTo(eGameMode_Normal);
+		GameDifficulty_SetSettingValueIdByID(eGameDifficultySetting_SaveSystem, eDifficultySettingValue_SaveSystem_NoSaving);
+		Parkour_SetSpeedRunModeActive(true);
+
+		ImGui_AddTimer("NewGameTimer", mfNewGameFadeLength);
+		Sound_PlayGui("special_fx/frontend/new_game_sting", 1.0f, eSoundEntryType_Gui);
+		Effect_Rumble_Start(0.5, 0.5, 1.f, 1.f);
+		Music_StopAll(2.0f);
+	}
+
+	//-------------------------------------------------------
+
+	void StartBunkersEdgeSpeedRun()
+	{
+		GameStats_ResetAllEntries(true);
+		SetMenuActive(false);
+		cLux_LoadScreenSetOneShotSolidColorBackground();
+		mbGameOver = false;
+		mbWelcomeScreen = false;
+		msPreviousSaveLoaded = "";
+
+		MainMenu_SetPhase_Items(eMainMenuPhase_Items_None);
+		MainMenu_Sketchbook_SetSketch("loadscreen_1aa");
+		MainMenu_SetPhase_Ghoul(0);
+		Sketchbook_OnNewGame();
+
+		cLux_SetGameDifficulty(eGameMode_Normal);
+		GameDifficulty_SwitchSettingsPresetTo(eGameMode_Normal);
+		GameDifficulty_SetSettingValueIdByID(eGameDifficultySetting_SaveSystem, eDifficultySettingValue_SaveSystem_NoSaving);
+		Parkour_SetSpeedRunModeActive(true);
+
+		Achievement_CheckPlatinum();
+		array<int> vDifficultySettingValueIDs = GameDifficulty_GetSettingsSelectedValueIDs();
+
+		cLux_StartNewGame("parkour_level.hpm", "Start_Begin");
+
+		GameDifficulty_SetSettingsSelectedValueIDs(vDifficultySettingValueIDs, true);
+		GameDifficulty_SetInitialPlaythroughConditions(true);
+		Item_OnNewGame();
+		mbLaunchingSpeedRun = false;
+	}
+
+	//-------------------------------------------------------
+
 	void StartNewGame()
 	{
+		mbLaunchingSpeedRun = false;
+		Parkour_SetSpeedRunModeActive(false);
 		/////////////////
 		// Clear the selected save slot if used
 		for(uint i = 0; i < mvSaveFiles.size(); ++i)
@@ -3400,6 +3467,24 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		}
 		
 		/////////////////
+		// Speed Run Mode
+		{
+			if (mbSpeedRunUnlocked)
+			{
+				if(OptionMenu_MainMenuButton("SpeedRunMode", kMainMenuButtonPos, lEntryPos, eMainMenuButtonID_SpeedRun, msSelectedMainMenuButton, mlClickedMainMenuButton, mfTransitionAlpha))
+					mlClickedMainMenuButton = eMainMenuButtonID_SpeedRun;
+
+				msSelectedMainMenuButton = OptionMenu_UpdateFocus("SpeedRunMode", msSelectedMainMenuButton);
+			}
+			else
+			{
+				OptionMenu_MainMenuDisabledButton("SpeedRunMode", kMainMenuButtonPos, lEntryPos, mfTransitionAlpha / 2.f);
+			}
+
+			++lEntryPos;
+		}
+
+		/////////////////
 		// Load Game 
 		if (mbSaveLoadEnabled)
 		{
@@ -3540,6 +3625,9 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 				
 				msTargetFocus = msSelectedSaveSlotButton;
 				break;
+			case eMainMenuButtonID_SpeedRun:
+				BeginBunkersEdgeSpeedRun();
+				return;
 			case eMainMenuButtonID_LoadGame:
 				// Load
 				mlFirstItemId = 0;
@@ -8113,6 +8201,10 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		{
 			MessageBoxModDialog();
 		}
+		else if(mbShowSpeedRunUnlocked)
+		{
+			MessageBoxSpeedRunUnlocked();
+		}
 		else if(mbShowGameCompleted)
 		{
 			MessageBoxGameCompleted();
@@ -9082,6 +9174,26 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 	}
 	
 	//-----------------------------------------------------------------------------------
+
+	void MessageBoxSpeedRunUnlocked()
+	{
+		ImGui_SetTransCategory("SpeedRunUnlock");
+		bool bSelect = OptionMenu_MessageBox_GameCompleted("SpeedRunUnlocked", "Ok", msMessageBoxFocus, msMessageBoxFocus);
+		ImGui_SetModUseInput(false);
+		mlActionHorizontal = 0;
+
+		if (bSelect)
+		{
+			mbSpeedRunUnlockMessageSeen = true;
+			Parkour_SetSpeedRunUnlockMessageSeen(true);
+			mbShowSpeedRunUnlocked = false;
+			msFocusNextFrame = "SpeedRunMode";
+		}
+
+		OptionMenu_ShowGamepadButtons(false, false);
+	}
+
+	//-----------------------------------------------------------------------------------
 	
 	void MessageBoxGameCompleted()
 	{
@@ -9234,7 +9346,7 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			mbShowRestartWarning || mbShowExit || mbShowPlayGo ||
 			mbShowNewGame || mbShowSkipIntro || mbShowCustomSettingsChangesWillBeLost || mbShowOverwriteSaveSlot 
 			|| mbShowLoadGame || mbShowSelectedModDialog || mbShowNewGamePlusPopUpMsg || mbShowNewGamePlusSettingPopUp ||
-			mbShowDetectSettings || mbShowGameCompleted || mbShowGameCompleted_02 || mbShowGameCompleted_03 || 
+			mbShowDetectSettings || mbShowSpeedRunUnlocked || mbShowGameCompleted || mbShowGameCompleted_02 || mbShowGameCompleted_03 ||
 			mfKeepDisplaySetting > 0 || mlActionToBind > 0 || 
 			(msLoadSaveError.length() > 0 && mbPremenuActive == false))
 			{
@@ -11950,6 +12062,10 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 	
 	[nosave] bool mbGameCompletedOnce = false;
 	[nosave] bool mbGameCompletedMsgSeen = false;
+	[nosave] bool mbSpeedRunUnlocked = false;
+	[nosave] bool mbSpeedRunUnlockMessageSeen = false;
+	[nosave] bool mbLaunchingSpeedRun = false;
+	bool mbShowSpeedRunUnlocked = false;
 	bool mbShowGameCompleted = false;
 	bool mbShowGameCompleted_02 = false;
 	bool mbShowGameCompleted_03 = false;

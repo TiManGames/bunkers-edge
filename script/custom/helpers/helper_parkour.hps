@@ -7,6 +7,9 @@
 const tString gsParkourModuleName = "ParkourHandler";
 const tString gsParkourUserConfigSection = "BunkersEdge";
 const tString gsParkourLevelCompletedOnceKey = "ParkourLevelCompletedOnce";
+const tString gsParkourSpeedRunModeActiveKey = "SpeedRunModeActive";
+const tString gsParkourSpeedRunUnlockMessageSeenKey = "SpeedRunUnlockMessageSeen";
+const tString gsParkourBestCompletionTimeKey = "ParkourBestCompletionTime";
 
 const float gfParkourWallDetect_EntryRayLength = 0.5f;
 const float gfParkourWallDetect_SustainRayLength = 1.00f;
@@ -66,6 +69,77 @@ void Parkour_SetLevelCompletedOnce()
 
 	pConfig.SetBool(gsParkourUserConfigSection, gsParkourLevelCompletedOnceKey, true);
 	pConfig.Save();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetSpeedRunModeActive()
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	return pConfig !is null && pConfig.GetBool(gsParkourUserConfigSection,
+											 gsParkourSpeedRunModeActiveKey,
+											 false);
+}
+
+//------------------------------------------------------------
+
+void Parkour_SetSpeedRunModeActive(bool abActive)
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	if (pConfig is null) return;
+	if (pConfig.GetBool(gsParkourUserConfigSection, gsParkourSpeedRunModeActiveKey, false) == abActive) return;
+
+	pConfig.SetBool(gsParkourUserConfigSection, gsParkourSpeedRunModeActiveKey, abActive);
+	pConfig.Save();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetSpeedRunUnlockMessageSeen()
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	return pConfig !is null && pConfig.GetBool(gsParkourUserConfigSection,
+											 gsParkourSpeedRunUnlockMessageSeenKey,
+											 false);
+}
+
+//------------------------------------------------------------
+
+void Parkour_SetSpeedRunUnlockMessageSeen(bool abSeen)
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	if (pConfig is null) return;
+	if (pConfig.GetBool(gsParkourUserConfigSection, gsParkourSpeedRunUnlockMessageSeenKey, false) == abSeen) return;
+
+	pConfig.SetBool(gsParkourUserConfigSection, gsParkourSpeedRunUnlockMessageSeenKey, abSeen);
+	pConfig.Save();
+}
+
+//------------------------------------------------------------
+
+float Parkour_GetBestCompletionTime()
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	return pConfig is null ? 0.f : pConfig.GetFloat(gsParkourUserConfigSection,
+											  gsParkourBestCompletionTimeKey,
+											  0.f);
+}
+
+//------------------------------------------------------------
+
+bool Parkour_RecordCompletionTime(float afTime)
+{
+	if (afTime <= 0.f) return false;
+
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	if (pConfig is null) return false;
+
+	float fBestTime = pConfig.GetFloat(gsParkourUserConfigSection, gsParkourBestCompletionTimeKey, 0.f);
+	if (fBestTime > 0.f && afTime >= fBestTime) return false;
+
+	pConfig.SetFloat(gsParkourUserConfigSection, gsParkourBestCompletionTimeKey, afTime);
+	pConfig.Save();
+	return true;
 }
 
 //------------------------------------------------------------
