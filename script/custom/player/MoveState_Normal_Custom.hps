@@ -72,6 +72,7 @@ const float gfParkourMove_SlideWallMargin = 0.35f;
 const float gfParkourMove_SlideGroundRayUp = 0.75f;
 const float gfParkourMove_SlideGroundRayLength = 2.4f;
 const float gfParkourMove_SlideMaxGroundDrop = 0.85f;
+const tString gsParkourMove_CrouchVocalisation = "player/vocalisations/world/crouch";
 
 //------------------------------------------------------------
 
@@ -187,6 +188,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		}
 
 		iCharacterBody@ pCharBody = mBaseObj.mpPlayer.GetCharacterBody();
+		bool bWasCrouching = mbCrouching;
 		bool bWasOnGround = pCharBody !is null && pCharBody.IsOnGround();
 		bool bHadForwardIntent = cInput_IsTriggered(eAction_Forward);
 		float fPreJumpFlatSpeed = 0.f;
@@ -203,7 +205,10 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (alAction == eAction_Crouch && abPressed)
 		{
 			if (TryStartParkourSlide(pCharBody, bWasOnGround, bHadForwardIntent, fPreJumpFlatSpeed, mfLastParkourTimeStep))
+			{
+				PlayCrouchVocalisation();
 				return false;
+			}
 		}
 
 		if (alAction == eAction_Run && Parkour_GetEnabled())
@@ -228,6 +233,14 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 			mbParkourPendingSideJump = GetParkourSideJumpInput(pCharBody, mlParkourPendingSideJumpDir, mbParkourPendingSideJumpRun);
 
 		bool bResult = cScrMoveState_Normal::OnAction(alAction, abPressed);
+
+		if (alAction == eAction_Crouch &&
+			abPressed &&
+			bWasCrouching == false &&
+			mbCrouching)
+		{
+			PlayCrouchVocalisation();
+		}
 
 		if (alAction == eAction_Jump && abPressed)
 		{
@@ -428,6 +441,16 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 		if (fT >= 1.f)
 			mbLeanTurning = false;
+	}
+
+	//------------------------------------------------------------
+
+	void PlayCrouchVocalisation()
+	{
+		cLux_PlayGuiSoundData(gsParkourMove_CrouchVocalisation,
+						  eSoundEntryType_World,
+						  1.0f,
+						  true);
 	}
 
 	//------------------------------------------------------------

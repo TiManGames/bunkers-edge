@@ -1736,12 +1736,20 @@ class cScrMoveState_Normal : iScrMoveState, iScrMoveState_Interface
 				sSoundDataName = "player/"+sCategory+"/"+sPlayerFootWear+"/"+sMaterialStep;
 			else
 				sSoundDataName = "player/"+sCategory+"/"+sPlayerFootWear+"/"+sPrefix+"/"+sMaterialStep;
+
+			if (sPrefix == "exterior")
+			{
+				float fFlow = Parkour_GetFlow();
+				tString sPrefix = fFlow > 0.5f ? "Run" : "Walk";
+				tString sParkourFootSound = "AI_" + sPrefix + "_Concrete_0" +  cMath_RandRectl(1, 7) + ".ogg";
+				Sound_PlayGui(sParkourFootSound, cMath_RandRectf(0.1f, 0.2f), eSoundEntryType_World);
+			}
 		}
 		
 		///////////////////////
 		//Play sound
 		cLuxSoundExtraData extraData;
-		if(cLux_PlayGuiSoundDataEx(sSoundDataName, eSoundEntryType_World, 1.0f, true, extraData))
+		if(cLux_PlayGuiSoundDataEx(sSoundDataName, eSoundEntryType_World, sPrefix == "exterior" ? 0.0f : 1.0f, true, extraData))
 		{
 			if(moveType != eFootMoveType_LastEnum)
 				extraData.mpSoundEntry.SetParam("movement", moveType);
@@ -1752,8 +1760,7 @@ class cScrMoveState_Normal : iScrMoveState, iScrMoveState_Interface
 		float fFlow = Parkour_GetFlow();
 		tString sClothPrefix = fFlow > 0.5f ? "Run_0" : "Walk_0";
 		tString sClothSoundName = "Cloth_Movement_" + sClothPrefix + cMath_RandRectl(1, 8) + ".ogg";
-		Sound_PlayGui(sClothSoundName, 0.55f, eSoundEntryType_World);
-		Debug_Log("" + fFlow, false);
+		Sound_PlayGui(sClothSoundName, cMath_RandRectf(0.4f, 0.6f), eSoundEntryType_World);
 		
 		///////////////////////
 		//Broadcast as an AI event
