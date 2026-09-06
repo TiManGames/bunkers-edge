@@ -145,19 +145,19 @@ class cScrMap : iScrMap
 		{
 			if(mfPlayerDeathTimer >= 5.0f)
 			{
-				Hint_ShowInfo("Hints", "HintDie", false);
+				Hint_ShowInfo("BunkersEdgeHints", "HintBEDie", false);
 			}
 			if(mfPlayerDeathTimer >= 20.0f)
 			{
-				Hint_ShowInfo("Hints", "HintDie2", false);
+				Hint_ShowInfo("BunkersEdgeHints", "HintBEDie2", false);
 			}
 			if(mfPlayerDeathTimer >= 40.0f)
 			{
-				Hint_ShowInfo("Hints", "HintDie3", false);
+				Hint_ShowInfo("BunkersEdgeHints", "HintBEDie3", false);
 			}
 			if(mfPlayerDeathTimer >= 54.0f)
 			{
-				Hint_ShowInfo("Hints", "HintDie4", false);
+				Hint_ShowInfo("BunkersEdgeHints", "HintBEDie4", false);
 			}
 		}
 
@@ -269,7 +269,10 @@ class cScrMap : iScrMap
 	 
 		//-------------------------------------------------------
 	 
-		/*Put any functions that are used in more than one event in Scene X here.*/
+		void OnGuiDWNote(const tString&in asEntityName, float afTimeStep)
+		{
+			DWNote_RenderGUI(asEntityName, afTimeStep);
+		}
 	 
 		//-------------------------------------------------------
 		
@@ -314,6 +317,8 @@ class cScrMap : iScrMap
 
 		bool mbPickedUpShotgun = false;
 		bool mbInsideDebugRoom = false;
+		bool mbWaterFilled;
+		bool mbLightsOff;
 	 
 		//-------------------------------------------------------
 	 
@@ -373,8 +378,92 @@ class cScrMap : iScrMap
 			PlayerBody_FreeSocket("R_Hand");
 		}
 
-		void OnInteract_Button3(const tString &in asEntity)
+		void OnInteract_Button1(const tString &in asEntity)
 		{
+			
+			if(!mbLightsOff)
+			{
+				Light_FadeBrightnessTo("Light_Box_17", 0.0f, 1.0f); 
+				Light_FadeBrightnessTo("Light_Box_19", 0.0f, 1.0f);
+				Light_FadeBrightnessTo("Light_Spot_2", 0.0f, 1.0f);
+				mbLightsOff = true;
+			}
+			else
+			{
+				Light_FadeBrightnessTo("Light_Box_17", 0.35f, 1.0f); 
+				Light_FadeBrightnessTo("Light_Box_19", 0.35f, 1.0f);
+				Light_FadeBrightnessTo("Light_Spot_2", 0.7f, 1.0f);
+				mbLightsOff = false;
+			}
+
+			
+		}
+
+		void OnInteract_Button2(const tString &in asEntity)
+		{
+			if(mbWaterFilled) Seq_WaterDrain("");
+			else Seq_WaterFill("");
+		}
+
+		cSequenceStatesData mSeqWaterFill;
+		void Seq_WaterFill(const tString &in asX = "")
+		{
+			Sequence_Begin("Seq_WaterFill", mSeqWaterFill);
+			
+			if (Sequence_DoStepAndWait(4.0))
+			{
+				Player_SetInteractionAllowed("NoPressing", false);
+				SlideDoor_SetClosed("DebugDoor", true, false);
+			}
+			else if (Sequence_DoStepAndWait(5.7))
+			{
+				Sound_CreateAtEntity("Sound_Start", "player/ladder/debug/attach_bottom", "player", 0, false, 0.5f);
+				cLux_AddDebugMessage("[DEBUG ROOM] Water rising!");
+				LiquidArea_MoveLinearTo("Liquid_1", "LiquidTarget_Fill", 0.2, 1, 0.5, false);
+			}
+			else if (Sequence_DoStepAndWait(2.0))
+			{
+				Sound_CreateAtEntity("Sound_Stop", "player/ladder/debug/hand_place", "player", 0, false, 0.5f);
+				Player_SetInteractionAllowed("NoPressing", true);
+
+				mbWaterFilled = true;
+			}
+			
+			Sequence_End();
+		}
+	
+		cSequenceStatesData mSeqWaterDrain;
+		void Seq_WaterDrain(const tString &in asX = "")
+		{
+			Sequence_Begin("Seq_WaterDrain", mSeqWaterDrain);
+			
+			
+			if (Sequence_DoStepAndWait(1.2))
+			{
+				Player_SetInteractionAllowed("NoPressing", false);
+			}
+			else if (Sequence_DoStepAndWait(1.5))
+			{
+				Sound_CreateAtEntity("Sound_Start", "player/ladder/debug/attach_bottom", "player", 0, false, 0.5f);
+			}
+			else if (Sequence_DoStepAndWait(4.7))
+			{
+				cLux_AddDebugMessage("[DEBUG ROOM] Water draining!");
+				LiquidArea_MoveLinearTo("Liquid_1", "LiquidTarget_Drain", 0.3, 1, 0.5, false);
+			}
+			else if (Sequence_DoStepAndWait(0.5))
+			{
+				Sound_CreateAtEntity("Sound_Stop", "player/ladder/debug/hand_place", "player", 0, false, 0.5f);
+				
+				mbWaterFilled = false;
+			}
+			else if (Sequence_DoStepAndWait(2.0))
+			{
+				SlideDoor_SetClosed("DebugDoor", false, false);
+				Player_SetInteractionAllowed("NoPressing", true);
+			}
+			
+			Sequence_End();
 		}
 	 
 		//-------------------------------------------------------
