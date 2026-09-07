@@ -137,7 +137,14 @@ class cScrMap : iScrMap
 			Death_SetCustomDeathBehaviour(true);
 		}
 
-		RestoreParkourColorGrading();
+		// The save system can restore tone-mapping layers after OnEnter. Reconcile
+		// them on the next update, once the restored viewport state is final.
+		Map_RemoveTimer("RestoreParkourColorGrading");
+		Map_RemoveTimer("VerifyParkourColorGrading");
+		Map_AddTimer("RestoreParkourColorGrading", 0.25f,
+			"OnTimer_RestoreParkourColorGrading");
+		Map_AddTimer("VerifyParkourColorGrading", 1.0f,
+			"OnTimer_VerifyParkourColorGrading");
 		Parkour_WallSlideDebug("MAP OnEnter: diagnostics loaded; state=" + cLux_GetPlayer().GetCurrentStateId());
 		EnsureStalkerNarrowBodySectionsSetup();
 		SetBeastNarrowSectionBody(false);
@@ -211,6 +218,8 @@ class cScrMap : iScrMap
 	{
 		ResetSpeedRunRestartHold();
 		Map_RemoveTimer("EndingWallSlide");
+		Map_RemoveTimer("RestoreParkourColorGrading");
+		Map_RemoveTimer("VerifyParkourColorGrading");
 		Map_RemoveTimer("SpeedRunRestart");
 		SetBeastNarrowSectionBody(false);
 		Hint_SetCanShowHints(true);
@@ -872,6 +881,20 @@ class cScrMap : iScrMap
 		// Also set the viewport layer immediately if the world already has this grade.
 		Effect_ToneMapping_SetGradingTexture(0, sGrading, 1.0f);
 		Debug_Log("[ParkourGrading] Restored " + sGrading);
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_RestoreParkourColorGrading(const tString &in asTimer)
+	{
+		RestoreParkourColorGrading();
+	}
+
+	//-------------------------------------------------------
+
+	void OnTimer_VerifyParkourColorGrading(const tString &in asTimer)
+	{
+		RestoreParkourColorGrading();
 	}
 
 	//-------------------------------------------------------

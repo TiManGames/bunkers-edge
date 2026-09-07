@@ -75,6 +75,8 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f(0.f, 0.05f, 0.05f), 8.f, 5.f, 0.08f);
 
+		@mpScrambleSound = cSound_PlayGuiStream("WallRun.ogg", false, 0.5f, cLux_GetPlayer().GetCharacterBody().GetPosition(), eSoundEntryType_Gui);
+
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Wall scramble entered.", true);
 	}
@@ -90,6 +92,7 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		Player_SetLeanDisabled(false);
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Script, 0.f, 8.f, cMath_ToRad(160.f));
 		cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script, cVector3f_Zero, 8.f, 4.f, 0.10f);
+		mpScrambleSound.FadeOut(5.0f);
 	}
 
 	//------------------------------------------------------------
@@ -392,6 +395,8 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 	bool mbTurning = false;
 	tString msLastWallRefreshFail = "";
 	cVector3f mvWallNormal = cVector3f_Forward;
+
+	[nosave] cSoundEntry@ mpScrambleSound;
 
 	//------------------------------------------------------------
 }
