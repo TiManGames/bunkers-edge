@@ -166,6 +166,14 @@ class cScrMap : iScrMap
 		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
 		Game_SetupAfterMapChange();
 		Hint_SetCanShowHints(Parkour_GetLevelCompletedOnce() == false);
+		// Release-build diagnostic for first-run tutorial reports on other profiles.
+		LogNewLine("[BunkersEdgeHints] language=" + cLux_GetCurrentLanguage() +
+			" completed=" + Parkour_GetLevelCompletedOnce() +
+			" speedrun=" + mbSpeedRunModeActive +
+			" showHints=" + cLux_GetUserConfig().GetBool("Gameplay", "ShowHints", true) +
+			" pausingHints=" + cLux_GetUserConfig().GetBool("Gameplay", "GamePausingHints", true) +
+			" footage=" + cLux_GetFootageModeActive() +
+			" ledgeTranslation=" + cLux_HasTranslation("BunkersEdgeHints", "HintBELedge"));
 
 		bool bPlayIntroArrival = cScript_GetGlobalVarBool(gsIntroArrivalGlobal);
 		if (mbSpeedRunModeActive)
@@ -180,6 +188,13 @@ class cScrMap : iScrMap
 			Effect_Flash_Start(0.02f, 0.02f, 0.11f, 1.f);
 			Effect_Fade_In(0.15f);
 			mbParkourTimerActive = true;
+			Map_RemoveTimer("SpeedRunSaveReady");
+			if (mbSpeedRunStartSaved == false)
+			{
+				mbParkourTimerActive = false;
+				Player_SetActive(false);
+				Map_AddTimer("SpeedRunInitialSave", 0.15f, "OnTimer_SpeedRunInitialSave");
+			}
 		}
 		else if (bPlayIntroArrival)
 		{
@@ -386,6 +401,7 @@ class cScrMap : iScrMap
 	bool mbParkourResultsConfirmed = false;
 	bool mbSpeedRunModeActive = false;
 	bool mbSpeedRunRestartQueued = false;
+	bool mbSpeedRunStartSaved = false;
 	bool mbSpeedRunNewRecord = false;
 	bool mbParkourResultsSetInitialFocus = false;
 	float mfParkourElapsedTime = 0.f;
@@ -446,6 +462,11 @@ class cScrMap : iScrMap
 
 	void OnTimer_SpeedRunRestart(const tString &in asTimer)
 	{
+		if (cLux_GetSaveHandler().GetSaveThreadActive())
+		{
+			Map_AddTimer("SpeedRunRestart", 0.1f, "OnTimer_SpeedRunRestart");
+			return;
+		}
 		Music_StopAll(0.f);
 		Death_ResetDeathEffects();
 		PlayerBody_SetAnimationControlledCamera(false);
@@ -455,7 +476,29 @@ class cScrMap : iScrMap
 		Parkour_SetEnabled(true);
 		Parkour_SetSpeedRunModeActive(true);
 		cLux_LoadScreenSetOneShotSolidColorBackground();
-		cLux_StartNewGame("parkour_level.hpm", "Start_Begin");
+		cLux_GetSaveHandler().DelayedLoadGameFromFile(cString_To16Char("BunkersEdgeSpeedRunStart.sav"), "", "", false, false);
+	}
+
+	void OnTimer_SpeedRunInitialSave(const tString &in asTimer)
+	{
+		// Serialized before writing, so loading the snapshot never replaces it.
+		mbSpeedRunStartSaved = true;
+		mfParkourElapsedTime = 0.f;
+		// A named snapshot avoids story autosave rotation and save-slot suffixes.
+		cLux_GetSaveHandler().DelayedSaveGameToFile(cString_To16Char("BunkersEdgeSpeedRunStart.sav"), false);
+		Map_AddTimer("SpeedRunSaveReady", 0.1f, "OnTimer_SpeedRunSaveReady");
+	}
+
+	void OnTimer_SpeedRunSaveReady(const tString &in asTimer)
+	{
+		if (cLux_GetSaveHandler().GetSaveThreadActive())
+		{
+			Map_AddTimer("SpeedRunSaveReady", 0.1f, "OnTimer_SpeedRunSaveReady");
+			return;
+		}
+		Player_SetActive(true);
+		mfParkourElapsedTime = 0.f;
+		mbParkourTimerActive = true;
 	}
 
 	//-------------------------------------------------------
@@ -1649,9 +1692,6 @@ class cScrMap : iScrMap
 
 			Map_AddTimer("ReactivatePlayer", 1.5f, "Timer_ReactivatePlayer");
 			Map_AddTimer("Jump", 1.0f, "Timer_BeastJump");
-
-			if (mbSpeedRunModeActive == false)
-				Game_AutoSave(true);
 
 			return false;
 		}
