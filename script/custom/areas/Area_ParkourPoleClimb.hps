@@ -81,9 +81,11 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 		if (mbCanClimb == false) return;
 		if (Parkour_GetEnabled() == false) return;
 		if (cLux_GetPlayer().IsActive() == false) return;
-		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
+		int lPlayerState = cLux_GetPlayer().GetCurrentStateId();
+		bool bZiplineHandoff = lPlayerState == ePlayerState_Custom_ParkourZipline;
+		if (lPlayerState != ePlayerState_Normal && bZiplineHandoff == false) return;
 		int lMoveState = cLux_GetPlayer().GetCurrentMoveStateId();
-		if (lMoveState != eMoveState_Normal && lMoveState != eMoveState_ParkourWallRun) return;
+		if (bZiplineHandoff == false && lMoveState != eMoveState_Normal && lMoveState != eMoveState_ParkourWallRun) return;
 		if (Player_GetUnderwater()) return;
 
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
@@ -104,20 +106,20 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 		if (mbNeedsExitAfterGrab) return;
 		if (mfGrabCooldown > 0.f) return;
 
-		if (pBody.IsOnGround())
+		if (bZiplineHandoff == false && pBody.IsOnGround())
 		{
 			DebugSkip("player is grounded");
 			return;
 		}
 
 		cVector3f vFlatVel = Parkour_GetFlatVelocity(pBody, afTimeStep);
-		if (vFlatVel.Length() < mfMinApproachSpeed)
+		if (bZiplineHandoff == false && vFlatVel.Length() < mfMinApproachSpeed)
 		{
 			DebugSkip("approach speed too low. speed=" + vFlatVel.Length() + " min=" + mfMinApproachSpeed);
 			return;
 		}
 
-		if (pBody.GetForceVelocity().y < mfMinVerticalSpeed)
+		if (bZiplineHandoff == false && pBody.GetForceVelocity().y < mfMinVerticalSpeed)
 		{
 			DebugSkip("vertical speed too low. velocity=" + pBody.GetForceVelocity().y + " min=" + mfMinVerticalSpeed);
 			return;
@@ -179,6 +181,11 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 										   mfSlideSpeed,
 										   mfTopOutTime,
 										   mfJumpTurnAngle);
+
+		// Cache the pole while the player is still constrained to the zipline. The
+		// normal move state consumes this candidate immediately after zipline release,
+		// avoiding a frame-rate-dependent wait for another area update.
+		if (bZiplineHandoff) return;
 
 		if (Parkour_TryStartPoleClimbCandidate(lMoveState == eMoveState_Normal))
 		{

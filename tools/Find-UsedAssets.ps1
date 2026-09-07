@@ -2,7 +2,10 @@
 param(
     [string] $ModRoot = (Split-Path -Parent $PSScriptRoot),
     [string] $OutputPath = (Join-Path $PSScriptRoot 'used-assets-report.txt'),
-    [string] $JsonOutputPath = (Join-Path $PSScriptRoot 'used-assets-report.json')
+    [string] $JsonOutputPath = (Join-Path $PSScriptRoot 'used-assets-report.json'),
+    # Optional HPL runtime log. Only actual "Loaded resource ... in N ms" entries
+    # under this mod's entities/static_objects roots are accepted as direct evidence.
+    [string[]] $RuntimeLogPath = @()
 )
 
 Set-StrictMode -Version Latest
@@ -48,6 +51,8 @@ $queue = [Collections.Generic.Queue[string]]::new()
 $reasons = [Collections.Generic.Dictionary[string,Collections.Generic.List[string]]]::new([StringComparer]::OrdinalIgnoreCase)
 $ambiguous = [Collections.Generic.List[object]]::new()
 $unresolved = [Collections.Generic.List[object]]::new()
+$runtimeObserved = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+$runtimeLogFull = [Collections.Generic.List[string]]::new()
 
 function Add-Used([string] $Key, [string] $Reason) {
     if (-not $candidates.ContainsKey($Key)) { return }
@@ -70,7 +75,13 @@ function Resolve-Reference([string] $Value, [string] $Source) {
         if ($candidates.ContainsKey($key)) { Add-Used $key $Source; return }
     }
 
-    $leaf = [IO.Path]::GetFileName($value)
+    try { $leaf = [IO.Path]::GetFileName($value) }
+    catch {
+        # A malformed/external authoring reference is not deletion evidence.
+        # Keep it in the unresolved audit and continue scanning the rest.
+        $unresolved.Add([pscustomobject]@{ source=$Source; reference=$value })
+        return
+    }
     if ($byFileName.ContainsKey($leaf)) {
         $matches = @($byFileName[$leaf])
         if ($matches.Count -eq 1) { Add-Used $matches[0] ("Unique filename fallback from {0}: {1}" -f $Source,$value); return }
@@ -125,6 +136,27 @@ function Scan-Hpm([object] $File) {
     }
 }
 
+function Scan-RuntimeLog([string] $Path) {
+    $logFullPath = (Get-Item -LiteralPath $Path -ErrorAction Stop).FullName
+    $script:runtimeLogFull.Add($logFullPath)
+    $lineNumber = 0
+    foreach ($line in [IO.File]::ReadLines($logFullPath)) {
+        $lineNumber++
+        # Resource Logging writes fully resolved paths in this exact form. Do not
+        # accept merely-mentioned or destroyed paths as proof of a load.
+        if ($line -notmatch '^\s*Loaded resource\s+(.+?)\s+in\s+\d+\s+ms\s*$') { continue }
+        $resourcePath = $Matches[1]
+        Resolve-Reference $resourcePath ("Runtime load: {0}; line {1}" -f (Split-Path -Leaf $logFullPath),$lineNumber)
+        $rootMatch = [regex]::Match($resourcePath, '(?i)(?:^|[\\/])(entities|static_objects)[\\/](.+)$')
+        if ($rootMatch.Success) {
+            $key = Get-Key ($rootMatch.Groups[1].Value + '/' + $rootMatch.Groups[2].Value)
+            if ($candidates.ContainsKey($key) -and $used.Contains($key)) { [void]$runtimeObserved.Add($key) }
+        }
+    }
+}
+
+foreach ($logPath in @($RuntimeLogPath | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) { Scan-RuntimeLog $logPath }
+
 # Primary roots: current HPM object indices plus engine-generated preload caches.
 foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $modRootFull 'maps') -Recurse -File)) {
     if ($file.Name -match '(?i)\.hpm(?:_|$)') { Scan-Hpm $file }
@@ -171,9 +203,10 @@ $bundleOnly = @($bundleRetained | Where-Object { -not $used.Contains($_) -and -n
 $possibleOnly = @($possible | Where-Object { -not $used.Contains($_) } | ForEach-Object { $candidates[$_]} | Sort-Object Path)
 $noRecordedReference = @($candidates.Values | Where-Object { -not $used.Contains($_.Key) -and -not $bundleRetained.Contains($_.Key) -and -not $possible.Contains($_.Key) } | Sort-Object Path)
 
-$report = [ordered]@{ schemaVersion=1; mode='report-only-used-asset-graph'; generatedAt=(Get-Date).ToString('o'); modRoot=$modRootFull; summary=[ordered]@{ inventory=$candidates.Count; directlyUsed=$directUsed.Count; bundleRetained=$bundleOnly.Count; ambiguousPossible=$possibleOnly.Count; noRecordedReference=$noRecordedReference.Count; unresolvedReferences=$unresolved.Count }; directlyUsed=$directUsed; bundleRetained=@($bundleOnly|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); ambiguousPossible=@($possibleOnly|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); noRecordedReference=@($noRecordedReference|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); ambiguousReferences=@($ambiguous); unresolvedReferences=@($unresolved) }
+$runtimeObservedItems = @($runtimeObserved | ForEach-Object { $candidates[$_] } | Sort-Object Path)
+$report = [ordered]@{ schemaVersion=1; mode='report-only-used-asset-graph'; generatedAt=(Get-Date).ToString('o'); modRoot=$modRootFull; runtimeLogs=@($runtimeLogFull); summary=[ordered]@{ inventory=$candidates.Count; runtimeObserved=$runtimeObservedItems.Count; directlyUsed=$directUsed.Count; bundleRetained=$bundleOnly.Count; ambiguousPossible=$possibleOnly.Count; noRecordedReference=$noRecordedReference.Count; unresolvedReferences=$unresolved.Count }; runtimeObserved=@($runtimeObservedItems|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); directlyUsed=$directUsed; bundleRetained=@($bundleOnly|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); ambiguousPossible=@($possibleOnly|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); noRecordedReference=@($noRecordedReference|ForEach-Object{[ordered]@{path=$_.Path;bytes=$_.Bytes}}); ambiguousReferences=@($ambiguous); unresolvedReferences=@($unresolved) }
 [IO.File]::WriteAllText($JsonOutputPath,($report|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
-$lines=[Collections.Generic.List[string]]::new(); $lines.Add('BunkersEdge used-asset graph report'); $lines.Add('REPORT ONLY: no deletion recommendation is made.'); $lines.Add("Inventory: $($candidates.Count)"); $lines.Add("Directly used (traceable): $($directUsed.Count)"); $lines.Add("Retained by used asset bundle: $($bundleOnly.Count)"); $lines.Add("Possible via ambiguous filename: $($possibleOnly.Count)"); $lines.Add("No recorded reference: $($noRecordedReference.Count)"); $lines.Add(''); $lines.Add('DIRECTLY USED (path | reasons)'); foreach($item in $directUsed){$lines.Add(($item.path+' | '+($item.reasons -join ' ; ')))}; $lines.Add(''); $lines.Add('RETAINED BY USED BUNDLE (not direct-use proof)'); foreach($item in $bundleOnly){$lines.Add($item.Path)}; $lines.Add(''); $lines.Add('NO RECORDED REFERENCE (not deletion-safe)'); foreach($item in $noRecordedReference){$lines.Add($item.Path)}
+$lines=[Collections.Generic.List[string]]::new(); $lines.Add('BunkersEdge used-asset graph report'); $lines.Add('REPORT ONLY: no deletion recommendation is made.'); $lines.Add("Inventory: $($candidates.Count)"); $lines.Add("Runtime-observed loads: $($runtimeObservedItems.Count)"); foreach($runtimeLog in $runtimeLogFull){$lines.Add("Runtime log: $runtimeLog")}; $lines.Add("Directly used (traceable): $($directUsed.Count)"); $lines.Add("Retained by used asset bundle: $($bundleOnly.Count)"); $lines.Add("Possible via ambiguous filename: $($possibleOnly.Count)"); $lines.Add("No recorded reference: $($noRecordedReference.Count)"); $lines.Add(''); $lines.Add('RUNTIME-OBSERVED (confirmed loaded by engine)'); foreach($item in $runtimeObservedItems){$lines.Add($item.Path)}; $lines.Add(''); $lines.Add('DIRECTLY USED (path | reasons)'); foreach($item in $directUsed){$lines.Add(($item.path+' | '+($item.reasons -join ' ; ')))}; $lines.Add(''); $lines.Add('RETAINED BY USED BUNDLE (not direct-use proof)'); foreach($item in $bundleOnly){$lines.Add($item.Path)}; $lines.Add(''); $lines.Add('NO RECORDED REFERENCE (not deletion-safe)'); foreach($item in $noRecordedReference){$lines.Add($item.Path)}
 [IO.File]::WriteAllLines($OutputPath,$lines,[Text.UTF8Encoding]::new($false))
 Write-Host "Used graph complete: $($directUsed.Count) direct, $($bundleOnly.Count) bundle-retained, $($possibleOnly.Count) ambiguous, $($noRecordedReference.Count) with no recorded reference."
 Write-Host "Text: $OutputPath"; Write-Host "JSON: $JsonOutputPath"

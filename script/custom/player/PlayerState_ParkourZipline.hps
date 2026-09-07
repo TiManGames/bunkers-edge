@@ -529,6 +529,20 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 			return;
 		}
 
+		// The ride completes with a small progress tolerance. At high frame rates that
+		// can leave the player just short of the authored endpoint, allowing a narrow
+		// pole-climb trigger to be skipped before its next variable update. Always
+		// finish at the exact cable endpoint before restoring collision.
+		if (abReachedEnd)
+		{
+			cVector3f vEndTangent;
+			cVector3f vEndFeet = GetFeetAtProgress(1.f, vEndTangent);
+			mfRideProgress = 1.f;
+			pBody.SetFeetPosition(vEndFeet, true);
+			if (vEndTangent.SqrLength() > 0.001f)
+				mvCurrentPathTangent = vEndTangent;
+		}
+
 		mbFinished = true;
 		RestoreBody();
 
