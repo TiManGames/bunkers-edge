@@ -398,7 +398,7 @@ class cScrMap : iScrMap
 
 		void OnInteract_Button3(const tString &in asEntity)
 		{
-			if(mlTerminalTextEntry >= 7)
+			if(mlTerminalTextEntry >= 4)
 			{
 				mlTerminalTextEntry = 0; // Reset terminal to first log
 				cLux_AddDebugMessage("Reset terminal!");
@@ -474,7 +474,9 @@ class cScrMap : iScrMap
 			Sequence_End();
 		}
 
-		void OnGui_StoryTerminal(const tString&in asEntityName, float afTimeStep)
+		int mlEntryOffset = 5;
+
+		void OnGui_DebugTerminals(const tString&in asEntityName, float afTimeStep)
 		{
 			///////////////
 			// Draw text
@@ -490,7 +492,15 @@ class cScrMap : iScrMap
 				ImGui_SetAlignment(eImGuiAlign_CenterCenter);
 				ImGui_SetModColorMul(cColor(1.f, 1.f, 1.f, 1.0f));
 				ImGui_SetTransCategory("Ending");
-				ImGui_DoTextFrameExt("DebugRoomNote_"+mlTerminalTextEntry, cVector2f(10, 10), 0.f, 0.f, textData, ImGui_NrmPosGroup(0.f, 0.3f, 0.1f), ImGui_NrmSizeGroup(1.f));
+				if(asEntityName == "StoryTerminal")
+				{
+					ImGui_DoTextFrameExt("DebugRoomNote_"+mlTerminalTextEntry, cVector2f(10, 10), 0.f, 0.f, textData, ImGui_NrmPosGroup(0.f, 0.3f, 0.1f), ImGui_NrmSizeGroup(1.f));
+				}
+				else if(asEntityName == "NoteTerminal")
+				{
+					ImGui_DoTextFrameExt("DebugRoomNote_"+(mlTerminalTextEntry+mlEntryOffset), cVector2f(10, 10), 0.f, 0.f, textData, ImGui_NrmPosGroup(0.f, 0.3f, 0.1f), ImGui_NrmSizeGroup(1.f));
+				}
+
 				ImGui_SetTransCategory("");
 					
 				ImGui_SetAlignment(eImGuiAlign_TopLeft);
