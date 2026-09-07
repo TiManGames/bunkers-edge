@@ -13,6 +13,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+throw 'Superseded: this scanner produced false negatives. Use Find-UsedAssets.ps1, which reports positive evidence and does not mark files deletion-safe.'
+
 # This is intentionally a report-only tool. It contains no deletion operation.
 $assetRoots = @('entities', 'static_objects')
 

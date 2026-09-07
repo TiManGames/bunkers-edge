@@ -23,6 +23,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		mbNeedsExitAfterGrab = false;
 		mbRuntimeRebuildPending = false;
 		mbRuntimeDestroyRequested = false;
+		mbRopeGfxNearRefreshPending = true;
 		mfDebugTimer = 0.f;
 		mfGrabCooldown = 0.f;
 		mfRuntimeRebuildRetryTimer = 0.f;
@@ -271,6 +272,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		// and creation after the load callback has returned.
 		mbRuntimeRebuildPending = true;
 		mbRuntimeDestroyRequested = false;
+		mbRopeGfxNearRefreshPending = true;
 		mfRuntimeRebuildRetryTimer = gfParkourZipline_RopePhysicsInitialDelay;
 		mfRopeGfxRetryTimer = gfParkourZipline_RopeGfxInitialDelay;
 		m_idAnchorBody = tID_Invalid;
@@ -405,6 +407,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 
 		pRope.SetActive(true);
 		pRope.SetPhysicsActive(true);
+		pRope.SetSleeping(false);
 
 		// Create the graphics rope after a small delay, once the physics rope has
 		// initialized its particles.
@@ -432,6 +435,24 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		{
 			pRopeGfx.SetActive(true);
 			pRopeGfx.SetVisible(true);
+
+			// A rope gfx entity created while this part of the map was far away can
+			// exist with a valid material/link but still have stale render geometry.
+			// Wake the rope and force one graphics update when the player approaches.
+			iCharacterBody@ pPlayerBody = cLux_GetPlayer().GetCharacterBody();
+			if (mbRopeGfxNearRefreshPending &&
+				pPlayerBody !is null &&
+				cMath_Vector3Dist(pPlayerBody.GetFeetPosition(), mvHighPoint) <= 40.f)
+			{
+				pRope.SetActive(true);
+				pRope.SetPhysicsActive(true);
+				pRope.SetSleeping(false);
+				pRopeGfx.UpdateLogic(0.f);
+				mbRopeGfxNearRefreshPending = false;
+
+				if (Parkour_GetDebug())
+					cLux_AddDebugMessage("[Parkour] Zipline rope graphics refreshed near player for '" + mBaseObj.GetName() + "'.", true);
+			}
 			return;
 		}
 
@@ -499,6 +520,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 		pRopeGfx.SetVisible(true);
 		pRopeGfx.SetScriptableIsSaved(false);
 		pRopeGfx.SetRenderFlagBit(eRenderableFlag_ShadowCaster, true);
+		pRopeGfx.UpdateLogic(0.f);
 		return true;
 	}
 
@@ -825,6 +847,7 @@ class cScrAreaParkourZipline : iScrArea, iScrArea_Interface
 	bool mbNeedsExitAfterGrab = false;
 	[nosave] bool mbRuntimeRebuildPending = false;
 	[nosave] bool mbRuntimeDestroyRequested = false;
+	[nosave] bool mbRopeGfxNearRefreshPending = true;
 	bool mbRopeCollideWorld = false;
 	bool mbRopeCollideCharacter = false;
 

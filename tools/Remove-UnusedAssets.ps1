@@ -26,6 +26,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+throw 'Disabled: the previous static scanner produced false negatives. This remover will remain disabled until the used-asset graph is independently verified.'
+
 # The remover is deliberately restricted to the two roots inventoried by
 # Find-UnusedAssets.ps1. It never accepts a target path outside this list.
 $allowedRoots = @('entities', 'static_objects')
