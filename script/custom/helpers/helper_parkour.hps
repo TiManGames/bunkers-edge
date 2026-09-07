@@ -51,6 +51,23 @@ const int geParkourFlowEvent_BeamWalkFall = 28;
 
 //------------------------------------------------------------
 
+void Parkour_EnableTutorialHintSettings()
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	if (pConfig is null) return;
+	bool bChanged = pConfig.GetBool("Gameplay", "ShowHints", false) == false ||
+		pConfig.GetBool("Gameplay", "GamePausingHints", false) == false;
+	pConfig.SetBool("Gameplay", "ShowHints", true);
+	pConfig.SetBool("Gameplay", "GamePausingHints", true);
+	if (bChanged) pConfig.Save();
+
+	// The handler caches both options; refresh them for this session as well.
+	iScrUserModule_Interface@ pHintHandler = cLux_GetUserModuleFromName("HintHandler");
+	if (pHintHandler !is null) pHintHandler.LoadUserConfig();
+}
+
+//------------------------------------------------------------
+
 bool Parkour_GetLevelCompletedOnce()
 {
 	cConfigFile@ pConfig = cLux_GetUserConfig();

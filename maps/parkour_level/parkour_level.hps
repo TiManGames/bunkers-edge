@@ -168,15 +168,8 @@ class cScrMap : iScrMap
 
 		Light_FadeBrightnessTo("Light_RunnerObject_Helper_*", 0, 0, eEasing_Linear);
 		Game_SetupAfterMapChange();
+		Parkour_EnableTutorialHintSettings();
 		Hint_SetCanShowHints(Parkour_GetLevelCompletedOnce() == false);
-		// Release-build diagnostic for first-run tutorial reports on other profiles.
-		LogNewLine("[BunkersEdgeHints] language=" + cLux_GetCurrentLanguage() +
-			" completed=" + Parkour_GetLevelCompletedOnce() +
-			" speedrun=" + mbSpeedRunModeActive +
-			" showHints=" + cLux_GetUserConfig().GetBool("Gameplay", "ShowHints", true) +
-			" pausingHints=" + cLux_GetUserConfig().GetBool("Gameplay", "GamePausingHints", true) +
-			" footage=" + cLux_GetFootageModeActive() +
-			" ledgeTranslation=" + cLux_HasTranslation("BunkersEdgeHints", "HintBELedge"));
 
 		bool bPlayIntroArrival = cScript_GetGlobalVarBool(gsIntroArrivalGlobal);
 		if (mbSpeedRunModeActive)

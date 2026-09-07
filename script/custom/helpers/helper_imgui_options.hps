@@ -71,6 +71,7 @@ const float gfFontSize_Prompts = 20;
 const float gfFontSize_PromptButtons = 26;
 const float gfFontSize_GamepadPrompts = 24;
 const float gfFontSize_InfoBox = 19;
+const cVector3f gvOptionMenu_TextShadowOffset(1.5f, 1.f, 0.f);
 
 // Difficulty Settings menu btn size
 const float gfCustomSettingsButtonWidth = 360.f;
@@ -78,6 +79,38 @@ const float gfCustomSettingsButtonWidth = 360.f;
 // Mod color
 cColor gOptionMenu_ModColor = cColor(1,1);
 cColor gTextCol_Dark = cColor(0.066f,0.058f,0.054f,1.f);
+
+void OptionMenu_DrawButtonTextShadow(const tString &in asText, const cImGuiButtonData &in aButtonData,
+									 const cVector3f &in avPos, const cVector2f &in avSize)
+{
+	if (asText == "") return;
+
+	cImGuiLabelData shadowData = ImGui_GetDefaultLabel();
+	shadowData.mFont = aButtonData.mFont;
+	shadowData.mFontAlign = aButtonData.mFontAlign;
+	shadowData.mColorBase = cColor(0.f);
+	shadowData.mbScrolling = aButtonData.mbClipText;
+	shadowData.mfScrollSpeed = aButtonData.mfScrollSpeed;
+	shadowData.mfScrollStartDelay = aButtonData.mfScrollStartDelay;
+	shadowData.mfScrollResetDelay = aButtonData.mfScrollResetDelay;
+	ImGui_DoLabelExt(asText, shadowData, avPos + gvOptionMenu_TextShadowOffset, avSize);
+}
+
+void OptionMenu_DrawLabelTextShadow(const tString &in asText, const cImGuiLabelData &in aLabelData,
+									const cVector3f &in avPos, const cVector2f &in avSize)
+{
+	cImGuiLabelData shadowData = aLabelData;
+	shadowData.mColorBase = cColor(0.f);
+	ImGui_DoLabelExt(asText, shadowData, avPos + gvOptionMenu_TextShadowOffset, avSize);
+}
+
+void OptionMenu_DrawLabelTextShadowW(const tWString &in asText, const cImGuiLabelData &in aLabelData,
+									 const cVector3f &in avPos, const cVector2f &in avSize)
+{
+	cImGuiLabelData shadowData = aLabelData;
+	shadowData.mColorBase = cColor(0.f);
+	ImGui_DoLabelExtW(asText, shadowData, avPos + gvOptionMenu_TextShadowOffset, avSize);
+}
 
 void OptionMenu_SetModColor(const cColor &in aCol)
 {
@@ -517,10 +550,12 @@ float OptionMenu_OptionsSlider(cVector2f avMainPos, cVector2f avPos, float afVal
 {
 	cVector3f vRightAnchorNrm = OptionMenu_GetTopLeftOffset(avRightAnchor);
 	cVector3f vLeftAnchorNrm = OptionMenu_GetTopLeftOffset(avMainPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0);
+	cVector2f vRowButtonSize(vRightAnchorNrm.x-vLeftAnchorNrm.x, kOptionMenu_ButtonSize.y);
+	OptionMenu_DrawButtonTextShadow(asName, aButtonData, vLeftAnchorNrm, vRowButtonSize);
 	
 	if (abActive==false)
 	{
-		ImGui_DoRepeatButtonExt(asName,asName, aButtonData, vLeftAnchorNrm+cVector3f(0,0,0), cVector2f(vRightAnchorNrm.x-vLeftAnchorNrm.x,kOptionMenu_ButtonSize.y));
+		ImGui_DoRepeatButtonExt(asName,asName, aButtonData, vLeftAnchorNrm+cVector3f(0,0,0), vRowButtonSize);
 		return afValue;
 	}
 	
@@ -592,7 +627,7 @@ float OptionMenu_OptionsSlider(cVector2f avMainPos, cVector2f avPos, float afVal
 		
 		/////////////////
 		// Normal button
-		if(ImGui_DoButtonExt(asName,asName, aButtonData, vLeftAnchorNrm, cVector2f(vRightAnchorNrm.x-vLeftAnchorNrm.x,kOptionMenu_ButtonSize.y)))
+		if(ImGui_DoButtonExt(asName,asName, aButtonData, vLeftAnchorNrm, vRowButtonSize))
 		{
 			// Select based on which side the mouse was
 			if(ImGui_GetMouseVisible()) 
@@ -689,7 +724,10 @@ float OptionMenu_OptionsSlider(cVector2f avMainPos, cVector2f avPos, float afVal
 		labelData.mfScrollStartDelay = 1.f;
 		labelData.mfScrollResetDelay = 1.f;
 		ImGui_SetTransCategory(asTextValueTransCat);
-		ImGui_DoLabelExt(asTextValue,labelData, vButtonAreaPosNrm+cVector3f(vButtonAreaSizeNrm.x-fLabelWidth,8,0), cVector2f(180, -1));
+		cVector3f vTextValuePos = vButtonAreaPosNrm+cVector3f(vButtonAreaSizeNrm.x-fLabelWidth,8,0);
+		cVector2f vTextValueSize(180, -1);
+		OptionMenu_DrawLabelTextShadow(asTextValue, labelData, vTextValuePos, vTextValueSize);
+		ImGui_DoLabelExt(asTextValue,labelData, vTextValuePos, vTextValueSize);
 		ImGui_SetTransCategory("Menu");
 			
 		/////////////
@@ -998,6 +1036,7 @@ void OptionMenu_OptionsMultiSelect(cVector2f avPos, array<tString> aArray, int a
 		/////////////////
 		// Do label
 		cVector2f vLabelSize = labelData.mbScrolling ? OptionMenu_GetScaledSize(cVector2f(fLabelSizeNrm, -1)) : 0;
+		OptionMenu_DrawLabelTextShadowW(sLabelText, labelData, vLabelPosNrm, vLabelSize);
 		ImGui_DoLabelExtW(sLabelText, labelData, vLabelPosNrm, vLabelSize);		
 	}
 	
@@ -1345,8 +1384,10 @@ bool MainMenu_DoButton(tString asName, const cVector3f &in avPos, bool abSelecte
 	
 	if (abSelected)
 		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
-		
-	return ImGui_DoButtonExt(asName, asName, buttonData, avPos, OptionMenu_GetScaledSize(avScale));
+
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(avScale);
+	OptionMenu_DrawButtonTextShadow(asName, buttonData, avPos, vButtonSize);
+	return ImGui_DoButtonExt(asName, asName, buttonData, avPos, vButtonSize);
 }
 
 //-------------------------------------------------------
@@ -1372,8 +1413,9 @@ bool MainMenu_DoBackButton(const tString&in asSelected, float afAlpha=1.f)
 		buttonData.mFont.mColor = gHoverColor * cColor(1, afAlpha);
 	
 	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(kBackButtonPos, 1.0);
-	
-	if (ImGui_DoButtonExt("Back", "Back", buttonData, vButtonPos, OptionMenu_GetScaledSize(cVector2f(256, 40))))
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(cVector2f(256, 40));
+	OptionMenu_DrawButtonTextShadow("Back", buttonData, vButtonPos, vButtonSize);
+	if (ImGui_DoButtonExt("Back", "Back", buttonData, vButtonPos, vButtonSize))
 	{
 		if (ImGui_TimerExists("TransitionOut") == false)
 			ImGui_AddTimer("TransitionOut", 10.f);
@@ -1404,8 +1446,9 @@ bool MainMenu_DoStartButton(const tString&in asSelected, float afAlpha=1.f)
 		buttonData.mFont.mColor = gHoverColor * cColor(1, afAlpha);
 	
 	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(kSelectButtonPos, 1.0);
-	
-	if (ImGui_DoButtonExt("Start", "Start", buttonData, vButtonPos, OptionMenu_GetScaledSize(cVector2f(256, 40))))
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(cVector2f(256, 40));
+	OptionMenu_DrawButtonTextShadow("Start", buttonData, vButtonPos, vButtonSize);
+	if (ImGui_DoButtonExt("Start", "Start", buttonData, vButtonPos, vButtonSize))
 	{
 		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
 		bClicked = true;
@@ -1435,8 +1478,9 @@ bool MainMenu_DoContinueButton(const tString&in asSelected, float afAlpha=1.f)
 		buttonData.mFont.mColor = gHoverColor * cColor(1, afAlpha);
 	
 	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(kContinueButtonPos, 1.0);
-	
-	if (ImGui_DoButtonExt(sLabel, sLabel, buttonData, vButtonPos, OptionMenu_GetScaledSize(cVector2f(256, 40))))
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(cVector2f(256, 40));
+	OptionMenu_DrawButtonTextShadow(sLabel, buttonData, vButtonPos, vButtonSize);
+	if (ImGui_DoButtonExt(sLabel, sLabel, buttonData, vButtonPos, vButtonSize))
 	{
 		if (ImGui_TimerExists("TransitionOut") == false)
 			ImGui_AddTimer("TransitionOut", 10.f);
@@ -1498,7 +1542,9 @@ void OptionMenu_MainMenuDisabledButton(tString asName, const cVector2f &in avBas
 
 
 	//MainMenu_DoButton(asName, OptionMenu_GetTopLeftOffset(avBasePos + cVector2f(0, kOptionMenu_ButtonSpacing * alEntryPos)), false, afAlpha);
-	ImGui_DoLabelExt(asName, disabledLabelData, OptionMenu_GetTopLeftOffset(avBasePos + cVector2f(0, kOptionMenu_ButtonSpacing * alEntryPos + 7), 0.0f));
+	cVector3f vLabelPos = OptionMenu_GetTopLeftOffset(avBasePos + cVector2f(0, kOptionMenu_ButtonSpacing * alEntryPos + 7), 0.0f);
+	OptionMenu_DrawLabelTextShadow(asName, disabledLabelData, vLabelPos, cVector2f_MinusOne);
+	ImGui_DoLabelExt(asName, disabledLabelData, vLabelPos);
 }
 
 //-------------------------------------------------------
@@ -1561,7 +1607,10 @@ bool OptionMenu_ButtonModOptions(tString asName, cVector2f avPos, tString asSele
 	buttonData.mFont.mColor = (asSelected == asName ? cColor(1, afAlpha) * gHoverColor : cColor(1,afAlpha)); 
 	buttonData.mFont.mColor = buttonData.mFont.mColor * gOptionMenu_ModColor;
 	
-	if(ImGui_DoButtonExt(asName,asName, buttonData, OptionMenu_GetTopLeftOffset(avPos, 1.0), OptionMenu_GetScaledSize(cVector2f(kOptionMenu_ButtonSize.x * 0.45, kOptionMenu_ButtonSize.y))))
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(avPos, 1.0);
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(cVector2f(kOptionMenu_ButtonSize.x * 0.45, kOptionMenu_ButtonSize.y));
+	OptionMenu_DrawButtonTextShadow(asName, buttonData, vButtonPos, vButtonSize);
+	if(ImGui_DoButtonExt(asName,asName, buttonData, vButtonPos, vButtonSize))
 	{
 		Sound_PlayGui("special_fx/frontend/frontend_menu_select", 1.0f, eSoundEntryType_Gui);
 		if (bFadeOnClick && ImGui_TimerExists("TransitionOut") == false)
@@ -1957,7 +2006,10 @@ int OptionMenu_ButtonKeybind(tString asName, tString asTitle, tString asBindPrim
 	ImGui_SetTransCategory("Actions"); 
 
 	{
-		if(ImGui_DoButtonExt(asName,asTitle, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 3), 2.0), OptionMenu_GetScaledSize(kOptionMenu_KeybindBaseButtonSize)))
+		cVector3f vActionButtonPos = OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, 3), 2.0);
+		cVector2f vActionButtonSize = OptionMenu_GetScaledSize(kOptionMenu_KeybindBaseButtonSize);
+		OptionMenu_DrawButtonTextShadow(asTitle, buttonData, vActionButtonPos, vActionButtonSize);
+		if(ImGui_DoButtonExt(asName,asTitle, buttonData, vActionButtonPos, vActionButtonSize))
 		{
 			lClicked = 1;
 			//cLux_AddTodoMessage("Sound: Keybind file pressed");
@@ -1977,7 +2029,9 @@ int OptionMenu_ButtonKeybind(tString asName, tString asTitle, tString asBindPrim
 	{
 		buttonData.mFont.mColor = mPrimaryColor;
 		ImGui_SetTransCategory("ButtonNames"); 
-		if(ImGui_DoButtonExt(asName+"Primary",asBindPrimary, buttonData, vButtonLeftPosNrm, cVector2f(vButtonSizeNrm.x/2,vButtonSizeNrm.y)))
+		cVector2f vBindButtonSize(vButtonSizeNrm.x/2,vButtonSizeNrm.y);
+		OptionMenu_DrawButtonTextShadow(asBindPrimary, buttonData, vButtonLeftPosNrm, vBindButtonSize);
+		if(ImGui_DoButtonExt(asName+"Primary",asBindPrimary, buttonData, vButtonLeftPosNrm, vBindButtonSize))
 		{
 			lClicked = 1;
 			//cLux_AddTodoMessage("Sound: Keybind file pressed");
@@ -1991,8 +2045,9 @@ int OptionMenu_ButtonKeybind(tString asName, tString asTitle, tString asBindPrim
 	// Secondary button
 	{
 		buttonData.mFont.mColor = mSecondaryColor;
-
-		if(ImGui_DoButtonExt(asName+"Secondary",asBindSecondary, buttonData, vButtonRightPosNrm, cVector2f(vButtonSizeNrm.x/2,vButtonSizeNrm.y)))
+		cVector2f vBindButtonSize(vButtonSizeNrm.x/2,vButtonSizeNrm.y);
+		OptionMenu_DrawButtonTextShadow(asBindSecondary, buttonData, vButtonRightPosNrm, vBindButtonSize);
+		if(ImGui_DoButtonExt(asName+"Secondary",asBindSecondary, buttonData, vButtonRightPosNrm, vBindButtonSize))
 		{
 			lClicked = 2;
 			//cLux_AddTodoMessage("Sound: Keybind file pressed");
@@ -2209,10 +2264,14 @@ bool OptionMenu_ButtonOptionsToggle(tString asName, cVector2f avPos, int alID, t
 	}
 	
 	if (bSelected) buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
-	
+
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0);
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y));
+	OptionMenu_DrawButtonTextShadow(asName, buttonData, vButtonPos, vButtonSize);
+
 	//////////////////////////////
 	// Check if button was clicked
-	if(ImGui_DoButtonExt(asName,asName, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0),  OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y))))
+	if(ImGui_DoButtonExt(asName,asName, buttonData, vButtonPos, vButtonSize))
 	{
 		//cLux_AddTodoMessage("Sound: Menu toggle button pressed");
 		abValue = !abValue;
@@ -2267,15 +2326,19 @@ int OptionMenu_ButtonOptionsMultiSelect(tString asName, cVector2f avPos, int alI
 	
 	if (bSelected)
 		buttonData.mFont.mColor = buttonData.mFont.mColor * gHoverColor;
-	
+
+	cVector3f vButtonPos = OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0);
+	cVector2f vButtonSize = OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y));
+	OptionMenu_DrawButtonTextShadow(asName, buttonData, vButtonPos, vButtonSize);
+
 	if (abActive==false)
 	{
-		ImGui_DoButtonExt(asName, asName, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0), OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y)));
+		ImGui_DoButtonExt(asName, asName, buttonData, vButtonPos, vButtonSize);
 		return alValue;
 	}
 	
 	int lDirection = 0;
-	if (ImGui_DoButtonExt(asName, asName, buttonData, OptionMenu_GetTopLeftOffset(avPos + cVector2f(0, kOptionMenu_ButtonSpacing * alID), 1.0), OptionMenu_GetScaledSize(cVector2f(avRightAnchor.x-avPos.x, kOptionMenu_ButtonSize.y))))
+	if (ImGui_DoButtonExt(asName, asName, buttonData, vButtonPos, vButtonSize))
 	{
 		/////////////////////////////////////////////
 		// Select based on which side the mouse was
