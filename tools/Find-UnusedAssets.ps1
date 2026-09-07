@@ -102,6 +102,7 @@ foreach ($file in $allFiles) {
         RelativePath = $relativePath
         FullPath     = $file.FullName
         Length       = $file.Length
+        LastWriteTimeUtc = $file.LastWriteTimeUtc.ToString('o')
         Extension    = Get-NormalizedExtension -Path $relativePath
         Root         = ($relativePath -split '/', 2)[0].ToLowerInvariant()
     }
@@ -597,7 +598,7 @@ if ($warnings.Count -gt 0) {
 [System.IO.File]::WriteAllText($OutputPath, $builder.ToString(), [System.Text.UTF8Encoding]::new($false))
 
 $jsonReport = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     mode = 'report-only'
     generatedAt = (Get-Date).ToString('o')
     modRoot = $modRootFull
@@ -618,6 +619,7 @@ $jsonReport = [ordered]@{
         [ordered]@{
             path = $_.RelativePath
             bytes = $_.Length
+            lastWriteTimeUtc = $_.LastWriteTimeUtc
             root = $_.Root
             extension = $_.Extension
         }
