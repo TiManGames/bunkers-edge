@@ -1376,6 +1376,17 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 			if(cLux_GetSaveHandler().GetSaveFiles(mvSaveNames, mvSaveDates, mvSaveFiles, vTempSuffix))
 			{
 				mbHasSaveFiles = true;
+				// The internal speedrun snapshot must not become story Continue or a save slot.
+				for (int i = int(mvSaveFiles.size()) - 1; i >= 0; --i)
+				{
+					if (mvSaveFiles[i] != cString_To16Char("BunkersEdgeSpeedRunStart.sav")) continue;
+					mvSaveNames.removeAt(i);
+					mvSaveDates.removeAt(i);
+					mvSaveFiles.removeAt(i);
+					vTempSuffix.removeAt(i);
+				}
+				// Keep the scan-complete flag true even when filtering leaves no saves.
+				// mbCanContinue below tracks whether a playable save actually exists.
 
 				// Process suffix
 				for(int i = 0; i < vTempSuffix.size(); ++i)

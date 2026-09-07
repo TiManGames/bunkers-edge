@@ -96,6 +96,13 @@ const float gfParkour_TopSpeedSoundStopFlow = 0.85f;
 const tString gsParkour_TopSpeedWindGustPrefix = "A_Ambience_Wind_BassRuffle_0";
 const float gfParkour_TopSpeedWindGustInterval = 5.0f;
 const float gfParkour_TopSpeedWindGustVolume = 0.5f;
+const float gfParkour_TopSpeedBlurStartFlow = 0.90f;
+const float gfParkour_TopSpeedBlurStopFlow = 0.85f;
+const float gfParkour_TopSpeedBlurSize = 0.04f;
+const float gfParkour_TopSpeedBlurAlpha = 0.30f;
+const float gfParkour_TopSpeedBlurStartDistance = 0.35f;
+const float gfParkour_TopSpeedBlurFadeInTime = 0.35f;
+const float gfParkour_TopSpeedBlurFadeOutTime = 0.45f;
 
 const tString gsParkour_TutorialHintCategory = "BunkersEdgeHints";
 const tString gsParkour_TutorialHintShownSuffix = "_Shown";
@@ -195,6 +202,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		UpdateWallRunChain(afTimeStep);
 		UpdateAirFlow(afTimeStep);
+		UpdateTopSpeedMotionBlur();
 		UpdateTopSpeedMovementSound();
 		UpdateTopSpeedWindGusts(afTimeStep);
 		UpdateHealthRegen(afTimeStep);
@@ -204,6 +212,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	void ResetMapData()
 	{
+		StopTopSpeedMotionBlur(gfParkour_TopSpeedBlurFadeOutTime);
+
 		if (cSound_GetEntry(gsParkour_TopSpeedSound) !is null)
 			mpTopSpeedSound.FadeVolumeMulTo(0.0f, 1.0f);
 
@@ -617,6 +627,46 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		if (mbWallJumpChainActive || mbWallScrambleJumpChainActive) return;
 
 		ChangeFlow(-gfParkour_FlowAirDecay * afTimeStep, "", false);
+	}
+
+	//------------------------------------------------------------
+
+	void UpdateTopSpeedMotionBlur()
+	{
+		bool bBlurActive = mlTopSpeedRadialBlurId != -1;
+		float fRequiredFlow = bBlurActive
+			? gfParkour_TopSpeedBlurStopFlow
+			: gfParkour_TopSpeedBlurStartFlow;
+
+		bool bShouldBlur =
+			mbEnabled &&
+			cLux_GetPlayer().IsActive() &&
+			mfParkourFlow > fRequiredFlow;
+
+		if (bShouldBlur == bBlurActive) return;
+
+		if (bShouldBlur)
+		{
+			mlTopSpeedRadialBlurId = Effect_RadialBlur_Start(
+				gfParkour_TopSpeedBlurSize,
+				gfParkour_TopSpeedBlurAlpha,
+				gfParkour_TopSpeedBlurStartDistance,
+				gfParkour_TopSpeedBlurFadeInTime);
+		}
+		else
+		{
+			StopTopSpeedMotionBlur(gfParkour_TopSpeedBlurFadeOutTime);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void StopTopSpeedMotionBlur(float afFadeOutTime)
+	{
+		if (mlTopSpeedRadialBlurId == -1) return;
+
+		Effect_RadialBlur_FadeOut(mlTopSpeedRadialBlurId, afFadeOutTime);
+		mlTopSpeedRadialBlurId = -1;
 	}
 
 	//------------------------------------------------------------
@@ -2710,6 +2760,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		if (mbEnabled == false)
 		{
 			mbRollLandingArmed = false;
+			StopTopSpeedMotionBlur(gfParkour_TopSpeedBlurFadeOutTime);
 			ResetFlow();
 		}
 	}
@@ -3211,6 +3262,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	[nosave] bool mbTopSpeedMovementSoundActive = false;
 	[nosave] cSoundEntry@ mpTopSpeedSound;
 	[nosave] float mfTopSpeedWindGustTimer = gfParkour_TopSpeedWindGustInterval;
+	[nosave] int mlTopSpeedRadialBlurId = -1;
 
 	//------------------------------------------------------------
 }
