@@ -32,6 +32,9 @@ const float gfParkourRankSTime = 5.f * 60.f;
 const float gfParkourRankATime = 7.f * 60.f;
 const float gfParkourRankBTime = 10.f * 60.f;
 const float gfParkourRankCTime = 15.f * 60.f;
+const float gfParkourResultsStatFontSize = 24.f;
+const float gfParkourResultsRankFontSize = 34.f;
+const float gfParkourResultsLineSpacing = 32.f;
 const float gfSpeedRunRestartHoldDuration = 1.f;
 const int glSpeedRunRestartRingSegments = 48;
 
@@ -1984,7 +1987,7 @@ class cScrMap : iScrMap
 			labelData.mColorBase = cColor_White;
 			labelData.mFontAlign = eFontAlign_Left;
 			labelData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
-			labelData.mFont.mvSize = 19;
+			labelData.mFont.mvSize = gfParkourResultsStatFontSize;
 
 			cImGuiLabelData labelDataShadow = labelData;
 			labelDataShadow.mColorBase = cColor(0.f);
@@ -1997,7 +2000,7 @@ class cScrMap : iScrMap
 			ImGui_SetAlignment(eImGuiAlign_CenterLeft);
 			cVector3f vNamePos = ImGui_NrmPosGroup(0.36f, 0.31f, 0.f);
 			cVector3f vValuePos = ImGui_NrmPosGroup(0.57f, 0.31f, 0.f);
-			const float fLineSpacing = 25.07f;
+			const float fLineSpacing = gfParkourResultsLineSpacing;
 
 			ImGui_SetTransCategory("ParkourResults");
 			ImGui_DoLabelExt("CompletionTime", labelDataShadow, vNamePos + avShadowOffset);
@@ -2019,8 +2022,8 @@ class cScrMap : iScrMap
 
 			ImGui_SetTransCategory("");
 			valueData.mColorBase = cColor(1.f, 0.75f, 0.25f, 1.f);
-			valueData.mFont.mvSize = 28;
-			valueDataShadow.mFont.mvSize = 28;
+			valueData.mFont.mvSize = gfParkourResultsRankFontSize;
+			valueDataShadow.mFont.mvSize = gfParkourResultsRankFontSize;
 			tString sRank = GetParkourRank();
 			ImGui_DoLabelExt(sRank, valueDataShadow, vValuePos + avShadowOffset);
 			ImGui_DoLabelExt(sRank, valueData, vValuePos);
@@ -2029,10 +2032,10 @@ class cScrMap : iScrMap
 			{
 				vNamePos.y += fLineSpacing;
 				vValuePos.y += fLineSpacing;
-				labelData.mFont.mvSize = 19;
-				labelDataShadow.mFont.mvSize = 19;
-				valueData.mFont.mvSize = 19;
-				valueDataShadow.mFont.mvSize = 19;
+				labelData.mFont.mvSize = gfParkourResultsStatFontSize;
+				labelDataShadow.mFont.mvSize = gfParkourResultsStatFontSize;
+				valueData.mFont.mvSize = gfParkourResultsStatFontSize;
+				valueDataShadow.mFont.mvSize = gfParkourResultsStatFontSize;
 
 				ImGui_SetTransCategory("ParkourResults");
 				ImGui_DoLabelExt("PersonalBest", labelDataShadow, vNamePos + avShadowOffset);
