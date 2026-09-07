@@ -78,6 +78,7 @@ class cScrMap : iScrMap
 		Player_SetAmbientLight_None();
 		Sketchbook_SetInventoryEnabled(false);
 		PlayerBody_SetActive(true);
+		Player_SetHealth(1.0f);
 
 		Entity_PlayAnimation("Grunt", "idle", 0.f, true, false);
 
@@ -387,6 +388,8 @@ class cScrMap : iScrMap
 				mbLightsOff = false;
 			}
 
+			Sound_CreateAtEntity("ButtonSound1", "level_entity_shared/doors/button_lock/unlock", "DebugButton_1", 0.0f, false, 0.35f);
+
 			
 		}
 
@@ -394,6 +397,8 @@ class cScrMap : iScrMap
 		{
 			if(mbWaterFilled) Seq_WaterDrain("");
 			else Seq_WaterFill("");
+
+			Sound_CreateAtEntity("ButtonSound2", "level_entity_shared/doors/button_lock/unlock", "DebugButton_2", 0.0f, false, 0.35f);
 		}
 
 		void OnInteract_Button3(const tString &in asEntity)
@@ -402,15 +407,17 @@ class cScrMap : iScrMap
 			{
 				mlTerminalTextEntry = 0; // Reset terminal to first log
 				cLux_AddDebugMessage("Reset terminal!");
-				Sound_CreateAtEntity("ClearBeep", "01_01_upsilon_awake/sfx/omnitool/omni_door_hack", "StoryTerminal", 0.0f, false);
+				Sound_CreateAtEntity("ClearBeep", "01_01_upsilon_awake/sfx/omnitool/omni_door_hack", "StoryTerminal", 0.0f, false, 1.5f);
 			}
 			else
 			{
 				mlTerminalTextEntry++;
-				Sound_CreateAtEntity("TerminalBeep", "01_01_upsilon_awake/sfx/omnitool/omni_door_detect", "StoryTerminal", 0.0f, false);
+				Sound_CreateAtEntity("TerminalBeep", "01_01_upsilon_awake/sfx/omnitool/omni_door_detect", "StoryTerminal", 0.0f, false, 1.5f);
 			}
 
 			cLux_AddDebugMessage("Text entry is "+mlTerminalTextEntry);
+
+				Sound_CreateAtEntity("ButtonSound3", "level_entity_shared/doors/button_lock/unlock", "DebugButton_3", 0.0f, false, 0.35f);
 		}
 
 		cSequenceStatesData mSeqWaterFill;
@@ -420,7 +427,7 @@ class cScrMap : iScrMap
 			
 			if (Sequence_DoStepAndWait(4.0))
 			{
-				Player_SetInteractionAllowed("NoPressing", false);
+				Entity_SetInteractionDisabled("DebugButton_2", true);
 				SlideDoor_SetClosed("DebugDoor", true, false);
 			}
 			else if (Sequence_DoStepAndWait(5.7))
@@ -432,7 +439,7 @@ class cScrMap : iScrMap
 			else if (Sequence_DoStepAndWait(2.0))
 			{
 				Sound_CreateAtEntity("Sound_Stop", "player/ladder/debug/hand_place", "player", 0, false, 0.5f);
-				Player_SetInteractionAllowed("NoPressing", true);
+				Entity_SetInteractionDisabled("DebugButton_2", false);
 
 				mbWaterFilled = true;
 			}
@@ -448,7 +455,7 @@ class cScrMap : iScrMap
 			
 			if (Sequence_DoStepAndWait(1.2))
 			{
-				Player_SetInteractionAllowed("NoPressing", false);
+				Entity_SetInteractionDisabled("DebugButton_2", true);
 			}
 			else if (Sequence_DoStepAndWait(1.5))
 			{
@@ -468,7 +475,7 @@ class cScrMap : iScrMap
 			else if (Sequence_DoStepAndWait(2.0))
 			{
 				SlideDoor_SetClosed("DebugDoor", false, false);
-				Player_SetInteractionAllowed("NoPressing", true);
+				Entity_SetInteractionDisabled("DebugButton_2", false);
 			}
 			
 			Sequence_End();
