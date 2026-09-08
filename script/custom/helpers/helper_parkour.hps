@@ -198,6 +198,17 @@ tString Parkour_WallSlideDebugVector(const cVector3f &in avValue)
 	return "(" + avValue.x + "," + avValue.y + "," + avValue.z + ")";
 }
 
+// Temporary diagnostics for the zipline-to-pole-climb handoff.
+void Parkour_ZipPoleDebug(const tString &in asMessage)
+{
+	LogNewLine("[ZipPole diag1] " + asMessage);
+}
+
+tString Parkour_ZipPoleDebugVector(const cVector3f &in avValue)
+{
+	return "(" + avValue.x + "," + avValue.y + "," + avValue.z + ")";
+}
+
 void Parkour_StartWallSlide(const cVector3f &in avForward,
 								float afStartDownSpeed = 4.0f,
 								float afDownAcceleration = 2.25f,

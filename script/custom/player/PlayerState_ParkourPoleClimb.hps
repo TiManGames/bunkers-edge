@@ -92,6 +92,16 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 		mfAttachTargetYaw = GetYawFromDir(GetPoleOutDir() * -1.f);
 		mfAttachStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
 
+		Parkour_ZipPoleDebug("POLE ENTER prevState=" + alPrevStateId +
+			" startFeet=" + Parkour_ZipPoleDebugVector(mvStartFeetPos) +
+			" poleCenter=" + Parkour_ZipPoleDebugVector(mvPoleCenter) +
+			" faceDir=" + Parkour_ZipPoleDebugVector(mvFaceDir) +
+			" outDir=" + Parkour_ZipPoleDebugVector(GetPoleOutDir()) +
+			" targetFeet=" + Parkour_ZipPoleDebugVector(mvAttachFeetPos) +
+			" attachRadius=" + mfAttachRadius + " climbY=" + mfClimbY +
+			" startYawDeg=" + cMath_ToDeg(mfAttachStartYaw) +
+			" targetYawDeg=" + cMath_ToDeg(mfAttachTargetYaw));
+
 		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
 		pBody.SetGravityActive(false);
 		pBody.SetTestCollision(false);
@@ -287,6 +297,11 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 
 		if (fT >= 1.f)
 		{
+			Parkour_ZipPoleDebug("POLE SNAP END targetFeet=" + Parkour_ZipPoleDebugVector(mvAttachFeetPos) +
+				" actualFeet=" + Parkour_ZipPoleDebugVector(apBody.GetFeetPosition()) +
+				" outDir=" + Parkour_ZipPoleDebugVector(GetPoleOutDir()) +
+				" bodyYawDeg=" + cMath_ToDeg(apBody.GetYaw()) +
+				" cameraYawDeg=" + cMath_ToDeg(cLux_GetPlayer().GetCamera().GetYaw()));
 			mlState = 1;
 			mfInputMoveMul = 0.f;
 			ClampCameraToPole();
@@ -510,6 +525,17 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 	{
 		cVector3f vOut = cVector3f_Zero;
 
+		// The area owns the attach side and distance. During a zipline handoff the
+		// player's current feet are at the cable endpoint, which may lie toward the
+		// wall and must not steer the pole snap to that side.
+		vOut = mvAttachFeetPos - mvPoleCenter;
+		vOut.y = 0.f;
+		if (vOut.SqrLength() > 0.001f)
+		{
+			vOut.Normalize();
+			return vOut;
+		}
+
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody !is null)
 		{
@@ -520,14 +546,6 @@ class cScrPlayerState_ParkourPoleClimb : iScrPlayerState, iScrPlayerState_Interf
 				vOut.Normalize();
 				return vOut;
 			}
-		}
-
-		vOut = mvAttachFeetPos - mvPoleCenter;
-		vOut.y = 0.f;
-		if (vOut.SqrLength() > 0.001f)
-		{
-			vOut.Normalize();
-			return vOut;
 		}
 
 		vOut = mvFaceDir;

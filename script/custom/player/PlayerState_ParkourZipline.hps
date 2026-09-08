@@ -535,12 +535,22 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 		// finish at the exact cable endpoint before restoring collision.
 		if (abReachedEnd)
 		{
+			cVector3f vBeforeEndFeet = pBody.GetFeetPosition();
 			cVector3f vEndTangent;
 			cVector3f vEndFeet = GetFeetAtProgress(1.f, vEndTangent);
 			mfRideProgress = 1.f;
 			pBody.SetFeetPosition(vEndFeet, true);
 			if (vEndTangent.SqrLength() > 0.001f)
 				mvCurrentPathTangent = vEndTangent;
+
+			Parkour_ZipPoleDebug("ZIP END rope=" + msRopeName +
+				" beforeFeet=" + Parkour_ZipPoleDebugVector(vBeforeEndFeet) +
+				" lowPoint=" + Parkour_ZipPoleDebugVector(mvLowPoint) +
+				" targetFeet=" + Parkour_ZipPoleDebugVector(vEndFeet) +
+				" actualFeet=" + Parkour_ZipPoleDebugVector(pBody.GetFeetPosition()) +
+				" tangent=" + Parkour_ZipPoleDebugVector(vEndTangent) +
+				" hangOffset=" + mfHangOffset + " bodyYawDeg=" + cMath_ToDeg(pBody.GetYaw()) +
+				" rideSpeed=" + mfRideSpeed);
 		}
 
 		mbFinished = true;

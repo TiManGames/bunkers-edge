@@ -3262,7 +3262,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	[nosave] bool mbTopSpeedMovementSoundActive = false;
 	[nosave] cSoundEntry@ mpTopSpeedSound;
 	[nosave] float mfTopSpeedWindGustTimer = gfParkour_TopSpeedWindGustInterval;
-	[nosave] int mlTopSpeedRadialBlurId = -1;
+	// Keep the owner ID paired with the saved radial-blur instance across reloads.
+	int mlTopSpeedRadialBlurId = -1;
 
 	//------------------------------------------------------------
 }

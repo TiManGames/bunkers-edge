@@ -18,6 +18,8 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 	{
 		mbPlayerIsInside = false;
 		mbNeedsExitAfterGrab = false;
+		mbZiplineHandoffDebugLogged = false;
+		mbZiplineHandoffAttachDirValid = false;
 		mfDebugTimer = 0.f;
 		mfGrabCooldown = 0.f;
 		m_idTopExitArea = tID_Invalid;
@@ -101,6 +103,8 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 		if (bCollide == false)
 		{
 			mbNeedsExitAfterGrab = false;
+			mbZiplineHandoffDebugLogged = false;
+			mbZiplineHandoffAttachDirValid = false;
 			return;
 		}
 		if (mbNeedsExitAfterGrab) return;
@@ -142,9 +146,6 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 		}
 
 		float fStartY = cMath_Clamp(vFeet.y, fMinY, fMaxY);
-		cVector3f vAttachFeet = vPoleCenter + vFaceDir * cMath_Max(0.05f, mfAttachRadius);
-		vAttachFeet.y = fStartY;
-
 		cVector3f vFlatToPole = vFeet - vPoleCenter;
 		vFlatToPole.y = 0.f;
 		float fGrabDistance = vFlatToPole.Length();
@@ -154,6 +155,27 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 			return;
 		}
 
+		cVector3f vAttachDir = vFaceDir;
+		if (bZiplineHandoff)
+		{
+			// Capture the side on the first pole overlap. Re-registering the candidate
+			// near the cable endpoint must not flip it to the wall side.
+			if (mbZiplineHandoffAttachDirValid == false)
+			{
+				mvZiplineHandoffAttachDir = vFlatToPole;
+				if (mvZiplineHandoffAttachDir.SqrLength() > 0.001f)
+					mvZiplineHandoffAttachDir.Normalize();
+				else
+					mvZiplineHandoffAttachDir = vFaceDir;
+
+				mbZiplineHandoffAttachDirValid = true;
+			}
+
+			vAttachDir = mvZiplineHandoffAttachDir;
+		}
+		cVector3f vAttachFeet = vPoleCenter + vAttachDir * cMath_Max(0.05f, mfAttachRadius);
+		vAttachFeet.y = fStartY;
+
 		cVector3f vTopExitFeet = cVector3f_Zero;
 		cVector3f vTopExitForward = cVector3f_Forward;
 		bool bHasTopExit = false;
@@ -162,6 +184,20 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 			vTopExitFeet = cLux_ID_Entity(m_idTopExitArea).GetPosition();
 			vTopExitForward = GetTopExitForward();
 			bHasTopExit = true;
+		}
+
+		if (bZiplineHandoff && mbZiplineHandoffDebugLogged == false)
+		{
+			Parkour_ZipPoleDebug("CANDIDATE area=" + mBaseObj.GetName() +
+				" playerFeet=" + Parkour_ZipPoleDebugVector(vFeet) +
+				" playerYawDeg=" + cMath_ToDeg(pBody.GetYaw()) +
+				" poleCenter=" + Parkour_ZipPoleDebugVector(vPoleCenter) +
+				" faceDir=" + Parkour_ZipPoleDebugVector(vFaceDir) +
+				" attachDir=" + Parkour_ZipPoleDebugVector(vAttachDir) +
+				" attachFeet=" + Parkour_ZipPoleDebugVector(vAttachFeet) +
+				" attachRadius=" + mfAttachRadius + " grabDistance=" + fGrabDistance +
+				" minY=" + fMinY + " maxY=" + fMaxY);
+			mbZiplineHandoffDebugLogged = true;
 		}
 
 		Parkour_RegisterPoleClimbCandidate(vPoleCenter,
@@ -320,6 +356,9 @@ class cScrAreaParkourPoleClimb : iScrArea, iScrArea_Interface
 	bool mbTopExitCrouch = false;
 	bool mbPlayerIsInside = false;
 	bool mbNeedsExitAfterGrab = false;
+	[nosave] bool mbZiplineHandoffDebugLogged = false;
+	[nosave] bool mbZiplineHandoffAttachDirValid = false;
+	[nosave] cVector3f mvZiplineHandoffAttachDir = cVector3f_Forward;
 	float mfGrabRadius = 0.9f;
 	float mfMinApproachSpeed = 0.35f;
 	float mfMinVerticalSpeed = -9.0f;
