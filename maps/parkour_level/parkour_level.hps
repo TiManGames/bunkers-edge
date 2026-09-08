@@ -1741,8 +1741,6 @@ class cScrMap : iScrMap
 
 			Music_PlayExt("chase_3.ogg", true, 0.3f, 1.0f, 0.0f, 0.5f, eMusicPrio_AgentHunt, true);
 
-			Entity_AttachToEntity("StalkerJumpRoute_24", "Player", "", false, true, false);
-
 			if (mbSpeedRunModeActive == false)
 				Game_AutoSave(true);
 			
@@ -1888,6 +1886,7 @@ class cScrMap : iScrMap
 			mfParkourBestTime = Parkour_GetBestCompletionTime();
 			Sound_FadeGlobalVolume(0, 0, eSoundEntryType_AllExceptGui);
 			Music_Play("stinger.ogg", 0.6f, false, eMusicPrio_AgentHunt);
+			cLux_GetPlayer().GetCharacterBody().StopMovement();
 			if (mbSpeedRunModeActive)
 			{
 				ResetSpeedRunRestartHold();
