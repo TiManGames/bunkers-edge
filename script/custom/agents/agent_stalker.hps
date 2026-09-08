@@ -2413,14 +2413,17 @@ class cScrAgentStalker : cScrAgentHumanoid
 		SetSpeedState(mbBossFight_AlwaysRun ? eStalkerSpeed_Run : eStalkerSpeed_Walk);
 		mpMover.SetSpeedMul(1.0f);
 
+		// Use the stock boss-fight opening sequence: Alert turns toward the
+		// player, plays the alert roar and only returns to BossFightDefault
+		// after that animation has finished. BossFightDefault then starts its
+		// normal Move and UpdateMoveSpeed timers.
 		mpStateMachine.StopTimer("Roar");
 		mpStateMachine.StopTimer("Move");
 		mpStateMachine.StopTimer("UpdateMoveSpeed");
-		mpStateMachine.AddTimer("Move", 0.0f);
-		mpStateMachine.AddTimer("UpdateMoveSpeed", 0.0f);
+		mpStateMachine.ChangeState(eStalkerState_Alert);
 
 		cLux_AddAIDebugMessage("(" + mBaseObj.GetName() +
-			") Scripted teleport complete; BossFight chase resumed.", false, true);
+			") Scripted teleport complete; roaring before BossFight chase resumes.", false, true);
 	}
 	
 	//------------------------------------------------------------
@@ -2479,13 +2482,9 @@ class cScrAgentStalker : cScrAgentHumanoid
 
 		if (pCharBody.GetActiveSize() == mlNarrowSectionBodySizeIndex)
 		{
-			cVector3f vPushBack;
-			if (pCharBody.CheckCharacterFits(pCharBody.GetFeetPosition(), true, 0, vPushBack))
-			{
-				pCharBody.SetActiveSize(0);
-				cLux_AddAIDebugMessage("(" + mBaseObj.GetName() +
-					") Normal character body restored.", false, true);
-			}
+			pCharBody.SetActiveSize(0);
+			cLux_AddAIDebugMessage("(" + mBaseObj.GetName() +
+				") Normal character body restored.", false, true);
 		}
 	}
 
@@ -15655,11 +15654,7 @@ class cScrAgentStalker : cScrAgentHumanoid
 		}
 		else
 		{
-			cVector3f vPushBack;
-			if (pCharBody.CheckCharacterFits(pCharBody.GetFeetPosition(), true, 0, vPushBack))
-				pCharBody.SetActiveSize(0);
-			else if (mlNarrowSectionBodySizeIndex >= 0)
-				pCharBody.SetActiveSize(mlNarrowSectionBodySizeIndex);
+			pCharBody.SetActiveSize(0);
 		}
 	}
 

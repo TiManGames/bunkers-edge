@@ -1,7 +1,8 @@
 //--------------------------------------------------
 // Generic, editor-authored Stalker jump routing.
 //
-// StalkerJumpRegion areas define navigation islands. StalkerJumpRoute areas
+// StalkerJumpRegion areas cover authored Stalker PathNode islands. Every box
+// on one connected island shares a required RegionGroup. StalkerJumpRoute areas
 // define directed jump endpoints: an endpoint with TargetJumpArea is a launch,
 // and an endpoint with no target is landing-only. Discovery order is sorted by
 // entity name so breadth-first route tie-breaking is deterministic.
@@ -128,6 +129,7 @@ class cStalkerJumpNetwork
 		mvAllRegionIds.resize(0);
 		mvAllRegionStalkerNames.resize(0);
 		msActivationRouteId = "";
+		mlSkippedSameIslandRouteCount = 0;
 	}
 
 	//--------------------------------------------------
@@ -137,16 +139,7 @@ class cStalkerJumpNetwork
 
 	//--------------------------------------------------
 
-	int GetSameRegionRouteCount()
-	{
-		int lCount = 0;
-		for (int i = 0; i < mvRoutes.size(); ++i)
-		{
-			if (mvRoutes[i].msSourceRegionId == mvRoutes[i].msDestinationRegionId)
-				++lCount;
-		}
-		return lCount;
-	}
+	int GetSkippedSameIslandRouteCount() { return mlSkippedSameIslandRouteCount; }
 
 	//--------------------------------------------------
 
@@ -289,7 +282,13 @@ class cStalkerJumpNetwork
 			tString sStalkerName = StalkerJumpRegion_GetStalkerName(sAreaName);
 			if (sStalkerName == "") sStalkerName = "stalker";
 			tString sRegionId = StalkerJumpRegion_GetRegionGroup(sAreaName);
-			if (sRegionId == "") sRegionId = sAreaName;
+			if (sRegionId == "")
+			{
+				Error("StalkerJumpRegion area '" + sAreaName +
+					"' requires a RegionGroup matching its Stalker PathNode island.");
+				bValid = false;
+				continue;
+			}
 
 			mvAllRegionAreaNames.push_back(sAreaName);
 			mvAllRegionIds.push_back(sRegionId);
@@ -341,6 +340,18 @@ class cStalkerJumpNetwork
 			if (bSourceValid == false || bDestinationValid == false)
 			{
 				bValid = false;
+				continue;
+			}
+			if (sSourceRegionId == sDestinationRegionId)
+			{
+				++mlSkippedSameIslandRouteCount;
+				if (bStartOnActivation)
+				{
+					Error("Stalker jump route '" + sRouteAreaName +
+						"' uses StartOnActivation but both endpoints are on island '" +
+						sSourceRegionId + "'.");
+					bValid = false;
+				}
 				continue;
 			}
 
@@ -475,64 +486,45 @@ class cStalkerJumpNetwork
 
 	//--------------------------------------------------
 
-	bool IsPlayerInsideRouteLanding(const tString &in asRouteId)
-	{
-		cStalkerJumpRoute@ pRoute = GetRoute(asRouteId);
-		return pRoute !is null && IsPlayerInsideArea(pRoute.msLandingAreaName);
-	}
-
-	//--------------------------------------------------
-
-	cStalkerJumpRoute@ GetTriggeredSameRegionRoute(const tString &in asRegionId,
-											   const tString &in asAgentName,
-											   const tString &in asIgnoredRouteId = "")
-	{
-		for (int i = 0; i < mvRoutes.size(); ++i)
-		{
-			cStalkerJumpRoute@ pRoute = mvRoutes[i];
-			if (pRoute.msId == asIgnoredRouteId) continue;
-			if (pRoute.msSourceRegionId != asRegionId ||
-				pRoute.msDestinationRegionId != asRegionId) continue;
-
-			if (IsPlayerInsideArea(pRoute.msLandingAreaName) &&
-				IsAgentInsideArea(asAgentName, pRoute.msLandingAreaName) == false)
-				return pRoute;
-		}
-		return null;
-	}
-
-	//--------------------------------------------------
-
 	cStalkerJumpRoute@ GetFirstRoute(const tString &in asSourceRegionId,
 									 const tString &in asDestinationRegionId)
 	{
 		if (asSourceRegionId == asDestinationRegionId) return null;
-		if (GetRegion(asSourceRegionId) is null || GetRegion(asDestinationRegionId) is null) return null;
+		if (GetRegion(asSourceRegionId) is null || GetRegion(asDestinationRegionId) is null)
+			return null;
 
-		array<tString> vRegionQueue;
+		array<tString> vIslandQueue;
 		array<int> vFirstRouteIndices;
-		vRegionQueue.push_back(asSourceRegionId);
+		vIslandQueue.push_back(asSourceRegionId);
 		vFirstRouteIndices.push_back(-1);
 
-		for (int lQueueIndex = 0; lQueueIndex < vRegionQueue.size(); ++lQueueIndex)
+		for (int lQueueIndex = 0; lQueueIndex < vIslandQueue.size(); ++lQueueIndex)
 		{
-			tString sCurrentRegionId = vRegionQueue[lQueueIndex];
+			tString sCurrentIslandId = vIslandQueue[lQueueIndex];
 			for (int i = 0; i < mvRoutes.size(); ++i)
 			{
 				cStalkerJumpRoute@ pRoute = mvRoutes[i];
-				if (pRoute.msSourceRegionId != sCurrentRegionId) continue;
-				if (vRegionQueue.find(pRoute.msDestinationRegionId) != -1) continue;
+				if (pRoute.msSourceRegionId != sCurrentIslandId) continue;
+				if (vIslandQueue.find(pRoute.msDestinationRegionId) != -1) continue;
 
 				int lFirstRouteIndex = vFirstRouteIndices[lQueueIndex] >= 0 ?
 					vFirstRouteIndices[lQueueIndex] : i;
 				if (pRoute.msDestinationRegionId == asDestinationRegionId)
 					return mvRoutes[lFirstRouteIndex];
 
-				vRegionQueue.push_back(pRoute.msDestinationRegionId);
+				vIslandQueue.push_back(pRoute.msDestinationRegionId);
 				vFirstRouteIndices.push_back(lFirstRouteIndex);
 			}
 		}
 		return null;
+	}
+
+	//--------------------------------------------------
+
+	bool CanWalkBetweenRegions(const tString &in asSourceRegionId,
+								   const tString &in asDestinationRegionId)
+	{
+		return asSourceRegionId != "" && asSourceRegionId == asDestinationRegionId;
 	}
 
 	//--------------------------------------------------
@@ -596,27 +588,6 @@ class cStalkerJumpNetwork
 			}
 		}
 
-		for (int i = 0; i < mvRegions.size(); ++i)
-		{
-			tString sUnreachableRegionIds = "";
-			int lUnreachableCount = 0;
-			for (int j = 0; j < mvRegions.size(); ++j)
-			{
-				if (i == j) continue;
-				if (GetFirstRoute(mvRegions[i].msId, mvRegions[j].msId) !is null) continue;
-
-				if (sUnreachableRegionIds != "") sUnreachableRegionIds += ", ";
-				sUnreachableRegionIds += mvRegions[j].msId;
-				++lUnreachableCount;
-			}
-
-			if (lUnreachableCount > 0)
-			{
-				Error("Stalker jump region '" + mvRegions[i].msId + "' cannot reach " +
-					lUnreachableCount + " region(s): " + sUnreachableRegionIds + ".");
-				bValid = false;
-			}
-		}
 		return bValid;
 	}
 
@@ -757,6 +728,7 @@ class cStalkerJumpNetwork
 	array<tString> mvAllRegionIds;
 	array<tString> mvAllRegionStalkerNames;
 	tString msActivationRouteId = "";
+	int mlSkippedSameIslandRouteCount = 0;
 }
 
 //--------------------------------------------------

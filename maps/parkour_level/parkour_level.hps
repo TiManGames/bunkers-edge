@@ -145,7 +145,6 @@ class cScrMap : iScrMap
 			"OnTimer_RestoreParkourColorGrading");
 		Map_AddTimer("VerifyParkourColorGrading", 1.0f,
 			"OnTimer_VerifyParkourColorGrading");
-		ParkourGradingLog("OnEnter scheduled cleanup timers");
 		Parkour_WallSlideDebug("MAP OnEnter: diagnostics loaded; state=" + cLux_GetPlayer().GetCurrentStateId());
 		EnsureStalkerNarrowBodySectionsSetup();
 		SetBeastNarrowSectionBody(false);
@@ -217,7 +216,6 @@ class cScrMap : iScrMap
 	// Run when leaving map
 	void OnLeave()
 	{
-		ParkourGradingLog("OnLeave cancelled cleanup timers");
 		ResetSpeedRunRestartHold();
 		Map_RemoveTimer("EndingWallSlide");
 		Map_RemoveTimer("RestoreParkourColorGrading");
@@ -810,7 +808,6 @@ class cScrMap : iScrMap
 			QueueSpeedRunRestart();
 			return;
 		}
-		ParkourGradingLog("death reload requested; checkpoint restoration does not rerun OnEnter");
 		SaveRoom_LoadLastSave();
 	}
 
@@ -865,21 +862,7 @@ class cScrMap : iScrMap
 
 		return true;
 	}
- 
-	//-------------------------------------------------------
 
-	int mlParkourGradingLogIndex = 0;
-
-	void ParkourGradingLog(const tString &in asEvent)
-	{
-		++mlParkourGradingLogIndex;
-		bool bInside = Doorway_PlayerIsInGroup("Inside");
-		tString sTarget = bInside ? gsParkourIndoorGrading : gsParkourOutdoorGrading;
-		cLux_AddDebugMessage("[ParkourGrading #" + mlParkourGradingLogIndex + "] " + asEvent +
-			"; Inside=" + bInside +
-			"; SaveThreadActive=" + cLux_GetSaveHandler().GetSaveThreadActive() +
-			"; target=" + sTarget);
-	}
 
 	//-------------------------------------------------------
 
@@ -895,7 +878,6 @@ class cScrMap : iScrMap
 
 	void RestoreParkourColorGrading()
 	{
-		ParkourGradingLog("cleanup begin: removing all parkour grading layer paths");
 		// Saves can contain both the doorway grade and the map's default grade.
 		// Remove both path forms used by older saves before rebuilding this layer.
 		ClearParkourColorGradingLayers();
@@ -904,14 +886,12 @@ class cScrMap : iScrMap
 		tString sGrading = Doorway_PlayerIsInGroup("Inside") ?
 			gsParkourIndoorGrading : gsParkourOutdoorGrading;
 		Effect_ToneMapping_FadeWorldGrading(sGrading, 0.0f);
-		ParkourGradingLog("cleanup end: reapplied world grading");
 	}
 
 	//-------------------------------------------------------
 
 	void OnTimer_RestoreParkourColorGrading(const tString &in asTimer)
 	{
-		ParkourGradingLog("+0.25 cleanup timer fired");
 		RestoreParkourColorGrading();
 	}
 
@@ -919,7 +899,6 @@ class cScrMap : iScrMap
 
 	void OnTimer_VerifyParkourColorGrading(const tString &in asTimer)
 	{
-		ParkourGradingLog("+1.00 verification timer fired");
 		RestoreParkourColorGrading();
 	}
 
@@ -927,13 +906,10 @@ class cScrMap : iScrMap
 
 	bool IndoorLightingArea_DoorWay(const tString &in asArea, const tString &in asEntity, int alState)
 	{
-		ParkourGradingLog("doorway callback: area=" + asArea + "; entity=" + asEntity +
-			"; callbackState=" + alState);
 		// A death checkpoint restores the map in place, skipping OnEnter and its
 		// cleanup timers. Clear any layers it restored before applying this side's
 		// world grade, so the first doorway crossed after reload cannot stack grades.
 		ClearParkourColorGradingLayers();
-		ParkourGradingLog("doorway cleared residual grading layers before fade");
 		if (alState == 1)
 		{
 			Effect_ToneMapping_FadeWorldGrading(gsParkourIndoorGrading, 2.0f);
@@ -949,7 +925,6 @@ class cScrMap : iScrMap
 			Light_FadeTo("Light_Box_42", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_43", cColor_White, -1, 1.0f);
 			Light_FadeTo("Light_Box_49", cColor_White, -1, 1.0f);
-
 		}
 		else
 		{
@@ -1038,7 +1013,6 @@ class cScrMap : iScrMap
 		tString msBeastTraversalJumpTarget = "";
 		tString msBeastTraversalTargetRegion = "";
 		tString msBeastLastRouteWarning = "";
-		tString msBeastSameRegionRouteLatch = "";
 
 		//-------------------------------------------------------
 
@@ -1116,9 +1090,10 @@ class cScrMap : iScrMap
 			Debug_Log("Discovered " + mStalkerJumpNetwork.GetRegionCount() +
 				" Stalker jump region group(s) and " + mStalkerJumpNetwork.GetRouteCount() +
 				" directed route(s).", false);
-			int lSameRegionRouteCount = mStalkerJumpNetwork.GetSameRegionRouteCount();
-			if (lSameRegionRouteCount > 0)
-				Debug_Log("Discovered " + lSameRegionRouteCount + " same-region Stalker jump route(s).", false);
+			int lSkippedSameIslandRouteCount = mStalkerJumpNetwork.GetSkippedSameIslandRouteCount();
+			if (lSkippedSameIslandRouteCount > 0)
+				Debug_Log("Ignored " + lSkippedSameIslandRouteCount +
+					" same-island Stalker jump route(s).", false);
 
 			if (bValid == false)
 				Debug_Log("Editor-authored Stalker jump network has validation errors.", false);
@@ -1178,7 +1153,6 @@ class cScrMap : iScrMap
 			msBeastTraversalTargetRegion = "";
 			msBeastStalkerRegion = "";
 			msPlayerStalkerRegion = "";
-			msBeastSameRegionRouteLatch = "";
 			msBeastLastRouteWarning = "";
 			mbBeastTraversalHighJump = false;
 			mfBeastTraversalTime = 0.0f;
@@ -1308,7 +1282,9 @@ class cScrMap : iScrMap
 
 			if (abForceSourceRegion)
 				msBeastStalkerRegion = pRoute.msSourceRegionId;
-			else if (msBeastStalkerRegion != pRoute.msSourceRegionId)
+			else if (msBeastStalkerRegion != pRoute.msSourceRegionId &&
+				mStalkerJumpNetwork.CanWalkBetweenRegions(msBeastStalkerRegion,
+					pRoute.msSourceRegionId) == false)
 			{
 				LogBeastRouteWarning("route '" + asRouteId + "' expects source region '" +
 					pRoute.msSourceRegionId + "', but the Stalker is in '" + msBeastStalkerRegion + "'.");
@@ -1329,17 +1305,18 @@ class cScrMap : iScrMap
 			mbBeastTraversalActive = true;
 			mbBeastNodePathChaseActive = false;
 			mbBeastTraversalRetryBlocked = false;
+			cVector3f vToLaunch = Entity_GetPosition(msBeastTraversalLaunchNode) -
+				Entity_GetPosition("stalker");
+			UpdateBeastNarrowSectionBody();
 
 			Debug_Log("Stalker traversal route '" + pRoute.msId + "': " +
 				pRoute.msSourceRegionId + " -> " + pRoute.msDestinationRegionId +
 				", HighJump=" + pRoute.mbHighJump, false);
-
 			// Keep boss behaviour in Default chase mode, but temporarily let the
 			// map own the pathfinder so the chase loop cannot overwrite this route.
 			SetBeastBossFightBehaviour(0);
 			SetBeastExternalTraversal(true);
 
-			cVector3f vToLaunch = Entity_GetPosition(msBeastTraversalLaunchNode) - Entity_GetPosition("stalker");
 			if (vToLaunch.SqrLength() <= 1.25f * 1.25f)
 				BeastReachedTraversalLaunch("stalker", true);
 			else
@@ -1425,32 +1402,17 @@ class cScrMap : iScrMap
 
 			EnsureStalkerJumpNetworkSetup();
 			RefreshStalkerRegions();
-			if (msBeastSameRegionRouteLatch != "" &&
-				mStalkerJumpNetwork.IsPlayerInsideRouteLanding(msBeastSameRegionRouteLatch) == false)
-			{
-				msBeastSameRegionRouteLatch = "";
-			}
 
 			if (msPlayerStalkerRegion == "" || msBeastStalkerRegion == "")
 			{
-				EnableBeastNodePathChase();
 				LogBeastRouteWarning("actor outside registered regions (Stalker='" +
 					msBeastStalkerRegion + "', player='" + msPlayerStalkerRegion +
-					"'); using strict Stalker PathNode chase.");
+					"'); refusing to infer an island transition.");
 				return;
 			}
 
 			if (msPlayerStalkerRegion == msBeastStalkerRegion)
 			{
-				cStalkerJumpRoute@ pSameRegionRoute = mStalkerJumpNetwork.GetTriggeredSameRegionRoute(
-					msPlayerStalkerRegion, "stalker", msBeastSameRegionRouteLatch);
-				if (pSameRegionRoute !is null)
-				{
-					ClearBeastRouteWarning();
-					BeginBeastTraversal(pSameRegionRoute.msId);
-					return;
-				}
-
 				ClearBeastRouteWarning();
 				EnableBeastNodePathChase();
 				return;
@@ -1460,13 +1422,11 @@ class cScrMap : iScrMap
 				msPlayerStalkerRegion);
 			if (pRoute is null)
 			{
-				EnableBeastNodePathChase();
 				LogBeastRouteWarning("no directed route from '" + msBeastStalkerRegion +
-					"' to '" + msPlayerStalkerRegion + "'; using strict Stalker PathNode chase.");
+					"' to '" + msPlayerStalkerRegion + "'; refusing to bypass the required transition.");
 				return;
 			}
 
-			ClearBeastRouteWarning();
 			BeginBeastTraversal(pRoute.msId);
 		}
 
@@ -1495,6 +1455,7 @@ class cScrMap : iScrMap
 
 			SetBeastExternalTraversal(false);
 			SetBeastBossFightBehaviour(0);
+			UpdateBeastNarrowSectionBody();
 			Map_RemoveTimer("ReevaluateBeastTraversal");
 			Map_AddTimer("ReevaluateBeastTraversal", 0.5f, "ReevaluateBeastTraversal");
 		}
@@ -1505,17 +1466,11 @@ class cScrMap : iScrMap
 		{
 			if (mbBeastTraversalActive == false) return;
 
-			cStalkerJumpRoute@ pCompletedRoute = mStalkerJumpNetwork.GetRoute(msBeastTraversalRouteId);
-			if (pCompletedRoute !is null &&
-				pCompletedRoute.msSourceRegionId == pCompletedRoute.msDestinationRegionId)
-			{
-				msBeastSameRegionRouteLatch = pCompletedRoute.msId;
-			}
-
-			tString sDestinationRegion = msBeastTraversalTargetRegion;
 			Map_RemoveTimer("BeastTraversalWatchdog");
 
-			msBeastStalkerRegion = sDestinationRegion;
+			// Resolve both actors from live island coverage on the next evaluation.
+			msBeastStalkerRegion = "";
+			msPlayerStalkerRegion = "";
 			mbBeastTraversalActive = false;
 			msBeastTraversalStage = "";
 			msBeastTraversalRouteId = "";
@@ -1531,6 +1486,7 @@ class cScrMap : iScrMap
 			// Hand the pathfinder back to Default boss chase after the jump.
 			SetBeastExternalTraversal(false);
 			SetBeastBossFightBehaviour(0);
+			UpdateBeastNarrowSectionBody();
 			Map_RemoveTimer("ReevaluateBeastTraversal");
 			Map_AddTimer("ReevaluateBeastTraversal", 0.1f, "ReevaluateBeastTraversal");
 		}
@@ -1557,10 +1513,11 @@ class cScrMap : iScrMap
 		{
 			if (mbBeastActivated == false) return;
 
+			EnsureStalkerJumpNetworkSetup();
+			UpdateBeastNarrowSectionBody();
+
 			if (mbBeastAutomaticRoutingPaused == false)
 			{
-				EnsureStalkerJumpNetworkSetup();
-				UpdateBeastNarrowSectionBody();
 				RefreshStalkerRegions();
 				if (mbBeastTraversalActive == false && mbBeastTraversalRetryBlocked == false)
 					EvaluateBeastTraversal();
