@@ -22,7 +22,7 @@
 //--------------------------------------------------
  
 const tString gsBunkersEdgeCreditsFile = "BunkersEdge_Credits.cfg";
-const tString gsBunkersEdgeCreditsMusic = "Bunker_EndCredits.ogg";
+const tString gsBunkersEdgeCreditsMusic = "endcredits.ogg";
  
 //--------------------------------------------------
  
@@ -668,7 +668,7 @@ class cScrMap : iScrMap
 			Parkour_SetLevelCompletedOnce();
 			Player_SetActive(false);
 			Sound_FadeGlobalVolume(0.f, 0.5f, eSoundEntryType_WorldAll);
-			Credits_Start(gsBunkersEdgeCreditsFile, "OnEndOfBunkersEdgeCredits", "", cVector3f_Zero, gsBunkersEdgeCreditsMusic);
+			Credits_Start(gsBunkersEdgeCreditsFile, "OnEndOfBunkersEdgeCredits", "", cVector3f_Zero, gsBunkersEdgeCreditsMusic, 0.0f, 0.4f);
 		}
 
 		void OnEndOfBunkersEdgeCredits()
