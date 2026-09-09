@@ -65,8 +65,6 @@ class cScrMap : iScrMap
 		if (cLux_ScriptDebugOn())
 		{
 		}
-		
-		Game_AutoSave();
 
 		Effect_Shake_Start(0.012f, 4.f, 0.35f, 0.5f);
 		Effect_Rumble_Start(0.06f, 4.f, 0.35f, 0.5f);
@@ -83,6 +81,8 @@ class cScrMap : iScrMap
 		Entity_PlayAnimation("Grunt", "idle", 0.f, true, false);
 
 		Music_PlayExt("hallway.ogg", true, 0.6f, 1.0f, 0.0f, 0.0f, eMusicPrio_BgAmb, true);
+
+		Game_AutoSave();
 	}
 
 	//-------------------------------------------------------
