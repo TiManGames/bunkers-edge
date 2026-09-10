@@ -209,6 +209,7 @@ class cScrPlayerCustom : cScrPlayer
 		mfParkourMoveTiltPrevYaw = 0.f;
 		mbParkourMoveTiltHasYaw = false;
 		mbParkourSuppressInjuredHintForFall = false;
+		mbParkourSafeLandingArmed = false;
 		ResetFallingWoosh();
 	}
 	
@@ -307,7 +308,7 @@ class cScrPlayerCustom : cScrPlayer
 		}
 		
 		if ((alAnalogId == eAnalogType_Move || alAnalogId == eAnalogType_GamepadMove) &&
-			Parkour_GetAirLockConsumesMoveInput())
+			Parkour_HandleMoveInput(avAmount))
 		{
 			return;
 		}
@@ -1696,6 +1697,7 @@ class cScrPlayerCustom : cScrPlayer
 	float mfPlayedHurtAnimCount = 0.f;
 	bool mbDamageAnimPlaying = false;
 	bool mbParkourSuppressInjuredHintForFall = false;
+	[nosave] bool mbParkourSafeLandingArmed = false;
 	tString msDamageAnimEquipItemL = "";
 	tString msDamageAnimEquipItemR = "";
 	array<tString> mvHurtAnims;
@@ -1969,6 +1971,32 @@ class cScrPlayerCustom : cScrPlayer
 	float GetMinFallDamageHealth() override
 	{
 		return 0.f;
+	}
+
+	void UpdateFallDamage(float afTimeStep) override
+	{
+		if (mbParkourSafeLandingArmed)
+		{
+			ResetFallDamage();
+			iCharacterBody@ pBody = mBaseObj.GetCharacterBody();
+			if (pBody !is null && pBody.IsOnGround())
+				mbParkourSafeLandingArmed = false;
+			return;
+		}
+
+		// Physics contact snapshots the roll input. Reapply its fall thresholds
+		// here because visual landing processing may run before or after damage.
+		bool bParkourLanding = Parkour_GetEnabled() &&
+			mBaseObj.GetCurrentMoveStateId() == eMoveState_Normal;
+		if (bParkourLanding) Parkour_PrepareLandingDamage();
+		cScrPlayer::UpdateFallDamage(afTimeStep);
+		if (bParkourLanding) Parkour_FinishLandingDamage();
+	}
+
+	void _Global_ArmParkourSafeLanding()
+	{
+		mbParkourSafeLandingArmed = true;
+		ResetFallDamage();
 	}
 	
 	

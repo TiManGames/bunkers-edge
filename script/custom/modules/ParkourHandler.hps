@@ -10,7 +10,7 @@
 //------------------------------------------------------------
 
 const float gfParkour_RunSpeedMulMin = 1.6f;
-const float gfParkour_RunSpeedMulMax = 2.55f;
+const float gfParkour_RunSpeedMulMax = 2.448f;
 const float gfParkour_WallRunMaxAge = 1.1f;
 const float gfParkour_WallRunMinSpeed = 3.0f;
 const float gfParkour_FrontWallDot = -0.7f;
@@ -75,9 +75,9 @@ const float gfParkour_SpeedVaultArcHeight = 0.42f;
 const float gfParkour_FlowGroundRunGain = 0.25f;
 const float gfParkour_FlowIdleDecay = 0.35f;
 const float gfParkour_FlowAirDecay = 0.05f;
-const float gfParkour_FlowSharpTurnPenalty = 0.18f;
-const float gfParkour_FlowSharpTurnDot = 0.25f;
-const float gfParkour_FlowSharpTurnCooldown = 0.45f;
+const float gfParkour_FlowRecoveryGain = 0.40f;
+const float gfParkour_FlowRecoveryThreshold = 0.50f;
+const float gfParkour_FlowIdleGrace = 0.25f;
 const float gfParkour_FlowRunMinSpeed = 0.75f;
 const float gfParkour_FlowIdleSpeed = 0.18f;
 const float gfParkour_FlowBlockedSpeed = 0.12f;
@@ -214,8 +214,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	{
 		StopTopSpeedMotionBlur(gfParkour_TopSpeedBlurFadeOutTime);
 
-		if (cSound_GetEntry(gsParkour_TopSpeedSound) !is null)
-			mpTopSpeedSound.FadeVolumeMulTo(0.0f, 1.0f);
+		// A restored module may have no cached handle even while the sound exists.
+		cSoundEntry@ pTopSpeedSound = cSound_GetEntry(gsParkour_TopSpeedSound);
+		if (pTopSpeedSound !is null)
+			pTopSpeedSound.FadeVolumeMulTo(0.0f, 1.0f);
+		@mpTopSpeedSound = null;
+		mlTopSpeedSoundId = -1;
 
 		mbTopSpeedMovementSoundActive = false;
 		mfTopSpeedWindGustTimer = gfParkour_TopSpeedWindGustInterval;
@@ -288,9 +292,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	void ResetFlow()
 	{
 		mfParkourFlow = 0.f;
-		mbFlowHasMoveDir = false;
-		mvFlowLastMoveDir = cVector3f_Zero;
-		mfFlowSharpTurnCooldown = 0.f;
+		mfFlowIdleTimer = 0.f;
 		mfFlowBlockedRunTimer = 0.f;
 		mfFlowBlockedRunCooldown = 0.f;
 	}
@@ -552,38 +554,21 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		if (mbEnabled == false) return;
 		if (afTimeStep <= 0.f) return;
 
-		if (mfFlowSharpTurnCooldown > 0.f)
-			mfFlowSharpTurnCooldown -= afTimeStep;
 		if (mfFlowBlockedRunCooldown > 0.f)
 			mfFlowBlockedRunCooldown -= afTimeStep;
 
-		cVector3f vMoveDir = avMoveDir;
-		vMoveDir.y = 0.f;
-		bool bHasMoveDir = vMoveDir.SqrLength() > 0.001f;
-		if (bHasMoveDir)
-			vMoveDir.Normalize();
-
 		bool bCleanRun = abForwardIntent &&
-						 afFlatSpeed >= gfParkour_FlowRunMinSpeed &&
-						 Player_GetUnderwater() == false &&
-						 Player_IsInteracting() == false;
-
-		if (bCleanRun && bHasMoveDir)
+			afFlatSpeed >= gfParkour_FlowRunMinSpeed &&
+			Player_GetUnderwater() == false && Player_IsInteracting() == false;
+		if (bCleanRun)
 		{
-			if (mbFlowHasMoveDir && mfFlowSharpTurnCooldown <= 0.f)
-			{
-				float fTurnDot = cMath_Vector3Dot(mvFlowLastMoveDir, vMoveDir);
-				if (fTurnDot < gfParkour_FlowSharpTurnDot)
-				{
-					ChangeFlow(-gfParkour_FlowSharpTurnPenalty, "sharp turn", true);
-					mfFlowSharpTurnCooldown = gfParkour_FlowSharpTurnCooldown;
-				}
-			}
-
-			mvFlowLastMoveDir = vMoveDir;
-			mbFlowHasMoveDir = true;
+			mfFlowIdleTimer = 0.f;
 			mfFlowBlockedRunTimer = 0.f;
-			ChangeFlow(gfParkour_FlowGroundRunGain * afTimeStep, "", false);
+			// Split a frame crossing 50% so recovery is independent of frame rate.
+			float fRecoveryTime = cMath_Min(afTimeStep,
+				cMath_Max(0.f, gfParkour_FlowRecoveryThreshold - mfParkourFlow) / gfParkour_FlowRecoveryGain);
+			ChangeFlow(gfParkour_FlowRecoveryGain * fRecoveryTime +
+				gfParkour_FlowGroundRunGain * (afTimeStep - fRecoveryTime), "", false);
 			return;
 		}
 
@@ -606,10 +591,14 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		if (afFlatSpeed <= gfParkour_FlowIdleSpeed || abForwardIntent == false)
 		{
-			ChangeFlow(-gfParkour_FlowIdleDecay * afTimeStep, "", false);
-			if (afFlatSpeed <= gfParkour_FlowIdleSpeed)
-				mbFlowHasMoveDir = false;
+			float fOldIdleTime = mfFlowIdleTimer;
+			mfFlowIdleTimer += afTimeStep;
+			float fDecayTime = cMath_Max(0.f, mfFlowIdleTimer - gfParkour_FlowIdleGrace) -
+				cMath_Max(0.f, fOldIdleTime - gfParkour_FlowIdleGrace);
+			ChangeFlow(-gfParkour_FlowIdleDecay * fDecayTime, "", false);
 		}
+		else
+			mfFlowIdleTimer = 0.f;
 	}
 
 	//------------------------------------------------------------
@@ -622,6 +611,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null) return;
 		if (pBody.IsOnGround()) return;
+		mfFlowIdleTimer = 0.f;
 		if (cLux_GetPlayer().GetCurrentStateId() != ePlayerState_Normal) return;
 		if (cLux_GetPlayer().GetCurrentMoveStateId() != eMoveState_Normal) return;
 		if (mbWallJumpChainActive || mbWallScrambleJumpChainActive) return;
@@ -674,6 +664,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	void UpdateTopSpeedMovementSound()
 	{
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		if (mpTopSpeedSound is null || cSound_IsValid(mpTopSpeedSound, mlTopSpeedSoundId) == false)
+		{
+			@mpTopSpeedSound = null;
+			mlTopSpeedSoundId = -1;
+			mbTopSpeedMovementSoundActive = false;
+		}
 
 		bool bCanPlay =
 			mbEnabled &&
@@ -700,15 +696,17 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				cLux_GetPlayer().GetCharacterBody().GetPosition(),
 				eSoundEntryType_Gui);
 			
+			if (mpTopSpeedSound is null) return;
+			mlTopSpeedSoundId = mpTopSpeedSound.GetId();
 			mpTopSpeedSound.SetVolume(0);
 			mpTopSpeedSound.FadeIn(0.7f, 0.75f);
 		}
-		else if (!bShouldPlay)
+		else if (mpTopSpeedSound !is null)
 		{
 			mpTopSpeedSound.FadeVolumeMulTo(0.0F, 1.0f);
 		}
 
-		if (mpTopSpeedSound !is null)
+		if (mpTopSpeedSound !is null && pBody !is null)
 		{
 			mpTopSpeedSound.SetPosition(cLux_GetPlayer().GetCharacterBody().GetPosition());
 		}
@@ -3152,13 +3150,11 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	bool mbRollLandingArmed = false;
 
 	float mfParkourFlow = 0.f;
-	float mfFlowSharpTurnCooldown = 0.f;
+	[nosave] float mfFlowIdleTimer = 0.f;
 	float mfFlowBlockedRunTimer = 0.f;
 	float mfFlowBlockedRunCooldown = 0.f;
 	float mfHealthRegenDelay = 0.f;
 	float mfLastPlayerHealth = -1.f;
-	bool mbFlowHasMoveDir = false;
-	cVector3f mvFlowLastMoveDir = cVector3f_Zero;
 
 	bool mbLedgeCandidateActive = false;
 	bool mbLedgeCrouchOnFinish = false;
@@ -3261,6 +3257,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	
 	[nosave] bool mbTopSpeedMovementSoundActive = false;
 	[nosave] cSoundEntry@ mpTopSpeedSound;
+	[nosave] int mlTopSpeedSoundId = -1;
 	[nosave] float mfTopSpeedWindGustTimer = gfParkour_TopSpeedWindGustInterval;
 	// Keep the owner ID paired with the saved radial-blur instance across reloads.
 	int mlTopSpeedRadialBlurId = -1;

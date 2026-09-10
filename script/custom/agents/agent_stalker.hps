@@ -2342,6 +2342,13 @@ class cScrAgentStalker : cScrAgentHumanoid
 
 	//------------------------------------------------------------
 
+	void _Global_BossFight_SetLethalityOverride()
+	{
+		mlBossFight_LethalityOverride = cScript_GetGlobalArgInt(0);
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_BossFight_ResetForScriptedTeleport()
 	{
 		// A scripted teleport can happen while BossFightJump owns root motion,
@@ -19135,7 +19142,9 @@ class cScrAgentStalker : cScrAgentHumanoid
 		{
 			int lNewState;
 			float fMinHealth;
-			int lLethality = GameDifficulty_GetSettingValueByID_Int(eGameDifficultySetting_StalkerLethality);
+			int lLethality = mlBossFight_LethalityOverride >= 0
+				? mlBossFight_LethalityOverride
+				: GameDifficulty_GetSettingValueByID_Int(eGameDifficultySetting_StalkerLethality);
 			
 			switch (lLethality)
 			{
@@ -21206,6 +21215,7 @@ class cScrAgentStalker : cScrAgentHumanoid
 	cLuxAttackDamage@ mpAttackDamage;
 	cLuxFootPlacement@ mpFootPlacement;
 	cLuxVerletAnimation@ mpVerletAnimation;
+	int mlBossFight_LethalityOverride = -1;
 	
 	tString msHeadTracker_TargetEntity = "";
 	tID m_idHeadTracker_TargetEntity = tID_Invalid;

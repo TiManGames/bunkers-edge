@@ -280,6 +280,35 @@ bool Parkour_GetAirLockConsumesMoveInput()
 	return cScript_GetGlobalReturnBool();
 }
 
+// Player input bridge. Existing map-facing movement helpers remain unchanged.
+bool Parkour_HandleMoveInput(const cVector3f &in avAmount)
+{
+	cScript_SetGlobalArgVector3f(0, avAmount);
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_HandleParkourMoveInput");
+	return cScript_GetGlobalReturnBool();
+}
+
+void Parkour_PrepareLandingDamage()
+{
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_PrepareParkourLandingDamage");
+}
+
+void Parkour_FinishLandingDamage()
+{
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_FinishParkourLandingDamage");
+}
+
+void Parkour_ResetMovementControls()
+{
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_ResetParkourControlState");
+}
+
+void Parkour_ArmSafeLanding()
+{
+	cScript_RunGlobalFunc("LuxPlayer", "", "_Global_ArmParkourSafeLanding");
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_ArmParkourSafeLanding");
+}
+
 //------------------------------------------------------------
 
 void Parkour_SetDebug(bool abX)

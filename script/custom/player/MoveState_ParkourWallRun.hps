@@ -23,6 +23,10 @@ const float gfParkourWallRun_OutwardLookDeadZone = 0.20f;
 const float gfParkourWallJump_SideImpulse = 240.f;
 const float gfParkourWallJump_UpImpulse = 350.f;
 const float gfParkourWallJump_ForwardImpulse = 125.f;
+const float gfParkourWallJump_ClearanceSpeed = 0.35f;
+const float gfParkourWallJump_FullTransferAngle = cMath_ToRad(60.f);
+const float gfParkourWallJump_ForwardSpeedMul = 0.75f;
+const float gfParkourWallJump_TransferSpeedMul = 0.85f;
 const float gfParkourWallRun_CameraBobEntryTime = 0.18f;
 const float gfParkourWallRun_CameraBobFrequency = 12.0f;
 const float gfParkourWallRun_CameraBobVertical = 0.075f;
@@ -118,6 +122,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	
 	void Update(float afTimeStep)
 	{
+		mfLastVelocityTimeStep = Parkour_GetSafeVelocityTimeStep(afTimeStep);
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
 		{
@@ -232,12 +237,13 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 
 		if (alAction == eAction_Jump && abPressed)
 		{
+			cVector3f vJumpLook = cLux_GetPlayer().GetCamera().GetForward();
 			CancelOutwardLookForWallJump();
 
 			if (Parkour_TryStartLedgeGrab(false))
 				return false;
 
-			WallJump();
+			WallJump(vJumpLook);
 			return false;
 		}
 		
@@ -434,7 +440,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 
 	//------------------------------------------------------------
 	
-	void WallJump()
+	void WallJump(const cVector3f &in avLookDirection)
 	{
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
 		if (pBody is null)
@@ -443,16 +449,44 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 			return;
 		}
 		
-		cVector3f vCamFwd = cLux_GetPlayer().GetCamera().GetForward();
+		cVector3f vCamFwd = avLookDirection;
 		vCamFwd.y = 0.f;
 		if (vCamFwd.SqrLength() > 0.001f) vCamFwd.Normalize();
-		
-		cVector3f vImpulse = mvWallNormal * gfParkourWallJump_SideImpulse * mfPowerMul;
-		vImpulse += cVector3f_Up * gfParkourWallJump_UpImpulse * mfPowerMul;
-		vImpulse += vCamFwd * gfParkourWallJump_ForwardImpulse * mfPowerMul;
-		
-		pBody.SetForceVelocity(cVector3f_Zero);
-		pBody.AddImpulse(vImpulse);
+		else vCamFwd = mvWallForward;
+		float fOutDot = cMath_Vector3Dot(vCamFwd, mvWallNormal);
+		if (fOutDot < 0.f)
+		{
+			vCamFwd = mvWallForward;
+			fOutDot = 0.f;
+		}
+		float fBlend = cMath_Clamp(cMath_ASin(cMath_Clamp(fOutDot, 0.f, 1.f)) /
+			gfParkourWallJump_FullTransferAngle, 0.f, 1.f);
+		float fMass = cMath_Max(pBody.GetMass(), 0.001f);
+		cVector3f vIncoming = Parkour_GetFlatVelocity(pBody, mfLastVelocityTimeStep);
+		float fIncomingSpeed = vIncoming.Length();
+		cVector3f vForwardJump = mvWallForward * cMath_Max(fIncomingSpeed, gfParkourWallRun_Speed * mfPowerMul) +
+			mvWallNormal * gfParkourWallJump_ClearanceSpeed;
+		cVector3f vTransfer = (mvWallNormal * gfParkourWallJump_SideImpulse +
+			vCamFwd * gfParkourWallJump_ForwardImpulse) * (mfPowerMul / fMass);
+		// Direction blends continuously; horizontal speed never stacks both launches.
+		cVector3f vLaunch = vForwardJump * (1.f - fBlend) + vTransfer * fBlend;
+		float fLegacyMaxSpeed = (gfParkourWallJump_SideImpulse + gfParkourWallJump_ForwardImpulse) * mfPowerMul / fMass;
+		float fForwardCap = gfParkourWallRun_Speed * mfPowerMul * gfParkourWallJump_ForwardSpeedMul;
+		float fTransferCap = fLegacyMaxSpeed * gfParkourWallJump_TransferSpeedMul;
+		float fSpeedCap = cMath_InterpolateLinear(fForwardCap, fTransferCap, fBlend);
+		float fLaunchSpeed = cMath_Min(fSpeedCap, cMath_Max(fIncomingSpeed, vLaunch.Length()));
+		if (vLaunch.SqrLength() > 0.001f) vLaunch.Normalize();
+		vLaunch *= fLaunchSpeed;
+		vLaunch.y = gfParkourWallJump_UpImpulse * mfPowerMul / fMass;
+		pBody.StopMovement();
+		pBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		pBody.SetMoveSpeed(eCharDir_Right, 0.f);
+		pBody.SetForceVelocity(vLaunch);
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[ParkourControl v2] wall jump look=" + vCamFwd +
+				" outward=" + fOutDot + " blend=" + fBlend + " incoming=" + fIncomingSpeed +
+				" launch=" + vLaunch + " cap=" + fSpeedCap + " dt=" + mfLastVelocityTimeStep +
+				" flow=" + Parkour_GetFlow(), true);
 		Parkour_NotifyFlowEvent(geParkourFlowEvent_WallJump, 1.f);
 		Parkour_ArmWallJumpChain(mvWallNormal);
 		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
@@ -540,6 +574,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	
 	float mfTimer = 0.f;
 	float mfLostWallTimer = 0.f;
+	[nosave] float mfLastVelocityTimeStep = gfParkourVelocityFallbackTimeStep;
 	float mfForwardReleaseTimer = 0.f;
 	float mfGroundTimer = 0.f;
 	float mfPowerMul = 1.f;

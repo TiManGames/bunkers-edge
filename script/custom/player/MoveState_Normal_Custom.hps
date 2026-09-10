@@ -8,9 +8,9 @@
 cVector2f gvLowHealthBobSize = cVector2f(0.1f,0.105f);
 
 const float gfParkourMove_RunSideSpeedMul = 1.10f;
+const float gfParkourMove_NormalForwardSpeed = 2.5f;
 const float gfParkourMove_RunJumpGrace = 1.1f;
 const float gfParkourMove_RunJumpGroundSettleGrace = 0.45f;
-const float gfParkourMove_RollInputGrace = 0.28f;
 const float gfParkourMove_RollMinFallSpeed = 4.25f;
 const float gfParkourMove_RollSmallFallDistance = 5.2f;
 const float gfParkourMove_RollMediumFallDistance = 8.0f;
@@ -18,7 +18,7 @@ const float gfParkourMove_RollBigFallDistance = 11.5f;
 const float gfParkourMove_RollDuration = 0.72f;
 const float gfParkourMove_RollForwardSpeedMin = 3.0f;
 const float gfParkourMove_RollForwardSpeedMax = 4.7f;
-const float gfParkourMove_RollEndSpeed = 0.65f;
+const float gfParkourMove_RollEndSpeedMul = 0.90f;
 const float gfParkourMove_RollCameraDip = 0.24f;
 const float gfParkourMove_WallRunMinArmFlow = 0.08f;
 const float gfParkourMove_WallRunMinArmSpeed = 1.20f;
@@ -34,6 +34,9 @@ const float gfParkourMove_JumpCarryDecay = 0.65f;
 const float gfParkourMove_AirLockSideInputAcc = 0.12f;
 const float gfParkourMove_AirLockSideDecay = 0.85f;
 const float gfParkourMove_AirLockMaxSideSpeed = 0.16f;
+const float gfParkourMove_JumpCorrectionAcc = 2.0f;
+const float gfParkourMove_JumpCorrectionDecay = 3.0f;
+const float gfParkourMove_JumpCorrectionMaxSpeed = 0.8f;
 const float gfParkourMove_JumpBaseAirSpeedCap = 5.0f;
 const float gfParkourMove_JumpFlowAirSpeedBonus = 0.55f;
 const float gfParkourMove_JumpTakeoffSpeedCapMul = 1.25f;
@@ -80,6 +83,42 @@ const float gfParkourMove_JumpVocalisationChance = 0.5f;
 
 class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 {
+	void Reset() override
+	{
+		cScrMoveState_Normal::Reset();
+		ResetParkourControlState();
+	}
+
+	void OnMapEnter(cLuxMap @apMap) override
+	{
+		cScrMoveState_Normal::OnMapEnter(apMap);
+		ResetParkourControlState();
+	}
+
+	void OnMapLeave(cLuxMap @apMap) override
+	{
+		ResetParkourControlState();
+		cScrMoveState_Normal::OnMapLeave(apMap);
+	}
+
+	void ResetParkourControlState(bool abKeepGroundSpeed = false)
+	{
+		StopParkourLandRoll(false);
+		// Reset is also called during player initialization, before user modules.
+		if (mbParkourRollArmed || mbParkourRollFallDistancesActive || mbParkourLandingContactPending)
+			ResetParkourRollLandingState();
+		ResetParkourAirborneState();
+		mvParkourMoveInput = cVector3f_Zero;
+		mvParkourLandingFlatVelocity = cVector3f_Zero;
+		mbParkourLandingContactPending = false;
+		mbParkourLandingRollEligible = false;
+		mbParkourCrouchNeedsRelease = false;
+		mbParkourSafeLandingArmed = false;
+		mfLandingVelocityY = -1.f;
+		if (abKeepGroundSpeed == false) mfParkourNormalSpeedLimit = 0.f;
+		mfParkourControlDebugTimer = 0.f;
+	}
+
 	void Update(float afTimeStep) override
 	{
 		mfLastParkourTimeStep = Parkour_GetSafeVelocityTimeStep(afTimeStep);
@@ -103,6 +142,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		UpdateWallRunLeanTurnSuppress(afTimeStep);
 		UpdateLeanTurn(afTimeStep, pCharBody);
 		UpdateParkour(afTimeStep, pCharBody);
+		UpdateParkourControlDebug(afTimeStep, pCharBody);
 
 		////////////////////////
 		// Update run meter
@@ -131,6 +171,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 	void OnLeaveState(int alNextStateId) override
 	{
+		// A wallrun or pole handoff must not replace the ground cap with an air cap.
+		ResetParkourControlState(true);
 		cScrMoveState_Normal::OnLeaveState(alNextStateId);
 		StopParkourLandRoll(false);
 		StopParkourRunJumpCameraBump(true);
@@ -148,6 +190,22 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 	bool OnAction(int alAction, bool abPressed) override
 	{
+		if (Parkour_GetEnabled() && alAction == eAction_Crouch)
+		{
+			if (mbParkourCrouchNeedsRelease)
+			{
+				if (abPressed == false) mbParkourCrouchNeedsRelease = false;
+				return false;
+			}
+			iCharacterBody@ pRollBody = mBaseObj.mpPlayer.GetCharacterBody();
+			if (pRollBody !is null && pRollBody.IsOnGround() == false)
+			{
+				// Airborne crouch prepares a roll, without toggling body posture.
+				if (abPressed == false) SetParkourRollPrepared(false);
+				return false;
+			}
+		}
+
 		if (alAction == eAction_LeanLeft || alAction == eAction_LeanRight)
 		{
 			if (ShouldHandleLeanTurnInput() == false)
@@ -215,9 +273,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 		if (alAction == eAction_Run && Parkour_GetEnabled())
 		{
-			if (abPressed && bWasOnGround == false)
-				mfParkourRollInputGrace = gfParkourMove_RollInputGrace;
-
 			mbWantsToRun = false;
 			mbRunning = false;
 			mbAnalogRun = false;
@@ -657,6 +712,19 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	void CharBody_HitGround(iCharacterBody@ apCharBody,const cVector3f &in avVel) override
 	{
 		mfLandingVelocityY = avVel.y*-1.0f;
+		// Contact velocity can contain only force velocity, excluding locomotion.
+		mvParkourLandingFlatVelocity = Parkour_GetFlatVelocity(apCharBody, mfLastParkourTimeStep);
+		if (mvParkourLandingFlatVelocity.SqrLength() <= 0.001f) mvParkourLandingFlatVelocity = avVel;
+		mvParkourLandingFlatVelocity.y = 0.f;
+		mbParkourLandingContactPending = Parkour_GetEnabled();
+		mbParkourLandingRollEligible = Parkour_GetEnabled() &&
+			cInput_IsTriggered(eAction_Crouch) &&
+			mfLandingVelocityY >= gfParkourMove_RollMinFallSpeed &&
+			ParkourRollDropAllowed(apCharBody);
+		SetParkourRollPrepared(mbParkourLandingRollEligible);
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[ParkourControl v1] contact roll=" + mbParkourLandingRollEligible +
+				" horizontal=" + mvParkourLandingFlatVelocity.Length() + " fall=" + mfLandingVelocityY, true);
 	}
 
 	//------------------------------------------------------------
@@ -754,17 +822,23 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 			cVector3f vFlatVel = Parkour_GetFlatVelocity(apCharBody, afTimeStep);
 
-			bool bForwardIntent = cInput_IsTriggered(eAction_Forward) || apCharBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
+			bool bForwardIntent = mvParkourMoveInput.y > 0.1f || cInput_IsTriggered(eAction_Forward);
 			Parkour_UpdateGroundFlow(afTimeStep, false, bForwardIntent, vFlatVel.Length(), vFlatVel);
 		}
 
 		if (apCharBody.IsOnGround() && mbCrouching == false && mbCrawling == false)
 		{
 			mBaseObj.mfMaxForwardSpeed *= Parkour_GetRunSpeedMul();
-			mBaseObj.mfMaxSidwaySpeed *= cMath_InterpolateLinear(0.75f, gfParkourMove_RunSideSpeedMul, Parkour_GetFlow());
+			if (mvParkourMoveInput.y > 0.1f && Player_IsInteracting() == false &&
+				cInput_IsTriggered(eAction_AnalogLean) == false)
+				mBaseObj.mfMaxSidwaySpeed = mBaseObj.mfMaxForwardSpeed;
+			else
+				mBaseObj.mfMaxSidwaySpeed *= cMath_InterpolateLinear(0.75f, gfParkourMove_RunSideSpeedMul, Parkour_GetFlow());
 		}
 
 		ApplyParkourHardLandingSpeedPenalty();
+		if (apCharBody.IsOnGround() && mbCrouching == false && mbCrawling == false)
+			mfParkourNormalSpeedLimit = mBaseObj.mfMaxForwardSpeed / Parkour_GetRunSpeedMul();
 
 		if (apCharBody.IsOnGround()) return;
 
@@ -822,13 +896,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 					cLux_AddDebugMessage("[Parkour] Wall run grace cleared: still grounded after jump", true);
 				mfParkourRunJumpGrace = -1.f;
 			}
-		}
-
-		if (mfParkourRollInputGrace > 0.f)
-		{
-			mfParkourRollInputGrace -= afTimeStep;
-			if (mfParkourRollInputGrace <= 0.f)
-				mfParkourRollInputGrace = -1.f;
 		}
 
 		if (mfParkourHardLandingPenaltyTime > 0.f)
@@ -1154,6 +1221,77 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 			   mBaseObj.mpPlayer.GetCurrentMoveStateId() == eMoveState_Normal;
 	}
 
+	bool HandleParkourMoveInput(const cVector3f &in avAmount)
+	{
+		if (Parkour_GetEnabled() == false ||
+			mBaseObj.mpPlayer.GetCurrentStateId() != ePlayerState_Normal ||
+			mBaseObj.mpPlayer.GetCurrentMoveStateId() != eMoveState_Normal)
+		{
+			mvParkourMoveInput = cVector3f_Zero;
+			return false;
+		}
+
+		mvParkourMoveInput = cVector3f(avAmount.x, avAmount.y, 0.f);
+		float fLength = mvParkourMoveInput.Length();
+		if (fLength <= 0.1f) mvParkourMoveInput = cVector3f_Zero;
+		else if (fLength > 1.f) mvParkourMoveInput /= fLength;
+
+		if (mbParkourLandRollActive || ParkourAirLockConsumesMoveInput()) return true;
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		if (pBody is null || pBody.IsOnGround() == false || mbCrouching || mbCrawling ||
+			Player_IsInteracting() || cInput_IsTriggered(eAction_AnalogLean) || mvParkourMoveInput.y <= 0.1f)
+			return false;
+
+		// Input already has unit length (or proportional stick magnitude).
+		// Disable the engine's additional diagonal correction to avoid normalizing twice.
+		pBody.SetDisableDiagSpeedBoost(false);
+		pBody.Move(eCharDir_Forward, mvParkourMoveInput.y);
+		pBody.SetMoveSpeedMul(eCharDir_Forward, mvParkourMoveInput.y);
+		if (cMath_Abs(mvParkourMoveInput.x) > 0.001f)
+			pBody.Move(eCharDir_Right, mvParkourMoveInput.x);
+		// Sign selects direction in Move; the speed multiplier is always positive.
+		pBody.SetMoveSpeedMul(eCharDir_Right, cMath_Abs(mvParkourMoveInput.x));
+		return true;
+	}
+
+	void UpdateParkourControlDebug(float afTimeStep, iCharacterBody@ apBody)
+	{
+		if (Parkour_GetEnabled() == false || Parkour_GetDebug() == false || apBody is null) return;
+		mfParkourControlDebugTimer -= afTimeStep;
+		if (mfParkourControlDebugTimer > 0.f) return;
+		mfParkourControlDebugTimer = 0.25f;
+		cLux_AddDebugMessage("[ParkourControl v1] input=" + mvParkourMoveInput +
+			" speed=" + Parkour_GetFlatVelocity(apBody, afTimeStep).Length() +
+			" flow=" + Parkour_GetFlow() + " ground=" + apBody.IsOnGround() +
+			" roll=" + mbParkourLandRollActive + " air=" + msParkourAirLockSource, true);
+	}
+
+	void _Global_HandleParkourMoveInput()
+	{
+		cVector3f vInput = cScript_GetGlobalArgVector3f(0);
+		cScript_SetGlobalReturnBool(HandleParkourMoveInput(vInput));
+	}
+
+	void _Global_ResetParkourControlState()
+	{
+		ResetParkourControlState();
+	}
+
+	void _Global_PrepareParkourLandingDamage()
+	{
+		if (mbParkourLandingContactPending)
+			SetParkourRollPrepared(mbParkourLandingRollEligible);
+	}
+
+	void _Global_FinishParkourLandingDamage()
+	{
+		if (mbParkourLandingContactPending == false) return;
+		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
+		if (pBody is null || pBody.IsOnGround() == false) return;
+		mbParkourLandingContactPending = false;
+		SetParkourRollPrepared(false);
+	}
+
 	//------------------------------------------------------------
 
 	void StartParkourAirborneMetrics(iCharacterBody@ apCharBody)
@@ -1247,28 +1385,33 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (mvParkourJumpDir.SqrLength() <= 0.001f) return;
 
 		// Air correction is intentionally only left/right in the original jump basis.
-		float fSideInput = 0.f;
-		if (cInput_IsTriggered(eAction_Right)) fSideInput += 1.f;
-		if (cInput_IsTriggered(eAction_Left)) fSideInput -= 1.f;
+		bool bOrdinaryJump = msParkourAirLockSource == "normal jump";
+		float fSideInput = mvParkourMoveInput.x;
+		if (cInput_IsTriggered(eAction_Right) || cInput_IsTriggered(eAction_Left))
+			fSideInput = (cInput_IsTriggered(eAction_Right) ? 1.f : 0.f) -
+				(cInput_IsTriggered(eAction_Left) ? 1.f : 0.f);
+		float fSideAcc = bOrdinaryJump ? gfParkourMove_JumpCorrectionAcc : gfParkourMove_AirLockSideInputAcc;
+		float fSideDecay = bOrdinaryJump ? gfParkourMove_JumpCorrectionDecay : gfParkourMove_AirLockSideDecay;
+		float fSideMax = bOrdinaryJump ? gfParkourMove_JumpCorrectionMaxSpeed : gfParkourMove_AirLockMaxSideSpeed;
 
 		mfParkourJumpCarrySpeed = cMath_Max(0.f, mfParkourJumpCarrySpeed - gfParkourMove_JumpCarryDecay * afTimeStep);
 
 		if (fSideInput != 0.f)
-			mfParkourAirLockSideSpeed += fSideInput * gfParkourMove_AirLockSideInputAcc * afTimeStep;
+			mfParkourAirLockSideSpeed += fSideInput * fSideAcc * afTimeStep;
 		else
 		{
 			if (mfParkourAirLockSideSpeed > 0.f)
-				mfParkourAirLockSideSpeed = cMath_Max(0.f, mfParkourAirLockSideSpeed - gfParkourMove_AirLockSideDecay * afTimeStep);
+				mfParkourAirLockSideSpeed = cMath_Max(0.f, mfParkourAirLockSideSpeed - fSideDecay * afTimeStep);
 			else if (mfParkourAirLockSideSpeed < 0.f)
-				mfParkourAirLockSideSpeed = cMath_Min(0.f, mfParkourAirLockSideSpeed + gfParkourMove_AirLockSideDecay * afTimeStep);
+				mfParkourAirLockSideSpeed = cMath_Min(0.f, mfParkourAirLockSideSpeed + fSideDecay * afTimeStep);
 		}
 
 		float fAirSpeedCap = cMath_Min(gfParkourMove_JumpBaseAirSpeedCap + Parkour_GetFlow() * gfParkourMove_JumpFlowAirSpeedBonus,
 									   cMath_Max(mfParkourJumpStartSpeed, gfParkourMove_JumpBasisMinSpeed) * gfParkourMove_JumpTakeoffSpeedCapMul);
 		mfParkourJumpCarrySpeed = cMath_Clamp(mfParkourJumpCarrySpeed, 0.f, fAirSpeedCap);
+		if (bOrdinaryJump) fAirSpeedCap = mfParkourJumpCarrySpeed;
 		mfParkourAirLockSideSpeed = cMath_Clamp(mfParkourAirLockSideSpeed,
-												-gfParkourMove_AirLockMaxSideSpeed,
-												gfParkourMove_AirLockMaxSideSpeed);
+												-fSideMax, fSideMax);
 
 		cVector3f vCorrectedFlat = mvParkourJumpDir * mfParkourJumpCarrySpeed +
 								   mvParkourAirLockRight * mfParkourAirLockSideSpeed;
@@ -1328,13 +1471,26 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (apCharBody.IsOnGround()) return;
 
 		float fFallSpeed = -apCharBody.GetForceVelocity().y;
-		if (fFallSpeed < gfParkourMove_RollMinFallSpeed) return;
-		if (mfParkourRollInputGrace <= 0.f) return;
+		SetParkourRollPrepared(cInput_IsTriggered(eAction_Crouch) &&
+			fFallSpeed >= gfParkourMove_RollMinFallSpeed && ParkourRollDropAllowed(apCharBody));
+	}
 
-		if (mbParkourRollArmed == false)
+	bool ParkourRollDropAllowed(iCharacterBody@ apCharBody)
+	{
+		if (apCharBody is null || Player_IsDead() || Player_GetUnderwater()) return false;
+		float fDrop = cMath_Max(0.f, mfParkourAirHighestFeetY - apCharBody.GetFeetPosition().y);
+		if (cScript_GetGlobalVarBool("PlayerOnSand")) fDrop *= 0.7f;
+		return fDrop <= gfParkourMove_RollBigFallDistance;
+	}
+
+	void SetParkourRollPrepared(bool abPrepared)
+	{
+		mbParkourRollArmed = abPrepared;
+		Parkour_SetRollLandingArmed(abPrepared);
+		if (abPrepared == false)
 		{
-			mbParkourRollArmed = true;
-			Parkour_SetRollLandingArmed(true);
+			ResetParkourRollFallDistances();
+			return;
 		}
 		if (mbParkourRollFallDistancesActive == false)
 		{
@@ -1349,6 +1505,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 	void UpdateParkourRollLanding()
 	{
+		if (Player_IsDead()) return;
 		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
 		float fLandingFeetY = mfParkourAirLastFeetY;
 		if (pBody !is null)
@@ -1356,8 +1513,16 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		float fAirDrop = mbParkourAirborneMetricsActive ? cMath_Max(0.f, mfParkourAirHighestFeetY - fLandingFeetY) : 0.f;
 		float fAirTime = mbParkourAirborneMetricsActive ? mfParkourAirTime : 0.f;
 		bool bLegalLanding = mbParkourAirLegalLanding;
+		if (mbParkourSafeLandingArmed)
+		{
+			DebugParkourLanding("Zipline landing protected", mfLandingVelocityY, fAirDrop, fAirTime, true);
+			mbParkourSafeLandingArmed = false;
+			ResetParkourRollFallDistances();
+			ResetParkourAirborneState();
+			return;
+		}
 
-		if (mbParkourRollArmed && mfLandingVelocityY >= gfParkourMove_RollMinFallSpeed)
+		if (mbParkourLandingRollEligible && mfLandingVelocityY >= gfParkourMove_RollMinFallSpeed)
 		{
 			float fVelMul = cMath_Clamp((mfLandingVelocityY - gfParkourMove_RollMinFallSpeed) / 7.0f, 0.0f, 1.0f);
 
@@ -1408,7 +1573,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 		cCamera@ pCam = mBaseObj.mpPlayer.GetCamera();
 
-		mvParkourLandRollDir = Parkour_GetFlatVelocity(pCharBody, mfLastParkourTimeStep, 0.05f);
+		mvParkourLandRollDir = mvParkourLandingFlatVelocity;
 		if (mvParkourLandRollDir.SqrLength() <= 0.05f)
 		{
 			mvParkourLandRollDir = pCam.GetForward();
@@ -1419,12 +1584,24 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		mvParkourLandRollDir.Normalize();
 
 		mbParkourLandRollActive = true;
+		mbParkourCrouchNeedsRelease = cInput_IsTriggered(eAction_Crouch);
+		mbCrouchPressed = false;
+		mbCanToggleUncrouch = false;
 		mfParkourLandRollTime = 0.f;
 		mfParkourLandRollStartPitch = pCam.GetPitch();
 		mfParkourLandRollStartSpeed = cMath_InterpolateLinear(gfParkourMove_RollForwardSpeedMin,
 															   gfParkourMove_RollForwardSpeedMax,
 															   afVelocityMul);
 		mfParkourLandRollStartSpeed *= cMath_InterpolateLinear(0.95f, 1.12f, Parkour_GetFlow());
+		float fSpeedLimit = mfParkourNormalSpeedLimit * Parkour_GetRunSpeedMul();
+		if (fSpeedLimit <= 0.f)
+			// Direct airborne loads have no cached ground frame; use the stock normal-state base.
+			fSpeedLimit = gfParkourMove_NormalForwardSpeed * Parkour_GetRunSpeedMul();
+		mfParkourLandRollStartSpeed = cMath_Min(fSpeedLimit,
+			cMath_Max(mfParkourLandRollStartSpeed, mvParkourLandingFlatVelocity.Length()));
+		pCharBody.StopMovement();
+		pCharBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		pCharBody.SetMoveSpeed(eCharDir_Right, 0.f);
 		cVector3f vVel = pCharBody.GetForceVelocity();
 		vVel.x = mvParkourLandRollDir.x * mfParkourLandRollStartSpeed;
 		vVel.z = mvParkourLandRollDir.z * mfParkourLandRollStartSpeed;
@@ -1444,7 +1621,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		Sound_PlayGui("Body_Roll_Cloth_0" + cMath_RandRectl(1, 4) + ".ogg", 0.6f, eSoundEntryType_Gui);
 
 		if (Parkour_GetDebug())
-			cLux_AddDebugMessage("[Parkour] Land roll started. speed=" + mfParkourLandRollStartSpeed, true);
+			cLux_AddDebugMessage("[ParkourControl v2] roll start speed=" + mfParkourLandRollStartSpeed +
+				" incoming=" + mvParkourLandingFlatVelocity.Length() + " cap=" + fSpeedLimit, true);
 	}
 
 	//------------------------------------------------------------
@@ -1459,6 +1637,10 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		}
 
 		PlayerBody_SetVisible(false);
+		apCharBody.StopMovement();
+		apCharBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		apCharBody.SetMoveSpeed(eCharDir_Right, 0.f);
+		if (cInput_IsTriggered(eAction_Crouch) == false) mbParkourCrouchNeedsRelease = false;
 
 		mfParkourLandRollTime += afTimeStep;
 		float fT = cMath_Clamp(mfParkourLandRollTime / gfParkourMove_RollDuration, 0.f, 1.f);
@@ -1468,7 +1650,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		pCam.SetPitch(mfParkourLandRollStartPitch - cMath_PiMul2 * fRollT);
 
 		float fSpeedT = cMath_Easing(eEasing_QuadOut, fT);
-		float fSpeed = cMath_InterpolateLinear(mfParkourLandRollStartSpeed, gfParkourMove_RollEndSpeed, fSpeedT);
+		float fSpeed = cMath_InterpolateLinear(mfParkourLandRollStartSpeed,
+			mfParkourLandRollStartSpeed * gfParkourMove_RollEndSpeedMul, fSpeedT);
 		cVector3f vVel = apCharBody.GetForceVelocity();
 		vVel.x = mvParkourLandRollDir.x * fSpeed;
 		vVel.z = mvParkourLandRollDir.z * fSpeed;
@@ -1483,7 +1666,22 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 										   0.06f);
 
 		if (fT >= 1.f)
+		{
+			// Transfer the existing velocity to locomotion, never add both channels.
+			cVector3f vFlat = vVel;
+			vFlat.y = 0.f;
+			cVector3f vForward = apCharBody.GetForward();
+			vForward.y = 0.f;
+			if (vForward.SqrLength() > 0.001f) vForward.Normalize();
+			cVector3f vRight = apCharBody.GetRight();
+			vRight.y = 0.f;
+			if (vRight.SqrLength() > 0.001f) vRight.Normalize();
+			apCharBody.SetMoveSpeed(eCharDir_Forward, cMath_Vector3Dot(vFlat, vForward));
+			apCharBody.SetMoveSpeed(eCharDir_Right, cMath_Vector3Dot(vFlat, vRight));
+			apCharBody.SetForceVelocity(cVector3f(0.f, vVel.y, 0.f));
+			if (Parkour_GetDebug()) cLux_AddDebugMessage("[ParkourControl v1] roll exit speed=" + fSpeed, true);
 			StopParkourLandRoll(false);
+		}
 	}
 
 	//------------------------------------------------------------
@@ -1507,7 +1705,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (abEndCrouched)
 			SetCrouching(true, false, true, true);
 		else
-			SetCrouching(false, false, true, true);
+			SetCrouching(false, false, true, false);
 	}
 
 	//------------------------------------------------------------
@@ -1528,7 +1726,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		ResetParkourRollFallDistances();
 		mbParkourRollArmed = false;
 		Parkour_SetRollLandingArmed(false);
-		mfParkourRollInputGrace = -1.f;
 	}
 
 	//------------------------------------------------------------
@@ -1550,6 +1747,11 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	void _Global_GetParkourAirLockConsumesMoveInput()
 	{
 		cScript_SetGlobalReturnBool(ParkourAirLockConsumesMoveInput());
+	}
+
+	void _Global_ArmParkourSafeLanding()
+	{
+		mbParkourSafeLandingArmed = true;
 	}
 
 	//------------------------------------------------------------
@@ -1579,7 +1781,13 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	float mfParkourRunJumpCameraBumpTime = -1.f;
 	float mfParkourRunJumpCameraBumpPower = 0.f;
 	float mfParkourRunJumpCameraPitchAdd = 0.f;
-	float mfParkourRollInputGrace = -1.f;
+	[nosave] cVector3f mvParkourMoveInput = cVector3f_Zero;
+	[nosave] cVector3f mvParkourLandingFlatVelocity = cVector3f_Zero;
+	[nosave] bool mbParkourLandingContactPending = false;
+	[nosave] bool mbParkourLandingRollEligible = false;
+	[nosave] bool mbParkourCrouchNeedsRelease = false;
+	[nosave] float mfParkourNormalSpeedLimit = 0.f;
+	[nosave] float mfParkourControlDebugTimer = 0.f;
 	float mfParkourJumpStartSpeed = 0.f;
 	float mfParkourJumpCarrySpeed = 0.f;
 	float mfParkourAirLockSideSpeed = 0.f;
@@ -1608,6 +1816,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	bool mbParkourRollArmed = false;
 	bool mbParkourRollFallDistancesActive = false;
 	bool mbParkourLandRollActive = false;
+	[nosave] bool mbParkourSafeLandingArmed = false;
 
 	//------------------------------------------------------------
 }

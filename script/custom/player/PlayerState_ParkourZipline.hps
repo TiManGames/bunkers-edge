@@ -562,12 +562,20 @@ class cScrPlayerState_ParkourZipline : iScrPlayerState, iScrPlayerState_Interfac
 		pBody.SetForceVelocity(vExitVel);
 
 		if (abReachedEnd)
+		{
 			Parkour_NotifyFlowEvent(geParkourFlowEvent_ZiplineComplete, 1.f);
+		}
 
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[Parkour] Zipline completed. reachedEnd=" + abReachedEnd + " speed=" + mfRideSpeed, true);
 
 		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+		if (abReachedEnd)
+		{
+			// Arm after the state transition so normal-state initialization cannot
+			// clear it. Manual crouch drops retain normal fall-damage behavior.
+			Parkour_ArmSafeLanding();
+		}
 	}
 
 	//------------------------------------------------------------

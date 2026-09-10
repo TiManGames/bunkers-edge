@@ -149,6 +149,11 @@ class cScrMap : iScrMap
 		EnsureStalkerNarrowBodySectionsSetup();
 		SetBeastNarrowSectionBody(false);
 		Entity_SetActive("stalker", false);
+		cScript_SetGlobalArgInt(0, mbSpeedRunModeActive
+			? int(eDifficultySettingValue_StalkerLethality_Default)
+			: -1);
+		cScript_RunGlobalFunc("stalker", "cScrAgentStalker",
+			"_Global_BossFight_SetLethalityOverride");
 		cScript_SetGlobalArgBool(0, false);
 		cScript_RunGlobalFunc("stalker", "cScrAgentStalker", "_Global_SetLampsFlicker");
 
@@ -481,6 +486,7 @@ class cScrMap : iScrMap
 		Parkour_SetEnabled(true);
 		Parkour_SetSpeedRunModeActive(true);
 		cLux_LoadScreenSetOneShotSolidColorBackground();
+		Parkour_ResetMovementControls();
 		cLux_GetSaveHandler().DelayedLoadGameFromFile(cString_To16Char("BunkersEdgeSpeedRunStart.sav"), "", "", false, false);
 	}
 
@@ -808,6 +814,7 @@ class cScrMap : iScrMap
 			QueueSpeedRunRestart();
 			return;
 		}
+		Parkour_ResetMovementControls();
 		SaveRoom_LoadLastSave();
 	}
 
