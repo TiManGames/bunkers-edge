@@ -24,6 +24,7 @@ const float gfParkourWallScramble_LookUpPitchDeg = 45.f;
 const float gfParkourWallScramble_JumpSideImpulse = 235.f;
 const float gfParkourWallScramble_JumpUpImpulse = 360.f;
 const float gfParkourWallScramble_JumpForwardImpulse = 55.f;
+const float gfParkourWallScramble_ManualTurnOutwardDot = 0.18f;
 
 //------------------------------------------------------------
 
@@ -328,9 +329,20 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 	{
 		if (mbTurned == false)
 		{
-			if (Parkour_GetDebug())
-				cLux_AddDebugMessage("[Parkour] Wall scramble jump ignored: turn first.", true);
-			return;
+			float fOutwardDot = GetManualTurnOutwardDot();
+			if (fOutwardDot >= gfParkourWallScramble_ManualTurnOutwardDot)
+			{
+				mbTurned = true;
+				LogNewLine("[WallScrambleTurn diag1] mouse turn accepted. outwardDot=" + fOutwardDot);
+			}
+			else
+			{
+				LogNewLine("[WallScrambleTurn diag1] jump blocked: turn first. outwardDot=" + fOutwardDot);
+
+				if (Parkour_GetDebug())
+					cLux_AddDebugMessage("[Parkour] Wall scramble jump ignored: turn first. outwardDot=" + fOutwardDot, true);
+				return;
+			}
 		}
 
 		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
@@ -357,6 +369,23 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		Parkour_ArmWallScrambleJumpChain(mvWallNormal);
 		cLux_PlayGuiSoundData("player/foley/default/pose_jump", eSoundEntryType_World, 0.75f, true);
 		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
+	}
+
+	//------------------------------------------------------------
+
+	float GetManualTurnOutwardDot()
+	{
+		cVector3f vLook = cLux_GetPlayer().GetCamera().GetForward();
+		vLook.y = 0.f;
+		if (vLook.SqrLength() <= 0.001f) return -1.f;
+		vLook.Normalize();
+
+		cVector3f vOutward = mvWallNormal;
+		vOutward.y = 0.f;
+		if (vOutward.SqrLength() <= 0.001f) return -1.f;
+		vOutward.Normalize();
+
+		return cMath_Vector3Dot(vLook, vOutward);
 	}
 
 	//------------------------------------------------------------
