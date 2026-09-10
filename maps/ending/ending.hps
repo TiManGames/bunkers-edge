@@ -178,10 +178,10 @@ class cScrMap : iScrMap
 		
 		if(mbPlayerInDeathBox)
 		{
-			//Player_SetCrossHairEnabled(false);
-
 			if(mfPlayerDeathTimer > 60.0f) 
 			{
+				Player_ShowCrossHairIcons(false, false);
+				
 				ImGui_SetAlignment(eImGuiAlign_CenterCenter);
 					ImGui_GroupBegin(cLux_GetHudVirtualCenterScreenStartPos(), cLux_GetHudVirtualCenterScreenSize(), false);
 
@@ -202,6 +202,9 @@ class cScrMap : iScrMap
 				ImGui_GroupEnd();
 			ImGui_SetAlignment(eImGuiAlign_TopLeft);
 		}
+
+		ImGui_ResetModifiers();
+		ImGui_SetAlignment(eImGuiAlign_TopLeft);
 	}
 
 	tString FormatDate(tString&in asDate)
@@ -285,12 +288,12 @@ class cScrMap : iScrMap
 			if(alState == 1)
 			{
 				mbPlayerInDeathBox = true;
-				Player_ShowCrossHairIcons(false, false);
+				//Player_ShowCrossHairIcons(false, false);
 			}
 			if(alState == -1)
 			{
 				mbPlayerInDeathBox = false;
-				Player_ShowCrossHairIcons(true, false);
+				//Player_ShowCrossHairIcons(true, false);
 			}
 
 			return true;
