@@ -236,6 +236,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		mfLedgeRequiredFacingDot = 0.35f;
 		mfLedgeMinFallSpeed = 0.5f;
 		mfLedgeMaxPlayerFeetY = 999999.f;
+		mbLedgeGrabEnabled = true;
 		mfFrontWallDot = gfParkour_FrontWallDot;
 		mbSpeedVaultEnabled = true;
 		ClearPoleClimbCandidate();
@@ -1492,6 +1493,8 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	bool TryStartLedgeGrab(bool abRequireNormalMoveState = true,
 						   bool abDebugAutoFailures = true)
 	{
+		if (mbLedgeGrabEnabled == false) return false;
+
 		if (PlayerCanUseParkour(abRequireNormalMoveState) == false)
 		{
 			if (mbLedgeCandidateActive)
@@ -2765,6 +2768,18 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	void _Global_SetLedgeGrabEnabled()
+	{
+		mbLedgeGrabEnabled = cScript_GetGlobalArgBool(0);
+		if (mbLedgeGrabEnabled == false)
+		{
+			mbLedgeCandidateActive = false;
+			mfLedgeCandidateTime = -1.f;
+		}
+	}
+
+	//------------------------------------------------------------
+
 	void _Global_SetSpeedVaultEnabled()
 	{
 		mbSpeedVaultEnabled = cScript_GetGlobalArgBool(0);
@@ -3128,7 +3143,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	void _Global_RegisterLedgeCandidate()
 	{
-		if (mbEnabled == false) return;
+		if (mbEnabled == false || mbLedgeGrabEnabled == false) return;
 
 		mvLedgeFeetPos = cScript_GetGlobalArgVector3f(0);
 		mbLedgeCrouchOnFinish = cScript_GetGlobalArgBool(1);
@@ -3145,6 +3160,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	//------------------------------------------------------------
 
 	bool mbEnabled = true;
+	bool mbLedgeGrabEnabled = true;
 	bool mbSpeedVaultEnabled = true;
 	bool mbDebug = false;
 	bool mbRollLandingArmed = false;

@@ -258,6 +258,14 @@ void Parkour_SetEnabled(bool abX)
 
 //------------------------------------------------------------
 
+void Parkour_SetLedgeGrabEnabled(bool abX)
+{
+	cScript_SetGlobalArgBool(0, abX);
+	cScript_RunGlobalFunc(gsParkourModuleName, "", "_Global_SetLedgeGrabEnabled");
+}
+
+//------------------------------------------------------------
+
 void Parkour_SetSpeedVaultEnabled(bool abX)
 {
 	cScript_SetGlobalArgBool(0, abX);
