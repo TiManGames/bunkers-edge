@@ -1,0 +1,905 @@
+#include "interfaces/InputHandler_Interface.hps"
+#include "base/InputHandler_Types.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+
+#include "helpers/helper_game.hps"
+#include "helpers/helper_input.hps"
+
+const int KEYBIND_VERSION_CURRENT = 47;
+
+const int glMaxGamepadLookPos = 5;
+const float gfPrevGamepadLookPosMul = 0.7f;
+
+class cDefaultKeyBind
+{
+	cDefaultKeyBind(){}
+	cDefaultKeyBind(eAction aAction, tString asPrimary, tString asSecondary="", bool abAnalog = false)
+	{
+		msPrimary = asPrimary;
+		msSecondary = asSecondary;
+		mAction = aAction;
+		mbAnalog = abAnalog;
+	}
+
+	tString msPrimary;
+	tString msSecondary;
+
+	eAction mAction;
+	bool mbAnalog;
+};
+
+class cScrInputHandler : iScrInputHandlerBase, iScrInputHandler_Interface
+{
+	//------------------------------------------------------------
+
+	/////////////////////////////////////////
+	// CREATE ACTIONS
+	/////////////////////////////////////////
+
+	//------------------------------------------------------------
+
+	void CreateActions()
+	{
+		///////////////////////////////
+		// Actions
+		CreateAnalogAction("Forward", eAction_Forward, true, "Movement",1,1, eAnalogType_Move);
+		CreateAnalogAction("Backward", eAction_Backward, true, "Movement",1,-1, eAnalogType_Move);
+		CreateAnalogAction("Left", eAction_Left, true, "Movement",0,-1, eAnalogType_Move);
+		CreateAnalogAction("Right", eAction_Right, true, "Movement",0,1, eAnalogType_Move);
+		CreateAction("Jump", eAction_Jump, true, "Movement");
+		CreateAction("Crouch", eAction_Crouch, true, "Movement");
+		CreateAction("Run", eAction_Run, true, "Movement");
+		CreateAnalogGamepadAction("GamepadMove", eAction_GamepadMove, "Movement", eAnalogType_GamepadMove, 0.0f, 32, 0, 0.f);
+		CreateAnalogGamepadAction("GamepadLook", eAction_GamepadLook, "Movement", eAnalogType_Look, 0.9f, 32, glMaxGamepadLookPos, gfPrevGamepadLookPosMul);
+		CreateAnalogAction("LeanRight", eAction_LeanRight, true, "Actions",0,1, eAnalogType_Lean);
+		CreateAnalogAction("LeanLeft", eAction_LeanLeft, true, "Actions",0,-1, eAnalogType_Lean);
+		CreateAction("AnalogLean", eAction_AnalogLean, true, "Actions");
+		CreateAction("Interact", eAction_Interact, true, "Actions");
+		CreateAction("InteractRotate", eAction_InteractRotate, true, "Actions");
+		CreateAction("Flashlight", eAction_Flashlight, true, "Actions");
+		CreateAction("InteractCancel", eAction_InteractCancel, true, "Actions");
+		CreateAction("Throw", eAction_Throw, true, "Actions");
+		CreateAction("AimGun", eAction_AimGun, true, "Actions");
+		CreateAction("InventoryUse", eAction_InventoryUse, false, "");
+		CreateAction("InventoryCombine", eAction_InventoryCombine, false, "");
+		CreateAction("InventoryAssignHotkey", eAction_InventoryAssignHotkey, false, "");
+		CreateAction("Item1", eAction_Item1, false, "");
+		CreateAction("Item2", eAction_Item2, false, "");
+		CreateAction("Item3", eAction_Item3, false, "");
+		CreateAction("Item4", eAction_Item4, false, "");
+		CreateAction("InventoryAdjustStack", eAction_InventoryAdjustStack, false, "");
+		CreateAction("GasMask", eAction_GasMask, false, "");
+		CreateAction("HolsterEquip", eAction_HolsterEquip, false, "");
+		CreateAction("CheckAmmo", eAction_CheckAmmo, false, "");
+		CreateAction("UseItem", eAction_UseItem, false, "");
+		CreateAction("InventoryDrop", eAction_InventoryDrop, false, "");
+		CreateAction("SketchbookNextTab", eAction_SketchbookNextTab, false, "");
+		CreateAction("SketchbookPrevTab", eAction_SketchbookPrevTab, false, "");
+		CreateAction("MenuUp", eAction_MenuUp, false, "");
+		CreateAction("MenuDown", eAction_MenuDown, false, "");
+		CreateAction("MenuLeft", eAction_MenuLeft, false, "");
+		CreateAction("MenuRight", eAction_MenuRight, false, "");
+		CreateAction("MenuScrollUp", eAction_MenuScrollUp, false, "");
+		CreateAction("MenuScrollDown", eAction_MenuScrollDown, false, "");
+		CreateAction("MenuConfirm", eAction_MenuConfirm, false, "");
+		CreateAction("MenuCancel", eAction_MenuCancel, false, "");
+		CreateAction("MenuLeftMouse", eAction_MenuLeftMouse, false, "");
+		CreateAction("OpenMenu", eAction_OpenMenu, false, "");
+		CreateAction("OpenInventory", eAction_OpenInventory, false, "");
+		CreateAction("ShowText", eAction_ShowText, false, "");
+		CreateAction("ToggleNotesListType", eAction_ToggleNotesListType, false, "");
+		CreateAction("PlayNoteVoiceSubject", eAction_PlayNoteVoiceSubject, false, "");
+		CreateAction("NextNoteVoiceSubject", eAction_NextNoteVoiceSubject, false, "");
+		CreateAction("StopNoteVoiceSubject", eAction_StopNoteVoiceSubject, false, "");
+		CreateAction("GamepadBack", eAction_GamepadBack, false, "");
+		CreateAnalogAction("GamepadScrollUp", eAction_ScrollUp, false, "Actions", 1,1,eAnalogType_Scroll);
+		CreateAnalogAction("GamepadScrollDown", eAction_ScrollDown, false, "Actions", 1,-1,eAnalogType_Scroll);
+		CreateAnalogAction("GamepadRotateUp", eAction_GamepadRotateUp, false, "Actions", 1, -1,eAnalogType_GamepadRotate);
+		CreateAnalogAction("GamepadRotateDown", eAction_GamepadRotateDown, false, "Actions", 1, 1,eAnalogType_GamepadRotate);
+		CreateAnalogAction("GamepadRotateRight", eAction_GamepadRotateRight, false, "Actions", 0,1,eAnalogType_GamepadRotate);
+		CreateAnalogAction("GamepadRotateLeft", eAction_GamepadRotateLeft, false, "Actions", 0,-1,eAnalogType_GamepadRotate);
+
+
+		if(cLux_DebugModeOn() && cLux_TestModeOn() == false)
+		{
+			CreateDebugAction("Test0", eAction_Test0);
+			CreateDebugAction("Test1", eAction_Test1);
+			CreateDebugAction("Test2", eAction_Test2);
+			CreateDebugAction("Test3", eAction_Test3);
+			CreateDebugAction("Test4", eAction_Test4);
+			CreateDebugAction("Test5", eAction_Test5);
+			CreateDebugAction("Test6", eAction_Test6);
+			CreateDebugAction("Test7", eAction_Test7);
+			CreateDebugAction("Test8", eAction_Test8);
+			CreateDebugAction("Test9", eAction_Test9);
+			CreateDebugAction("Test+", eAction_TestPlus);
+			CreateDebugAction("Test-", eAction_TestMinus);
+		}
+
+		if(cLux_DebugModeOn() && cLux_TestModeOn() == false)
+		{
+			CreateDebugAction("GamepadTest0", eAction_GamepadDebug0);
+			CreateDebugAction("GamepadTest1", eAction_GamepadDebug1);
+			CreateDebugAction("GamepadTest2", eAction_GamepadDebug2);
+			CreateDebugAction("GamepadTest3", eAction_GamepadDebug3);
+			CreateDebugAction("GamepadTest4", eAction_GamepadDebug4);
+			CreateDebugAction("GamepadTest5", eAction_GamepadDebug5);
+			CreateDebugAction("GamepadTest6", eAction_GamepadDebug6);
+			CreateDebugAction("GamepadTest7", eAction_GamepadDebug7);
+			CreateDebugAction("GamepadTest8", eAction_GamepadDebug8);
+			CreateDebugAction("GamepadTest9", eAction_GamepadDebug9);
+			CreateDebugAction("GamepadTest10", eAction_GamepadDebug10);
+			CreateDebugAction("GamepadTest11", eAction_GamepadDebug11);
+			CreateDebugAction("GamepadTest12", eAction_GamepadDebug12);
+			CreateDebugAction("GamepadTest13", eAction_GamepadDebug13);
+			CreateDebugAction("GamepadTest14", eAction_GamepadDebug14);
+			CreateDebugAction("GamepadTest15", eAction_GamepadDebug15);
+			CreateDebugAction("GamepadTest16", eAction_GamepadDebug16);
+			CreateDebugAction("GamepadTest17", eAction_GamepadDebug17);
+			CreateDebugAction("GamepadTest18", eAction_GamepadDebug18);
+			CreateDebugAction("GamepadTest19", eAction_GamepadDebug19);
+			CreateDebugAction("GamepadTest20", eAction_GamepadDebug20);
+			CreateDebugAction("GamepadTest21", eAction_GamepadDebug21);
+			CreateDebugAction("GamepadTest22", eAction_GamepadDebug22);
+			CreateDebugAction("GamepadTest23", eAction_GamepadDebug23);
+			CreateDebugAction("GamepadTest24", eAction_GamepadDebug24);
+			CreateDebugAction("GamepadTest25", eAction_GamepadDebug25);
+			CreateDebugAction("GamepadTest26", eAction_GamepadDebug26);
+			CreateDebugAction("GamepadTest27", eAction_GamepadDebug27);
+			CreateDebugAction("GamepadTest28", eAction_GamepadDebug28);
+			CreateDebugAction("GamepadTest29", eAction_GamepadDebug29);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void LoadKeyConfig(cConfigFile@ apKeyConfig)
+	{
+		int lCurrentKeybindVersion = apKeyConfig.GetInt("Keybinds", "version",0);
+		Log("Loading keybinds - file version:"+lCurrentKeybindVersion+"\n");
+		if (KEYBIND_VERSION_CURRENT>lCurrentKeybindVersion)
+		{
+			Log("New default keybindings detected - trashing old keybindings.\n");
+			// Trash the existing file
+			apKeyConfig.EraseAll();
+			apKeyConfig.SetInt("Keybinds","version",KEYBIND_VERSION_CURRENT);
+		}
+
+		/////////////////////////////////
+		// Base Input
+		CreateActionInput("MouseButton.LeftMouse", eAction_MenuLeftMouse);
+		CreateActionInput("Keyboard.Up", eAction_MenuUp);
+		CreateActionInput("Keyboard.Down", eAction_MenuDown);
+		CreateActionInput("Keyboard.Left", eAction_MenuLeft);
+		CreateActionInput("Keyboard.Right", eAction_MenuRight);
+
+		CreateActionInput("Keyboard.Return", eAction_MenuConfirm);
+		CreateActionInput("Keyboard.Escape", eAction_OpenMenu);
+		CreateActionInput("MouseButton.WheelUp", eAction_MenuScrollUp);
+		CreateActionInput("MouseButton.WheelDown", eAction_MenuScrollDown);
+
+		CreateActionInput("MouseButton.WheelUp", eAction_ScrollUp);
+		CreateActionInput("MouseButton.WheelDown", eAction_ScrollDown);
+
+		/////////////////////////////////
+		// IMPORTANT
+		/////////////////////////////////
+		// If you change the default keybindings,
+		// up the version number at the top of the
+		// file: KEYBIND_VERSION_CURRENT
+		// and then the new keybinds will overwrite
+		// the player's currently stored ones.
+		// THIS SHOULD NOT BE DONE IN PRODUCTION,
+		// ONLY IN DEV
+
+		////////////////////////////////
+		// Default binds
+		array<cDefaultKeyBind> vBinds =
+		{
+			cDefaultKeyBind(eAction_Forward, "Keyboard.W"),
+			cDefaultKeyBind(eAction_Backward, "Keyboard.S"),
+			cDefaultKeyBind(eAction_Left, "Keyboard.A"),
+			cDefaultKeyBind(eAction_Right, "Keyboard.D"),
+			cDefaultKeyBind(eAction_Jump, "Keyboard.Space"),
+			cDefaultKeyBind(eAction_Crouch, "Keyboard.LeftControl"),
+			cDefaultKeyBind(eAction_Run, "Keyboard.LeftShift"),
+			cDefaultKeyBind(eAction_LeanRight, "Keyboard.E"),
+			cDefaultKeyBind(eAction_LeanLeft, "Keyboard.Q"),
+			cDefaultKeyBind(eAction_OpenInventory, "Keyboard.Tab"),
+			cDefaultKeyBind(eAction_OpenAlys, "Keyboard.K"),
+			cDefaultKeyBind(eAction_ShowText, "Keyboard.E"),
+			cDefaultKeyBind(eAction_Interact, "MouseButton.LeftMouse"),
+			cDefaultKeyBind(eAction_InteractRotate, "Keyboard.T", "MouseButton.MiddleMouse"),
+			cDefaultKeyBind(eAction_Flashlight, "Keyboard.F"),
+			cDefaultKeyBind(eAction_InteractCancel, "MouseButton.RightMouse"),
+			cDefaultKeyBind(eAction_Throw, "MouseButton.RightMouse"),
+			cDefaultKeyBind(eAction_AimGun, "MouseButton.RightMouse"),
+			cDefaultKeyBind(eAction_InventoryUse, "MouseButton.LeftMouse"),
+			cDefaultKeyBind(eAction_InventoryCombine, "Keyboard.Space"),
+			cDefaultKeyBind(eAction_InventoryAdjustStack, "Keyboard.LeftControl", "MouseButton.MiddleMouse"),
+			cDefaultKeyBind(eAction_GasMask, "Keyboard.X"),
+			cDefaultKeyBind(eAction_HolsterEquip, "Keyboard.C"),
+			cDefaultKeyBind(eAction_CheckAmmo, "Keyboard.R"),
+			cDefaultKeyBind(eAction_UseItem, "MouseButton.RightMouse"),
+			cDefaultKeyBind(eAction_InventoryDrop, "Keyboard.X"),
+			cDefaultKeyBind(eAction_Item1, "Keyboard.1"),
+			cDefaultKeyBind(eAction_Item2, "Keyboard.2"),
+			cDefaultKeyBind(eAction_Item3, "Keyboard.3"),
+			cDefaultKeyBind(eAction_Item4, "Keyboard.4")
+		};
+
+		for(uint i = 0; i < vBinds.size(); ++i)
+		{
+			BindAction(apKeyConfig, vBinds[i], "Primary", "Secondary", true);
+		}
+
+		/////////////////
+		// Load
+		LoadGamepadMapping(apKeyConfig);
+
+		///////////////////
+		// Debug input
+		if(cLux_DebugModeOn() && cLux_TestModeOn() == false)
+		{
+			CreateActionInput("Keyboard.KP_1", eAction_Test1);
+			CreateActionInput("Keyboard.KP_2", eAction_Test2);
+			CreateActionInput("Keyboard.KP_3", eAction_Test3);
+			CreateActionInput("Keyboard.KP_4", eAction_Test4);
+			CreateActionInput("Keyboard.KP_5", eAction_Test5);
+			CreateActionInput("Keyboard.KP_6", eAction_Test6);
+			CreateActionInput("Keyboard.KP_7", eAction_Test7);
+			CreateActionInput("Keyboard.KP_8", eAction_Test8);
+			CreateActionInput("Keyboard.KP_9", eAction_Test9);
+			CreateActionInput("Keyboard.KP_0", eAction_Test0);
+			CreateActionInput("Keyboard.KP_Plus", eAction_TestPlus);
+			CreateActionInput("Keyboard.KP_Minus", eAction_TestMinus);
+
+			CreateActionInput("Keyboard.5", eAction_Test5);
+			CreateActionInput("Keyboard.6", eAction_Test6);
+			CreateActionInput("Keyboard.7", eAction_Test7);
+			CreateActionInput("Keyboard.8", eAction_Test8);
+			CreateActionInput("Keyboard.9", eAction_Test9);
+			CreateActionInput("Keyboard.0", eAction_Test0);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void LoadGamepadMapping(cConfigFile@ apKeyConfig)
+	{
+		///////////////
+		// Validation
+
+		tString sDefaultProfile = GetDefaultGamepadProfile();
+		tString sDefaultPreset = gvGamepadPresetValues[eGamepadPreset_1];
+
+		for(int i=0; i<gvGamepadProfileValues.size(); ++i)
+		{
+			tString sProfile = gvGamepadProfileValues[i];
+			tString sProfileCode = GetGamepadProfilePrefix(gvGamepadProfileValues[i]);
+			if(sProfileCode=="") // Profile is not available in this setup
+				continue;
+
+			// This sets up whatever mapping each profile had the last time it was used (it will be chosen whenever that profile is plugged again)
+			tString sPreset = apKeyConfig.GetString("GamepadMapping", "Preset_" + sProfileCode, sDefaultPreset);
+			SetGamepadMapping(sProfile, sPreset);
+		}
+
+		tString sLastPluggedProfile = apKeyConfig.GetString("GamepadMapping", "LastPluggedProfile", sDefaultProfile);
+		SetLastPluggedGamepadProfile(sLastPluggedProfile);
+
+		if(sLastPluggedProfile == "Custom")
+		{
+			/////////////////////////////////
+			// IMPORTANT
+			/////////////////////////////////
+			// If you change the default keybindings,
+			// up the version number at the top of the
+			// file: KEYBIND_VERSION_CURRENT
+			// and then the new keybinds will overwrite
+			// the player's currently stored ones.
+			// THIS SHOULD NOT BE DONE IN PRODUCTION,
+			// ONLY IN DEV
+
+			//////////////
+			// Custom binds saved to keyconfig
+			array<cDefaultKeyBind> vBinds =
+			{
+				cDefaultKeyBind(eAction_GamepadMove, "Gamepad.0.Axis.0.Positive.Axis.1.Negative", "", true),
+				cDefaultKeyBind(eAction_GamepadLook, "Gamepad.0.Axis.2.Positive.Axis.3.Negative", "", true),
+				cDefaultKeyBind(eAction_Jump, "Gamepad.0.Button.0"),
+				// B / Circle is the shared crouch, slide, roll and parkour-drop action.
+				cDefaultKeyBind(eAction_Crouch, "Gamepad.0.Button.1"),
+				cDefaultKeyBind(eAction_Run, "Gamepad.0.Button.9"),
+				cDefaultKeyBind(eAction_OpenInventory, "Gamepad.0.Button.4"),
+				cDefaultKeyBind(eAction_ShowText, "Gamepad.0.Button.2"),
+				cDefaultKeyBind(eAction_Interact, "Gamepad.0.Axis.5.Positive"),
+				cDefaultKeyBind(eAction_Flashlight, "Gamepad.0.Button.3"),
+				cDefaultKeyBind(eAction_InteractCancel, "Gamepad.0.Button.1"),
+				cDefaultKeyBind(eAction_InventoryUse, "Gamepad.0.Button.0"),
+				cDefaultKeyBind(eAction_InventoryCombine, "Gamepad.0.Button.2"),
+				cDefaultKeyBind(eAction_InventoryAdjustStack, "Gamepad.0.Button.3"),
+				cDefaultKeyBind(eAction_GasMask, "Gamepad.0.Button.8"),
+				cDefaultKeyBind(eAction_HolsterEquip, "Gamepad.0.Button.1"),
+				cDefaultKeyBind(eAction_CheckAmmo, "Gamepad.0.Button.2"),
+				cDefaultKeyBind(eAction_UseItem, "Gamepad.0.Axis.4.Positive"),
+				cDefaultKeyBind(eAction_InventoryDrop, "Gamepad.0.Button.8"),
+				cDefaultKeyBind(eAction_SketchbookNextTab, "Gamepad.0.Button.10"),
+				cDefaultKeyBind(eAction_SketchbookPrevTab, "Gamepad.0.Button.9"),
+				cDefaultKeyBind(eAction_Throw, "Gamepad.0.Axis.4.Positive"),
+				cDefaultKeyBind(eAction_AimGun, "Gamepad.0.Axis.4.Positive"),
+				// Direct bumper binds mirror the keyboard Q/E parkour turns.
+				cDefaultKeyBind(eAction_LeanLeft, "Gamepad.0.Button.9"),
+				cDefaultKeyBind(eAction_LeanRight, "Gamepad.0.Button.10"),
+				cDefaultKeyBind(eAction_AnalogLean, "Gamepad.0.Button.10"),
+				cDefaultKeyBind(eAction_GamepadRotateUp, "Gamepad.0.Button.11"),
+				cDefaultKeyBind(eAction_GamepadRotateDown, "Gamepad.0.Button.12"),
+				cDefaultKeyBind(eAction_GamepadRotateLeft, "Gamepad.0.Button.13"),
+				cDefaultKeyBind(eAction_GamepadRotateRight, "Gamepad.0.Button.14"),
+				cDefaultKeyBind(eAction_MenuConfirm, "Gamepad.0.Button.0"),
+				cDefaultKeyBind(eAction_MenuCancel, "Gamepad.0.Button.1"),
+				cDefaultKeyBind(eAction_MenuUp, "Gamepad.0.Axis.1.Negative"),
+				cDefaultKeyBind(eAction_MenuDown, "Gamepad.0.Axis.1.Positive"),
+				cDefaultKeyBind(eAction_MenuLeft, "Gamepad.0.Axis.0.Positive"),
+				cDefaultKeyBind(eAction_MenuRight, "Gamepad.0.Axis.0.Negative"),
+				cDefaultKeyBind(eAction_MenuScrollUp, "Gamepad.0.Axis.3.Negative"),
+				cDefaultKeyBind(eAction_MenuScrollDown, "Gamepad.0.Axis.3.Positive"),
+				cDefaultKeyBind(eAction_OpenMenu, "Gamepad.0.Button.6"),
+				cDefaultKeyBind(eAction_ToggleNotesListType, "Gamepad.0.Button.7"),
+				cDefaultKeyBind(eAction_PlayNoteVoiceSubject, "Gamepad.0.Button.3"),
+				cDefaultKeyBind(eAction_NextNoteVoiceSubject, "Gamepad.0.Button.3"),
+				cDefaultKeyBind(eAction_StopNoteVoiceSubject, "Gamepad.0.Button.1"),
+				cDefaultKeyBind(eAction_GamepadBack, "Gamepad.0.Button.4"),
+				cDefaultKeyBind(eAction_InventoryAssignHotkey, "Gamepad.0.Axis.5.Positive"),
+				cDefaultKeyBind(eAction_Item1, "Gamepad.0.Button.13"),
+				cDefaultKeyBind(eAction_Item2, "Gamepad.0.Button.11"),
+				cDefaultKeyBind(eAction_Item3, "Gamepad.0.Button.14"),
+				cDefaultKeyBind(eAction_Item4, "Gamepad.0.Button.12")
+			};
+
+			for(uint i = 0; i < vBinds.size(); ++i)
+			{
+				BindAction(apKeyConfig, vBinds[i], "GamepadPrimary", "GamepadSecondary", true);
+			}
+		}
+		else
+		{
+			/////////////
+			// Use predefined binds
+			int lNumBinds = GetGamepadMappingActionNum();
+			for(int i = 0; i < lNumBinds; ++i)
+			{
+				bool bAnalog;
+				int lAction;
+				tString sBind;
+
+				if(GetGamepadMappingAction(i, lAction, sBind, bAnalog))
+				{
+					// Bind
+					if(sBind != "" && bAnalog) CreateAnalogGamepadActionInput(sBind, lAction);
+					else if(sBind != "") CreateActionInput(sBind, lAction);
+				}
+				else
+				{
+					// Failed
+					break;
+				}
+			}
+		}
+
+		if(cLux_DebugModeOn() && cLux_TestModeOn() == false)
+		{
+			///////////////////////////////////////////////////////////////////////
+			// Debug buttons
+			CreateActionInput("Gamepad.0.Button.0", eAction_GamepadDebug0);
+			CreateActionInput("Gamepad.0.Button.1", eAction_GamepadDebug1);
+			CreateActionInput("Gamepad.0.Button.2", eAction_GamepadDebug2);
+			CreateActionInput("Gamepad.0.Button.3", eAction_GamepadDebug3);
+			CreateActionInput("Gamepad.0.Button.4", eAction_GamepadDebug4);
+			CreateActionInput("Gamepad.0.Button.5", eAction_GamepadDebug5);
+			CreateActionInput("Gamepad.0.Button.6", eAction_GamepadDebug6);
+			CreateActionInput("Gamepad.0.Button.7", eAction_GamepadDebug7);
+			CreateActionInput("Gamepad.0.Button.8", eAction_GamepadDebug8);
+			CreateActionInput("Gamepad.0.Button.9", eAction_GamepadDebug9);
+			CreateActionInput("Gamepad.0.Button.10", eAction_GamepadDebug10);
+			CreateActionInput("Gamepad.0.Button.11", eAction_GamepadDebug11);
+			CreateActionInput("Gamepad.0.Button.12", eAction_GamepadDebug12);
+			CreateActionInput("Gamepad.0.Button.13", eAction_GamepadDebug13);
+			CreateActionInput("Gamepad.0.Button.14", eAction_GamepadDebug14);
+			CreateActionInput("Gamepad.0.Button.15", eAction_GamepadDebug15);
+			CreateActionInput("Gamepad.0.Button.16", eAction_GamepadDebug16);
+			CreateActionInput("Gamepad.0.Button.17", eAction_GamepadDebug17);
+			CreateActionInput("Gamepad.0.Button.18", eAction_GamepadDebug18);
+			CreateActionInput("Gamepad.0.Button.19", eAction_GamepadDebug19);
+			CreateActionInput("Gamepad.0.Button.20", eAction_GamepadDebug20);
+			CreateActionInput("Gamepad.0.Button.21", eAction_GamepadDebug21);
+			CreateActionInput("Gamepad.0.Button.22", eAction_GamepadDebug22);
+			CreateActionInput("Gamepad.0.Button.23", eAction_GamepadDebug23);
+			CreateActionInput("Gamepad.0.Button.24", eAction_GamepadDebug24);
+			CreateActionInput("Gamepad.0.Button.25", eAction_GamepadDebug25);
+			CreateActionInput("Gamepad.0.Button.26", eAction_GamepadDebug26);
+			CreateActionInput("Gamepad.0.Button.27", eAction_GamepadDebug27);
+			CreateActionInput("Gamepad.0.Button.28", eAction_GamepadDebug28);
+			CreateActionInput("Gamepad.0.Button.29", eAction_GamepadDebug29);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void BindAction(cConfigFile@ apKeyConfig, cDefaultKeyBind aAction, tString asMainCat, tString asSecCat, bool abSave)
+	{
+		/////////////
+		// Get name of the action
+		tString sAction = GetActionName(aAction.mAction, aAction.mbAnalog);
+
+		if(sAction != "")
+		{
+			///////////////
+			// Get primary and secondary bind from the config file
+			// If its not bound the default binds from 'vBinds' will be used
+			tString sPrimary = apKeyConfig.GetString(sAction, asMainCat, aAction.msPrimary);
+			tString sSecondary = apKeyConfig.GetString(sAction, asSecCat, aAction.msSecondary);
+
+			////////////
+			// Bind
+			if(aAction.mbAnalog)
+			{
+				if(sPrimary != "") CreateAnalogGamepadActionInput(sPrimary, aAction.mAction);
+				if(sSecondary != "") CreateAnalogGamepadActionInput(sSecondary, aAction.mAction);
+			}
+			else
+			{
+				if(sPrimary != "") CreateActionInput(sPrimary, aAction.mAction);
+				if(sSecondary != "") CreateActionInput(sSecondary, aAction.mAction);
+			}
+
+			if(abSave)
+			{
+				//////////////
+				// Save binds
+				apKeyConfig.SetString(sAction, asMainCat, sPrimary);
+				apKeyConfig.SetString(sAction, asSecCat, sSecondary);
+			}
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void SetUpPS4Profile(array<tString> &avButtons, array<tString> &avAnalogAxes, array<uint> &avDPad)
+	{
+		avButtons.resize(0);
+		avAnalogAxes.resize(0);
+		avDPad.resize(0);
+
+		//////////////////////////////////////////////////////
+		//PS4 Controller:
+		//0: Cross			1: Circle		2: Square		3: Triangle
+		//4: Big button	5: ps4		 	6: Options		7: LS (L3)
+		//8: RS (r3)	9: LB			10: RB
+		//11: DpadUp	12: DpadDown	13: DpadLeft	14: DpadRight
+
+
+		//Gamepadaxis:
+		//0: LStick X	1: LStick Y		2: RStick X		3: RStick Y
+		//4: LT			5: RT
+		//////////////////////////////////////
+		avButtons.push_back("but_x");		// Button 0 : Cross
+		avButtons.push_back("but_o");		// Button 1 : Circle
+		avButtons.push_back("but_square");		// Button 2 : Square
+		avButtons.push_back("but_triangle");		// Button 3 : Triangle
+		avButtons.push_back("but_middle");		// Button 4 : Big button
+		avButtons.push_back("but_ps4");		// Button 5 : ps4
+		avButtons.push_back("but_options");	// Button 6 : Options
+		avButtons.push_back("but_l3");		// Button 7 : Button left stick
+		avButtons.push_back("but_r3");		// Button 8 : Button right stick
+		avButtons.push_back("but_lb");		// Button 9 : LB
+		avButtons.push_back("but_rb");		// Button 10: RB
+		avButtons.push_back("dpad_base,dpad_up");		// Button 11: DPAD up
+		avButtons.push_back("dpad_base,dpad_down");		// Button 12: DPAD down
+		avButtons.push_back("dpad_base,dpad_left");		// Button 13: DPAD left
+		avButtons.push_back("dpad_base,dpad_right");		// Button 14: DPAD right
+
+		avAnalogAxes.push_back("stick_l");	// Axis 0: Left stick (X)
+		avAnalogAxes.push_back("stick_l");	// Axis 1: Left stick (Y)
+		avAnalogAxes.push_back("stick_r");	// Axis 2: Right stick (X)
+		avAnalogAxes.push_back("stick_r");	// Axis 3: Right stick (Y)
+		avAnalogAxes.push_back("but_lt");	// Axis 4: Left Trigger
+		avAnalogAxes.push_back("but_rt");	// Axis 5: Right Trigger
+
+		avDPad.push_back(11);
+		avDPad.push_back(12);
+		avDPad.push_back(13);
+		avDPad.push_back(14);
+	}
+
+	void SetUpXBoxProfile(array<tString> &avButtons, array<tString> &avAnalogAxes, array<uint> &avDPad)
+	{
+		avButtons.resize(0);
+		avAnalogAxes.resize(0);
+		avDPad.resize(0);
+
+		//////////////////////////////////////////////////////
+		//XBox Controller:
+		//0: A			1: B			2: X			3: Y
+		//4: BACK		5: ringoflight 	6: Start		7: LS (L3)
+		//8: RS (r3)	9: LB			10: RB
+		//11: DpadUp	12: DpadDown	13: DpadLeft	14: DpadRight
+
+
+		//Gamepadaxis:
+		//0: LStick X	1: LStick Y		2: RStick X		3: RStick Y
+		//4: LT			5: RT
+		//////////////////////////////////////
+		avButtons.push_back("but_a");		// Button 0 : A
+		avButtons.push_back("but_b");		// Button 1 : B
+		avButtons.push_back("but_x");		// Button 2 : X
+		avButtons.push_back("but_y");		// Button 3 : Y
+		avButtons.push_back("but_back");		// Button 4 : Back
+		avButtons.push_back("but_xbox");		// Button 5 : xbox
+		avButtons.push_back("but_start");	// Button 6 : Start
+		avButtons.push_back("stick_l");		// Button 7 : Button left stick
+		avButtons.push_back("stick_r");		// Button 8 : Button right stick
+		avButtons.push_back("but_lb");		// Button 9 : LB
+		avButtons.push_back("but_rb");		// Button 10: RB
+		avButtons.push_back("dpad_base,dpad_up");		// Button 11: DPAD up
+		avButtons.push_back("dpad_base,dpad_down");		// Button 12: DPAD down
+		avButtons.push_back("dpad_base,dpad_left");		// Button 13: DPAD left
+		avButtons.push_back("dpad_base,dpad_right");		// Button 14: DPAD right
+
+		avAnalogAxes.push_back("stick_l");	// Axis 0: Left stick (X)
+		avAnalogAxes.push_back("stick_l");	// Axis 1: Left stick (Y)
+		avAnalogAxes.push_back("stick_r");	// Axis 2: Right stick (X)
+		avAnalogAxes.push_back("stick_r");	// Axis 3: Right stick (Y)
+		avAnalogAxes.push_back("but_lt");	// Axis 4: Left Trigger
+		avAnalogAxes.push_back("but_rt");	// Axis 5: Right Trigger
+
+		avDPad.push_back(11);
+		avDPad.push_back(12);
+		avDPad.push_back(13);
+		avDPad.push_back(14);
+	}
+
+	void CreateGamepadProfiles()
+	{
+		array<tString> vButtons;
+		array<tString> vAnalogAxes;
+		array<uint> vDPad;
+
+		///////////////
+		// Create a custom profile without binds
+		vButtons.resize(0);
+		vAnalogAxes.resize(0);
+		vDPad.resize(0);
+
+		for(int i = 0; i <= 32; ++i)
+		{
+			vButtons.push_back(""+i);
+			if(i <= 17) vAnalogAxes.push_back("stick_"+(i / 2));
+		}
+		CreateGamepadProfile(gvGamepadProfileValues[eGamepadProfile_Custom], "custom", vButtons, vAnalogAxes, vDPad);
+
+		////////////////
+		// Button layout
+		if(Platform_IsPlayStation())
+		{
+			SetUpPS4Profile(vButtons, vAnalogAxes, vDPad);
+
+			////////////////
+			// Create profile
+			CreateGamepadProfile(gvGamepadProfileValues[eGamepadProfile_PS4], "ps4", vButtons, vAnalogAxes, vDPad);
+			SetDefaultGamepadProfile(gvGamepadProfileValues[eGamepadProfile_PS4]);
+		}
+		else if(Platform_IsXbox())
+		{
+			SetUpXBoxProfile(vButtons, vAnalogAxes, vDPad);
+
+			////////////////
+			// Create profile
+			CreateGamepadProfile(gvGamepadProfileValues[eGamepadProfile_X360], "x360", vButtons, vAnalogAxes, vDPad);
+			SetDefaultGamepadProfile(gvGamepadProfileValues[eGamepadProfile_X360]);
+		}
+		else
+		{
+			////////////////
+			// Create profile
+			SetUpXBoxProfile(vButtons, vAnalogAxes, vDPad);
+			CreateGamepadProfile(gvGamepadProfileValues[eGamepadProfile_X360], "x360", vButtons, vAnalogAxes, vDPad);
+			SetDefaultGamepadProfile(gvGamepadProfileValues[eGamepadProfile_X360]);
+
+			if(cSystem_GetPlatform() != ePlatform_Win32GDK)
+			{
+				////////////////
+				// Create profile
+				SetUpPS4Profile(vButtons, vAnalogAxes, vDPad);
+				CreateGamepadProfile(gvGamepadProfileValues[eGamepadProfile_PS4], "ps4", vButtons, vAnalogAxes, vDPad);
+			}
+		}
+
+		/////////////////////////////////
+		// IMPORTANT
+		/////////////////////////////////
+		// If you change the default keybindings,
+		// up the version number at the top of the
+		// file: KEYBIND_VERSION_CURRENT
+		// and then the new keybinds will overwrite
+		// the player's currently stored ones.
+		// THIS SHOULD NOT BE DONE IN PRODUCTION,
+		// ONLY IN DEV
+
+		////////////////////
+		// Bindings
+		array<cDefaultKeyBind> vBindsPreset1 =
+		{
+			// 0
+			cDefaultKeyBind(eAction_GamepadMove, "Gamepad.0.Axis.0.Positive.Axis.1.Negative", "", true),
+			cDefaultKeyBind(eAction_GamepadLook, "Gamepad.0.Axis.2.Positive.Axis.3.Negative", "", true),
+			cDefaultKeyBind(eAction_Jump, "Gamepad.0.Button.0"),
+			// B / Circle is the shared crouch, slide, roll and parkour-drop action.
+			cDefaultKeyBind(eAction_Crouch, "Gamepad.0.Button.1"),
+			cDefaultKeyBind(eAction_Run, "Gamepad.0.Button.9"),
+			// 5
+			cDefaultKeyBind(eAction_OpenInventory, "Gamepad.0.Button.4"),
+			cDefaultKeyBind(eAction_ShowText, "Gamepad.0.Button.2"),
+			cDefaultKeyBind(eAction_Interact, "Gamepad.0.Axis.5.Positive"),
+			cDefaultKeyBind(eAction_Flashlight, "Gamepad.0.Button.3"),
+			cDefaultKeyBind(eAction_InteractCancel, "Gamepad.0.Button.1"),
+			// 10
+			cDefaultKeyBind(eAction_Throw, "Gamepad.0.Axis.4.Positive"),
+			cDefaultKeyBind(eAction_AimGun, "Gamepad.0.Axis.4.Positive"),
+			cDefaultKeyBind(eAction_InventoryUse, "Gamepad.0.Button.0"),
+			cDefaultKeyBind(eAction_InventoryCombine, "Gamepad.0.Button.2"),
+			cDefaultKeyBind(eAction_InventoryAdjustStack, "Gamepad.0.Button.3"),
+			// 15
+			cDefaultKeyBind(eAction_GasMask, "Gamepad.0.Button.8"),
+			cDefaultKeyBind(eAction_HolsterEquip, "Gamepad.0.Button.1"),
+			cDefaultKeyBind(eAction_CheckAmmo, "Gamepad.0.Button.2"),
+			cDefaultKeyBind(eAction_UseItem, "Gamepad.0.Axis.4.Positive"),
+			cDefaultKeyBind(eAction_InventoryDrop, "Gamepad.0.Button.8"),
+			// 20
+			cDefaultKeyBind(eAction_SketchbookNextTab, "Gamepad.0.Button.10"),
+			cDefaultKeyBind(eAction_SketchbookPrevTab, "Gamepad.0.Button.9"),
+			// Direct bumper binds mirror the keyboard Q/E parkour turns.
+			cDefaultKeyBind(eAction_LeanLeft, "Gamepad.0.Button.9"),
+			cDefaultKeyBind(eAction_LeanRight, "Gamepad.0.Button.10"),
+			cDefaultKeyBind(eAction_AnalogLean, "Gamepad.0.Button.10"),
+			cDefaultKeyBind(eAction_GamepadRotateUp, "Gamepad.0.Button.11"),
+			cDefaultKeyBind(eAction_GamepadRotateDown, "Gamepad.0.Button.12"),
+			// 25
+			cDefaultKeyBind(eAction_GamepadRotateLeft, "Gamepad.0.Button.13"),
+			cDefaultKeyBind(eAction_GamepadRotateRight, "Gamepad.0.Button.14"),
+			cDefaultKeyBind(eAction_MenuConfirm, "Gamepad.0.Button.0"),
+			cDefaultKeyBind(eAction_MenuCancel, "Gamepad.0.Button.1"),
+			cDefaultKeyBind(eAction_MenuUp, "Gamepad.0.Button.11"),
+			// 30
+			cDefaultKeyBind(eAction_MenuDown, "Gamepad.0.Button.12"),
+			cDefaultKeyBind(eAction_MenuLeft, "Gamepad.0.Button.13"),
+			cDefaultKeyBind(eAction_MenuRight, "Gamepad.0.Button.14"),
+			cDefaultKeyBind(eAction_OpenMenu, "Gamepad.0.Button.6"),
+			cDefaultKeyBind(eAction_ToggleNotesListType, "Gamepad.0.Button.7"),
+			// 35
+			cDefaultKeyBind(eAction_PlayNoteVoiceSubject, "Gamepad.0.Button.3"),
+			cDefaultKeyBind(eAction_NextNoteVoiceSubject, "Gamepad.0.Button.3"),
+			cDefaultKeyBind(eAction_StopNoteVoiceSubject, "Gamepad.0.Button.1"),
+			cDefaultKeyBind(eAction_MenuDown, "Gamepad.0.Axis.1.Positive"),
+			cDefaultKeyBind(eAction_MenuUp, "Gamepad.0.Axis.1.Negative"),
+			// 40
+			cDefaultKeyBind(eAction_MenuRight, "Gamepad.0.Axis.0.Positive"),
+			cDefaultKeyBind(eAction_MenuLeft, "Gamepad.0.Axis.0.Negative"),
+			cDefaultKeyBind(eAction_MenuScrollUp, "Gamepad.0.Axis.3.Negative"),
+			cDefaultKeyBind(eAction_MenuScrollDown, "Gamepad.0.Axis.3.Positive"),
+			cDefaultKeyBind(eAction_GamepadBack, "Gamepad.0.Button.4"),
+			// 45
+			cDefaultKeyBind(eAction_InventoryAssignHotkey, "Gamepad.0.Axis.5.Positive"),
+			cDefaultKeyBind(eAction_Item1, "Gamepad.0.Button.13"),
+			cDefaultKeyBind(eAction_Item2, "Gamepad.0.Button.11"),
+			cDefaultKeyBind(eAction_Item3, "Gamepad.0.Button.14"),
+			cDefaultKeyBind(eAction_Item4, "Gamepad.0.Button.12"),
+			// 50
+		};
+
+		array<cDefaultKeyBind> vBindsPreset2 = vBindsPreset1;
+		vBindsPreset2[3].msPrimary = "Gamepad.0.Button.1";
+		vBindsPreset2[4].msPrimary = "Gamepad.0.Button.7";
+		vBindsPreset2[15].msPrimary = "Gamepad.0.Button.9";
+
+
+		array<tString> vsGamepadPresets = {"GamepadPreset1", "GamepadPreset2", "GamepadPreset3"};
+
+		tString sProfile = Platform_IsPlayStation() ? gvGamepadProfileValues[eGamepadProfile_PS4] : gvGamepadProfileValues[eGamepadProfile_X360];
+
+		if(Platform_IsPlayStation())
+		{
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_PS4], gvGamepadPresetValues[eGamepadPreset_1], vBindsPreset1);
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_PS4], gvGamepadPresetValues[eGamepadPreset_2], vBindsPreset2);
+			AssociateGamepadTypeToProfile(eGamepadType_PS4, gvGamepadProfileValues[eGamepadProfile_PS4]);
+			AssociateGamepadTypeToProfile(eGamepadType_PS5, gvGamepadProfileValues[eGamepadProfile_PS4]);
+		}
+		else if(Platform_IsXbox())
+		{
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_X360], gvGamepadPresetValues[eGamepadPreset_1], vBindsPreset1);
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_X360], gvGamepadPresetValues[eGamepadPreset_2], vBindsPreset2);
+			AssociateGamepadTypeToProfile(eGamepadType_XBox360, gvGamepadProfileValues[eGamepadProfile_X360]);
+			AssociateGamepadTypeToProfile(eGamepadType_XBoxOne, gvGamepadProfileValues[eGamepadProfile_X360]);
+			AssociateGamepadTypeToProfile(eGamepadType_XBox, gvGamepadProfileValues[eGamepadProfile_X360]); // XInput gamepad returns this value
+		}
+		else
+		{
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_PS4], gvGamepadPresetValues[eGamepadPreset_1], vBindsPreset1);
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_PS4], gvGamepadPresetValues[eGamepadPreset_2], vBindsPreset2);
+			AssociateGamepadTypeToProfile(eGamepadType_PS4, gvGamepadProfileValues[eGamepadProfile_PS4]);
+			AssociateGamepadTypeToProfile(eGamepadType_PS5, gvGamepadProfileValues[eGamepadProfile_PS4]);
+
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_X360], gvGamepadPresetValues[eGamepadPreset_1], vBindsPreset1);
+			AddPresetToProfile(gvGamepadProfileValues[eGamepadProfile_X360], gvGamepadPresetValues[eGamepadPreset_2], vBindsPreset2);
+			AssociateGamepadTypeToProfile(eGamepadType_XBox360, gvGamepadProfileValues[eGamepadProfile_X360]);
+			AssociateGamepadTypeToProfile(eGamepadType_XBoxOne, gvGamepadProfileValues[eGamepadProfile_X360]);
+		}
+
+		/*
+		/////////////////
+		// PRESET 1 - Add right handed bindings
+		AddPresetToProfile(sProfile, gvGamepadPresetValues[eGamepadPreset_1], vBinds);
+
+		/////////////////
+		// PRESET 2 - Invert confirm/cancel
+		//vBinds[29].msPrimary = "Gamepad.0.Button.1";
+		//vBinds[30].msPrimary = "Gamepad.0.Button.0";
+		//AddPresetToProfile(sProfile, gvGamepadPresetValues[eGamepadPreset_2], vBinds);
+
+		//////////////////
+		// PRESET 3 - Switch move and look and create left handed preset
+		/*vBinds[0].msPrimary = "Gamepad.0.Axis.2.Positive.Axis.3.Negative";
+		vBinds[1].msPrimary = "Gamepad.0.Axis.0.Positive.Axis.1.Negative";
+		vBinds[27].msPrimary = "Gamepad.0.Axis.1.Negative";
+		vBinds[28].msPrimary = "Gamepad.0.Axis.1.Positive";
+		AddPresetToProfile(sProfile, gvGamepadPresetValues[eGamepadPreset_2], vBinds);*/
+
+		/*
+		//////////////////
+		// PRESET 4 - Alternative (fps style)
+		vBinds[3].msPrimary = "Gamepad.0.Button.8";
+		vBinds[4].msPrimary = "Gamepad.0.Button.7";
+		vBinds[15].msPrimary = "Gamepad.0.Button.9";
+		AddPresetToProfile(sProfile, gvGamepadPresetValues[eGamepadPreset_2], vBinds);
+		*/
+	}
+
+	void AddPresetToProfile(tString asProfile, tString asPreset, array<cDefaultKeyBind> avBinds)
+	{
+		//////////////
+		// Split binds into three arrays
+		array<int> vActions;
+		array<tString> vPrimary;
+		array<bool> vAnalog;
+
+		for(uint i = 0; i < avBinds.size(); ++i)
+		{
+			vActions.push_back(avBinds[i].mAction);
+			vPrimary.push_back(avBinds[i].msPrimary);
+			vAnalog.push_back(avBinds[i].mbAnalog);
+		}
+
+		AddPresetToProfile(asProfile, asPreset, vActions, vPrimary, vAnalog);
+	}
+
+	//------------------------------------------------------------
+
+	void CreateInputLayoutMapping()
+	{
+		///////////////////////////////////////
+		// Keyboard layout
+		{
+			ClearKeyboardLayout();
+
+			cImGuiGfx gfxKey("input/key.tga", eGuiMaterial_Alpha);
+			cImGuiLabelData labelKey;
+			labelKey.mFont = cImGuiFont("default_small.fnt", cVector2f(24));
+			labelKey.mFontAlign = eFontAlign_Center;
+			labelKey.mColorBase = cColor(1.0f, 1.0f);
+
+			SetKeyboardLayoutDefaults(gfxKey, labelKey);
+
+			AddKeyboardLayoutKey(eKey_Space, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_space.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_Tab, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_tab.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_Return, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_enter.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_LeftCtrl, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_ctrl.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_RightCtrl, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_ctrl_r.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_LeftShift, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_shift.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_RightShift, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_shift_r.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_LeftAlt, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_alt.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_RightAlt, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_alt_r.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_Up, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_arrow_up.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_Down, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_arrow_down.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_Left, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_arrow_left.tga", eGuiMaterial_Alpha), labelKey);
+			AddKeyboardLayoutKey(eKey_Right, eLuxKeyboardLayoutType_NoText, cImGuiGfx("input/key_arrow_right.tga", eGuiMaterial_Alpha), labelKey);
+
+		}
+
+		///////////////////////////////////////
+		// Mouse layout
+		{
+			array<tString> vButtons;
+			vButtons.push_back("mousebase.tga,mouseleft.tga");
+			vButtons.push_back("mousebase.tga,mousemiddle.tga");
+			vButtons.push_back("mousebase.tga,mouseright.tga");
+			vButtons.push_back("mousebase.tga,mousewheelup.tga");
+			vButtons.push_back("mousebase.tga,mousewheeldown.tga");
+
+			SetMouseLayout(vButtons);
+		}
+	}
+
+	//------------------------------------------------------------
+
+	void PreloadData(cLuxMap@ apMap)
+	{
+		////////////////
+		// Preload all preset data
+		apMap.PreloadGuiGfx("input/key.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("input/key_tab.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("input/key_enter.tga", eImGuiGfx_Image);
+
+		apMap.PreloadGuiGfx("mousebase.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("mouseleft.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("mousemiddle.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("mouseright.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("mousewheelup.tga", eImGuiGfx_Image);
+		apMap.PreloadGuiGfx("mousewheeldown.tga", eImGuiGfx_Image);
+
+		if(Platform_IsPlayStation())
+		{
+			apMap.PreloadGuiGfx("but_x", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_o", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_square", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_triangle", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_middle", eImGuiGfx_Image);
+		//	apMap.PreloadGuiGfx("but_ps4", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_options", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_l3", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_r3", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_lb", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_rb", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_up", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_down", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_left", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_right", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_base", eImGuiGfx_Image);
+
+			apMap.PreloadGuiGfx("stick_l", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_l", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_r", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_r", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_lt", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_rt", eImGuiGfx_Image);
+		}
+		else
+		{
+			apMap.PreloadGuiGfx("but_a", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_b", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_x", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_y", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_back", eImGuiGfx_Image);
+		//	apMap.PreloadGuiGfx("but_xbox", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_start", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_l", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_r", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_lb", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_rb", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_up", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_down", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_left", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_right", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("dpad_base", eImGuiGfx_Image);
+
+			apMap.PreloadGuiGfx("stick_l", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_l", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_r", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("stick_r", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_lt", eImGuiGfx_Image);
+			apMap.PreloadGuiGfx("but_rt", eImGuiGfx_Image);
+		}
+	}
+
+	//------------------------------------------------------------
+}
+

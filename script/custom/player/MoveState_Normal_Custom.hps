@@ -250,7 +250,9 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		iCharacterBody@ pCharBody = mBaseObj.mpPlayer.GetCharacterBody();
 		bool bWasCrouching = mbCrouching;
 		bool bWasOnGround = pCharBody !is null && pCharBody.IsOnGround();
-		bool bHadForwardIntent = cInput_IsTriggered(eAction_Forward);
+		bool bKeyboardForwardIntent = cInput_IsTriggered(eAction_Forward);
+		bool bControllerForwardIntent = mvParkourMoveInput.y > 0.1f;
+		bool bHadForwardIntent = bKeyboardForwardIntent || bControllerForwardIntent;
 		float fPreJumpFlatSpeed = 0.f;
 		if (pCharBody !is null && pCharBody.GetMoveSpeed(eCharDir_Forward) > 0.05f)
 			bHadForwardIntent = true;
@@ -258,6 +260,13 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		{
 			cVector3f vPreJumpFlatVel = Parkour_GetFlatVelocity(pCharBody, mfLastParkourTimeStep);
 			fPreJumpFlatSpeed = vPreJumpFlatVel.Length();
+		}
+		if (alAction == eAction_Jump && abPressed && Parkour_GetDebug())
+		{
+			cLux_AddDebugMessage("[ParkourController diag1] jump forward: keyboard=" +
+				bKeyboardForwardIntent + " cachedLS=" + mvParkourMoveInput.y +
+				" body=" + (pCharBody is null ? 0.f : pCharBody.GetMoveSpeed(eCharDir_Forward)) +
+				" accepted=" + bHadForwardIntent, true);
 		}
 		if (alAction == eAction_Jump && abPressed)
 			ResetParkourPendingSideJump();
@@ -1224,18 +1233,24 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 
 	bool HandleParkourMoveInput(const cVector3f &in avAmount)
 	{
-		if (Parkour_GetEnabled() == false ||
-			mBaseObj.mpPlayer.GetCurrentStateId() != ePlayerState_Normal ||
-			mBaseObj.mpPlayer.GetCurrentMoveStateId() != eMoveState_Normal)
+		if (Parkour_GetEnabled() == false)
 		{
 			mvParkourMoveInput = cVector3f_Zero;
 			return false;
 		}
 
+		// Cache movement before checking the active move state. Traversal states
+		// need the live LS vector even though only normal movement consumes it here.
 		mvParkourMoveInput = cVector3f(avAmount.x, avAmount.y, 0.f);
 		float fLength = mvParkourMoveInput.Length();
 		if (fLength <= 0.1f) mvParkourMoveInput = cVector3f_Zero;
 		else if (fLength > 1.f) mvParkourMoveInput /= fLength;
+
+		if (mBaseObj.mpPlayer.GetCurrentStateId() != ePlayerState_Normal ||
+			mBaseObj.mpPlayer.GetCurrentMoveStateId() != eMoveState_Normal)
+		{
+			return false;
+		}
 
 		if (mbParkourLandRollActive || ParkourAirLockConsumesMoveInput()) return true;
 		iCharacterBody@ pBody = mBaseObj.mpPlayer.GetCharacterBody();
@@ -1271,6 +1286,11 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	{
 		cVector3f vInput = cScript_GetGlobalArgVector3f(0);
 		cScript_SetGlobalReturnBool(HandleParkourMoveInput(vInput));
+	}
+
+	void _Global_GetParkourForwardInputAmount()
+	{
+		cScript_SetGlobalReturnFloat(cMath_Max(0.f, mvParkourMoveInput.y));
 	}
 
 	void _Global_ResetParkourControlState()

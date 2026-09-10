@@ -105,6 +105,7 @@ const float gfParkour_TopSpeedBlurFadeInTime = 0.35f;
 const float gfParkour_TopSpeedBlurFadeOutTime = 0.45f;
 
 const tString gsParkour_TutorialHintCategory = "BunkersEdgeHints";
+const tString gsParkour_TutorialHintGamepadSuffix = "_Gamepad";
 const tString gsParkour_TutorialHintShownSuffix = "_Shown";
 const tString gsParkour_TutorialHintPausedSuffix = "_Paused";
 const tString gsParkour_TutorialHintMomentum = "HintBEMomentum";
@@ -417,6 +418,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 	bool IsParkourTutorialHint(const tString &in asEntry)
 	{
 		return asEntry == gsParkour_TutorialHintMomentum ||
+			   asEntry == gsParkour_TutorialHintMomentum + gsParkour_TutorialHintGamepadSuffix ||
 			   asEntry == gsParkour_TutorialHintVault ||
 			   asEntry == gsParkour_TutorialHintLedge ||
 			   asEntry == gsParkour_TutorialHintSlide ||
@@ -425,9 +427,26 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			   asEntry == gsParkour_TutorialHintWallScramble ||
 			   asEntry == gsParkour_TutorialHintWallJump ||
 			   asEntry == gsParkour_TutorialHintBeam ||
+			   asEntry == gsParkour_TutorialHintBeam + gsParkour_TutorialHintGamepadSuffix ||
 			   asEntry == gsParkour_TutorialHintPoleClimb ||
+			   asEntry == gsParkour_TutorialHintPoleClimb + gsParkour_TutorialHintGamepadSuffix ||
 			   asEntry == gsParkour_TutorialHintPoleSwing ||
+			   asEntry == gsParkour_TutorialHintPoleSwing + gsParkour_TutorialHintGamepadSuffix ||
 			   asEntry == gsParkour_TutorialHintZipline;
+	}
+
+	//------------------------------------------------------------
+
+	tString GetTutorialHintDisplayEntry(const tString &in asBaseEntry)
+	{
+		if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed() == false)
+			return asBaseEntry;
+
+		tString sGamepadEntry = asBaseEntry + gsParkour_TutorialHintGamepadSuffix;
+		if (cLux_HasTranslation(gsParkour_TutorialHintCategory, sGamepadEntry))
+			return sGamepadEntry;
+
+		return asBaseEntry;
 	}
 
 	//------------------------------------------------------------
@@ -457,6 +476,7 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 				cLux_AddDebugMessage("[Parkour] Missing tutorial hint entry '" + asEntry + "'.", true);
 			return;
 		}
+		tString sDisplayEntry = GetTutorialHintDisplayEntry(asEntry);
 
 		tString sShownEntry = asEntry + gsParkour_TutorialHintShownSuffix;
 		tString sPausedEntry = asEntry + gsParkour_TutorialHintPausedSuffix;
@@ -471,21 +491,25 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 		// Lift that block for the first encounter, then restore completion state.
 		if (bLearned)
 			Hint_RemoveFromGiven(gsParkour_TutorialHintCategory, asEntry);
+		bool bDisplayEntryGiven = sDisplayEntry != asEntry &&
+			Hint_IsGiven(gsParkour_TutorialHintCategory, sDisplayEntry);
+		if (bDisplayEntryGiven)
+			Hint_RemoveFromGiven(gsParkour_TutorialHintCategory, sDisplayEntry);
 
 		Hint_ReleaseAll();
-		ReplaceCurrentParkourTutorialHint(asEntry);
+		ReplaceCurrentParkourTutorialHint(sDisplayEntry);
 
 		// Stock HintHandler disables pausing while Script Debug is active. Disable
 		// that flag only while this designated hint is synchronously started, then
 		// restore it so the rest of the development session is unaffected.
 		if (bPauseThisTime)
-			Hint_RemoveFromPauseOnce(gsParkour_TutorialHintCategory, asEntry);
+			Hint_RemoveFromPauseOnce(gsParkour_TutorialHintCategory, sDisplayEntry);
 		bool bRestoreScriptDebug = bPauseThisTime && cLux_ScriptDebugOn();
 		if (bRestoreScriptDebug)
 			cLux_SetScriptDebugOn(false);
 
 		int lHintId = Hint_ShowHint_Hold(gsParkour_TutorialHintCategory,
-									 asEntry,
+									 sDisplayEntry,
 									 true,
 									 1.5f,
 									 false,
@@ -498,10 +522,12 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		if (bLearned)
 			Hint_AddAsGiven(gsParkour_TutorialHintCategory, asEntry);
+		if (bDisplayEntryGiven)
+			Hint_AddAsGiven(gsParkour_TutorialHintCategory, sDisplayEntry);
 
-		if (lHintId >= 0 || Hint_GetCurrentEntry() == asEntry)
+		if (lHintId >= 0 || Hint_GetCurrentEntry() == sDisplayEntry)
 			Hint_AddAsGiven(gsParkour_TutorialHintCategory, sShownEntry);
-		if (bPauseThisTime && Hint_GetCurrentEntry() == asEntry)
+		if (bPauseThisTime && Hint_GetCurrentEntry() == sDisplayEntry)
 			Hint_AddAsGiven(gsParkour_TutorialHintCategory, sPausedEntry);
 	}
 
@@ -1364,11 +1390,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		bool bUseCameraAssist = abFromWallScrambleChain == false && IsLookingUpForWallScramble() == false;
 
-		bool bForwardInput = cInput_IsTriggered(eAction_Forward);
+		float fControllerForwardInput = Parkour_GetForwardInputAmount();
+		bool bForwardInput = cInput_IsTriggered(eAction_Forward) || fControllerForwardInput > 0.1f;
 		bool bForwardMove = pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
 		if (abFromWallScrambleChain == false && bForwardInput == false && bForwardMove == false)
 		{
-			DebugWallRunFail("no forward input");
+			DebugWallRunFail("no forward input [ParkourController diag1 cachedLS=" + fControllerForwardInput +
+				" body=" + pBody.GetMoveSpeed(eCharDir_Forward) + "]");
 			return false;
 		}
 
@@ -1437,11 +1465,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			return false;
 		}
 
-		bool bForwardInput = cInput_IsTriggered(eAction_Forward);
+		float fControllerForwardInput = Parkour_GetForwardInputAmount();
+		bool bForwardInput = cInput_IsTriggered(eAction_Forward) || fControllerForwardInput > 0.1f;
 		bool bForwardMove = pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
 		if (bForwardInput == false && bForwardMove == false)
 		{
-			DebugWallRunFail("no forward input");
+			DebugWallRunFail("no forward input [ParkourController diag1 cachedLS=" + fControllerForwardInput +
+				" body=" + pBody.GetMoveSpeed(eCharDir_Forward) + "]");
 			return false;
 		}
 

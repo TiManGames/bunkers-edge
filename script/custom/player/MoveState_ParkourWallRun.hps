@@ -148,14 +148,18 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 			return;
 		}
 		
-		if (cInput_IsTriggered(eAction_Forward) || pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f)
+		float fControllerForwardInput = Parkour_GetForwardInputAmount();
+		if (cInput_IsTriggered(eAction_Forward) ||
+			fControllerForwardInput > 0.1f ||
+			pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f)
 			mfForwardReleaseTimer = gfParkourWallRun_ForwardReleaseGrace;
 		else if (mfTimer > gfParkourWallRun_EntryExitGrace)
 			mfForwardReleaseTimer -= afTimeStep;
 		
 		if (mfForwardReleaseTimer <= 0.f)
 		{
-			EndWallRun("forward released");
+			EndWallRun("forward released [ParkourController diag1 cachedLS=" +
+				fControllerForwardInput + " body=" + pBody.GetMoveSpeed(eCharDir_Forward) + "]");
 			return;
 		}
 		

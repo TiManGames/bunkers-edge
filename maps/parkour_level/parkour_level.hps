@@ -552,16 +552,15 @@ class cScrMap : iScrMap
 	{
 		cVector3f vCenterPos = ImGui_NrmPos(0.92f, 0.88f, 5.f);
 		cVector2f vCenter(vCenterPos.x, vCenterPos.y);
-		cVector2f vRadius = ImGui_NrmSize(0.028f, 0.037f);
+		cVector2f vBadgeSize = ImGui_NrmSize(0.081f, 0.107f);
+		cVector3f vBadgePos(vCenter.x - vBadgeSize.x * 0.5f,
+						   vCenter.y - vBadgeSize.y * 0.5f,
+						   5.f);
+		cImGuiGfx gfxResetBadge("speedrun_reset_badge.png", eImGuiGfx_Texture);
+		ImGui_DrawGfx(gfxResetBadge, vBadgePos, vBadgeSize, cColor_White);
+
+		cVector2f vRadius = ImGui_NrmSize(0.032f, 0.043f);
 		float fProgress = cMath_Clamp(mfSpeedRunRestartHoldTime / gfSpeedRunRestartHoldDuration, 0.f, 1.f);
-
-		for (int i = 0; i <= glSpeedRunRestartRingSegments; ++i)
-		{
-			float fAngle = -cMath_Pi * 0.5f + cMath_PiMul2 * (float(i) / float(glSpeedRunRestartRingSegments));
-			ImGui_AddLineStripVertex(vCenter + cVector2f(cMath_Cos(fAngle) * vRadius.x, cMath_Sin(fAngle) * vRadius.y));
-		}
-		ImGui_DrawAndClearLineStrip(5.f, 2.f, cColor(1.f, 1.f, 1.f, 0.22f));
-
 		int lFilledSegments = int(fProgress * float(glSpeedRunRestartRingSegments));
 		for (int i = 0; i <= lFilledSegments; ++i)
 		{
@@ -570,16 +569,19 @@ class cScrMap : iScrMap
 		}
 		float fEndAngle = -cMath_Pi * 0.5f + cMath_PiMul2 * fProgress;
 		ImGui_AddLineStripVertex(vCenter + cVector2f(cMath_Cos(fEndAngle) * vRadius.x, cMath_Sin(fEndAngle) * vRadius.y));
-		ImGui_DrawAndClearLineStrip(5.1f, 3.f, cColor(1.f, 0.75f, 0.25f, 1.f));
+		ImGui_DrawAndClearLineStrip(5.2f, 4.f, cColor(1.f, 0.08f, 0.04f, 1.f));
 
 		cImGuiLabelData controlData = ImGui_GetDefaultLabel();
 		controlData.mFont.SetFile(FontHandler_GetFont(eFontType_MainMenu, 72));
-		controlData.mFont.mvSize = 22;
+		controlData.mFont.mvSize = 23;
 		controlData.mColorBase = cColor_White;
 		controlData.mFontAlign = eFontAlign_Center;
 		ImGui_SetAlignment(eImGuiAlign_CenterCenter);
 		ImGui_SetTransCategory("ButtonNames");
-		ImGui_DoLabelExt(GetSpeedRunRestartControlLabel(), controlData, cVector3f(vCenter.x, vCenter.y, 5.2f), ImGui_NrmSize(0.07f, 0.08f));
+		ImGui_DoLabelExt(GetSpeedRunRestartControlLabel(),
+						 controlData,
+						 cVector3f(vCenter.x, vCenter.y, 5.3f),
+						 ImGui_NrmSize(0.052f, 0.062f));
 	}
 
 	//-------------------------------------------------------
@@ -2106,6 +2108,20 @@ class cScrMap : iScrMap
 				Parkour_SetSpeedVaultEnabled(true);
 			}
 			
+			return true;
+		}
+
+		bool Collide_Crouch(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState == 1)
+			{
+				Player_SetCrouching(true, false, false);
+			}
+			else
+			{
+				Player_SetCrouching(false, false, false);
+			}
+
 			return true;
 		}
 	 

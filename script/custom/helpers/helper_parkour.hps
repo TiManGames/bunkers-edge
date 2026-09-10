@@ -296,6 +296,12 @@ bool Parkour_HandleMoveInput(const cVector3f &in avAmount)
 	return cScript_GetGlobalReturnBool();
 }
 
+float Parkour_GetForwardInputAmount()
+{
+	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_GetParkourForwardInputAmount");
+	return cScript_GetGlobalReturnFloat();
+}
+
 void Parkour_PrepareLandingDamage()
 {
 	cScript_RunGlobalFunc("MoveState_Normal", "", "_Global_PrepareParkourLandingDamage");

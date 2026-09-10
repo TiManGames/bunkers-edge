@@ -33,14 +33,14 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 	
 	//------------------------------------------------------------
 	
-	void Init() {}
+	void Init() { mvAnalogMoveInput = cVector3f_Zero; }
 	void LoadUserConfig() {}
 	void SaveUserConfig() {}
 	void OnMapEnter(cLuxMap @apMap) {}
 	void OnMapLeave(cLuxMap @apMap) {}
 	void CreateWorldEntities(cLuxMap @apMap) {}
 	void DestroyWorldEntities(cLuxMap @apMap) {}
-	void Reset() {}
+	void Reset() { mvAnalogMoveInput = cVector3f_Zero; }
 	void PostUpdate(float afTimeStep) {}
 	bool OnExitPressed() { return true; }
 	
@@ -77,6 +77,7 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 		
 		mbFinished = false;
 		mfTimer = 0.f;
+		mvAnalogMoveInput = cVector3f_Zero;
 		SetupInitialSwingMomentum(pBody);
 		mvStartFeetPos = pBody.GetFeetPosition();
 		mfStartPitch = cLux_GetPlayer().GetCamera().GetPitch();
@@ -134,7 +135,9 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 		}
 		
 		mfTimer += afTimeStep;
-		UpdateSwingPhysics(afTimeStep);
+		float fAnalogForwardInput = mvAnalogMoveInput.y;
+		mvAnalogMoveInput = cVector3f_Zero;
+		UpdateSwingPhysics(afTimeStep, fAnalogForwardInput);
 		cVector3f vTargetFeet = GetSwingFeetPosition();
 		cVector3f vFeet = vTargetFeet;
 		
@@ -192,9 +195,18 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 	
 	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
 	{
+		if (alAnalogId == eAnalogType_Move ||
+			alAnalogId == eAnalogType_GamepadMove)
+		{
+			// The swing state locks the character body, so retain LS Y and feed it
+			// directly into the swing simulation instead of relying on body speed.
+			if (avAmount.Length() >= mvAnalogMoveInput.Length())
+				mvAnalogMoveInput = cVector3f(cMath_Clamp(avAmount.x, -1.f, 1.f),
+										 cMath_Clamp(avAmount.y, -1.f, 1.f), 0.f);
+			return false;
+		}
+
 		if (alAnalogId == eAnalogType_Look ||
-			alAnalogId == eAnalogType_Move ||
-			alAnalogId == eAnalogType_GamepadMove ||
 			alAnalogId == eAnalogType_Lean)
 		{
 			return false;
@@ -269,16 +281,22 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 	
 	//------------------------------------------------------------
 	
-	void UpdateSwingPhysics(float afTimeStep)
+	void UpdateSwingPhysics(float afTimeStep, float afAnalogForwardInput)
 	{
 		bool bForward = cInput_IsTriggered(eAction_Forward);
 		bool bBackward = cInput_IsTriggered(eAction_Backward);
 		
-		float fInput = 0.f;
+		float fMoveInput = cMath_Clamp(afAnalogForwardInput, -1.f, 1.f);
 		if (bForward && bBackward == false)
-			fInput = gfParkourPoleSwing_ForwardHoldSpeedMul;
+			fMoveInput = 1.f;
 		else if (bBackward && bForward == false)
-			fInput = -gfParkourPoleSwing_BackwardHoldSpeedMul;
+			fMoveInput = -1.f;
+		else if (bForward && bBackward)
+			fMoveInput = 0.f;
+
+		float fInput = fMoveInput >= 0.f
+			? fMoveInput * gfParkourPoleSwing_ForwardHoldSpeedMul
+			: fMoveInput * gfParkourPoleSwing_BackwardHoldSpeedMul;
 		
 		float fDurationScale = 1.15f / mfSwingDuration;
 		float fAccel = -cMath_Sin(mfSwingAngle) * gfParkourPoleSwing_GravityAccel * fDurationScale;
@@ -475,6 +493,7 @@ class cScrPlayerState_ParkourPoleSwing : iScrPlayerState, iScrPlayerState_Interf
 	cVector3f mvSwingForward = cVector3f_Forward;
 	cVector3f mvLaunchTarget = cVector3f_Zero;
 	cVector3f mvStartFeetPos = cVector3f_Zero;
+	[nosave] cVector3f mvAnalogMoveInput = cVector3f_Zero;
 	
 	bool mbHasLaunchTarget = false;
 	bool mbFinished = false;

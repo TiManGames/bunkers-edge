@@ -34,7 +34,7 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 
 	void Init() {}
 	void OnMapEnter(cLuxMap @apMap) {}
-	void Reset() {}
+	void Reset() { mvAnalogMoveInput = cVector3f_Zero; }
 
 	//------------------------------------------------------------
 
@@ -68,6 +68,7 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 		mfCameraBobTimer = 0.f;
 		mfCameraBobRoll = 0.f;
 		mvCameraBobOffset = cVector3f_Zero;
+		mvAnalogMoveInput = cVector3f_Zero;
 
 		Player_SetDisableCrawling(true);
 		Player_SetCrouching(false, false, true);
@@ -99,6 +100,7 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 
 	void OnLeaveState(int alNextStateId)
 	{
+		mvAnalogMoveInput = cVector3f_Zero;
 		RestoreBody();
 		Player_SetDisableCrawling(false);
 		Player_SetCrouchDisabled(false);
@@ -136,9 +138,10 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 			return;
 		}
 
-		UpdateBalance(afTimeStep, pBody);
+		UpdateBalance(afTimeStep, pBody, mvAnalogMoveInput.x);
 
-		float fForwardInput = GetForwardInput(pBody);
+		float fForwardInput = GetForwardInput(pBody, mvAnalogMoveInput.y);
+		mvAnalogMoveInput = cVector3f_Zero;
 		mfCurrentMoveSpeed = mfWalkSpeed * fForwardInput;
 		mfProgress += (mfCurrentMoveSpeed * afTimeStep) / cMath_Max(0.001f, mfBeamLength);
 		mfProgress = cMath_Clamp(mfProgress, 0.f, 1.f);
@@ -190,6 +193,17 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 
 	bool OnAnalogInput(int alAnalogId, const cVector3f &in avAmount)
 	{
+		if (alAnalogId == eAnalogType_Move ||
+			alAnalogId == eAnalogType_GamepadMove)
+		{
+			// The beam lock clears body move speed every update, so retain the
+			// current LS/WASD vector here and apply it directly to beam controls.
+			if (avAmount.Length() >= mvAnalogMoveInput.Length())
+				mvAnalogMoveInput = cVector3f(cMath_Clamp(avAmount.x, -1.f, 1.f),
+										 cMath_Clamp(avAmount.y, -1.f, 1.f), 0.f);
+			return false;
+		}
+
 		if (alAnalogId == eAnalogType_Look ||
 			alAnalogId == eAnalogType_Lean)
 		{
@@ -268,11 +282,11 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 
 	//------------------------------------------------------------
 
-	void UpdateBalance(float afTimeStep, iCharacterBody@ apBody)
+	void UpdateBalance(float afTimeStep, iCharacterBody@ apBody, float afAnalogSideInput)
 	{
 		float fNoise = cMath_Clamp(cGenerate_GetNoisePerlin1D(mfDriftSeed + mfTimer * gfParkourBeamWalk_DriftNoiseSpeed), -1.f, 1.f);
 		float fAuto = cMath_Clamp(fNoise * gfParkourBeamWalk_DriftNoiseMul + mfDriftBias, -1.f, 1.f) * mfAutoDrift;
-		float fInput = GetBalanceInput(apBody);
+		float fInput = GetBalanceInput(apBody, afAnalogSideInput);
 
 		mfBalanceVelocity += (fAuto + fInput * mfCorrectionStrength) * afTimeStep;
 		mfBalanceVelocity *= cMath_Clamp(1.f - mfBalanceDamping * 0.35f * afTimeStep, 0.f, 1.f);
@@ -283,9 +297,9 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 
 	//------------------------------------------------------------
 
-	float GetBalanceInput(iCharacterBody@ apBody)
+	float GetBalanceInput(iCharacterBody@ apBody, float afAnalogSideInput)
 	{
-		float fInput = 0.f;
+		float fInput = afAnalogSideInput;
 		if (cInput_IsTriggered(eAction_Right)) fInput += 1.f;
 		if (cInput_IsTriggered(eAction_Left)) fInput -= 1.f;
 		if (apBody !is null)
@@ -296,9 +310,9 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 
 	//------------------------------------------------------------
 
-	float GetForwardInput(iCharacterBody@ apBody)
+	float GetForwardInput(iCharacterBody@ apBody, float afAnalogForwardInput)
 	{
-		float fInput = 0.f;
+		float fInput = afAnalogForwardInput;
 		if (cInput_IsTriggered(eAction_Forward)) fInput += 1.f;
 		if (cInput_IsTriggered(eAction_Backward)) fInput -= 1.f;
 		if (apBody !is null)
@@ -475,6 +489,7 @@ class cScrMoveState_ParkourBeamWalk : iScrMoveState, iScrMoveState_Interface
 	cVector3f mvBeamForward = cVector3f_Forward;
 	cVector3f mvBeamRight = cVector3f_Right;
 	cVector3f mvStartFeetPos = cVector3f_Zero;
+	[nosave] cVector3f mvAnalogMoveInput = cVector3f_Zero;
 
 	bool mbFinished = false;
 
