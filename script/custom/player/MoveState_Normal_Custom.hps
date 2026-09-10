@@ -1192,6 +1192,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		mfParkourJumpCarrySpeed = mfParkourJumpStartSpeed;
 		mfParkourAirLockSideSpeed = 0.f;
 		mbParkourJumpAirControlActive = true;
+		mbParkourAirCommandValid = false;
 		msParkourAirLockSource = asSource;
 
 		if (pBody !is null && pBody.IsOnGround() == false)
@@ -1333,6 +1334,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	void ResetParkourAirborneState()
 	{
 		mbParkourJumpAirControlActive = false;
+		mbParkourAirCommandValid = false;
 		mfParkourJumpStartSpeed = 0.f;
 		mfParkourJumpCarrySpeed = 0.f;
 		mfParkourAirLockSideSpeed = 0.f;
@@ -1384,7 +1386,29 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		cVector3f vForceVel = apCharBody.GetForceVelocity();
 		if (mvParkourJumpDir.SqrLength() <= 0.001f) return;
 
-		// Air correction is intentionally only left/right in the original jump basis.
+		// Once carry has been transferred into force velocity, respect the physics
+		// response to it. Restoring the original vector after every fence contact
+		// repeatedly converts horizontal energy into upward velocity at its edge.
+		// The first air-control frame is deliberately excluded: locomotion has not
+		// yet been transferred to force velocity at that point.
+		cVector3f vResolvedFlat = vForceVel;
+		vResolvedFlat.y = 0.f;
+		if (mbParkourAirCommandValid &&
+			(vResolvedFlat - mvParkourAirLastCommand).Length() > 0.1f)
+		{
+			float fResolvedSpeed = vResolvedFlat.Length();
+			mfParkourJumpCarrySpeed = cMath_Min(mfParkourJumpCarrySpeed, fResolvedSpeed);
+			mfParkourAirLockSideSpeed = 0.f;
+			if (fResolvedSpeed > 0.001f)
+			{
+				mvParkourJumpDir = vResolvedFlat / fResolvedSpeed;
+				mvParkourAirLockRight = cMath_Vector3Cross(cVector3f_Up, mvParkourJumpDir);
+				mvParkourAirLockRight.Normalize();
+			}
+		}
+
+		// Air correction stays left/right in the jump basis, rebased above only
+		// when physics has redirected or removed the commanded momentum.
 		bool bOrdinaryJump = msParkourAirLockSource == "normal jump";
 		float fSideInput = mvParkourMoveInput.x;
 		if (cInput_IsTriggered(eAction_Right) || cInput_IsTriggered(eAction_Left))
@@ -1429,6 +1453,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		apCharBody.SetMoveSpeed(eCharDir_Forward, 0.f);
 		apCharBody.SetMoveSpeed(eCharDir_Right, 0.f);
 		apCharBody.SetForceVelocity(vForceVel);
+		mvParkourAirLastCommand = vCorrectedFlat;
+		mbParkourAirCommandValid = true;
 	}
 
 	//------------------------------------------------------------
@@ -1788,6 +1814,8 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 	[nosave] bool mbParkourCrouchNeedsRelease = false;
 	[nosave] float mfParkourNormalSpeedLimit = 0.f;
 	[nosave] float mfParkourControlDebugTimer = 0.f;
+	[nosave] bool mbParkourAirCommandValid = false;
+	[nosave] cVector3f mvParkourAirLastCommand = cVector3f_Zero;
 	float mfParkourJumpStartSpeed = 0.f;
 	float mfParkourJumpCarrySpeed = 0.f;
 	float mfParkourAirLockSideSpeed = 0.f;
