@@ -216,6 +216,21 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		if (alAction == eAction_LeanLeft || alAction == eAction_LeanRight)
 		{
 			int lYawDir = alAction == eAction_LeanRight ? -1 : 1;
+			if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed())
+			{
+				// Controller bumpers select and latch a look side on press. Their release
+				// must not recenter the view; keyboard Q/E retain the held behavior below.
+				mbOutwardLookLeanInputHeld = false;
+				if (abPressed)
+				{
+					SetOutwardLookFromYawDir(lYawDir);
+					if (Parkour_GetDebug())
+						cLux_AddDebugMessage("[ParkourController turn latch] yawDir=" + lYawDir, true);
+				}
+
+				return false;
+			}
+
 			mbOutwardLookLeanInputHeld = abPressed ||
 										 cInput_IsTriggered(eAction_LeanLeft) ||
 										 cInput_IsTriggered(eAction_LeanRight) ||
@@ -230,6 +245,9 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 
 		if (alAction == eAction_AnalogLean)
 		{
+			if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed())
+				return false;
+
 			mbOutwardLookLeanInputHeld = abPressed ||
 										 cInput_IsTriggered(eAction_LeanLeft) ||
 										 cInput_IsTriggered(eAction_LeanRight);
@@ -266,6 +284,18 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	{
 		if (alAnalogId == eAnalogType_Lean)
 		{
+			if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed())
+			{
+				mbOutwardLookLeanInputHeld = false;
+				if (cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone)
+				{
+					int lYawDir = avAmount.x > 0.f ? -1 : 1;
+					SetOutwardLookFromYawDir(lYawDir);
+				}
+
+				return false;
+			}
+
 			mbOutwardLookLeanInputHeld = cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone;
 
 			if (cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone)

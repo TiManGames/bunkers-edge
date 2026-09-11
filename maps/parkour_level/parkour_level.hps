@@ -2124,6 +2124,21 @@ class cScrMap : iScrMap
 
 			return true;
 		}
+
+		bool Trigger_DisableLedge(const tString &in asParent, const tString &in asChild, int alState)
+		{
+			if (alState == 1)
+			{
+				Parkour_SetLedgeGrabEnabled(false);
+			}
+			else
+			{
+				Parkour_SetLedgeGrabEnabled(true);
+			}
+			
+			
+			return true;
+		}
 	 
 	//} END SCENE X 
 }
