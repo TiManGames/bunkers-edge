@@ -1,0 +1,995 @@
+#include "modules/ModuleInterfaces.hps"
+#include "player/PlayerTypes_Custom.hps"
+#include "custom/agents/agent_types_custom.hps"
+
+//---------------------------------------------------
+
+shared enum eModuleType_Custom
+{
+	// Must be bigger than eModuleType_LastEnum
+	eModuleType_Custom_MenuHandler=51,
+	eModuleType_Custom_ItemHandler=52,
+	eModuleType_Custom_DeathHandler=55,
+	eModuleType_Custom_SketchbookUIHandler=57,
+	eModuleType_Custom_TerrorHandler=58,
+	eModuleType_Custom_AgentBlackboard=59,
+	eModuleType_Custom_PlayerEmotionHandler = 78,
+	eModuleType_Custom_FontHandler = 79,
+	eModuleType_Custom_AchievementHandler = 80,
+	eModuleType_Custom_Generator = 81,
+	eModuleType_Custom_SoundOcclusionHandler = 82,
+	eModuleType_Custom_SaveRoomHandler = 83,
+	eModuleType_Custom_EnvironmentalDamageHandler = 84,
+	eModuleType_Custom_RatHandler = 85,
+	eModuleType_Custom_InGameMapHandler = 86,
+	
+	
+	eModuleType_Custom_RandomizerHandler = 89,
+	eModuleType_Custom_BulletHandler = 90,
+	eModuleType_Custom_BombingHandler = 91,
+	eModuleType_Custom_GameStatsHandler = 92,
+	eModuleType_Custom_GameDifficultyHandler = 93,
+	eModuleType_Custom_LastEnum
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// IN GAME MAP HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrInGameMapHandler_Interface
+{
+	bool GetMapFound(const tString&in asMapName);
+	void SetMapFound(const tString&in asMapName);
+
+	void AddObjective(const tString&in asObjectiveID);
+	void AddObjective(const tString&in asObjectiveID, float afDelay);
+	void RemoveObjective(const tString&in asObjectiveID);
+	bool HasObjective(const tString&in asObjectiveID);
+	bool IsObjectiveActive(const tString&in asObjectiveID);
+	bool IsObjectiveCompleted(const tString&in asObjectiveID);
+	void SetObjectiveCompleted(const tString&in asObjectiveID);
+	void SetObjectiveNotCompleted(const tString&in asObjectiveID);
+	bool GetCanAddObjective(const tString&in asObjectiveID);
+	void ShowUpdatedMapIcon();
+
+	void UpdateGlobalMapState();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// GAME STATS HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrGameStatsHandler_Interface
+{
+	void SetGameTimerActive(bool abX);
+	void UpdateTimeBetweenSaves();
+	void SetGuiActive(bool abX);
+	bool GetGuiActive();
+	void ResetAllEntries(bool abSave);
+	void AddEntry(int alId, const tString&in asName);
+	void RemoveEntry(int alId);
+	void SetEntryAmount(int alId, int alAmount);
+	void IncreaseEntryAmount(int alId, int alAmount);
+	int GetEntryAmount(int alId);
+	bool GetEntryExists(int alId);
+	void SaveStats();
+	void LoadStats();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// DEATH HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrDeathHandler_Interface
+{
+	void StartDeath(const tString &in asSource);
+	void SetDeathAnimation(const tString &in asAnim);
+	void SetCustomDeathBehaviour(bool abX);
+	void ResetDeathEffects();
+}
+
+/////////////////////////////////////////
+// GAME DIFFICULTY HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrGameDifficulty_Interface
+{
+	void GetSettingsDisplayData(array<int>&out avIds, array<tString>&out avNames, array<int>&out avControlTypes, array<array<tString>>&out avValueNames, array<int>&out avReliesOn_SettingID, array<array<int>>&out avReliesOn_DisablingValueID, array<bool>&out avActive);
+	void SetSettingValueIdByID(int alId, int alValueID);
+	int GetSettingSelectedValueIdByID(int alId);
+	tString GetSettingValueNameByID(int alId);
+	float GetSettingValueByID_Float(int alId);
+	int GetSettingValueByID_Int(int alId);
+	bool GetSettingValueByID_Bool(int alId);
+	void SwitchSettingsPresetTo(int alMode);
+	array<int> GetSettingsSelectedValueIDs();
+	array<tString> GetSettingsNames();
+	void SetSettingsSelectedValueIDs(array<int> avValueIDs, bool abReloadConfig);
+	array<int> GetValuesSettingByPreset(int aMode);
+	void SetInitialPlaythroughConditions(bool abX);
+	bool GetInitialPlaythroughConditions();
+	bool GetNewGamePlusActive();
+	array<int> GetSettingsIDs();
+	array<int> GetAllDifficultyPresetsSupportingSettingByID(int aId);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// RAT HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrRatHandler_Interface
+{
+	void SetActive(bool abX);
+	cVector3f AddEatingRat(tID a_idAgent, tID a_idArea);
+	void RemoveEatingRat(tID a_idAgent, float afDelay, tID a_idSpecificFood);
+	void SetFoodThreatTime(tID a_idFood, float afTime);
+	cVector3f GetFeedWorldPos(tID a_idAgent, tID a_idArea);
+	bool AddHidingRat(tID a_idAgent, tID a_idUsedHole=tID_Invalid);
+	void RemoveHidingRat(tID a_idAgent);
+	tID GetFreeFoodEntityId(tID a_idAgent, bool abCheckAttractionDistance, bool abCheckThrownMeat);
+	tID GetClosestFoodEntityId(tID a_idAgent);
+	bool AddAttackingRat(tID a_idAgent);
+	void RemoveAttackingRat(tID a_idAgent);
+	int GetAttackingRatCount();
+	bool GetAttackAllowed();
+	void DoRatAttack();
+	bool GetWarningAttackWasIssued();
+	bool GetWarningAttackIsPending();
+	void IssueWarningAttack(tID a_idFoodEntity);
+	bool AddAlertedRat(tID a_idAgent);
+	void RemoveAlertedRat(tID a_idAgent);
+	bool AddStalkingRat(tID a_idAgent);
+	void RemoveStalkingRat(tID a_idAgent);
+	int GetStalkingRatCount();
+	void SetRatIgnoresDamageAreas(tID a_idAgent, bool abX);
+	int GetBloodTrailNum();	
+	tID GetBloodTrail(int alId);
+	tID GetMostRecentBloodTrailIdAtPos(const cVector3f &in avPos, float afMaxDist);
+	float GetBloodTrailIntensity(tID a_idTrail);
+	void AddBloodTrail(tID a_idEntity, float afIntensity);
+	void RemoveBloodTrail(tID a_idEntity);
+	bool GetPointIsInsidePathBlocker(const cVector3f &in avPos, tID &out a_idBody);
+	void SetPlayerThreatensRats(bool abX);
+	bool GetPlayerThreatensRats();
+	bool GetRatFoodIsArea(tID a_idFood);
+	bool GetRatFoodIsThrownMeat(tID a_idFood);
+	bool GetIsHoleBlocked(tID a_idHole, tID &out a_iBlockingBody);
+	bool GetIsHoleBlocked(tID a_idHole);
+	tID GetBestHoleIdFromPos(const cVector3f &in avPos, bool abIgnoreEmergeTimer, float afDistanceThreshold, bool abOnlyGhoulHoles);
+	tID GetRandomHoleId(tID a_idIgnoredHole, bool abCheckPath, const cVector3f &in avStartPos);
+	void AddFoodEntity(tID a_idEntity);
+	void AddFoodEntity(iLuxEntity@ apEntity);
+	void RemoveFoodEntity(tID a_idEntity);
+	float GetPlayerDistanceToClosestRat();
+	void AddPathBlocker(tID a_idBlocker, bool abIsDamageArea);
+	void RemovePathBlocker(tID a_idBlocker);	
+	void ReportUnreachableFood(tID a_idFood);
+	void ReportReachableFood(tID a_idFood);
+	void SetupFeedAreas();
+	bool GetRatsAreAggressive();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// ENVIRONMENTAL DAMAGE HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrEnvironmentalDamageHandler_Interface
+{
+	tID AddMolotovDamageArea(tID a_idPS, const cVector3f &in avMin, const cVector3f &in avMax, bool abIsTrap);
+	tID AddGasDamageArea(tID a_idPS, const cVector3f &in avMin, const cVector3f &in avMax, bool abIsTrap);
+	void RemoveDamageArea(tID a_idPS);
+	array<tID> GetDamageAreasOfType(eDamageType aType);
+	eDamageType GetDamageAreaType(tID a_idArea);
+
+	void AddEntityToCheck(tID a_idEntity);
+	void RemoveEntityToCheck(tID a_idEntity);
+	
+	void SetNoDeathDamageActive(bool abX);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// SAVE ROOM HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrSaveRoomHandler_Interface
+{
+	void Setup(const tString &in asLamp, const tString &in asRoomArea);
+	void SaveGame(bool abShowIcon, bool abManualSave);
+	void LoadLastSave();
+	bool GetPlayerIsInSaveRoom();
+	int GetManualSaveCount();
+	void SetSaveHintActive(bool abX);
+	void SetupSaveLamp(bool abSubLevel, const tString &in asLampEntity);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// GENERATOR MODULE
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared enum eGeneratorState
+{
+	eGeneratorState_On,
+	eGeneratorState_Off
+}
+
+shared interface iScrGeneratorModule_Interface
+{
+	void SetupEntities(const tString &in asGenerator, const tString &in asPowerLamp, const tString &in asLever, 
+					   const tString &in asFuelGauge, const tString &in asLamps, const tString &in asBackupLamps);
+	void EndSetup();
+	void AddFuel(int alAmount);
+	int GetFuelAddedTimestamp();
+	float GetFullnessInteractLimit();
+	float GetFullness();
+	void ChangeState(eGeneratorState aState);
+	eGeneratorState GetState(bool abCheckFuse = false);
+	void AddPowerSwitch(const tString &in asSwitch, const tString &in asParent, const tString &in asChild, 
+						const tString &in asLamps, bool abOn);
+	void SetPowerSwitchOn(const tString &in asSwitch, bool abOn, bool abIsSetup);
+	void SetupFuseBox(const tString &in asName, const tString &in asLamp, const tString &in asBackupLamp,
+					  const tString &in asLever, const tString &in asSocket, const tString &in asGrating,
+					  const tString &in asFusePickup, const tString &in asNote, const tString &in asNail, 
+					  const tString &in asNoteInteractAux, const tString &in asFuseInteractArea, 
+					  const tString &in asSoundLoop, const tString &in asHighPrioLamps);
+	void ActivateFuseBox(bool abIsSetup);
+	void PlaceFuseInFuseBox(const tString &in asCutsceneFuseEnt);
+	tString GetFuseInteractArea();
+	tString GetFuseBoxEntity();
+	void SetFuseBoxNoteDiscovered(bool abX);
+	bool GetFuseBoxNoteDiscovered();
+	bool GetIsSetupDone();
+	void SetRunForever(bool abX);
+	bool GetRunForever();
+	void SetFuelAmount(int alAmount, float afTimeUntilDecrease = -1.f);
+	float GetFuelTimeLeft();
+	bool GetGeneratorIsInCurrentMap();
+	
+	array<tString>@ GetMapsWithActivatedFuseBox();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// ACHIEVEMENT HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrAchievementHandler_Custom_Interface
+{
+	void IncreaseCount(eAchievementCount aCount);
+}
+
+shared enum eAchievementCount
+{
+	eAchievementCount_Notes,
+	eAchievementCount_CrewNotes,
+	eAchievementCount_Cylinders,
+	eAchievementCount_UsedMatches,
+	eAchievementCount_BrokenProps
+}
+
+//---------------------------------------------------
+
+
+/////////////////////////////////////////
+// FONT HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrFontHandler_Interface
+{
+	void SetLanguage(const tString& in asLanguage);
+	tString GetFont(eFontType aFontType, int alSize);
+}
+
+shared enum eFontType
+{
+	eFontType_MainMenu,
+	eFontType_MainMenu_InfoBox,
+	eFontType_Sketchbook,
+	eFontType_GamepadPrompt,
+	eFontType_Hints,
+	eFontType_Readable,
+	eFontType_MemoryCylinder_Big,
+	eFontType_MemoryCylinder_Small,
+	eFontType_ControlsPrompt,
+	eFontType_Subtitles,
+	eFontType_Credits,
+	eFontType_Intro,
+	eFontType_AccountName
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// MENU HANDLER
+/////////////////////////////////////////
+	
+//---------------------------------------------------
+
+shared interface iScrMenuHandler_Interface
+{
+	void EnablePauseMenu(bool abX);
+	void ShowMainMenu(bool abX);
+	bool GetMenuActive();
+	bool GetMainMenuVisible();
+	void GameOver();
+	void SetMenuActive(bool abX);
+	void SetSaveLoadEnabled(bool abX);
+	void SetMainMenuSketchbookSketch(const tString& in asSketch);
+	void SetMainMenuItemsPhase(eMainMenuPhase_Items aPhase);
+	void SetMainMenuGhoulPhase(int alPhase);
+	void SetGameCompletedOnce(bool abX);
+	bool GetGameCompletedOnce();
+	void ResetBlur();
+	cVector2l GetScreenRatio(int alScreenWidth, int alScreenHeight);
+	cVector2l GetScreenRatio();
+}
+
+shared enum eMainMenuPhase_Sketchbook
+{
+	eMainMenuPhase_Sketchbook_None,
+	eMainMenuPhase_Sketchbook_Plane,
+	eMainMenuPhase_Sketchbook_Caves,
+	eMainMenuPhase_Sketchbook_CavesB,
+	eMainMenuPhase_Sketchbook_DWL,
+	eMainMenuPhase_Sketchbook_PathToOutpost,
+	eMainMenuPhase_Sketchbook_Courtyard,
+	eMainMenuPhase_Sketchbook_Arsenal,
+	eMainMenuPhase_Sketchbook_LQ,
+	eMainMenuPhase_Sketchbook_Cistern,
+	eMainMenuPhase_Sketchbook_Oasis,
+	eMainMenuPhase_Sketchbook_AlchemistLab,
+	eMainMenuPhase_Sketchbook_HQA,
+	eMainMenuPhase_Sketchbook_HQB,
+	eMainMenuPhase_Sketchbook_PillarsRoom,
+	eMainMenuPhase_Sketchbook_VitaeStation,
+	eMainMenuPhase_Sketchbook_GhoulsNest,
+	eMainMenuPhase_Sketchbook_FactoryA,
+	eMainMenuPhase_Sketchbook_FactoryB,
+	eMainMenuPhase_Sketchbook_FactoryC,
+	eMainMenuPhase_Sketchbook_FactoryD,
+	eMainMenuPhase_Sketchbook_Town,
+	eMainMenuPhase_Sketchbook_Sandstorm,
+	eMainMenuPhase_Sketchbook_Undercity,
+	eMainMenuPhase_Sketchbook_End,
+}
+
+shared enum eMainMenuPhase_Ghoul
+{
+	eMainMenuPhase_Ghoul_None,
+	eMainMenuPhase_Ghoul_VeryMild,
+	eMainMenuPhase_Ghoul_Mild,
+	eMainMenuPhase_Ghoul_Medium,
+	eMainMenuPhase_Ghoul_Strong,
+	eMainMenuPhase_Ghoul_VeryStrong,
+	eMainMenuPhase_Ghoul_Max,
+}
+
+shared enum eMainMenuPhase_Items
+{
+	eMainMenuPhase_Items_None,
+	eMainMenuPhase_Items_Doll,
+	eMainMenuPhase_Items_DollRing,
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// ITEMS
+/////////////////////////////////////////
+	
+//---------------------------------------------------
+
+shared interface iScrItemType
+{	
+	tString GetID();
+	tString GetNameID();
+	tString GetDescID();
+	tString GetAltDescID();
+	bool CanCombineWith(iScrItemType@ apOtherType);
+	int GetAmountMax();
+	bool AllowsStacking();
+	bool CanCombine();
+	bool PrioritizeCombineOverStacking();
+	tString GetCombineType();
+	bool GetUsesArmAnimation();
+	bool GetUseArmAnimationYaw();
+	bool GetUseArmAnimationPitch();
+	bool GetUsesInspectAnimation();
+	tString GetEntityInspectAnimation();
+	tString GetPlayerInspectAnimation();
+	
+	/////////////////////
+	// Inventory
+	tString GetInventoryIcon();
+	tString GetAltInventoryIcon();
+	tString GetPickupIcon();
+	bool CanDrop();
+	bool GetHidden();
+	bool GetIsWeapon();
+	
+	/////////////////////
+	// Container stuff
+	bool IsContainer();
+	tString GetContainerContentType();
+	int GenerateInitAmount();
+	
+	////////////////////
+	// Use
+	bool CanUseOnSelf();
+	tString GetRequiredToUseItemType();
+	tString GetCanUseOnSelfMapCallback();
+	tString GetUseOnSelfMapCallback();
+	bool CanUseOnWorld();
+	tString GetCanUseOnWorldMapCallback();
+	tString GetUseOnWorldMapCallback();
+	bool GetUseCanMove();
+	int GetUsingState();
+		
+	////////////////////
+	// Hands
+	bool IsLeftHand();
+	eItemHandlerHand GetEquipHand();
+	bool IsLightSource();
+	tString GetHandEntityFile();
+	tString GetDropEntityFile();
+	tString GetAccessoryEntityFile();
+	tString GetAccessorySocket();
+	float GetAccessoryEntityScale();
+	bool IsAccessory();
+	bool UseParentBoneRotation();
+	float GetEntityScale();
+	float GetEquipToggleDelay();
+	float GetUnequipToggleDelay();
+}
+
+//---------------------------------------------------
+
+shared interface iScrItem
+{
+	tString GetID();
+	tString GetInventoryParentName();
+	int GetInventoryParentID();
+	tString GetTypeID();
+	iScrItemType@ GetType();
+	const tString& GetCrossHairGfx();
+	int GetAmount();
+	int GetPreviousAmount();
+	void SetAmount(int alAmount);
+	int GetMaxAmount();
+	bool IsAmountMaxed();
+	bool CanCombineWith(iScrItem@ apOtherItem);
+	bool CanCombine();	
+	bool IsContainer();
+	tString GetContentType();
+	void SetContentType(const tString& in asContentType);
+	float GetFullness();
+	void SetFullness(float afFullness);
+	void SetDisableUseOnSelf(bool abX);
+	bool GetUseOnSelfDisabled();
+	bool GetUseAltInventoryIcon();
+	void SetUseAltInventoryIcon(bool abX, bool wbWhenSketchbookClosed = true);
+	tString GetActiveInventoryIcon();
+	tString GetPickupIcon();
+	void SetHidden(bool abX);
+	bool GetHidden();
+	bool GetIsWeapon();
+	bool CanAddSubType(const tString& in asType, const tString& in asSubType);
+	
+	void SetPlayUnequipAnim(bool abX);
+	bool GetPlayUnequipAnim();
+	
+	tString GetInternalEntity();
+	void DestroyInternalEntity();
+	void Destroy();
+	
+	float GetHealth();
+	void SetHealth(float afX);
+}
+
+//---------------------------------------------------
+
+shared enum eItemSpawn
+{
+	eItemSpawn_World,
+	eItemSpawn_Hand,
+	eItemSpawn_LeftHand
+}
+
+//---------------------------------------------------
+
+shared enum eItemSpawnType
+{
+	eItemSpawnType_Default,
+	eItemSpawnType_Accessory,
+	eItemSpawnType_Drop
+}
+
+//---------------------------------------------------
+
+shared enum eItemHandlerHand
+{
+	eItemHandlerHand_Left,
+	eItemHandlerHand_Right,
+	eItemHandlerHand_LastEnum
+}
+
+//---------------------------------------------------
+
+shared enum eInventoryInstance
+{
+	eInventoryInstance_Player,
+	eInventoryInstance_Auxiliary,
+	eInventoryInstance_LastEnum
+}
+
+//----------------------------------------------------------------------------------------
+
+shared interface iScrItemCallbacks
+{
+	bool OnItemsCombined(const tString& in asItemTypeA, iScrItem@ pItemA, const tString& in asItemTypeB, iScrItem@ pItemB, eInventoryInstance aInventoryInstanceA, eInventoryInstance aInventoryInstanceB);
+	bool CanUseOnSelf(const tString& in asItemType, iScrItem@ pItem);
+	bool CanUseOnWorld(const tString& in asItemType, iScrItem@ pItem, const tString& in asPickedEntity);
+	bool UseOnSelf(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, float afTimeElapsed, float afTimeStep);
+	bool UseOnWorld(const tString& in asItemType, iScrItem@ pItem, const tString& in asTargetEntity, const tString& in asItemEntity, float afTimeElapsed, float afTimeStep);
+	void OnStoppedUsing(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity);
+	void OnPickUp(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity);
+	void OnTakeOut(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, eItemHandlerHand aHand);
+	void OnHeld(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, eItemHandlerHand aHand);
+	void OnStartPutAway(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity);
+	void OnPutAway(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity);
+	void OnRemoveFromInventory(const tString& in asItemType, iScrItem@ pItem, const tString& in asItemEntity, eInventoryInstance aInventoryInstance);
+	void OnDrop(const tString& in asItemType, const tString& in asItemEntity);
+}
+
+//---------------------------------------------------
+
+shared interface iScrItemHandler_Interface
+{
+	void OnNewGame();
+	int GetCurrentSlotsCount(eInventoryInstance aInstance);
+	void SetCurrentSlotsCount(eInventoryInstance aInstance, int alValue);
+	int GetMaxSlotsCount(eInventoryInstance aInstance);
+	void SetMaxSlotsCount(eInventoryInstance aInstance, int alValue);
+	int GetMinSlotsCount(eInventoryInstance aInstance);
+	void SetMinSlotsCount(eInventoryInstance aInstance, int alValue);
+	int GetPlayerInventoryDefaultSlotsCount();
+	void ClearInventory(eInventoryInstance aInstance);
+	tString AddToInventory(eInventoryInstance aInstance, const tString& in asType, bool abDrawGuiAnimation = false);
+	void AddManyToInventory(eInventoryInstance aInstance, const tString& in asType, int alCount);
+	void RemoveFromInventory(eInventoryInstance aInstance, const tString& in asItemID, bool abWholeBulk=false, bool abSkipUnequip=false);
+	void AddToInventoryFromInventory(const tString&in asItemID, eInventoryInstance aSourceInstance, eInventoryInstance aDestinationInstance);
+	bool Combine(const tString& in asItemAID, const tString& in asItemBID, eInventoryInstance aInventoryInstanceA, eInventoryInstance aInventoryInstanceB);
+	iScrItem@ GetItemByID(const tString& in asItemID, eInventoryInstance aInstance=eInventoryInstance_Player);
+	bool WillItemTypeFit(eInventoryInstance aInstance, const tString& in asType, bool abIgnoreHidden=false);
+	void RemoveTypeFromInventory(eInventoryInstance aInstance, const tString& in asType, int alCount=-1);
+	bool IsTypeInInventory(eInventoryInstance aInstance, const tString& in asType);
+	int GetTypeCountInInventory(eInventoryInstance aInstance, const tString& in asType);
+	int GetContentTypeCountInInventory(const tString& in asType); //TODO: remove content types
+	tString GetFirstOfTypeInInventory(eInventoryInstance aInstance, const tString& in asType);
+	void UpdateInventoryIcons(eInventoryInstance aInstance=eInventoryInstance_Player);
+	tString PickUpEntity(const tString& in asEntityName, bool abMakeHeld=false, bool abThenPutAway=true, bool abDestroyEntityOnPickup=true);
+	tString DropAsEntity(const tString& in sItemID);
+	tString SpawnAsEntity(const tString& in sItemID, const cMatrixf& in aTransform, const tString& in asName="", float afScale=1.0f, eItemSpawn aSpawn=eItemSpawn_World, eItemSpawnType aSpawnType=eItemSpawnType_Default);
+	tString SpawnTypeAsEntity(const tString& in asType, const cMatrixf& in aTransform, const tString& in asName="", float afScale=1.0f, eItemSpawn aSpawn=eItemSpawn_World, eItemSpawnType aSpawnType=eItemSpawnType_Default);
+	iScrItemType@ FindType(const tString& in asType);
+	tString GetLastWeaponUsed();
+	void SetLastWeaponUsed(const tString&in asItemID);
+	void SetCraftingPreviewItem(const tString&in asType);
+	void ClearCraftingPreviewItem();
+	iScrItem@ GetCraftingPreviewItem();
+	
+	tString DrawPickupGui(const tString& in asEntityName, bool abLockerItem=false);
+	void StopDrawPickupGui(const tString& in asID);
+	
+	void EquipTempRTUItem(const tString&in asItemID, eItemHandlerHand aHand);
+	void RemoveTempRTUItem(const tString&in asAnim);
+	tString GetTempRTUItemEntity();
+
+	// For iterating through for inventory UI - 
+	// best to ignore otherwise.
+	int GetItemCount(eInventoryInstance aInstance, bool abIgnoreHidden=false);
+	iScrItem@ GetItem(eInventoryInstance aInstance, int i);
+	
+	// For UI preloading
+	void GetContentTypes(array<tString>& out avTypes); //TODO: remove content types
+	
+	// Player hands
+	void TakeOut(const tString& in asItem, bool abThenPutAway=false);
+	bool GetHasRequitedItemToEquip(const tString& in asItem);
+	void Equip(const tString& in asItem);
+	void Unequip(const tString& in asItem, bool abInstant=false);
+	void PutAway(eItemHandlerHand aHand);
+	bool IsItemHeld(eItemHandlerHand aHand);
+	int GetHeldItemState(eItemHandlerHand aHand);
+	tString GetHeldItem(eItemHandlerHand aHand);
+	tString GetHeldEntity(eItemHandlerHand aHand);
+	tString GetAccessoryEntityByID(const tString &in asItemID);
+	bool CanUseHeldItemOnSelf(eItemHandlerHand aHand);
+	bool CanUseHeldItemOnWorld(eItemHandlerHand aHand, const tString& in asPickedEntity);
+	void UseHeldItemOnSelf(eItemHandlerHand aHand);
+	void UseHeldItemOnWorld(eItemHandlerHand aHand, const tString& in asEntity);
+	void KillHeldItem(eItemHandlerHand aHand);
+	void StopUsingItem(eItemHandlerHand aHand);
+	tString GetLastHeldItem(eItemHandlerHand aHand);
+	bool IsPickingUpItem();
+	void CancelPuttingAway(eItemHandlerHand aHand);
+	void ToggleHeldItem(const tString&in asItem, eItemHandlerHand aHand);
+	void SetFocusOutroAnimation(const tString&in asAnim);
+	tString GetFocusOutroAnimation();
+	void SetItemMeshVisible(eItemHandlerHand aHand);
+	
+	// Entities
+	void SetEntityItemType(const tString& in asEntity, const tString& in asTypeID);
+	tString GetEntityItemType(const tString& in asEntity);
+	void CopyItemDataToEntity(iScrItem@ apItem, const tString& in asEntity);
+	void CopyEntityToItemData(const tString& in asEntity, iScrItem@ apItem);
+	void SetEntityContent(const tString& in asEntity, const tString& in asSubType, int alLevel);
+	void SetEntityHealth(const tString& in asEntity, float afX);
+	void CopyItemEntityInfo(const tString& in asSource, const tString& in asDest);
+
+	// Save item state things
+	//void SetSaveGunData(int alCurrentChamberId, float afCylinderAngle, array<int> avBulletStates);
+	//void GetSaveGunData(int&inout alCurrentChamberId, float&inout afCylinderAngle, array<int>&inout avBulletStates);
+
+	void ShowBulletCount(const tString &in asBulletType, bool abEmpty, bool abRemainOnScreen = true);
+	void ShowFuelCount(bool abEmpty, bool abRemainOnScreen = true);
+	void ShowBottleCount(bool abEmpty, bool abRemainOnScreen = true);
+	void FlashItemCount(int alFlashCount = 1);
+	
+	void GiveAllItems();
+	
+	void StartPickUpGuiAnimation(const tString &in asIcon, const tString&in asType, float afDelay=0.f);
+	bool GetIsPickupGuiAnimating();
+
+	
+	// Hotkey slots
+	void ClearHotkey(int alSlot);
+	void AssignToHotkey(int alSlot, const tString& in asItemID);
+	void TriggerHotkey(int alSlot);
+	tString GetHotKeyItem(int alSlot);
+	bool GetIsHoverGuiAnimating();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// SKETCHBOOK UI
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+shared enum eSketchbookState
+{
+	eSketchbookState_Inventory,
+	eSketchbookState_Notes,
+	eSketchbookState_Photos,
+	eSketchbookState_Codes,
+	
+	eSketchbookState_LastEnum,
+}
+
+//-------------------------------------------------
+
+shared interface iScrSketchbookUIHandler_Interface
+{
+	void OpenSketchbook(const bool abPauseGame=true);
+	void CloseSketchbook();
+	bool IsSketchbookOpen();
+	bool GetCanOpenSketchbook();
+	void SetCanOpenSketchbook(bool abX);
+	bool GetIsNoteVoiceSubjectPlaying();
+	
+	void SetSketchbookState(int alState);
+	void ToggleSketchbookState(int alState);
+	void SetInventoryEnabled(bool abX);
+	
+	void GetNoteData(const tString&in asNoteID, tString&out asAuthor, tString&out asDate, tString&out asContent, tString&out asVoiceSubject);
+	void AddNoteByID(const tString &in asNoteID);
+	void CollectAllNotes();
+	void ClearNotes();
+	void ToggleNotesListing();
+	bool GetHasNote(const tString &in asNoteID);
+	bool GetHasReadNote(const tString &in asNoteID);
+	
+	void AddAllPhotos();
+	void ClearPhotos();
+	void AddPhotoByID(const tString &in asID);
+	
+	void AddCode(const tString&in asName, const tString&in asCode);
+	bool GetHasCode(const tString&in asName);
+	void RemoveCode(const tString&in asName);
+	void SetCodeUsed(const tString&in asName, bool abUsed);
+	void SetCodeUsedByCode(const tString&in asCode, bool abUsed);
+	void GetUnusedCodeData(array<tString> &out avIds, array<tString> &out avDigits);
+	
+	void AddMemoryCylinder(const tString&in asSubject, const tString&in asText);
+		
+	bool GetIsAuxiliaryBoxEnabled();
+	void SetAuxiliaryBoxActive(bool abActive);
+	void OpenAuxiliaryBox();
+	void CloseAuxiliaryBox();
+	bool GetAuxiliaryBoxOpen();
+	
+	void NotifyNewNote();
+	bool GetNotifyNewNote();
+	cVector3f GetNotifyNewNoteIconPosition();
+	
+	void NotifyNewPhoto();
+	bool GetNotifyNewPhoto();
+	
+	int GetPlaytime(bool abAddCurrent=false);
+	void OnNewGame();
+	bool BeatenDevPlaytime();
+	bool GetNoDropOrStoreAchivementActive();
+}
+	
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// TERROR HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared enum eTerrorMusicAgentType
+{
+	eTerrorMusicAgentType_Stalker,
+	eTerrorMusicAgentType_Shotgunner,
+	eTerrorMusicAgentType_Grunt,
+	eTerrorMusicAgentType_Brute,
+	eTerrorMusicAgentType_Suitor
+}
+
+//---------------------------------------------------
+
+shared enum eTerrorMusicStage
+{
+	eTerrorMusicStage_None,
+	eTerrorMusicStage_Default,
+	eTerrorMusicStage_Searching,
+	eTerrorMusicStage_Hunting
+}
+
+//---------------------------------------------------
+
+shared interface iScrTerrorHandler_Interface
+{
+	void AddTerrorEnemy(tID a_idEnemy, float afTimeBeforeHunt = 6.0f);
+	void RemoveTerrorEnemy(tID a_idEnemy);
+	void AddHuntingEnemy(tID a_idEnemy);
+	void RemoveHuntingEnemy(tID a_idEnemy);
+	float GetAmount();	
+	bool GetPlayerIsBeingHunted();
+	void SetEnemyMusicStage(eTerrorMusicAgentType aAgentType, eTerrorMusicStage aStage);
+	void SetEnemyMusicActive(bool abX);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// AGENT BLACKBOARD
+/////////////////////////////////////////
+	
+//---------------------------------------------------
+
+shared interface iScrAgentBlackboardModule_Interface
+{
+	void SetDebugMode(bool abActive);
+	void AddAgent(tID aEnemy);
+	void RemoveAgent(tID aEnemy);
+	void SetAgentHunt(tID aEnemy, bool abHunt);
+	int GetHuntingAgentCount();
+	int GetHuntingAgentCountInRadius(const cVector3f &in avPos, float afRadius);
+	int GetAgentCount();
+	void ShowDebug(bool abX);
+	int RegisterGhoulHoleNetwork(cLuxMap@ apMap, const tString &in asNetworkName);
+	array<tID> GetGhoulHoleNetwork(int mlId);
+	void SetGhoulHoleUsed(tID a_idHole, tID a_idAgent);
+	void RemoveGhoulHoleUsed(tID a_idHole);
+	void RemoveGhoulHolesUsedBy(tID a_idAgent);
+	bool GetGhoulHoleUsed(tID a_idHole);
+	tID GetGhoulHoleUsedBy(tID a_idHole);
+	int GetFreeGhoulHoleCount(int alNetworkId);
+	tID GetClosestGhoulHole(int alNetworkId, const cVector3f &in avPos, float afMinRadius = -1.0f, float afMaxRadius = -1.0f, bool abOnlyFree = false, bool abOnlyOutOfPlayerSight = false, array<tID>@ avExcludeHoles = null);
+	tID GetRandomGhoulHole(int alNetworkId, const cVector3f &in avPos, float afMinRadius = -1.0f, float afMaxRadius = -1.0f, bool abOnlyFree = false, bool abOnlyOutOfPlayerSight = false, array<tID>@ avExcludeHoles = null);
+	tID GetFarthestGhoulHole(int alNetworkId, const cVector3f &in avPos, float afMinRadius = -1.0f, float afMaxRadius = -1.0f, bool abOnlyFree = false, bool abOnlyOutOfPlayerSight = false, array<tID>@ avExcludeHoles = null);
+	tID GetGhoulHoleInPosDir(int alNetworkId, const cVector3f &in avPos, const cVector3f &in avDir, float afMinRadius = -1.0f, float afMaxRadius = -1.0f, bool abOnlyFree = false, bool abClosest = false, bool abOnlyOutOfPlayerSight = false, array<tID>@ avExcludeHoles = null);
+	tID GetClosestAgent(const cVector3f &in avPos);
+	void SetupStalkerMapTransfer(const tString &in asStalker);
+	void DoStalkerMapTransfer(const tString &in asStalker);
+	void IncStalkerRetreatByShotCount();
+	int GetStalkerRetreatByShotCount();
+	void IncStalkerShotCount();
+	int GetStalkerShotCount();
+	int GetStalkerHubTransferCount();
+	eStalkerInterestIncreaseBehaviour GetStalkerInterestIncreaseBehaviour();
+	void AddDamageAreaBody(tID a_idBody);
+	int GetPathBlockerCounter();
+	array<tID>@ GetPathBlockerBodyIds(bool abPhysical, bool abDamageArea);
+	array<tID>@ GetPathBlockerBodyCluster(tID a_idBody);
+	bool GetCanBodyBlockPath(iPhysicsBody@ apBody);
+	bool GetIsBodyDamageArea(iPhysicsBody@ apBody);
+	bool GetIsBodyPlayerPathBlocker(iPhysicsBody@ apBody);
+	tID GetPlayerPathBlockerBodyId();
+	void SetPlayerBlocksPath(cLuxAgent@ apAgent, bool abX);
+	void SetStalkerReachOutHoleCooldown(float afTime);
+	float GetStalkerReachOutHoleCooldown();
+	void SetStalkerSitAndWaitCooldown(float afTime);
+	float GetStalkerSitAndWaitCooldown();
+	void SetStalkerRandomEmergeCooldown(float afTime);
+	float GetStalkerRandomEmergeCooldown();
+	void SetStalkerWaitByAdminCooldown(float afTime);
+	float GetStalkerWaitByAdminCooldown();
+	eStalkerEscalation GetStalkerEscalation();
+	void IncreaseStalkerEscalation(bool abFullStep);
+	bool GetReducedEnemyPerceptionActive();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// PLAYER BODY HANDLER
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+shared enum ePlayerBodyAnimation_Custom
+{
+	ePlayerBodyAnimation_Custom_BirthIdle=ePlayerBodyAnimation_LastEnum,
+	ePlayerBodyAnimation_Custom_BirthPush,
+	ePlayerBodyAnimation_Custom_BirthRest,
+	ePlayerBodyAnimation_Custom_SwimIdle,
+	ePlayerBodyAnimation_Custom_SwimForward,
+	ePlayerBodyAnimation_Custom_SwimFastToSlow,
+	ePlayerBodyAnimation_Custom_SwimForwardSlow,
+	
+	ePlayerBodyAnimation_Custom_LastEnum
+}
+
+//---------------------------------------------------
+
+shared interface iScrPlayerBodyHandler_Custom_Interface
+{
+	void SetSwimStateActive(const bool abActive, const tString&in asStartPositionEntity, const tString&in asTargetEntity, const tString&in asWaterEntity, float afAnimBlendInTime);
+    void SetSwimBodyYaw(const float afAngle);
+	void SetUnequipItemsOnCutscene(bool abLeft, bool abRight);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// EMOTION HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared enum eEmotionSoundType
+{
+	eEmotionSoundType_Loop,
+	eEmotionSoundType_RateLoop,
+	eEmotionSoundType_FearLoop,
+	eEmotionSoundType_OneShotEvent,
+	
+	eEmotionSoundType_LastEnum
+}
+
+//---------------------------------------------------
+
+shared enum eEmotionPlaylistType
+{
+	eEmotionPlaylistType_Vocal,
+	eEmotionPlaylistType_Heartbeat,
+	
+	eEmotionPlaylistType_LastEnum
+}
+
+//---------------------------------------------------
+
+shared interface iScrPlayerEmotionHandler_Interface
+{
+	void SetActive(const bool abActive);
+	bool GetIsActive();
+	int StartEmotionSoundInst(eEmotionPlaylistType aPlaylistType, eEmotionSoundType aEmotionSoundType, const int alPrio, const tString&in asSoundFile, const float afDuration, const float afFadeIn, const float afFadeOut);
+	void SetEmotionSoundInstParam(eEmotionPlaylistType aPlaylistType, const int alID, float afParam);
+	void SetEmotionSoundInstVolume(eEmotionPlaylistType aPlaylistType, const int alID, const float afVolume);
+	int GetHigherEmotionSoundPrio(eEmotionPlaylistType aPlaylistType);
+	void StopEmotionSoundInst(eEmotionPlaylistType aPlaylistType, const int alID, float afFadeOut);
+	void PauseEmotionSoundInst(eEmotionPlaylistType aPlaylistType, const int alID, bool abPause);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// BULLET HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared enum eBulletType
+{
+	eBulletType_Revolver,
+	eBulletType_Shotgun
+}
+
+//---------------------------------------------------
+
+shared interface iScrBulletHandler_Interface
+{
+	int AddBullet(const cVector3f &in avStart, const cVector3f &in avDir, eBulletType aType, tID a_idSource, const tString &in asHitCallback);
+	void SetMinPlayerHealth(int alBulletId, float afMinHealth);
+	void SetCustomImpactEffectsForEntity(tID a_idEntity, const tString &in asPS, const tString &in asSound);
+	void SetImpactParticleSuffix(const tString &in asSuffix);
+	float GetTimeSinceLastBullet();
+	void AddIgnoredEntity(int alBulletId, tID a_idEntity);
+	void AddGlobalIgnoredEntity(tID a_idEntity);
+	void AddGlobalIgnoredAgent(tID a_idAgent);
+	void RemoveGlobalIgnoredAgent(tID a_idAgent);
+	eBulletType GetLastDamageBulletType();
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// BOMBING HANDLER
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrBombingHandler_Interface
+{
+	void SetActive(bool abX);
+	bool GetActive();
+	void TriggerBombEffect();
+	void SetWeak(bool abX);
+}
+
+//---------------------------------------------------
+
+/////////////////////////////////////////
+// RANDOMIZATION
+/////////////////////////////////////////
+
+//---------------------------------------------------
+
+shared interface iScrRandomizerHandler_Interface
+{
+	int GetTotalItemCount(const tString &in asItemType);
+	int GetCode(const tString &in asName);
+	bool GetLockerIsInHub(const tString &in asLockerName);
+}
+
+//---------------------------------------------------

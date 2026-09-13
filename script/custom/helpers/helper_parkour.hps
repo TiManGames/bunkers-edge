@@ -10,6 +10,7 @@ const tString gsParkourLevelCompletedOnceKey = "ParkourLevelCompletedOnce";
 const tString gsParkourSpeedRunModeActiveKey = "SpeedRunModeActive";
 const tString gsParkourSpeedRunUnlockMessageSeenKey = "SpeedRunUnlockMessageSeen";
 const tString gsParkourBestCompletionTimeKey = "ParkourBestCompletionTime";
+const tString gsParkourSecretEndingUnlockedKey = "SecretEndingUnlocked";
 
 const float gfParkourWallDetect_EntryRayLength = 0.5f;
 const float gfParkourWallDetect_SustainRayLength = 1.00f;
@@ -85,6 +86,28 @@ void Parkour_SetLevelCompletedOnce()
 	if (pConfig.GetBool(gsParkourUserConfigSection, gsParkourLevelCompletedOnceKey, false)) return;
 
 	pConfig.SetBool(gsParkourUserConfigSection, gsParkourLevelCompletedOnceKey, true);
+	pConfig.Save();
+}
+
+//------------------------------------------------------------
+
+bool Parkour_GetSecretEndingUnlocked()
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	return pConfig !is null && pConfig.GetBool(gsParkourUserConfigSection,
+											 gsParkourSecretEndingUnlockedKey,
+											 false);
+}
+
+//------------------------------------------------------------
+
+void Parkour_UnlockSecretEnding()
+{
+	cConfigFile@ pConfig = cLux_GetUserConfig();
+	if (pConfig is null) return;
+	if (pConfig.GetBool(gsParkourUserConfigSection, gsParkourSecretEndingUnlockedKey, false)) return;
+
+	pConfig.SetBool(gsParkourUserConfigSection, gsParkourSecretEndingUnlockedKey, true);
 	pConfig.Save();
 }
 

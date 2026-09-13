@@ -1,0 +1,832 @@
+#include "helpers/helper_modules.hps"
+#include "base/AchievementHandler_Types.hps"
+#include "base/RichPresenceHandler_Types.hps"
+#include "custom/modules/ModuleInterfaces_Custom.hps"
+#include "helpers/helper_components_custom.hps"
+#include "helpers/helper_modules_custom.hps"
+#include "helpers/helper_player_custom.hps"
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// PLATFORM
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+/**
+ * Gets the name of the platform that is running the game.
+ **/
+tString Platform_GetName()
+{
+	return cSystem_GetPlatformName();
+}
+
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on a console
+ **/
+bool Platform_IsConsole()
+{
+	ePlatform platform = cSystem_GetPlatform();
+	return platform >= ePlatform_PS4 && platform <= ePlatform_XboxSeriesX || Platform_IsStreaming();
+}
+
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on a PlayStation.
+ **/
+bool Platform_IsPlayStation()
+{
+	ePlatform platform = cSystem_GetPlatform();
+	return platform >= ePlatform_PS4 && platform <= ePlatform_PS5;
+}
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on a PS4.
+ **/
+bool Platform_IsPS4()
+{
+	ePlatform platform = cSystem_GetPlatform();
+	return platform == ePlatform_PS4 || platform == ePlatform_PS4Pro;
+}
+
+
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on a Xbox.
+ **/
+bool Platform_IsXbox()
+{
+	ePlatform platform = cSystem_GetPlatform();
+	return platform >= ePlatform_XboxOne && platform <= ePlatform_XboxSeriesX;
+}
+
+
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on a XboxOne or XboxOneX
+ **/
+bool Platform_IsXboxOne()
+{
+	ePlatform platform = cSystem_GetPlatform();
+	return platform >= ePlatform_XboxOne && platform <= ePlatform_XboxOneX;
+}
+
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on a Xbox Series S or X.
+ **/
+bool Platform_IsXboxSeries()
+{
+	ePlatform platform = cSystem_GetPlatform();
+	return platform >= ePlatform_XboxSeriesS && platform <= ePlatform_XboxSeriesX;
+}
+
+//-------------------------------------------------
+
+/**
+ * Checks if the game is running on streaming platform, ie no options
+ **/
+bool Platform_IsStreaming()
+{
+	return cSystem_GetPlatform() == ePlatform_Streaming;
+}
+
+/////////////////////////////////////////
+// SAVING
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+/**
+ * Saves the current postion of the game.
+ **/
+void Game_AutoSave(bool abSaveCheckpoint = true, bool abDelayed = true)
+{
+	cLux_GetSaveHandler().AutoSave(abSaveCheckpoint, abDelayed);
+}
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// GAME MODE
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+enum eGameMode
+{
+	eGameMode_Easy,
+	eGameMode_Normal,
+	eGameMode_Hard,
+	eGameMode_UltraHard,
+	eGameMode_Custom,
+	eGameMode_VeryEasy
+};
+
+//-------------------------------------------------
+
+enum eDifficultySettingType
+{
+	eDifficultySettingType_Bool,
+	eDifficultySettingType_Int,
+	eDifficultySettingType_Float
+};
+
+//-------------------------------------------------
+
+enum eDifficultySettingControlType
+{
+	eDifficultySettingControlType_Checkbox,
+	eDifficultySettingControlType_Switch,
+	eDifficultySettingControlType_Slider
+};
+
+//-------------------------------------------------
+
+enum eGameDifficultySetting
+{
+	eGameDifficultySetting_GeneratorRunTime = 0,
+	eGameDifficultySetting_FlashlightChargeDuration = 1,
+	eGameDifficultySetting_TorchBurnDuration = 2,
+	eGameDifficultySetting_AmmunitionAmount = 3,
+	eGameDifficultySetting_ResourceAmount = 4,
+	eGameDifficultySetting_TrapAmount = 5,
+	eGameDifficultySetting_StalkerPresence = 6,
+	eGameDifficultySetting_StalkerReactivity = 7,
+	eGameDifficultySetting_StalkerAggressiveness = 8,
+	eGameDifficultySetting_StalkerRecoverTime = 9,
+	eGameDifficultySetting_StalkerLethality = 10,
+	eGameDifficultySetting_StalkerBulletResistance = 11,
+	eGameDifficultySetting_StalkerRetreatBehavior = 12,
+	eGameDifficultySetting_IncreasedStalkerUnpredictability = 13,
+	eGameDifficultySetting_RatsDamage = 14,
+	eGameDifficultySetting_RatsAggressiveness = 15,
+	eGameDifficultySetting_RatCorpseAmount = 16,
+	eGameDifficultySetting_ShotgunnerLethality = 17,
+	eGameDifficultySetting_InitialInventorySize = 18,
+	eGameDifficultySetting_GamePausedInInventory = 19,
+	eGameDifficultySetting_HardcoreHealthSystem = 20,
+	eGameDifficultySetting_GrenadePlayerDamageRadius = 21,
+	eGameDifficultySetting_PlayerDamageFromGasFire = 22,
+	eGameDifficultySetting_FireDuration = 23,
+	eGameDifficultySetting_GasDuration = 24,
+	eGameDifficultySetting_SaveSystem = 25,
+	eGameDifficultySetting_SaveLampLocations = 26,
+	eGameDifficultySetting_FusesAndFuseBoxes = 27,
+	eGameDifficultySetting_InitialPoweredFuseBoxes = 28,
+	eGameDifficultySetting_ReducedSafeRoom = 29,
+	eGameDifficultySetting_RevolverInLocker = 30,
+	eGameDifficultySetting_RandomizedLockerLocations = 31,
+	eGameDifficultySetting_InitialPlaythroughConditions = 32,
+	eGameDifficultySetting_ShotgunnerReactivity = 33,
+	eGameDifficultySetting_PlayerHealthRegeneration = 34,
+	eGameDifficultySetting_FuelStorageCodeLock = 35,
+	
+	eGameDifficultySetting_GruntPresence = 36,
+	eGameDifficultySetting_GruntReactivity = 37,
+	eGameDifficultySetting_GruntAggressiveness = 38,
+	eGameDifficultySetting_GruntRecoverTime = 39,
+	eGameDifficultySetting_GruntLethality = 40,
+	eGameDifficultySetting_GruntBulletResistance = 41,
+	eGameDifficultySetting_GruntRetreatBehavior = 42,
+	eGameDifficultySetting_IncreasedGruntUnpredictability = 43,
+	
+	eGameDifficultySetting_BrutePresence = 44,
+	eGameDifficultySetting_BruteReactivity = 45,
+	eGameDifficultySetting_BruteAggressiveness = 46,
+	eGameDifficultySetting_BruteRecoverTime = 47,
+	eGameDifficultySetting_BruteLethality = 48,
+	eGameDifficultySetting_BruteBulletResistance = 49,
+	eGameDifficultySetting_BruteRetreatBehavior = 50,
+	eGameDifficultySetting_IncreasedBruteUnpredictability = 51,
+	
+	eGameDifficultySetting_SuitorPresence = 52,
+	eGameDifficultySetting_SuitorReactivity = 53,
+	eGameDifficultySetting_SuitorAggressiveness = 54,
+	eGameDifficultySetting_SuitorRecoverTime = 55,
+	eGameDifficultySetting_SuitorLethality = 56,
+	eGameDifficultySetting_SuitorBulletResistance = 57,
+	eGameDifficultySetting_SuitorRetreatBehavior = 58,
+	eGameDifficultySetting_IncreasedSuitorUnpredictability = 59
+}
+
+//-------------------------------------------------
+
+eGameMode Game_GetDifficultyMode()
+{
+	return eGameMode(cLux_GetGameDifficulty());
+}
+
+//-------------------------------------------------
+
+enum eDifficultySettingValue_StalkerPresence
+{
+	eDifficultySettingValue_StalkerPresence_VeryLow,
+	eDifficultySettingValue_StalkerPresence_Low,
+	eDifficultySettingValue_StalkerPresence_Default,
+	eDifficultySettingValue_StalkerPresence_High,
+	eDifficultySettingValue_StalkerPresence_VeryHigh,
+	eDifficultySettingValue_StalkerPresence_Maximum
+}
+
+enum eDifficultySettingValue_StalkerReactivity
+{
+	eDifficultySettingValue_StalkerReactivity_VeryLow,
+	eDifficultySettingValue_StalkerReactivity_Low,
+	eDifficultySettingValue_StalkerReactivity_Default,
+	eDifficultySettingValue_StalkerReactivity_High,
+	eDifficultySettingValue_StalkerReactivity_VeryHigh,
+	eDifficultySettingValue_StalkerReactivity_Maximum
+}
+
+enum eDifficultySettingValue_StalkerAggressiveness
+{
+	eDifficultySettingValue_StalkerAggressiveness_VeryLow,
+	eDifficultySettingValue_StalkerAggressiveness_Low,
+	eDifficultySettingValue_StalkerAggressiveness_Default,
+	eDifficultySettingValue_StalkerAggressiveness_High,
+	eDifficultySettingValue_StalkerAggressiveness_VeryHigh,
+	eDifficultySettingValue_StalkerAggressiveness_Maximum
+}
+
+enum eDifficultySettingValue_StalkerLethality
+{
+	eDifficultySettingValue_StalkerLethality_Low,
+	eDifficultySettingValue_StalkerLethality_Default,
+	eDifficultySettingValue_StalkerLethality_High
+}
+
+enum eDifficultySettingValue_StalkerBulletResistance
+{
+	eDifficultySettingValue_StalkerBulletResistance_Low,
+	eDifficultySettingValue_StalkerBulletResistance_Default,
+	eDifficultySettingValue_StalkerBulletResistance_High,
+	eDifficultySettingValue_StalkerBulletResistance_VeryHigh
+}
+
+enum eDifficultySettingValue_StalkerRetreatBehavior
+{
+	eDifficultySettingValue_StalkerRetreatBehavior_AllDamage,
+	eDifficultySettingValue_StalkerRetreatBehavior_AllDamageExceptBullets,
+	eDifficultySettingValue_StalkerRetreatBehavior_ExplosivesOnly,
+	eDifficultySettingValue_StalkerRetreatBehavior_NeverRetreat
+}
+
+enum eDifficultySettingValue_ShotgunnerLethality
+{
+	eDifficultySettingValue_ShotgunnerLethality_VeryLow,
+	eDifficultySettingValue_ShotgunnerLethality_Low,
+	eDifficultySettingValue_ShotgunnerLethality_Default,
+	eDifficultySettingValue_ShotgunnerLethality_High,
+	eDifficultySettingValue_ShotgunnerLethality_VeryHigh,
+}
+
+enum eDifficultySettingValue_ShotgunnerReactivity
+{
+	eDifficultySettingValue_ShotgunnerReactivity_Low,
+	eDifficultySettingValue_ShotgunnerReactivity_Default,
+	eDifficultySettingValue_ShotgunnerReactivity_High,
+}
+
+enum eDifficultySettingValue_SaveSystem
+{
+	eDifficultySettingValue_SaveSystem_Default,
+	eDifficultySettingValue_SaveSystem_SavingCostsFuel,
+	eDifficultySettingValue_SaveSystem_NoSaving
+}
+
+enum eDifficultySettingValue_SaveLampLocations
+{
+	eDifficultySettingValue_SaveLampLocations_Default,
+	eDifficultySettingValue_SaveLampLocations_EverySubLevel
+}
+
+//////////////////////////////////////////
+//TDD Enemies
+
+enum eDifficultySettingValue_GruntPresence
+{
+	eDifficultySettingValue_GruntPresence_VeryLow,
+	eDifficultySettingValue_GruntPresence_Low,
+	eDifficultySettingValue_GruntPresence_Default,
+	eDifficultySettingValue_GruntPresence_High,
+	eDifficultySettingValue_GruntPresence_VeryHigh,
+	eDifficultySettingValue_GruntPresence_Maximum
+}
+
+enum eDifficultySettingValue_GruntReactivity
+{
+	eDifficultySettingValue_GruntReactivity_VeryLow,
+	eDifficultySettingValue_GruntReactivity_Low,
+	eDifficultySettingValue_GruntReactivity_Default,
+	eDifficultySettingValue_GruntReactivity_High,
+	eDifficultySettingValue_GruntReactivity_VeryHigh,
+	eDifficultySettingValue_GruntReactivity_Maximum
+}
+
+enum eDifficultySettingValue_GruntAggressiveness
+{
+	eDifficultySettingValue_GruntAggressiveness_VeryLow,
+	eDifficultySettingValue_GruntAggressiveness_Low,
+	eDifficultySettingValue_GruntAggressiveness_Default,
+	eDifficultySettingValue_GruntAggressiveness_High,
+	eDifficultySettingValue_GruntAggressiveness_VeryHigh,
+	eDifficultySettingValue_GruntAggressiveness_Maximum
+}
+
+enum eDifficultySettingValue_GruntLethality
+{
+	eDifficultySettingValue_GruntLethality_Low,
+	eDifficultySettingValue_GruntLethality_Default,
+	eDifficultySettingValue_GruntLethality_High
+}
+
+enum eDifficultySettingValue_GruntBulletResistance
+{
+	eDifficultySettingValue_GruntBulletResistance_Low,
+	eDifficultySettingValue_GruntBulletResistance_Default,
+	eDifficultySettingValue_GruntBulletResistance_High,
+	eDifficultySettingValue_GruntBulletResistance_VeryHigh
+}
+
+enum eDifficultySettingValue_GruntRetreatBehavior
+{
+	eDifficultySettingValue_GruntRetreatBehavior_AllDamage,
+	eDifficultySettingValue_GruntRetreatBehavior_AllDamageExceptBullets,
+	eDifficultySettingValue_GruntRetreatBehavior_ExplosivesOnly,
+	eDifficultySettingValue_GruntRetreatBehavior_NeverRetreat
+}
+
+enum eDifficultySettingValue_BrutePresence
+{
+	eDifficultySettingValue_BrutePresence_VeryLow,
+	eDifficultySettingValue_BrutePresence_Low,
+	eDifficultySettingValue_BrutePresence_Default,
+	eDifficultySettingValue_BrutePresence_High,
+	eDifficultySettingValue_BrutePresence_VeryHigh,
+	eDifficultySettingValue_BrutePresence_Maximum
+}
+
+enum eDifficultySettingValue_BruteReactivity
+{
+	eDifficultySettingValue_BruteReactivity_VeryLow,
+	eDifficultySettingValue_BruteReactivity_Low,
+	eDifficultySettingValue_BruteReactivity_Default,
+	eDifficultySettingValue_BruteReactivity_High,
+	eDifficultySettingValue_BruteReactivity_VeryHigh,
+	eDifficultySettingValue_BruteReactivity_Maximum
+}
+
+enum eDifficultySettingValue_BruteAggressiveness
+{
+	eDifficultySettingValue_BruteAggressiveness_VeryLow,
+	eDifficultySettingValue_BruteAggressiveness_Low,
+	eDifficultySettingValue_BruteAggressiveness_Default,
+	eDifficultySettingValue_BruteAggressiveness_High,
+	eDifficultySettingValue_BruteAggressiveness_VeryHigh,
+	eDifficultySettingValue_BruteAggressiveness_Maximum
+}
+
+enum eDifficultySettingValue_BruteLethality
+{
+	eDifficultySettingValue_BruteLethality_Low,
+	eDifficultySettingValue_BruteLethality_Default,
+	eDifficultySettingValue_BruteLethality_High
+}
+
+enum eDifficultySettingValue_BruteBulletResistance
+{
+	eDifficultySettingValue_BruteBulletResistance_Low,
+	eDifficultySettingValue_BruteBulletResistance_Default,
+	eDifficultySettingValue_BruteBulletResistance_High,
+	eDifficultySettingValue_BruteBulletResistance_VeryHigh
+}
+
+enum eDifficultySettingValue_BruteRetreatBehavior
+{
+	eDifficultySettingValue_BruteRetreatBehavior_AllDamage,
+	eDifficultySettingValue_BruteRetreatBehavior_AllDamageExceptBullets,
+	eDifficultySettingValue_BruteRetreatBehavior_ExplosivesOnly,
+	eDifficultySettingValue_BruteRetreatBehavior_NeverRetreat
+}
+
+enum eDifficultySettingValue_SuitorPresence
+{
+	eDifficultySettingValue_SuitorPresence_VeryLow,
+	eDifficultySettingValue_SuitorPresence_Low,
+	eDifficultySettingValue_SuitorPresence_Default,
+	eDifficultySettingValue_SuitorPresence_High,
+	eDifficultySettingValue_SuitorPresence_VeryHigh,
+	eDifficultySettingValue_SuitorPresence_Maximum
+}
+
+enum eDifficultySettingValue_SuitorReactivity
+{
+	eDifficultySettingValue_SuitorReactivity_VeryLow,
+	eDifficultySettingValue_SuitorReactivity_Low,
+	eDifficultySettingValue_SuitorReactivity_Default,
+	eDifficultySettingValue_SuitorReactivity_High,
+	eDifficultySettingValue_SuitorReactivity_VeryHigh,
+	eDifficultySettingValue_SuitorReactivity_Maximum
+}
+
+enum eDifficultySettingValue_SuitorAggressiveness
+{
+	eDifficultySettingValue_SuitorAggressiveness_VeryLow,
+	eDifficultySettingValue_SuitorAggressiveness_Low,
+	eDifficultySettingValue_SuitorAggressiveness_Default,
+	eDifficultySettingValue_SuitorAggressiveness_High,
+	eDifficultySettingValue_SuitorAggressiveness_VeryHigh,
+	eDifficultySettingValue_SuitorAggressiveness_Maximum
+}
+
+enum eDifficultySettingValue_SuitorLethality
+{
+	eDifficultySettingValue_SuitorLethality_Low,
+	eDifficultySettingValue_SuitorLethality_Default,
+	eDifficultySettingValue_SuitorLethality_High
+}
+
+enum eDifficultySettingValue_SuitorBulletResistance
+{
+	eDifficultySettingValue_SuitorBulletResistance_Low,
+	eDifficultySettingValue_SuitorBulletResistance_Default,
+	eDifficultySettingValue_SuitorBulletResistance_High,
+	eDifficultySettingValue_SuitorBulletResistance_VeryHigh
+}
+
+enum eDifficultySettingValue_SuitorRetreatBehavior
+{
+	eDifficultySettingValue_SuitorRetreatBehavior_AllDamage,
+	eDifficultySettingValue_SuitorRetreatBehavior_AllDamageExceptBullets,
+	eDifficultySettingValue_SuitorRetreatBehavior_ExplosivesOnly,
+	eDifficultySettingValue_SuitorRetreatBehavior_NeverRetreat
+}
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// CHECKPOINT
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+/**
+ * Sets a checkpoint for the player. If the player dies the game will be reloaded to the state it was when this was called.
+ * 
+ * @param asCallback, Function called after player has died and just before he starts again. Syntax: void F(int alNumDeathsAtCheckPoint, const tString&in asDeathSource)
+ **/
+void CheckPoint_Setup(	const tString&in asCallback="")
+{
+	cScript_SetGlobalArgString(0, asCallback);
+	cScript_RunGlobalFunc("GameOverHandler","","_Global_SetupCheckPoint");
+}
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// ACHIEVEMENTS
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+/**
+ * Unlocks a specific game achievement.
+ * 
+ * @param alID, The achievement ID
+ **/
+void Achievement_Unlock(int alID)
+{
+	cLuxMap@ pMap = cLux_GetCurrentMap();
+	if (pMap !is null && pMap.GetName() == "training_grounds")
+		return;
+	
+	cLux_AddDebugMessage("[UNLOCKED ACHIEVEMENT] "+Achievement_GetName(alID));
+	cLux_GetAchievementHandler().UnlockAchievement(alID);
+	if (Achievement_GetAllUnlocked())
+	{
+		cLux_AddDebugMessage("[ !!! PLATINUM UNLOCKED !!!!]");
+		cLux_GetAchievementHandler().UnlockAchievement(eAchievement_CroixDeGuerre);
+	}
+}
+
+//-------------------------------------------------------
+
+void Achievement_CheckPlatinum()
+{
+	if (Achievement_GetAllUnlocked() && cLux_GetAchievementHandler().GetAchievementUnlocked(eAchievement_CroixDeGuerre)==false)
+	{
+		cLux_AddDebugMessage("[ !!! PLATINUM UNLOCKED !!!!]");
+		cLux_GetAchievementHandler().UnlockAchievement(eAchievement_CroixDeGuerre);
+	}
+}
+
+//-------------------------------------------------------
+
+/**
+ * Increase one of the counters needed to unlock cumulative achievements.
+ * 
+ * @param aCount, The counter to increase
+ **/
+void Achievement_IncreaseCount(eAchievementCount aCount)
+{
+	iScrAchievementHandler_Custom_Interface @pAchievementHandler = cast<iScrAchievementHandler_Custom_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_AchievementHandler) );
+	pAchievementHandler.IncreaseCount(aCount);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Returns the name of an achievement.
+ * 
+ * @param alID, The achievement ID
+ **/
+tString Achievement_GetName(int alID)
+{
+	return cLux_GetAchievementHandler().GetAchievementName(alID);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Checks if an achievement has already be unlocked or not.
+ * 
+ * @param alID, The achievement ID
+ **/
+bool Achievement_GetUnlocked(int alID)
+{
+	return cLux_GetAchievementHandler().GetAchievementUnlocked(alID);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Checks if all of the achievements have been unlocked.
+ * 
+ **/
+bool Achievement_GetAllUnlocked()
+{
+	return cLux_GetAchievementHandler().GetAllAchievementsUnlocked();
+}
+
+//-------------------------------------------------------
+
+/**
+ * Returns the displayed name of an achievement (might differ from the name itself).
+ * 
+ * @param alID, The achievement ID
+ **/
+tString Achievement_GetDisplayName(int alID)
+{
+	return cLux_GetAchievementHandler().GetAchievementDisplayName(alID);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Returns the description of an achievement.
+ * 
+ * @param alID, The achievement ID
+ **/
+tString Achievement_GetDescription(int alID)
+{
+	return cLux_GetAchievementHandler().GetAchievementDescription(alID);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Returns the icon assigned to an achievement.
+ * 
+ * @param alID, The achievement ID
+ **/
+int Achievement_GetIcon(int alID)
+{
+	return cLux_GetAchievementHandler().GetAchievementIcon(alID);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Handles the achievement for unlocking the lockers to avoid spreading out the code
+ * 
+ **/
+const int glLockerCount = 11;
+void Achievement_IncreaseUnlockedLockerCount()
+{
+	int lNewCount = cScript_GetGlobalVarInt("UnlockedLockerCount") + 1;
+	
+	cLux_AddDebugMessage("Unlocked "+lNewCount+"/"+glLockerCount);
+	if (lNewCount >= glLockerCount)
+		Achievement_Unlock(eAchievement_Codebreaker);
+		
+	cScript_SetGlobalVarInt("UnlockedLockerCount", lNewCount);
+}
+
+//-------------------------------------------------------
+
+/**
+ * Handles the achievement for cutting chains and opening vents to avoid spreading out the code
+ * 
+ **/
+const int glCleithrophobistVentCount = 5;
+const int glCleithrophobistChainCount = 6;
+void Achievement_IncreaseCleithrophobistCount()
+{
+	int lNewCount = cScript_GetGlobalVarInt("CleithrophobistCount") + 1;
+	
+	if (lNewCount >= glCleithrophobistVentCount+glCleithrophobistChainCount)
+		Achievement_Unlock(eAchievement_Cleithrophobist);
+		
+	cScript_SetGlobalVarInt("CleithrophobistCount", lNewCount);
+}
+
+//-------------------------------------------------
+
+void Achievement_EndGame(bool abEscaped)
+{
+	Achievement_Unlock(eAchievement_Napoo);
+	
+	if (abEscaped)
+		Achievement_Unlock(eAchievement_Scarper);
+		
+	if (Game_BeatenDevPlaytime()) 
+		Achievement_Unlock(eAchievement_TootSweet);
+			
+	if (SaveRoom_GetManualSaveCount()==0)
+		Achievement_Unlock(eAchievement_GotItInOne);
+		
+	if (Game_GetNoDropOrStoreAchivementActive())
+		Achievement_Unlock(eAchievement_EfficiencyExpert);
+			
+	if (Game_GetDifficultyMode() == eGameMode_Custom)
+		Achievement_Unlock(eAchievement_Revisionist);
+			
+	if (Game_GetDifficultyMode() == eGameMode_UltraHard)
+		Achievement_Unlock(eAchievement_InRecovery);
+}
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// Playtime
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+int Game_GetPlaytime(bool abAddCurrent=false)
+{
+	iScrSketchbookUIHandler_Interface @pHandler = cast<iScrSketchbookUIHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_SketchbookUIHandler) );
+	return pHandler.GetPlaytime(abAddCurrent);
+}
+
+//-------------------------------------------------------
+
+bool Game_BeatenDevPlaytime()
+{
+	iScrSketchbookUIHandler_Interface @pHandler = cast<iScrSketchbookUIHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_SketchbookUIHandler) );
+	return pHandler.BeatenDevPlaytime();
+}
+
+//-------------------------------------------------------
+
+bool Game_GetNoDropOrStoreAchivementActive()
+{
+	iScrSketchbookUIHandler_Interface @pHandler = cast<iScrSketchbookUIHandler_Interface>( cLux_GetUserModuleFromID(eModuleType_Custom_SketchbookUIHandler) );
+	return pHandler.GetNoDropOrStoreAchivementActive();
+}
+
+//-------------------------------------------------------
+/////////////////////////////////////////
+// RICH PRESENCE
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+void RichPresence_SetCurrent(int alID)
+{
+	cLux_GetRichPresenceHandler().SetCurrentRichPresence(alID);
+}
+
+int RichPresence_GetCurrent()
+{
+	return cLux_GetRichPresenceHandler().GetCurrentRichPresence();
+}
+
+tString RichPresence_GetName(int alID)
+{
+	return cLux_GetRichPresenceHandler().GetRichPresenceName(alID);
+}
+
+tString RichPresence_GetDescription(int alID)
+{
+	return cLux_GetRichPresenceHandler().GetRichPresenceDescription(alID);
+}
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// HERO STATS
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+void HeroStat_IncreaseAmount(int alID,int alAmount)
+{
+	cLux_GetHeroStatsHandler().IncreaseHeroStatAmount(alID,alAmount);
+}
+
+void HeroStat_SetHeroStatAmount(int alID,int alAmount)
+{
+	cLux_GetHeroStatsHandler().SetHeroStatAmount(alID,alAmount);
+}
+
+int HeroStat_GetAmount(int alID)
+{
+	return cLux_GetHeroStatsHandler().GetHeroStatAmount(alID);
+}
+
+tString HeroStat_GetName(int alID)
+{
+	return cLux_GetHeroStatsHandler().GetHeroStatName(alID);
+}
+
+tString HeroStat_GetDescription(int alID)
+{
+	return cLux_GetHeroStatsHandler().GetHeroStatDescription(alID);
+}
+
+//-------------------------------------------------
+
+/////////////////////////////////////////
+// MAP TRANSFER
+/////////////////////////////////////////
+
+//-------------------------------------------------
+
+void Game_DoMapChange(const tString &in asMap, const tString &in asTransferArea)
+{
+	/////////////////////
+	// Setup interact transfer
+	int lState = cLux_GetPlayer().GetCurrentStateId();
+	cLuxProp@ pProp = null;
+	
+	if (lState == ePlayerState_Grab)
+	{
+		cScript_RunGlobalFunc("State_Interact_Grab", "", "_Global_GetPropID");
+		@pProp = cLux_ID_Prop(cScript_GetGlobalReturnID());
+	}
+	else if (lState == ePlayerState_Push)
+	{
+		cScript_RunGlobalFunc("State_Interact_Push", "", "_Global_GetPropID");
+		@pProp = cLux_ID_Prop(cScript_GetGlobalReturnID());
+	}
+	
+	if (pProp !is null)
+	{
+		cScript_SetGlobalVarString("MapTransfer_InteractProp", pProp.GetName());
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+	else
+	{
+		cScript_SetGlobalVarString("MapTransfer_InteractProp", "");
+	}
+	
+	/////////////////////
+	// Load map
+	cLux_ChangeMap(asMap, "", asTransferArea, "", "", false, 1.f, false);
+	cLux_LoadScreenShowLoadingIcon(10.f);
+}
+
+//-------------------------------------------------
+
+void Game_SetupAfterMapChange()
+{
+	cLux_GetCurrentMap().AddTimer("_Timer_SetupAfterMapChange", 0.01f, "$_OnTimer_SetupAfterMapChange");
+}
+
+//-------------------------------------------------
+
+void _OnTimer_SetupAfterMapChange(const tString &in asTimer)
+{
+	tString sInteractProp = cScript_GetGlobalVarString("MapTransfer_InteractProp");
+	if (sInteractProp == "") return;
+	
+	cLuxProp@ pProp = cLux_ToProp(cLux_GetCurrentMap().GetEntityByName(sInteractProp, eLuxEntityType_Prop));
+	iPhysicsBody@ pBody = pProp !is null ? pProp.GetMainBody() : null;
+	
+	if (pProp !is null && pBody !is null)
+	{
+		pProp.OnInteract(0, pBody, pProp.GetPosition(), "");
+	}
+}
+
+//-------------------------------------------------

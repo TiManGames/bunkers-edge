@@ -1055,7 +1055,10 @@ int OptionMenu_MessageBox(const tString &in asMessage, const tString &in asButto
 int mlPrevSelectedButton = 0;
 int mlSelectedButton = 0;
 
-bool OptionMenu_MessageBox_GameCompleted(const tString &in asMessage, const tString &in asButton, tString &out asFocusIn, tString &out asFocusOut, const bool abPlaySound=true)
+bool OptionMenu_MessageBox_GameCompleted(const tString &in asMessage, const tString &in asButton,
+										 tString &out asFocusIn, tString &out asFocusOut,
+										 const bool abPlaySound=true,
+										 const tString &in asHighlightMessage="")
 {
 	////////////////////////////////////
 	// ImGui Data
@@ -1110,6 +1113,18 @@ bool OptionMenu_MessageBox_GameCompleted(const tString &in asMessage, const tStr
 	// Draw Txt
 	textFrameData.mFont.mColor = cColor(1,1) * gOptionMenu_ModColor;
 	ImGui_DoTextFrameExt(asMessage, vFrameEdgeSpacing, 0, 0, textFrameData, vFramePos, vFrameSize);
+
+	if (asHighlightMessage != "")
+	{
+		cImGuiLabelData highlightData = labelData;
+		highlightData.mFont.mvSize = gfFontSize_MainMenu_Small;
+		highlightData.mFont.mColor = cColor(1.f, 0.08f, 0.04f, 1.f) * gOptionMenu_ModColor;
+		highlightData.mFontAlign = eFontAlign_Center;
+		cVector3f vHighlightPos = vFramePos +
+			cVector3f(0.f, vFrameSize.y - fHeaderHeight - gfFontSize_MainMenu_Small, 0.2f);
+		ImGui_DoLabelExt(asHighlightMessage, highlightData, vHighlightPos,
+			cVector2f(vFrameSize.x, gfFontSize_MainMenu_Small * 1.5f));
+	}
 	
 	///////////////////////
 	// Calculate button size

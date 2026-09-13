@@ -1542,6 +1542,9 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 		// Show the BunkersEdge speedrun unlock once after the first completion.
 		if (mbPremenuActive == false && mbSpeedRunUnlocked && mbSpeedRunUnlockMessageSeen == false)
 		{
+			// Credits leave a solid black fade; clear it before this modal pauses the menu scene.
+			if (mbShowSpeedRunUnlocked == false)
+				cLux_GetEffectHandler().FadeIn(0.f);
 			mbShowSpeedRunUnlocked = true;
 			msFocusNextFrame = "Ok";
 		}
@@ -9189,7 +9192,12 @@ class cScrMenuHandler : iScrUserModule, iScrUserModule_Interface, iScrMenuHandle
 	void MessageBoxSpeedRunUnlocked()
 	{
 		ImGui_SetTransCategory("SpeedRunUnlock");
-		bool bSelect = OptionMenu_MessageBox_GameCompleted("SpeedRunUnlocked", "Ok", msMessageBoxFocus, msMessageBoxFocus);
+		bool bSecretEndingUnlocked = Parkour_GetSecretEndingUnlocked();
+		tString sMessage = bSecretEndingUnlocked ? "SpeedRunUnlockedWithSecret" : "SpeedRunUnlocked";
+		tString sHighlight = bSecretEndingUnlocked
+			? "SpeedRunUnlockedSecretEndingUnlocked" : "SpeedRunUnlockedSecretEnding";
+		bool bSelect = OptionMenu_MessageBox_GameCompleted(sMessage, "Ok",
+			msMessageBoxFocus, msMessageBoxFocus, true, sHighlight);
 		ImGui_SetModUseInput(false);
 		mlActionHorizontal = 0;
 

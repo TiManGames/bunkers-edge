@@ -28,7 +28,7 @@ const tString gsIntroArrivalGlobal = "BunkersEdge_PlayIntroArrival";
 const tString gsBunkerEndingReturnGlobal = "BunkersEdge_PlayReturnedBunkerEnding";
 const tString gsParkourOutdoorGrading = "mods/BunkersEdge/textures/colorgrading/grading_parkour_new.dds";
 const tString gsParkourIndoorGrading = "mods/BunkersEdge/textures/colorgrading/grading_parkour_interior.dds";
-const float gfParkourRankSTime = 5.f * 60.f;
+const float gfParkourRankSTime = 210.f;
 const float gfParkourRankATime = 7.f * 60.f;
 const float gfParkourRankBTime = 10.f * 60.f;
 const float gfParkourRankCTime = 15.f * 60.f;
@@ -312,7 +312,8 @@ class cScrMap : iScrMap
 			{
 				ImGui_SetTransCategory("ParkourResults");
 				cVector2f vButtonSize = ImGui_NrmSizeGroup(0.16f, 0.1f);
-				cVector3f vRetryPos = ImGui_NrmPosGroup(0.42f, 0.81f, 0.f);
+				bool bSecretEndingUnlocked = Parkour_GetSecretEndingUnlocked();
+				cVector3f vRetryPos = ImGui_NrmPosGroup(bSecretEndingUnlocked ? 0.32f : 0.42f, 0.81f, 0.f);
 				buttonData.mFont.mColor = msParkourResultsSelectedButton == "Retry"
 					? cColor(1.f, 0.75f, 0.25f, 1.f) : cColor(1.f, 1.f);
 				ImGui_DoLabelExt("Retry", buttonLabelDataShadow, vRetryPos + vShadowOffset, vButtonSize);
@@ -328,7 +329,27 @@ class cScrMap : iScrMap
 					msParkourResultsSelectedButton = "Retry";
 				}
 
-				cVector3f vMainMenuPos = ImGui_NrmPosGroup(0.58f, 0.81f, 0.f);
+				if (bSecretEndingUnlocked)
+				{
+					cVector3f vSecretEndingPos = ImGui_NrmPosGroup(0.50f, 0.81f, 0.f);
+					buttonData.mFont.mColor = msParkourResultsSelectedButton == "SecretEnding"
+						? cColor(1.f, 0.3f, 0.22f, 1.f) : cColor(1.f, 0.08f, 0.04f, 1.f);
+					ImGui_DoLabelExt("SecretEnding", buttonLabelDataShadow,
+						vSecretEndingPos + vShadowOffset, vButtonSize);
+					if (ImGui_DoButtonExt("ParkourResultsSecretEnding", "SecretEnding", buttonData,
+						vSecretEndingPos, vButtonSize))
+					{
+						OpenSecretEndingFromParkourResults();
+						return;
+					}
+					if (ImGui_PrevBecameInFocus())
+					{
+						Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+						msParkourResultsSelectedButton = "SecretEnding";
+					}
+				}
+
+				cVector3f vMainMenuPos = ImGui_NrmPosGroup(bSecretEndingUnlocked ? 0.68f : 0.58f, 0.81f, 0.f);
 				buttonData.mFont.mColor = msParkourResultsSelectedButton == "MainMenu"
 					? cColor(1.f, 0.75f, 0.25f, 1.f) : cColor(1.f, 1.f);
 				ImGui_DoLabelExt("MainMenu", buttonLabelDataShadow, vMainMenuPos + vShadowOffset, vButtonSize);
@@ -1893,6 +1914,8 @@ class cScrMap : iScrMap
 			mfParkourCompletionTime = mfParkourElapsedTime;
 			mbSpeedRunNewRecord = Parkour_RecordCompletionTime(mfParkourCompletionTime);
 			mfParkourBestTime = Parkour_GetBestCompletionTime();
+			if (GetParkourRankForTime(mfParkourCompletionTime) == "S")
+				Parkour_UnlockSecretEnding();
 			Sound_FadeGlobalVolume(0, 0, eSoundEntryType_AllExceptGui);
 			Music_Play("stinger.ogg", 0.6f, false, eMusicPrio_AgentHunt);
 			cLux_GetPlayer().GetCharacterBody().StopMovement();
@@ -1941,6 +1964,28 @@ class cScrMap : iScrMap
 			cLux_GetGuiHandler().SetGameHudInputFocus(false);
 			cLux_SetGamePaused(false, false, false, false);
 			PauseMenu_Enabled(true);
+			Player_SetActive(true);
+			Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
+
+			cLux_GetEffectHandler().FadeOut(0.f);
+			cLux_LoadScreenSetOneShotSolidColorBackground();
+			tString sEndingMap = Parkour_GetSecretEndingUnlocked()
+				? "ending.hpm" : "ending_fake.hpm";
+			Map_ChangeMap(sEndingMap, "Start_Begin", "", "", true);
+		}
+
+		void OpenSecretEndingFromParkourResults()
+		{
+			if (mbParkourResultsActive == false || mbParkourResultsConfirmed ||
+				Parkour_GetSecretEndingUnlocked() == false) return;
+
+			mbParkourResultsConfirmed = true;
+			mbParkourResultsActive = false;
+			ImGui_SetShowMouseAutomatically(false);
+			cLux_GetGuiHandler().SetGameHudInputFocus(false);
+			cLux_SetGamePaused(false, false, false, false);
+			PauseMenu_Enabled(true);
+			Parkour_SetSpeedRunModeActive(false);
 			Player_SetActive(true);
 			Sound_PlayGui("special_fx/frontend/frontend_menu_focus", 1.f, eSoundEntryType_Gui);
 

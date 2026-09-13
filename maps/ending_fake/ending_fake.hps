@@ -1,0 +1,171 @@
+#include "interfaces/Map_Interface.hps"
+#include "base/Inputhandler_Types.hps"
+
+#include "helpers/helper_map.hps"
+#include "helpers/helper_effects.hps"
+#include "helpers/helper_audio.hps"
+#include "helpers/helper_game.hps"
+#include "helpers/helper_modules.hps"
+
+#include "custom/helpers/helper_parkour.hps"
+
+//--------------------------------------------------
+
+const tString gsFakeEndingGrunt = "FakeEnding_Grunt";
+const tString gsFakeEndingCreditsFile = "BunkersEdge_FakeCredits.cfg";
+
+//--------------------------------------------------
+
+class cScrMap : iScrMap
+{
+	bool mbAttackSequenceStarted = false;
+	bool mbFakeCreditsStarted = false;
+
+	//-------------------------------------------------------
+
+	void Setup()
+	{
+		// Do not reveal that this is a different ending on the load screen.
+		GetBase().SetDisplayNameEntry("ending");
+	}
+
+	//-------------------------------------------------------
+
+	void PreloadData()
+	{
+	}
+
+	//-------------------------------------------------------
+
+	void OnStart()
+	{
+		// Match the true ending's portal arrival, but deliberately omit hallway.ogg.
+		Sound_FadeGlobalVolume(1.0f, 0.f, eSoundEntryType_AllExceptGui);
+		Effect_Shake_Start(0.012f, 4.f, 0.35f, 0.5f);
+		Effect_Rumble_Start(0.06f, 4.f, 0.35f, 0.5f);
+		Effect_Flash_Start(0.1f, 0.2f, 1.0f, 1.0f);
+		Sound_PlayGui("DW_tunnel/portal/portal_close", 1.0f, eSoundEntryType_Gui);
+
+		Player_SetFallDamageActive(false);
+		Parkour_SetEnabled(false);
+		Player_SetAmbientLight_None();
+		Sketchbook_SetInventoryEnabled(false);
+		PlayerBody_SetActive(true);
+		Player_SetHealth(1.0f);
+		Entity_SetActive(gsFakeEndingGrunt, false);
+
+		Game_AutoSave();
+	}
+
+	//-------------------------------------------------------
+
+	void OnEnter()
+	{
+		Death_SetCustomDeathBehaviour(true);
+	}
+
+	//-------------------------------------------------------
+
+	void OnLeave()
+	{
+		Death_SetCustomDeathBehaviour(false);
+		Player_StopLookAt(0.f);
+	}
+
+	//-------------------------------------------------------
+
+	void OnAction(int alAction, bool abPressed)
+	{
+	}
+
+	//-------------------------------------------------------
+
+	float DrawDebugOutput(cGuiSet@ apSet, iFontData@ apFont, float afY)
+	{
+		return afY;
+	}
+
+	//-------------------------------------------------------
+
+	bool Trigger_FakeEndingAttack(const tString &in asParent, const tString &in asChild, int alState)
+	{
+		if (alState != 1 || mbAttackSequenceStarted) return false;
+
+		mbAttackSequenceStarted = true;
+		Entity_SetActive(asParent, false);
+		Player_ChangeStateToNormal();
+		cLux_GetPlayer().GetCharacterBody().StopMovement();
+		Player_FadeMoveSpeedMulTo(0.f, 0.1f, ePlayerMoveSpeedMulType_PlayerState);
+		Player_FadeRunSpeedMulTo(0.f, 0.1f);
+		Player_FadeLookSpeedMulTo(0.f, 0.1f);
+		Player_SetJumpDisabled(true);
+		Player_SetCrouchDisabled(true);
+		Player_SetLeanDisabled(true);
+		Player_SetCanEquipItems(false);
+		Sketchbook_SetCanOpen(false);
+		Player_ShowCrossHairIcons(false, true);
+
+		Entity_SetActive(gsFakeEndingGrunt, true);
+		Player_StartLookAt(gsFakeEndingGrunt, 8.f, 8.f, 20.f, true);
+		ForceFakeEndingGruntHunt();
+
+		return false;
+	}
+
+	//-------------------------------------------------------
+
+	void ForceFakeEndingGruntHunt()
+	{
+		cScript_SetGlobalArgString(0, "OnFakeEndingGruntKillComplete");
+		if (cScript_RunGlobalFunc(gsFakeEndingGrunt, "cScrAgentStalker",
+			"_Global_ForceHuntPlayer") == false)
+		{
+			Error("Could not force '" + gsFakeEndingGrunt + "' into Hunt state");
+		}
+	}
+
+	//-------------------------------------------------------
+
+	void OnFakeEndingGruntKillComplete()
+	{
+		StartFakeEndingCredits();
+	}
+
+	//-------------------------------------------------------
+
+	void OnCustomDeath(const tString &in asSource)
+	{
+		StartFakeEndingCredits();
+	}
+
+	//-------------------------------------------------------
+
+	void StartFakeEndingCredits()
+	{
+		if (mbFakeCreditsStarted) return;
+
+		mbFakeCreditsStarted = true;
+		Player_StopLookAt(0.f);
+		Player_SetActive(false);
+		Music_StopAll(0.f);
+		Sound_FadeGlobalVolume(0.f, 0.5f, eSoundEntryType_WorldAll);
+		Parkour_SetLevelCompletedOnce();
+		Parkour_SetSpeedRunModeActive(false);
+		Credits_Start(gsFakeEndingCreditsFile, "OnEndOfBunkersEdgeFakeCredits",
+			"", cVector3f_Zero, "", 1.0f, 0.75f, 0.5f);
+	}
+
+	//-------------------------------------------------------
+
+	void OnEndOfBunkersEdgeFakeCredits()
+	{
+		GameStats_Save();
+		Music_StopAll(2.f);
+		Sound_FadeGlobalVolume(1.f, 0.5f, eSoundEntryType_WorldAll);
+		cLux_SetGamePaused(false, false, false, false);
+		cLux_GetGuiHandler().SetGameHudInputFocus(false);
+		cLux_GetEffectHandler().FadeOut(0.f);
+		cLux_LoadScreenSetOneShotSolidColorBackground();
+		cLux_StartMap(cLux_GetMainMenuFile());
+	}
+}
