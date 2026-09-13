@@ -10772,8 +10772,17 @@ class cScrAgentStalker : cScrAgentHumanoid
 		SetAlertState(eStalkerAlertState_Detected);
 		SetSpeedState(eStalkerSpeed_Run);
 		
-		Terror_AddHuntingEnemy(mBaseObj.GetID());
-		Terror_RemoveEnemy(mBaseObj.GetID());
+		if (msForcedHuntKillCallback != "")
+		{
+			// The fake-ending chase uses the audible terror meter instead of suppressing it.
+			Terror_RemoveHuntingEnemy(mBaseObj.GetID());
+			Terror_AddEnemy(mBaseObj.GetID(), 0.01f);
+		}
+		else
+		{
+			Terror_AddHuntingEnemy(mBaseObj.GetID());
+			Terror_RemoveEnemy(mBaseObj.GetID());
+		}
 		Blackboard_SetEnemyHunt(mBaseObj.GetID(), true);
 		
 		//////////////////
@@ -10832,6 +10841,9 @@ class cScrAgentStalker : cScrAgentHumanoid
 
 	void State_Hunt_Leave()
 	{
+		if (msForcedHuntKillCallback != "")
+			Terror_RemoveEnemy(mBaseObj.GetID());
+
 		mBaseObj.SetFOVMul(1.f);
 		mBaseObj.SetSightRangeMul(mfSightMul);
 		mfExtraSightMul = 1.f;
