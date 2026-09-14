@@ -11,7 +11,8 @@ const float gfParkourClimb_SnapTime = 0.18f;
 const float gfParkourClimb_ClimbTime = 0.68f;
 const float gfParkourClimb_ArcHeight = 0.18f;
 const float gfParkourClimb_MomentumTravelTime = 0.22f;
-const float gfParkourClimb_MaxMomentumDistance = 1.35f;
+const float gfParkourClimb_MaxExitSpeed = 4.0f;
+const float gfParkourClimb_MaxMomentumDistance = 0.88f;
 const float gfParkourClimb_FlowMaxHeight = 1.70f;
 const float gfParkourClimb_FlowMinSpeed = 1.25f;
 const float gfParkourClimb_FlowFastSpeed = 6.0f;
@@ -382,7 +383,8 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 		}
 
 		if (gfParkourClimb_MomentumTravelTime > 0.001f)
-			mfFlowExitSpeed = mvMomentumCarryOffset.Length() / gfParkourClimb_MomentumTravelTime;
+			mfFlowExitSpeed = cMath_Min(gfParkourClimb_MaxExitSpeed,
+				mvMomentumCarryOffset.Length() / gfParkourClimb_MomentumTravelTime);
 
 		if (Parkour_GetDebug())
 			cLux_AddDebugMessage("[ParkourLedgeCarry diag1] path speed=" +
