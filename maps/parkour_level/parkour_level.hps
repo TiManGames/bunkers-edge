@@ -1969,8 +1969,13 @@ class cScrMap : iScrMap
 
 			cLux_GetEffectHandler().FadeOut(0.f);
 			cLux_LoadScreenSetOneShotSolidColorBackground();
-			tString sEndingMap = Parkour_GetSecretEndingUnlocked()
+			bool bSecretEndingUnlocked = Parkour_GetSecretEndingUnlocked();
+			tString sEndingMap = bSecretEndingUnlocked
 				? "ending.hpm" : "ending_fake.hpm";
+			LogNewLine("[SecretEndingRoute] completionTime=" + mfParkourCompletionTime +
+				" rank=" + GetParkourRankForTime(mfParkourCompletionTime) +
+				" unlocked=" + bSecretEndingUnlocked +
+				" destination=" + sEndingMap);
 			Map_ChangeMap(sEndingMap, "Start_Begin", "", "", true);
 		}
 
