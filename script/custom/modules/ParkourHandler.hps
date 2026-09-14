@@ -1149,10 +1149,18 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 						 float afAutoHeight,
 						 float afAutoFaceDistance)
 	{
+		iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+		float fIncomingFlatSpeed = Parkour_GetFlatVelocity(pBody).Length();
+		float fLedgeHeight = cMath_Max(0.f, afAutoHeight);
+		if (fLedgeHeight <= 0.001f && pBody !is null)
+			fLedgeHeight = cMath_Max(0.f, avFeetPos.y - pBody.GetFeetPosition().y);
+
 		cScript_SetGlobalArgVector3f(0, avFeetPos);
 		cScript_SetGlobalArgBool(1, abCrouchOnFinish);
 		cScript_SetGlobalArgVector3f(2, avAreaDir);
 		cScript_SetGlobalArgVector3f(3, avAreaPos);
+		cScript_SetGlobalArgFloat(4, fIncomingFlatSpeed);
+		cScript_SetGlobalArgFloat(5, fLedgeHeight);
 		cScript_RunGlobalFunc("State_ParkourClimbLedge", "", "SetupParkourClimbLedge");
 
 		cLux_GetPlayer().ChangeState(ePlayerState_Custom_ParkourClimbLedge);
@@ -1165,6 +1173,10 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugAutoLedgeStart(afAutoHeight, afAutoFaceDistance, avFeetPos);
 		else
 			DebugLedgeStart();
+
+		if (mbDebug)
+			cLux_AddDebugMessage("[ParkourLedgeCarry diag1] captured speed=" + fIncomingFlatSpeed +
+				" height=" + fLedgeHeight, true);
 
 		return true;
 	}

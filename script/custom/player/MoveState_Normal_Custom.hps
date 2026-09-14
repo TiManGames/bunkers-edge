@@ -142,7 +142,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		UpdateWallRunLeanTurnSuppress(afTimeStep);
 		UpdateLeanTurn(afTimeStep, pCharBody);
 		UpdateParkour(afTimeStep, pCharBody);
-		UpdateParkourControlDebug(afTimeStep, pCharBody);
 
 		////////////////////////
 		// Update run meter
@@ -766,9 +765,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 			mfLandingVelocityY >= gfParkourMove_RollMinFallSpeed &&
 			ParkourRollDropAllowed(apCharBody);
 		SetParkourRollPrepared(mbParkourLandingRollEligible);
-		if (Parkour_GetDebug())
-			cLux_AddDebugMessage("[ParkourControl v1] contact roll=" + mbParkourLandingRollEligible +
-				" horizontal=" + mvParkourLandingFlatVelocity.Length() + " fall=" + mfLandingVelocityY, true);
 	}
 
 	//------------------------------------------------------------
@@ -1322,18 +1318,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		return true;
 	}
 
-	void UpdateParkourControlDebug(float afTimeStep, iCharacterBody@ apBody)
-	{
-		if (Parkour_GetEnabled() == false || Parkour_GetDebug() == false || apBody is null) return;
-		mfParkourControlDebugTimer -= afTimeStep;
-		if (mfParkourControlDebugTimer > 0.f) return;
-		mfParkourControlDebugTimer = 0.25f;
-		cLux_AddDebugMessage("[ParkourControl v1] input=" + mvParkourMoveInput +
-			" speed=" + Parkour_GetFlatVelocity(apBody, afTimeStep).Length() +
-			" flow=" + Parkour_GetFlow() + " ground=" + apBody.IsOnGround() +
-			" roll=" + mbParkourLandRollActive + " air=" + msParkourAirLockSource, true);
-	}
-
 	void _Global_HandleParkourMoveInput()
 	{
 		cVector3f vInput = cScript_GetGlobalArgVector3f(0);
@@ -1777,7 +1761,6 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 			apCharBody.SetMoveSpeed(eCharDir_Forward, cMath_Vector3Dot(vFlat, vForward));
 			apCharBody.SetMoveSpeed(eCharDir_Right, cMath_Vector3Dot(vFlat, vRight));
 			apCharBody.SetForceVelocity(cVector3f(0.f, vVel.y, 0.f));
-			if (Parkour_GetDebug()) cLux_AddDebugMessage("[ParkourControl v1] roll exit speed=" + fSpeed, true);
 			StopParkourLandRoll(false);
 		}
 	}

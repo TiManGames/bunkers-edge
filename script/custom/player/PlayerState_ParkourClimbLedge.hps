@@ -3,12 +3,22 @@
 #include "player/Player_Types.hps"
 
 #include "helpers/helper_player.hps"
+#include "custom/helpers/helper_parkour.hps"
 
 //------------------------------------------------------------
 
 const float gfParkourClimb_SnapTime = 0.18f;
 const float gfParkourClimb_ClimbTime = 0.68f;
 const float gfParkourClimb_ArcHeight = 0.18f;
+const float gfParkourClimb_MomentumTravelTime = 0.22f;
+const float gfParkourClimb_MaxMomentumDistance = 1.35f;
+const float gfParkourClimb_FlowMaxHeight = 1.70f;
+const float gfParkourClimb_FlowMinSpeed = 1.25f;
+const float gfParkourClimb_FlowFastSpeed = 6.0f;
+const float gfParkourClimb_FlowDurationSlow = 0.58f;
+const float gfParkourClimb_FlowDurationFast = 0.44f;
+const float gfParkourClimb_FlowArcMin = 0.24f;
+const float gfParkourClimb_FlowArcMax = 0.38f;
 
 //------------------------------------------------------------
 
@@ -36,6 +46,8 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 		mbCrouch = cScript_GetGlobalArgBool(1);
 		mvAreaDirection = cScript_GetGlobalArgVector3f(2);
 		mvAreaPosition = cScript_GetGlobalArgVector3f(3);
+		mfClimbCarrySpeed = cMath_Max(0.f, cScript_GetGlobalArgFloat(4));
+		mfLedgeHeight = cMath_Max(0.f, cScript_GetGlobalArgFloat(5));
 	}
 	
 	//------------------------------------------------------------
@@ -56,6 +68,11 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 			mvAreaDirection.Normalize();
 		else
 			mvAreaDirection = cVector3f_Forward;
+
+		mbFlowClimb = mfLedgeHeight <= gfParkourClimb_FlowMaxHeight;
+		mvMomentumCarryOffset = cVector3f_Zero;
+		if (mbFlowClimb)
+			SetupMomentumCarry(pCharBody);
 		
 		cLux_GetPlayer().ChangeMoveState(eMoveState_Normal);
 		pCharBody.SetGravityActive(false);
@@ -68,6 +85,7 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 		Player_CancelJump();
 		
 		mbCrouchCompleted = false;
+		mbFinished = false;
 		mlState = 0;
 		mfTimeCount = 0.f;
 		mfTimeCountAdd = 1.f / gfParkourClimb_SnapTime;
@@ -81,6 +99,33 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 		float fAngle = cMath_GetAngleFromPoints3D(cVector3f_Zero, mvAreaDirection * -1.f).y;
 		mvFadeRotStart = cVector3f(pCam.GetPitch(), pCam.GetYaw(), 0.f);
 		mvFadeRotEnd = cVector3f(0.f, fAngle, 0.f);
+
+		if (mbFlowClimb)
+		{
+			float fSpeedT = cMath_Clamp((mfClimbCarrySpeed - gfParkourClimb_FlowMinSpeed) /
+				(gfParkourClimb_FlowFastSpeed - gfParkourClimb_FlowMinSpeed), 0.f, 1.f);
+			float fHeightT = cMath_Clamp(mfLedgeHeight / gfParkourClimb_FlowMaxHeight, 0.f, 1.f);
+			mfFlowDuration = gfParkourClimb_FlowDurationSlow * (1.f - fSpeedT) +
+				gfParkourClimb_FlowDurationFast * fSpeedT;
+			mfFlowArcHeight = gfParkourClimb_FlowArcMin * (1.f - fHeightT) +
+				gfParkourClimb_FlowArcMax * fHeightT;
+			mlState = 2;
+			mfTimeCount = 0.f;
+			mfTimeCountAdd = 1.f / mfFlowDuration;
+			mvFadePosStart = pCharBody.GetFeetPosition();
+			mvFadePosEnd = mvFeetPosition + cVector3f(0.f, 0.01f, 0.f) + mvMomentumCarryOffset;
+		}
+
+		if (Parkour_GetDebug())
+		{
+			if (mbFlowClimb)
+				cLux_AddDebugMessage("[ParkourLedgeCarry diag1] style=flow height=" + mfLedgeHeight +
+					" speed=" + mfClimbCarrySpeed + " duration=" + mfFlowDuration +
+					" distance=" + mvMomentumCarryOffset.Length(), true);
+			else
+				cLux_AddDebugMessage("[ParkourLedgeCarry diag1] style=tall height=" + mfLedgeHeight +
+					" speed=" + mfClimbCarrySpeed, true);
+		}
 		
 		tString sSound = "player/climb_ledge/low";
 		if (mvAreaPosition.y > pCam.GetPosition().y + 0.1f)
@@ -96,13 +141,7 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 	
 	void OnLeaveState(int alNextStateId)
 	{
-		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
-		if (pCharBody !is null)
-		{
-			pCharBody.SetGravityActive(true);
-			pCharBody.SetTestCollision(true);
-			pCharBody.SetPhysicsBodyActive(true);
-		}
+		RestoreBody();
 		
 		Player_ResetCameraLimits();
 		cLux_GetPlayer().FadeCameraRollTo(ePlayerRoll_Climb, 0.f, 4.f, 5.f);
@@ -167,7 +206,42 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 			}
 			
 			if (mfTimeCount >= 1.f)
-				cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+				FinishClimb();
+		}
+		else if (mlState == 2)
+		{
+			float fMoveT = GetFlowMoveT(mfTimeCount);
+			cVector3f vPos = LerpVector(mvFadePosStart, mvFadePosEnd, fMoveT);
+			vPos.y += cMath_Sin(mfTimeCount * cMath_Pi) * mfFlowArcHeight;
+			pCharBody.SetFeetPosition(vPos, true);
+
+			float fRotTotalX = cMath_GetAngleDistance(mvFadeRotStart.x, mvFadeRotEnd.x, cMath_PiMul2);
+			float fRotTotalY = cMath_GetAngleDistance(mvFadeRotStart.y, mvFadeRotEnd.y, cMath_PiMul2);
+			float fRotT = cMath_Easing(eEasing_SineInOut, mfTimeCount);
+			float fArc = cMath_Sin(mfTimeCount * cMath_Pi);
+			pCam.SetPitch(mvFadeRotStart.x + fRotTotalX * fRotT + cMath_ToRad(fArc * 7.f));
+			pCharBody.SetYaw(mvFadeRotStart.y + fRotTotalY * fRotT);
+
+			float fRollAmount = cMath_Sin(mfTimeCount * cMath_PiMul2) * 4.f;
+			cLux_GetPlayer().SetCameraRoll(ePlayerRoll_Climb, cMath_ToRad(fRollAmount));
+			cLux_GetPlayer().MoveCameraPosAdd(eCameraAddType_Script,
+				cVector3f(0.f, -0.08f - fArc * 0.10f, 0.08f + fArc * 0.05f),
+				8.f, 5.f, 0.08f);
+
+			if (mfTimeCount > 0.72f)
+			{
+				float fCarryT = cMath_Clamp((mfTimeCount - 0.72f) / 0.28f, 0.f, 1.f);
+				ApplyFlowExitVelocity(pCharBody, cMath_Easing(eEasing_QuadIn, fCarryT));
+			}
+
+			if (mbCrouch && mbCrouchCompleted == false && mfTimeCount > 0.72f)
+			{
+				Player_SetCrouching(true);
+				mbCrouchCompleted = true;
+			}
+
+			if (mfTimeCount >= 1.f)
+				FinishClimb();
 		}
 	}
 	
@@ -231,9 +305,129 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 	{
 		return afStartY;
 	}
-	
+
 	//------------------------------------------------------------
-	
+
+	void FinishClimb()
+	{
+		if (mbFinished) return;
+
+		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
+		if (pCharBody is null)
+		{
+			cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+			return;
+		}
+
+		mbFinished = true;
+		RestoreBody();
+		cVector3f vFinishFeet = mvFeetPosition + cVector3f(0.f, 0.01f, 0.f);
+		if (mbFlowClimb)
+			vFinishFeet += mvMomentumCarryOffset;
+		pCharBody.SetFeetPosition(vFinishFeet, true);
+		if (mbFlowClimb)
+			ApplyFlowExitVelocity(pCharBody, 1.f);
+		else
+			ClearExitVelocity(pCharBody);
+
+		if (Parkour_GetDebug() && mbFlowClimb)
+			cLux_AddDebugMessage("[ParkourLedgeCarry diag1] exit speed=" + mfFlowExitSpeed +
+				" direction=" + mvFlowExitDirection, true);
+		cLux_GetPlayer().ChangeState(ePlayerState_Normal);
+	}
+
+	//------------------------------------------------------------
+
+	void RestoreBody()
+	{
+		iCharacterBody@ pCharBody = cLux_GetPlayer().GetCharacterBody();
+		if (pCharBody is null) return;
+
+		pCharBody.SetGravityActive(true);
+		pCharBody.SetTestCollision(true);
+		pCharBody.SetPhysicsBodyActive(true);
+	}
+
+	//------------------------------------------------------------
+
+	void SetupMomentumCarry(iCharacterBody@ apCharBody)
+	{
+		mvMomentumCarryOffset = cVector3f_Zero;
+		mvFlowExitDirection = cVector3f_Forward;
+		mfFlowExitSpeed = 0.f;
+		if (apCharBody is null || mfClimbCarrySpeed <= 0.001f) return;
+
+		cVector3f vCarryDir = mvAreaDirection * -1.f;
+		vCarryDir.y = 0.f;
+		if (vCarryDir.SqrLength() > 0.001f)
+			vCarryDir.Normalize();
+		else
+			vCarryDir = apCharBody.GetForward();
+		mvFlowExitDirection = vCarryDir;
+
+		float fCarryDistance = cMath_Clamp(mfClimbCarrySpeed * gfParkourClimb_MomentumTravelTime,
+			0.f, gfParkourClimb_MaxMomentumDistance);
+		cVector3f vFullOffset = vCarryDir * fCarryDistance;
+		array<float> vOffsetMuls = { 1.f, 0.75f, 0.5f, 0.25f, 0.f };
+		cVector3f vPushBack;
+		for (uint i = 0; i < vOffsetMuls.size(); ++i)
+		{
+			cVector3f vCandidate = mvFeetPosition + cVector3f(0.f, 0.01f, 0.f) +
+				vFullOffset * vOffsetMuls[i];
+			if (apCharBody.CheckCharacterFits(vCandidate, true, 0, vPushBack))
+			{
+				mvMomentumCarryOffset = vFullOffset * vOffsetMuls[i];
+				break;
+			}
+		}
+
+		if (gfParkourClimb_MomentumTravelTime > 0.001f)
+			mfFlowExitSpeed = mvMomentumCarryOffset.Length() / gfParkourClimb_MomentumTravelTime;
+
+		if (Parkour_GetDebug())
+			cLux_AddDebugMessage("[ParkourLedgeCarry diag1] path speed=" +
+				mfClimbCarrySpeed + " distance=" + mvMomentumCarryOffset.Length() +
+				" direction=" + vCarryDir, true);
+	}
+
+	//------------------------------------------------------------
+
+	void ApplyFlowExitVelocity(iCharacterBody@ apCharBody, float afMul)
+	{
+		if (apCharBody is null) return;
+
+		float fMul = cMath_Clamp(afMul, 0.f, 1.f);
+		cVector3f vVel = apCharBody.GetForceVelocity();
+		vVel.x = mvFlowExitDirection.x * mfFlowExitSpeed * fMul;
+		vVel.z = mvFlowExitDirection.z * mfFlowExitSpeed * fMul;
+		vVel.y = cMath_Max(vVel.y, 0.10f * fMul);
+		apCharBody.SetForceVelocity(vVel);
+	}
+
+	//------------------------------------------------------------
+
+	void ClearExitVelocity(iCharacterBody@ apCharBody)
+	{
+		if (apCharBody is null) return;
+
+		apCharBody.StopMovement();
+		apCharBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		apCharBody.SetMoveSpeed(eCharDir_Right, 0.f);
+		apCharBody.SetForceVelocity(cVector3f_Zero);
+	}
+
+	//------------------------------------------------------------
+
+	float GetFlowMoveT(float afTimeT)
+	{
+		float fTimeT = cMath_Clamp(afTimeT, 0.f, 1.f);
+		float fEaseT = cMath_Easing(eEasing_SineInOut, fTimeT);
+		float fLinearBlend = cMath_Easing(eEasing_QuadIn, fTimeT);
+		return cMath_InterpolateLinear(fEaseT, fTimeT, fLinearBlend);
+	}
+
+	//------------------------------------------------------------
+
 	cVector3f LerpVector(const cVector3f &in avA, const cVector3f &in avB, float afT)
 	{
 		return avA * (1.f - afT) + avB * afT;
@@ -245,9 +439,18 @@ class cScrPlayerState_ParkourClimbLedge : iScrPlayerState, iScrPlayerState_Inter
 	cVector3f mvAreaDirection = cVector3f_Forward;
 	cVector3f mvAreaPosition = cVector3f_Zero;
 	cVector3f mvHangFeetPosition = cVector3f_Zero;
+	cVector3f mvMomentumCarryOffset = cVector3f_Zero;
+	cVector3f mvFlowExitDirection = cVector3f_Forward;
 	
 	bool mbCrouch = false;
 	bool mbCrouchCompleted = false;
+	bool mbFinished = false;
+	bool mbFlowClimb = false;
+	float mfClimbCarrySpeed = 0.f;
+	float mfLedgeHeight = 0.f;
+	float mfFlowDuration = gfParkourClimb_FlowDurationSlow;
+	float mfFlowArcHeight = gfParkourClimb_FlowArcMin;
+	float mfFlowExitSpeed = 0.f;
 	
 	float mfTimeCount = 0.f;
 	float mfTimeCountAdd = 1.f;
