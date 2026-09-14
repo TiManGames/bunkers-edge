@@ -182,6 +182,25 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 			if (Parkour_TryStartLedgeGrab(false))
 				return false;
 
+			if (mbTurning)
+			{
+				mbTurning = false;
+				mfTurnTimer = -1.f;
+				if (Parkour_GetDebug())
+				{
+					cVector3f vLaunchDir = cLux_GetPlayer().GetCamera().GetForward();
+					vLaunchDir.y = 0.f;
+					if (vLaunchDir.SqrLength() > 0.001f)
+						vLaunchDir.Normalize();
+					iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+					float fYaw = 0.f;
+					if (pBody !is null)
+						fYaw = pBody.GetYaw();
+					cLux_AddDebugMessage("[ParkourQuickTurn diag1] context=wall_scramble stopped yaw=" +
+						cMath_ToDeg(fYaw) + " launch=" + vLaunchDir, true);
+				}
+			}
+
 			WallScrambleJump();
 			return false;
 		}
@@ -320,7 +339,10 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		apBody.AddYaw(fDiff);
 
 		if (fT >= 1.f)
+		{
 			mbTurning = false;
+			mfTurnTimer = -1.f;
+		}
 	}
 
 	//------------------------------------------------------------

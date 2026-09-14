@@ -17,7 +17,7 @@ const float gfParkour_FrontWallDot = -0.7f;
 const float gfParkour_WallScrambleAutoFrontDot = -0.60f;
 const float gfParkour_FrontWallUpSpeed = 1.7f;
 const float gfParkour_FrontWallOutSpeed = 0.85f;
-const float gfParkour_FrontWallForwardDamp = 1.92f;
+const float gfParkour_FrontWallForwardDamp = 1.0f;
 const float gfParkour_LedgeCandidateTTL = 0.16f;
 const float gfParkour_WallJumpChainGrace = 1.05f;
 const float gfParkour_WallJumpSameWallRejectTime = 0.28f;
@@ -1891,11 +1891,13 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			return false;
 		}
 
-		bool bForwardInput = cInput_IsTriggered(eAction_Forward);
+		float fControllerForwardInput = Parkour_GetForwardInputAmount();
+		bool bForwardInput = cInput_IsTriggered(eAction_Forward) || fControllerForwardInput > 0.1f;
 		bool bForwardMove = pBody.GetMoveSpeed(eCharDir_Forward) > 0.05f;
 		if (bForwardInput == false && bForwardMove == false)
 		{
-			DebugSpeedVaultFail("no forward intent");
+			DebugSpeedVaultFail("no forward intent [ParkourController diag1 cachedLS=" +
+				fControllerForwardInput + " body=" + pBody.GetMoveSpeed(eCharDir_Forward) + "]");
 			return false;
 		}
 

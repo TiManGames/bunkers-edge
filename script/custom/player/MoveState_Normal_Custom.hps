@@ -250,16 +250,42 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		iCharacterBody@ pCharBody = mBaseObj.mpPlayer.GetCharacterBody();
 		bool bWasCrouching = mbCrouching;
 		bool bWasOnGround = pCharBody !is null && pCharBody.IsOnGround();
+		bool bStoppedLeanTurnForJump = false;
+		if (alAction == eAction_Jump && abPressed && bWasOnGround && mbLeanTurning)
+		{
+			mbLeanTurning = false;
+			mfLeanTurnTimer = -1.f;
+			bStoppedLeanTurnForJump = true;
+		}
+
 		bool bKeyboardForwardIntent = cInput_IsTriggered(eAction_Forward);
 		bool bControllerForwardIntent = mvParkourMoveInput.y > 0.1f;
 		bool bHadForwardIntent = bKeyboardForwardIntent || bControllerForwardIntent;
 		float fPreJumpFlatSpeed = 0.f;
+		cVector3f vPreJumpFlatVel = cVector3f_Zero;
 		if (pCharBody !is null && pCharBody.GetMoveSpeed(eCharDir_Forward) > 0.05f)
 			bHadForwardIntent = true;
 		if (pCharBody !is null)
 		{
-			cVector3f vPreJumpFlatVel = Parkour_GetFlatVelocity(pCharBody, mfLastParkourTimeStep);
+			vPreJumpFlatVel = Parkour_GetFlatVelocity(pCharBody, mfLastParkourTimeStep);
 			fPreJumpFlatSpeed = vPreJumpFlatVel.Length();
+
+			if (bStoppedLeanTurnForJump)
+			{
+				cVector3f vLookDir = mBaseObj.mpPlayer.GetCamera().GetForward();
+				vLookDir.y = 0.f;
+				if (vLookDir.SqrLength() > 0.001f)
+				{
+					vLookDir.Normalize();
+					vPreJumpFlatVel = vLookDir * fPreJumpFlatSpeed;
+				}
+
+				if (Parkour_GetDebug())
+				{
+					cLux_AddDebugMessage("[ParkourQuickTurn diag1] context=normal stopped yaw=" +
+						cMath_ToDeg(pCharBody.GetYaw()) + " launch=" + vLookDir, true);
+				}
+			}
 		}
 		if (alAction == eAction_Jump && abPressed && Parkour_GetDebug())
 		{
@@ -295,7 +321,7 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		if (alAction == eAction_Jump && abPressed && bWasOnGround && Parkour_TryStartSpeedVault(mfLastParkourTimeStep))
 			return false;
 
-		if (alAction == eAction_Jump && abPressed && bWasOnGround)
+		if (alAction == eAction_Jump && abPressed && bWasOnGround && bStoppedLeanTurnForJump == false)
 			mbParkourPendingSideJump = GetParkourSideJumpInput(pCharBody, mlParkourPendingSideJumpDir, mbParkourPendingSideJumpRun);
 
 		bool bResult = cScrMoveState_Normal::OnAction(alAction, abPressed);
@@ -325,8 +351,14 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 						cVector3f vSideJumpVel;
 						if (ApplyParkourSideJumpLaunch(pCharBody, mlParkourPendingSideJumpDir, mbParkourPendingSideJumpRun, vSideJumpVel))
 							ArmParkourAirLock(vSideJumpVel, false, "side jump");
+						else if (bStoppedLeanTurnForJump)
+							ApplyLeanTurnJumpLaunch(pCharBody, vPreJumpFlatVel);
 						else
 							RecordParkourJumpBasis(pCharBody, fPreJumpFlatSpeed, mfLastParkourTimeStep);
+					}
+					else if (bStoppedLeanTurnForJump)
+					{
+						ApplyLeanTurnJumpLaunch(pCharBody, vPreJumpFlatVel);
 					}
 					else
 					{
@@ -508,7 +540,10 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		apCharBody.AddYaw(fDiff);
 
 		if (fT >= 1.f)
+		{
 			mbLeanTurning = false;
+			mfLeanTurnTimer = -1.f;
+		}
 	}
 
 	//------------------------------------------------------------
@@ -1086,6 +1121,23 @@ class cScrMoveState_Normal_Custom : cScrMoveState_Normal
 		}
 
 		return true;
+	}
+
+	//------------------------------------------------------------
+
+	void ApplyLeanTurnJumpLaunch(iCharacterBody@ apCharBody,
+								 const cVector3f &in avLaunchVelocity)
+	{
+		ArmParkourAirLock(avLaunchVelocity, false, "normal jump");
+		if (Parkour_GetEnabled() == false || apCharBody is null) return;
+
+		cVector3f vForceVel = apCharBody.GetForceVelocity();
+		vForceVel.x = mvParkourJumpDir.x * mfParkourJumpStartSpeed;
+		vForceVel.z = mvParkourJumpDir.z * mfParkourJumpStartSpeed;
+		apCharBody.StopMovement();
+		apCharBody.SetMoveSpeed(eCharDir_Forward, 0.f);
+		apCharBody.SetMoveSpeed(eCharDir_Right, 0.f);
+		apCharBody.SetForceVelocity(vForceVel);
 	}
 
 	//------------------------------------------------------------
