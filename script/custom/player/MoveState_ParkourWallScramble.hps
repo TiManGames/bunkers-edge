@@ -44,6 +44,7 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		mfLostWallTimer = gfParkourWallScramble_LostWallGrace;
 		mfGroundTimer = gfParkourWallScramble_GroundExitGrace;
 		mfTurnTimer = -1.f;
+		mfTurnTargetYaw = 0.f;
 		mbTurned = false;
 		mbTurning = false;
 		mfLookUpTimer = cScript_GetGlobalVarBool("Parkour_WallScramble_CameraAssist") ? 0.f : -1.f;
@@ -296,13 +297,26 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		mlTurnDir = alDir >= 0 ? 1 : -1;
 		mfLookUpTimer = -1.f;
 		mfTurnStartYaw = pBody.GetYaw();
+		float fHalfTurnYaw = mfTurnStartYaw + cMath_Pi * float(mlTurnDir);
+		cVector3f vOutward = mvWallNormal;
+		vOutward.y = 0.f;
+		if (vOutward.SqrLength() > 0.001f)
+		{
+			vOutward.Normalize();
+			float fOutwardYaw = cMath_GetAngleFromPoints3D(cVector3f_Zero, vOutward).y;
+			mfTurnTargetYaw = fHalfTurnYaw + cMath_GetAngleDistanceRad(fHalfTurnYaw, fOutwardYaw);
+		}
+		else
+			mfTurnTargetYaw = fHalfTurnYaw;
 		mfTurnTimer = 0.f;
 		mbTurning = true;
 		mbTurned = true;
 		Effect_Shake_Start(0.04f, 0.10f, 0.f, 0.08f, cVector3f(1, 1, 1), 14);
 
 		if (Parkour_GetDebug())
-			cLux_AddDebugMessage("[Parkour] Wall scramble quick turn.", true);
+			cLux_AddDebugMessage("[ParkourTurn diag1] context=scramble startYaw=" +
+				cMath_ToDeg(mfTurnStartYaw) + " targetYaw=" + cMath_ToDeg(mfTurnTargetYaw) +
+				" wallNormal=" + vOutward + " yawDir=" + mlTurnDir, true);
 	}
 
 	//------------------------------------------------------------
@@ -334,7 +348,7 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 		float fT = cMath_Clamp(mfTurnTimer / gfParkourWallScramble_TurnTime, 0.f, 1.f);
 		fT = cMath_Easing(eEasing_SineInOut, fT);
 
-		float fTargetYaw = mfTurnStartYaw + cMath_Pi * float(mlTurnDir) * fT;
+		float fTargetYaw = mfTurnStartYaw + (mfTurnTargetYaw - mfTurnStartYaw) * fT;
 		float fDiff = cMath_GetAngleDistanceRad(apBody.GetYaw(), fTargetYaw);
 		apBody.AddYaw(fDiff);
 
@@ -439,6 +453,7 @@ class cScrMoveState_ParkourWallScramble : iScrMoveState, iScrMoveState_Interface
 	float mfPowerMul = 1.f;
 	float mfTurnTimer = -1.f;
 	float mfTurnStartYaw = 0.f;
+	float mfTurnTargetYaw = 0.f;
 	float mfLookUpTimer = -1.f;
 	float mfLookUpStartPitch = 0.f;
 	int mlTurnDir = 1;

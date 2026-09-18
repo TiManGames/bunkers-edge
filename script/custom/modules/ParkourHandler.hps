@@ -32,6 +32,9 @@ const float gfParkour_WallScrambleLookUpForwardY = 0.12f;
 const float gfParkour_WallScrambleChainGrace = 1.05f;
 const float gfParkour_WallScrambleSameWallRejectTime = 0.48f;
 const float gfParkour_WallScrambleSameWallDot = 0.65f;
+const float gfParkour_WallScrambleInitialMinJumpAge = 0.15f;
+const float gfParkour_WallScrambleInitialMaxRiseSpeed = 1.0f;
+const float gfParkour_WallScrambleInitialMaxFallSpeed = -1.0f;
 const float gfParkour_LedgeGrabMinRiseSpeed = 0.75f;
 const float gfParkour_PoleSwingCandidateTTL = 0.12f;
 const float gfParkour_PoleClimbCandidateTTL = 0.12f;
@@ -1313,6 +1316,23 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 	//------------------------------------------------------------
 
+	bool IsInitialFrontWallScrambleNearApex(iCharacterBody@ apBody, float afJumpAge)
+	{
+		if (apBody is null) return false;
+
+		float fVerticalSpeed = apBody.GetForceVelocity().y;
+		bool bNearApex = afJumpAge >= gfParkour_WallScrambleInitialMinJumpAge &&
+			fVerticalSpeed <= gfParkour_WallScrambleInitialMaxRiseSpeed &&
+			fVerticalSpeed >= gfParkour_WallScrambleInitialMaxFallSpeed;
+
+		if (mbDebug && bNearApex == false)
+			cLux_AddDebugMessage("[ParkourScrambleApex diag1] delayed age=" + afJumpAge +
+				" vertical=" + fVerticalSpeed, true);
+		return bNearApex;
+	}
+
+	//------------------------------------------------------------
+
 	void DoFrontWallScramble(iCharacterBody@ apBody,
 							 const cVector3f &in avWallNormal,
 							 float afDistance)
@@ -1440,6 +1460,11 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 			DebugWallRunFail("same wall scramble chain cooldown");
 			return false;
 		}
+		if (abFromWallScrambleChain == false && IsInitialFrontWallScrambleNearApex(pBody, afAge) == false)
+			return false;
+		if (mbDebug && abFromWallScrambleChain == false)
+			cLux_AddDebugMessage("[ParkourScrambleApex diag1] accepted scramble age=" + afAge +
+				" vertical=" + pBody.GetForceVelocity().y, true);
 
 		PrepareWallRunPower(abFromWallScrambleChain);
 		ApplyFlowEvent(geParkourFlowEvent_WallScrambleStart, 1.f);
@@ -1517,6 +1542,11 @@ class cScrParkourHandler : iScrUserModule, iScrUserModule_Interface
 
 		if (IsDirectFrontWallForScramble(pBody, vWallNormal) && abFromWallJumpChain == false)
 		{
+			if (IsInitialFrontWallScrambleNearApex(pBody, afRunJumpAge) == false)
+				return false;
+			if (mbDebug)
+				cLux_AddDebugMessage("[ParkourScrambleApex diag1] accepted front impact age=" + afRunJumpAge +
+					" vertical=" + pBody.GetForceVelocity().y, true);
 			DoFrontWallScramble(pBody, vWallNormal, fWallDistance);
 			return true;
 		}

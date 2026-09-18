@@ -19,6 +19,8 @@ const float gfParkourWallRun_ForwardReleaseGrace = 0.28f;
 const float gfParkourWallRun_GroundExitGrace = 0.18f;
 const float gfParkourWallRun_OutwardLookAngle = cMath_ToRad(70.f);
 const float gfParkourWallRun_OutwardLookSpeed = 10.f;
+const float gfParkourWallRun_ControllerLookAngle = cMath_ToRad(90.f);
+const float gfParkourWallRun_ControllerLookSpeed = 10.f;
 const float gfParkourWallRun_OutwardLookDeadZone = 0.20f;
 const float gfParkourWallJump_SideImpulse = 240.f;
 const float gfParkourWallJump_UpImpulse = 350.f;
@@ -61,6 +63,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 		mfGroundTimer = gfParkourWallRun_GroundExitGrace;
 		mfOutwardLookYawOffset = 0.f;
 		mfOutwardLookTargetYawOffset = 0.f;
+		mlControllerOutwardLookDir = 0;
 		mbOutwardLookLeanInputHeld = false;
 		cScript_SetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease", 0);
 		mfCameraBobTimer = 0.f;
@@ -222,15 +225,12 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 				// must not recenter the view; keyboard Q/E retain the held behavior below.
 				mbOutwardLookLeanInputHeld = false;
 				if (abPressed)
-				{
 					SetOutwardLookFromYawDir(lYawDir);
-					if (Parkour_GetDebug())
-						cLux_AddDebugMessage("[ParkourController turn latch] yawDir=" + lYawDir, true);
-				}
 
 				return false;
 			}
 
+			mlControllerOutwardLookDir = 0;
 			mbOutwardLookLeanInputHeld = abPressed ||
 										 cInput_IsTriggered(eAction_LeanLeft) ||
 										 cInput_IsTriggered(eAction_LeanRight) ||
@@ -248,6 +248,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 			if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed())
 				return false;
 
+			mlControllerOutwardLookDir = 0;
 			mbOutwardLookLeanInputHeld = abPressed ||
 										 cInput_IsTriggered(eAction_LeanLeft) ||
 										 cInput_IsTriggered(eAction_LeanRight);
@@ -296,6 +297,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 				return false;
 			}
 
+			mlControllerOutwardLookDir = 0;
 			mbOutwardLookLeanInputHeld = cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone;
 
 			if (cMath_Abs(avAmount.x) > gfParkourWallRun_OutwardLookDeadZone)
@@ -419,6 +421,24 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 
 	void SetOutwardLookFromYawDir(int alYawDir)
 	{
+		if (cLux_GetInputHandler().GetGamepadWasLastDeviceUsed())
+		{
+			int lNewDir = alYawDir >= 0 ? 1 : -1;
+			if (Parkour_GetDebug() && mlControllerOutwardLookDir != lNewDir)
+			{
+				iCharacterBody@ pBody = cLux_GetPlayer().GetCharacterBody();
+				float fCurrentYaw = pBody is null ? 0.f : pBody.GetYaw();
+				float fWallYaw = cMath_GetAngleFromPoints3D(cVector3f_Zero, mvWallForward).y;
+				cLux_AddDebugMessage("[ParkourTurn diag1] context=wall_run controller yawDir=" + lNewDir +
+					" currentYaw=" + cMath_ToDeg(fCurrentYaw) +
+					" targetYaw=" + cMath_ToDeg(fWallYaw + gfParkourWallRun_ControllerLookAngle * float(lNewDir)) +
+					" wallNormal=" + mvWallNormal, true);
+			}
+			mlControllerOutwardLookDir = lNewDir;
+			return;
+		}
+
+		mlControllerOutwardLookDir = 0;
 		mfOutwardLookTargetYawOffset = gfParkourWallRun_OutwardLookAngle * float(alYawDir);
 	}
 
@@ -428,7 +448,19 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	{
 		if (apBody is null) return;
 
-		float fBlend = cMath_Clamp(afTimeStep * gfParkourWallRun_OutwardLookSpeed, 0.f, 1.f);
+		float fTurnSpeed = gfParkourWallRun_OutwardLookSpeed;
+		if (mlControllerOutwardLookDir != 0 && mvWallForward.SqrLength() > 0.001f)
+		{
+			float fBaseYaw = apBody.GetYaw() - mfOutwardLookYawOffset;
+			float fWallForwardYaw = cMath_GetAngleFromPoints3D(cVector3f_Zero, mvWallForward).y;
+			float fPreferredYaw = fBaseYaw + gfParkourWallRun_ControllerLookAngle * float(mlControllerOutwardLookDir);
+			float fWallTargetYaw = fWallForwardYaw + gfParkourWallRun_ControllerLookAngle * float(mlControllerOutwardLookDir);
+			mfOutwardLookTargetYawOffset = gfParkourWallRun_ControllerLookAngle * float(mlControllerOutwardLookDir) +
+				cMath_GetAngleDistanceRad(fPreferredYaw, fWallTargetYaw);
+			fTurnSpeed = gfParkourWallRun_ControllerLookSpeed;
+		}
+
+		float fBlend = cMath_Clamp(afTimeStep * fTurnSpeed, 0.f, 1.f);
 		float fPrevOffset = mfOutwardLookYawOffset;
 		mfOutwardLookYawOffset += (mfOutwardLookTargetYawOffset - mfOutwardLookYawOffset) * fBlend;
 		apBody.AddYaw(mfOutwardLookYawOffset - fPrevOffset);
@@ -451,6 +483,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 
 		mfOutwardLookYawOffset = 0.f;
 		mfOutwardLookTargetYawOffset = 0.f;
+		mlControllerOutwardLookDir = 0;
 	}
 
 	//------------------------------------------------------------
@@ -462,13 +495,15 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 						 cInput_IsTriggered(eAction_AnalogLean) ||
 						 mbOutwardLookLeanInputHeld;
 		bool bLookActive = cMath_Abs(mfOutwardLookYawOffset) > 0.001f ||
-						   cMath_Abs(mfOutwardLookTargetYawOffset) > 0.001f;
+						   cMath_Abs(mfOutwardLookTargetYawOffset) > 0.001f ||
+						   mlControllerOutwardLookDir != 0;
 
 		if (bLeanHeld || bLookActive)
 			cScript_SetGlobalVarInt("Parkour_WallRun_SuppressLeanTurnUntilRelease", 1);
 
 		mfOutwardLookYawOffset = 0.f;
 		mfOutwardLookTargetYawOffset = 0.f;
+		mlControllerOutwardLookDir = 0;
 		mbOutwardLookLeanInputHeld = false;
 	}
 
@@ -614,6 +649,7 @@ class cScrMoveState_ParkourWallRun : iScrMoveState, iScrMoveState_Interface
 	float mfPowerMul = 1.f;
 	float mfOutwardLookYawOffset = 0.f;
 	float mfOutwardLookTargetYawOffset = 0.f;
+	int mlControllerOutwardLookDir = 0;
 	float mfCameraBobTimer = 0.f;
 	float mfCameraBobRoll = 0.f;
 	float mfCameraOrganicSeedX = 0.f;
